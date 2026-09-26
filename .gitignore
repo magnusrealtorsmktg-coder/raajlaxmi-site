@@ -1,0 +1,15 @@
+# OS
+.DS_Store
+
+# Local Claude Code settings
+.claude/settings.local.json
+
+# Netlify CLI local state — netlify.toml here carries an absolute path to this
+# machine, so it is local config, not deploy config that should travel.
+.netlify/
+
+# Sanity Studio build output and deps (see studio/.gitignore too)
+studio/node_modules/
+studio/dist/
+studio/.sanity/
+studio/.env
