@@ -1244,6 +1244,74 @@
     .cor{opacity:1 !important;transform:none !important;}
   }
 
+  /* ===== LEAD POPUP — shared chrome, present in all eight files ===== */
+  /* Layers between the nav (z 100) and the loader (z 9999): the cover must
+     never end up being the thing the blurred backdrop is blurring. */
+  html.lead-open{overflow:hidden;}
+  .lead{position:fixed;inset:0;z-index:900;display:grid;place-items:center;
+    padding:clamp(1rem,4vw,2.5rem);visibility:hidden;opacity:0;
+    transition:opacity .4s var(--lux),visibility 0s linear .4s;}
+  .lead.on{visibility:visible;opacity:1;transition:opacity .5s var(--lux);}
+  /* visibility (not display:none) is what hides this: it keeps the element out
+     of the accessibility tree while still allowing the fade. */
+  .lead-scrim{position:absolute;inset:0;background:rgba(12,20,36,.52);
+    -webkit-backdrop-filter:blur(16px) saturate(.86);
+            backdrop-filter:blur(16px) saturate(.86);}
+  /* where backdrop-filter is unavailable the scrim goes near-opaque instead, so
+     the card is never read against live page content */
+  @supports not ((backdrop-filter:blur(2px)) or (-webkit-backdrop-filter:blur(2px))){
+    .lead-scrim{background:rgba(12,20,36,.9);}
+  }
+  .lead-card{position:relative;width:min(540px,100%);
+    max-height:calc(100vh - 2rem);max-height:calc(100dvh - 2rem);overflow-y:auto;
+    background:var(--navy);border:1px solid var(--glass-line);
+    padding:clamp(1.8rem,4.4vw,2.8rem);box-shadow:0 44px 120px rgba(0,0,0,.5);
+    transform:translateY(18px) scale(.99);transition:transform .6s var(--lux);}
+  .lead.on .lead-card{transform:none;}
+  .lead-card::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;
+    background:var(--champagne);pointer-events:none;}
+  .lead-x{position:absolute;top:.8rem;right:.8rem;width:34px;height:34px;
+    display:grid;place-items:center;color:var(--paper-dim);border-radius:50%;
+    transition:color .3s,background .3s;}
+  .lead-x:hover{color:var(--paper);background:rgba(255,255,255,.08);}
+  .lead-label{display:block;font:500 .62rem/1 'Inter',sans-serif;letter-spacing:.3em;
+    text-transform:uppercase;color:var(--champagne);}
+  .lead-title{margin:.75rem 0 .45rem;color:var(--paper);
+    font:600 clamp(1.45rem,3.4vw,1.95rem)/1.18 'Cinzel',serif;}
+  .lead-sub{margin-bottom:1.5rem;color:var(--paper-dim);
+    font:300 clamp(.95rem,2vw,1.06rem)/1.55 'Cormorant Garamond',serif;}
+  .lead-f{position:relative;margin-bottom:.7rem;}
+  .lead-f input,.lead-f select{width:100%;background:rgba(255,255,255,.05);
+    border:1px solid var(--glass-line);color:var(--paper);border-radius:2px;
+    font:400 .9rem/1 'Inter',sans-serif;padding:.95rem 1rem;
+    -webkit-appearance:none;appearance:none;transition:border-color .3s,background .3s;}
+  .lead-f select{padding-right:2.4rem;cursor:pointer;}
+  .lead-f option{background:var(--navy);color:var(--paper);}
+  .lead-f input::placeholder{color:var(--paper-faint);}
+  .lead-f input:focus,.lead-f select:focus{outline:none;border-color:var(--champagne);
+    background:rgba(255,255,255,.08);}
+  .lead-f .caret{position:absolute;right:1rem;top:50%;transform:translateY(-50%);
+    pointer-events:none;color:var(--champagne);}
+  /* minmax(0,…) not 1fr — a 1fr track floors at its content's min-width */
+  .lead-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:.7rem;}
+  .lead-send{margin-top:1rem;width:100%;padding:1rem 1.2rem;background:var(--champagne);
+    color:#14243C;font:500 .74rem/1 'Inter',sans-serif;letter-spacing:.18em;
+    text-transform:uppercase;border-radius:2px;transition:background .3s;}
+  .lead-send:hover{background:var(--champagne-soft);}
+  .lead-fine{margin-top:.9rem;text-align:center;color:var(--paper-faint);
+    font:300 .76rem/1.5 'Inter',sans-serif;}
+  /* the thank-you swaps in place of the body, so the card never collapses */
+  .lead-done{display:none;text-align:center;padding:.6rem 0 .3rem;}
+  .lead-card.sent .lead-body{display:none;}
+  .lead-card.sent .lead-done{display:block;}
+  .lead-done .tick{width:46px;height:46px;margin:0 auto 1.1rem;border-radius:50%;
+    border:1px solid var(--champagne);display:grid;place-items:center;color:var(--champagne);}
+  @media (max-width:520px){ .lead-row{grid-template-columns:minmax(0,1fr);} }
+  @media (prefers-reduced-motion:reduce){
+    .lead,.lead.on{transition:none;}
+    .lead-card,.lead.on .lead-card{transition:none;transform:none;}
+  }
+
 </style>
 </head>
 <body>
@@ -1445,6 +1513,47 @@
     </nav>
   </div>
 </footer>
+
+
+<!-- Lead popup. Opens 30s into a visit; see the LEAD POPUP IIFE at the end of
+     the trailing script. This markup sits *before* that script so the shared
+     [data-hover] / [data-magnetic] pass picks up its button. -->
+<div class="lead" id="leadModal" role="dialog" aria-modal="true" aria-labelledby="leadTitle">
+  <div class="lead-scrim" data-lead-close></div>
+  <div class="lead-card" id="leadCard">
+    <button type="button" class="lead-x" data-lead-close aria-label="Close" data-hover>
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.3"/></svg>
+    </button>
+
+    <div class="lead-body">
+      <span class="lead-label">Private Enquiry</span>
+      <h2 class="lead-title" id="leadTitle">Let us find your address.</h2>
+      <p class="lead-sub">Leave your details and a member of the team will call you within one business day.</p>
+
+      <form id="leadForm" novalidate>
+        <div class="lead-row">
+          <div class="lead-f"><input type="text" name="name" placeholder="Your Name" autocomplete="name" required></div>
+          <div class="lead-f"><input type="tel" name="phone" placeholder="Phone Number" autocomplete="tel" inputmode="tel" required></div>
+        </div>
+        <div class="lead-f"><input type="email" name="email" placeholder="Email Address" autocomplete="email" required></div>
+        <div class="lead-f">
+          <!-- options come from LOCATIONS in the IIFE, so the list is one line to edit -->
+          <select name="location" id="leadLoc" required aria-label="Interested location">
+            <option value="" selected>Interested Location</option>
+          </select>
+          <span class="caret"><svg width="11" height="7" viewBox="0 0 12 8" fill="none" aria-hidden="true"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.3"/></svg></span>
+        </div>
+        <button type="submit" class="lead-send" data-hover data-magnetic>Request a Callback</button>
+        <p class="lead-fine">By submitting, you agree to be contacted by Raajlaxmi Group about your enquiry.</p>
+      </form>
+    </div>
+
+    <div class="lead-done" aria-live="polite">
+      <div class="tick"><svg width="18" height="14" viewBox="0 0 18 14" fill="none" aria-hidden="true"><path d="M1 7l5.5 5.5L17 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <h2 class="lead-title" id="leadDoneMsg">Thank you. We&rsquo;ll be in touch shortly.</h2>
+    </div>
+  </div>
+</div>
 
 <script>
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1742,6 +1851,111 @@
     addEventListener('load', sense);
     sense();
   })();
+  /* ============ LEAD POPUP ============ */
+  /* Opens 30 seconds into a *visit*, not 30 seconds into every page. Each page
+     here is its own document, so a per-page timer would re-pop on every nav
+     click; the arrival time is kept in sessionStorage and the delay measured
+     from it. Shown once per tab session, and never again once submitted.
+     NOTE: like the contact form, this has no backend — nothing is sent yet. */
+  (function(){
+    const modal = document.getElementById('leadModal');
+    if(!modal) return;
+
+    /* contact.html already *is* this form; covering it with a duplicate is the
+       one place the popup would actively get in the way. */
+    const page = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+    if(page === 'contact.html') return;
+
+    const DELAY = 30000;   // 30s into the visit
+    const FLOOR = 1500;    // never slam open mid-navigation
+
+    /* storage can throw in private mode — a failure just means the popup
+       behaves as if nothing was remembered */
+    const get = (s,k)=>{ try{ return s.getItem(k); }catch(err){ return null; } };
+    const set = (s,k,v)=>{ try{ s.setItem(k,v); }catch(err){} };
+
+    if(get(localStorage,'rl-lead-done') === '1') return;   // already submitted
+    if(get(sessionStorage,'rl-lead-seen') === '1') return; // already shown this visit
+
+    let start = parseInt(get(sessionStorage,'rl-visit-start') || '', 10);
+    if(!start){ start = Date.now(); set(sessionStorage,'rl-visit-start', String(start)); }
+    const wait = Math.max(FLOOR, DELAY - (Date.now() - start));
+
+    /* the localities the client actually builds in — one line to edit */
+    const LOCATIONS = ['Vasai','Nallasopara','Virar','Saphale','Elsewhere in Mumbai','Not sure yet'];
+    const sel = document.getElementById('leadLoc');
+    LOCATIONS.forEach(name=>{
+      const o = document.createElement('option');
+      o.textContent = name;
+      sel.appendChild(o);
+    });
+
+    const card  = document.getElementById('leadCard');
+    const form  = document.getElementById('leadForm');
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const FOCUSABLE = 'button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])';
+    let lastFocus = null;
+
+    function onKey(e){
+      if(e.key === 'Escape'){ e.preventDefault(); close(); return; }
+      if(e.key !== 'Tab') return;
+      const f = [...card.querySelectorAll(FOCUSABLE)].filter(el => el.offsetParent !== null);
+      if(!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+    }
+    function open(){
+      if(modal.classList.contains('on')) return;
+      set(sessionStorage,'rl-lead-seen','1');
+      lastFocus = document.activeElement;
+      modal.classList.add('on');
+      document.documentElement.classList.add('lead-open');
+      addEventListener('keydown', onKey, true);
+      setTimeout(()=>{ form.querySelector('input')?.focus({preventScroll:true}); }, reduce ? 0 : 420);
+    }
+    function close(){
+      modal.classList.remove('on');
+      document.documentElement.classList.remove('lead-open');
+      removeEventListener('keydown', onKey, true);
+      try{ lastFocus?.focus({preventScroll:true}); }catch(err){}
+    }
+
+    modal.querySelectorAll('[data-lead-close]').forEach(el => el.addEventListener('click', close));
+
+    form.addEventListener('submit', e=>{
+      e.preventDefault();
+      const bad = [...form.querySelectorAll('[required]')].find(f=>{
+        const v = f.value.trim();
+        if(!v) return true;
+        if(f.type === 'email') return !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+        if(f.type === 'tel')   return v.replace(/\D/g,'').length < 8;
+        return false;
+      });
+      if(bad){
+        bad.focus();
+        if(!reduce) bad.closest('.lead-f')?.animate(
+          [{transform:'translateX(0)'},{transform:'translateX(-5px)'},
+           {transform:'translateX(4px)'},{transform:'translateX(0)'}],
+          {duration:320, easing:'ease-out'});
+        return;
+      }
+      /* form.elements.namedItem('name') rather than form.name: the named
+         getter does resolve to the input (contact.html relies on that), but
+         only while no control is actually called "form"/"id"/etc. Going
+         through elements can't be shadowed. */
+      const raw = (form.elements.namedItem('name').value || '').trim();
+      const first = (raw.split(/\s+/)[0] || '').replace(/[<>]/g,'');
+      const msg = document.getElementById('leadDoneMsg');
+      if(msg && first) msg.textContent = `Thank you, ${first}. We’ll be in touch shortly.`;
+      card.classList.add('sent');
+      set(localStorage,'rl-lead-done','1');   // never ask this visitor again
+      setTimeout(close, 2800);
+    });
+
+    setTimeout(open, wait);
+  })();
+
 </script>
 </body>
 </html>
