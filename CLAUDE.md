@@ -20,9 +20,14 @@ deployment, not construction — see *Known content placeholders* and the three
 
 ### Do these first
 
-1. **`git init`.** There is no version control on this directory. That is the
-   single biggest risk here — see the incident note below. One commit makes
-   every future mistake a one-command fix.
+1. ~~**`git init`.**~~ **Done (26 Sep).** The directory is now a git repo with
+   an initial commit, pushed to
+   <https://github.com/magnusrealtorsmktg-coder/raajlaxmi-site> (public).
+   `studio/node_modules`, `studio/dist`, `studio/.env` and `.netlify/` are
+   gitignored — the last because its `netlify.toml` carries an absolute path to
+   one machine, so committing it would break a build-from-git setup. If Netlify
+   is ever switched from CLI deploys to deploying from GitHub, add a fresh
+   `netlify.toml` at the repo root with `publish = "."`.
 2. **Deploy the Studio.** `cd studio && npm run deploy`. The `stage` field and
    the three-folder sidebar exist in the local schema and are validated
    (`npx sanity schema validate` → 0 errors) but the **hosted Studio at
@@ -82,11 +87,14 @@ and Sanity hydration via `?p=<slug>`.
   enquiries are lost.
 - Testimonials are written copy, not real clients.
 
-### Files on disk but no longer referenced
+### Deleted in the cleanup (recoverable from git)
 
-`quote-strip.png`, `service_side.png` and the twelve `assets/projects/*.png`
-project marks (~1MB together). All safe to delete; kept in case a removed
-section is wanted back.
+`quote-strip.png`, `service_side.png`, the twelve `assets/projects/*.png`
+project marks and the root-level source art (`Generate_*.jpeg`,
+`Minimalist_*.jpeg`, `generate_*.jpeg`, `download.png`) were all removed once
+version control existed — 23 files, ~8MB, none of them referenced by any page.
+They are in the initial commit, so `git show <commit>:<path> > <path>` brings
+any of them back if a removed section is ever wanted again.
 
 ## Previewing and verifying
 
@@ -122,7 +130,7 @@ Check at 1440×900, 1024×800 and 420×860; scroll the full page; confirm no con
 
 `testimonials.html` — one section, `#testimonials` ("Section VII — Testimonials"): a five-entry carousel built from the `T` array, three cards visible with the centre one featured, circular arrows outside the track, pagination dots, and a closing consultation strip. The track holds every card and is translated so the active one sits under the viewport's midpoint (measured from live offsets, so it survives whatever width the clamp resolves to); a mask fades the cards leaving frame. The nav's Testimonials item points here from every page.
 
-`services.html` — one section, `#services` ("Section IX — Services"), seven blocks: hero, philosophy, the five-step journey rail, six service cards, the six-step buying flow, a FAQ accordion and a closing CTA. Both rails fill their gold line from scroll position (`--fill` on `.sv-rail` / `.sv-flow`). Each block carries `data-rev` and gets its own observer, so the page reveals in movements rather than all at once. Its first two blocks are **finished artwork with the copy painted in**: `Services_start.png` is the hero band (`.sv-band`, full-bleed at its native 2164:380 — any max-height crops the label off the top; `.sv-mid` carries top padding so the plate below clears it rather than butting against it, which read as one accidental block of two photographs) and `assets/service-philosophy.jpg` is the philosophy plate (`.sv-side`, flush left at `--sv-side-w`, default 52%). The source artwork is 1376x768, **cropped on disk to 1376x513 (2.68:1)** — the extra height was empty cream above and below the copy and made the plate half again as tall as the banner. Any recrop must keep y150–635 of the original or it starts eating the paragraph, which is why it cannot reach the old 2.94:1 exactly. `--sv-side-w` is set by readability: much below ~40% the painted type stops being legible. The superseded `service_side.png` is still committed but unreferenced.
+`services.html` — one section, `#services` ("Section IX — Services"), seven blocks: hero, philosophy, the five-step journey rail, six service cards, the six-step buying flow, a FAQ accordion and a closing CTA. Both rails fill their gold line from scroll position (`--fill` on `.sv-rail` / `.sv-flow`). Each block carries `data-rev` and gets its own observer, so the page reveals in movements rather than all at once. Its first two blocks are **finished artwork with the copy painted in**: `Services_start.png` is the hero band (`.sv-band`, full-bleed at its native 2164:380 — any max-height crops the label off the top; `.sv-mid` carries top padding so the plate below clears it rather than butting against it, which read as one accidental block of two photographs) and `assets/service-philosophy.jpg` is the philosophy plate (`.sv-side`, flush left at `--sv-side-w`, default 52%). The source artwork is 1376x768, **cropped on disk to 1376x513 (2.68:1)** — the extra height was empty cream above and below the copy and made the plate half again as tall as the banner. Any recrop must keep y150–635 of the original or it starts eating the paragraph, which is why it cannot reach the old 2.94:1 exactly. `--sv-side-w` is set by readability: much below ~40% the painted type stops being legible. The superseded `service_side.png` has been deleted (recoverable from git).
   - **The new plate's painted headline has a typo**: it reads "feel as carefully designed the homes we create", dropping the second "as". The live copy in the markup (which takes over below 820px) is correct, so the page says two different things depending on width. Only a redraw fixes the artwork. Both keep their copy in the markup for screen readers, and the plate swaps to live text below 820px where its painted type would render ~6px. **Everything else is an unfilled `.sv-slot` placeholder** reading `[INSERT … IMAGE HERE]` — to fill one, drop the inner `<span>` and set `background-image` on the slot; ratio, radius and shadow are already right.
 
 `contact.html` — one section, `#contact` ("Section VIII — Contact"): the invitation and a 2×2 contact grid on the left, a floating consultation card on the right, then the location card + drawn map and a closing CTA. **The form has no backend** — the submit handler validates, then swaps the card to a thank-you state and nothing is sent. Wire it to Netlify Forms (`name="contact"` + `data-netlify="true"` on the `<form>`) or an endpoint before launch, or enquiries are lost. Deliberately carries no corner artwork, per the brief.
@@ -245,14 +253,14 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
 - `assets/cert-maharera.png` and `assets/cert-credai-mchi.png` are the accreditation marks in Section II's `.ab-creds` row, cut out of one flat client sheet and keyed transparent. Their captions are live HTML, not baked into the artwork, so they reflow and stay readable — keep it that way if the marks are ever re-exported.
 - `assets/projects/western-line.jpg` is the corridor banner (1923x514, JPEG q94 — PNG was 498KB for no visible gain). Its copy is painted into the artwork, so the same content is written out in the `img`'s `alt` for screen readers and search. The band's background is set to the artwork's own ground (`#F4F0EF`) so the banner dissolves into it rather than showing as a rectangle, and one stray white pixel column was cropped off the left edge to make that work.
 - The banner is 3.7:1 with baked-in type, so below 760px it would render the station names at ~6px. It is put in a horizontal scroller at a fixed 900px instead.
-- The 12 individual `assets/projects/*.png` marks are left over from an earlier markup rebuild of this band and are now **unreferenced** (~300KB). Safe to delete; kept in case the banner is ever rebuilt.
+- The 12 individual `assets/projects/*.png` marks were left over from an earlier markup rebuild of this band and have been **deleted** (~300KB, recoverable from git if the banner is ever rebuilt). Only `western-line.jpg` and `western-line-ongoing.jpg` remain in that folder.
 - `assets/logos/` holds **30 brand marks** for Section X. Nine were already committed; the other 21 were cut out of the client's category sheet, so they are only ~175px wide — fine at display size, soft on a retina screen. Swap in vendor-supplied files when they arrive. **All 30 have been trimmed to their ink**, because each carried its own padding and the grid's sizing depends on them being tight; re-trim anything you replace.
 - Section X fits every mark into an identical box with `object-fit:contain` rather than capping height alone — capping height left a 3x spread in optical weight between a wide lockup and a square roundel.
 - `assets/why-team.jpg` is the Section IV feature plate (the group photograph, 2000×1332). The plate is ~2.2:1 while the photo is 3:2, so the CSS biases the crop to `center 72%` to keep the front row's feet in frame, and below 820px the plate switches to `aspect-ratio:3/2` so a phone shows the whole line-up instead of cropping both ends off it.
 - Still placeholders: four `picsum.photos/seed/rl-*` URLs in `index.html` — the Signature Projects cards (Heights / Villa / Crest / Essence) — plus the seeded card art in the `projects.html` fallback list (real card images now come from Sanity). Replace by swapping the URL in the inline `background-image` (or the Sanity document) for the real asset. Earlier notes here claiming ten placeholders were stale.
 - The About plate is `assets/about-plate.jpg` (excavator on site, 810×1212), set as `background-image` on `.ab-photo` in CSS. It used to be copied off the hero by the About IIFE; that JS is gone, so **don't reintroduce an inline `style.backgroundImage` there** — it would override the stylesheet. The plate crops to `5/6.6` from the centre.
-- `quote-strip.png` (the Vikram Raajlaxmi quote banner) is still committed but **no longer referenced** — Section III's `.sp-quote-img` figure was deleted. Safe to delete the file, or to reinstate the figure if the quote is wanted back.
-- Many root-level `Generate_*.jpeg` / `download.png` / `Minimalist_*.jpeg` files are unreferenced source art, not site assets.
+- `quote-strip.png` (the Vikram Raajlaxmi quote banner) has been **deleted** — Section III's `.sp-quote-img` figure was removed earlier. Recoverable from git if the quote is ever wanted back.
+- The root-level `Generate_*.jpeg` / `download.png` / `Minimalist_*.jpeg` source art has been **deleted** — it was working material, not site assets. `footer.png`, `Services_start.png`, the seals and the sketches are all still referenced and remain.
 - **Favicon**: `favicon.ico` (16/32/48, at the repo root so browsers find it unprompted) plus `assets/favicon-32.png`, `assets/favicon-192.png` and `assets/apple-touch-icon.png` (180). All eight pages link them from `<head>`, right after `</title>`. Cut from the logo's building glyph with its dark ground **keyed out to transparency** (unmatted, so no dark fringe survives onto a light tab bar), squared up and centred with ~12% margin — the mark has to survive being read at 16px, so it sits deliberately large in frame.
 - The logo ships as **two external PNGs**, `assets/logo.png` (brown/charcoal ink, for ivory grounds) and `assets/logo-light.png` (gold/cream ink, for the dark navbar **and the footer** — `.ft-mark`, which used to be the word RAAJLAXMI set in Cinzel with a tagline span under it; the artwork already carries both, so the text version was removed), both ~17KB with a transparent ground. The nav carries both stacked inside `.brand`; `.nav-wrap.on-light` crossfades between them via opacity, replacing the old `filter:` hack. Regenerating either from a new master means keying out its flat background and re-cutting both variants — edit them as a pair or the two states drift.
 
