@@ -28,6 +28,40 @@
     fired = true;
     while(queue.length){ try{ queue.shift()(); }catch(err){ console.error(err); } }
   }
+  window.onIntro = function(fn){ fired ? fn() : queue.push(fn); };
+
+  /* The cover is an arrival, not a page transition. Every page here is its own
+     document, so without this flag the loader would replay on every nav click —
+     the site would feel like it reboots each time. sessionStorage scopes it to
+     the visit: the first page of a tab gets the cover, every page after it goes
+     straight to content, and a new tab or a later visit is a new arrival.
+     (Swap to localStorage to show it only once ever, per browser.) The accessor
+     can throw in private mode, so a failure falls through to playing it. */
+  var SEEN = 'rl-intro-seen', skip = false;
+  try{ skip = sessionStorage.getItem(SEEN) === '1'; }catch(err){}
+
+  if(skip){
+    /* This block is in <head>, so it runs before <body> is parsed — the cover
+       is suppressed before it can paint rather than hidden after the fact. */
+    document.documentElement.className += ' ld-skip';
+    var kill = document.createElement('style');
+    kill.textContent = 'html.ld-skip .ld{display:none!important}';
+    document.head.appendChild(kill);
+
+    var strip = function(){
+      var ld = document.getElementById('loader');
+      if(ld) ld.remove();
+      fire();                                   // onIntro work runs immediately
+      /* the adaptive nav would otherwise have sampled a cover that never showed */
+      dispatchEvent(new Event('resize'));
+    };
+    if(document.readyState === 'loading') addEventListener('DOMContentLoaded', strip, {once:true});
+    else strip();
+    return;
+  }
+
+  try{ sessionStorage.setItem(SEEN, '1'); }catch(err){}
+
   function done(){
     if(exiting) return;
     exiting = true;
@@ -47,8 +81,6 @@
   if(document.readyState === 'complete') done();
   else addEventListener('load', done, {once:true});
   setTimeout(done, Math.max(0, MAX - performance.now()));
-
-  window.onIntro = function(fn){ fired ? fn() : queue.push(fn); };
 })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
