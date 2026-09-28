@@ -1207,6 +1207,41 @@
   }
 
 
+  /* ===== ASSOCIATES BAND ===== */
+  /* Ported from the corridor band on projects.html / projects-ongoing.html —
+     this page carries no Western Line banner, so the slot between the grid and
+     the consultation strip was empty. Same rules as those banners: the band
+     takes the artwork's own ground (#F4F0EF) so the plate dissolves into it
+     rather than reading as a pasted rectangle. */
+  .cor{margin-top:clamp(4rem,7vw,6.5rem);background:#F4F0EF;
+    border:1px solid rgba(28,28,28,.07);border-radius:26px;overflow:hidden;
+    padding:clamp(2.2rem,4vw,3.4rem) clamp(1.2rem,2.6vw,2.6rem);
+    box-shadow:0 30px 70px -46px rgba(40,32,18,.35);
+    opacity:0;transform:translateY(26px);
+    transition:opacity 1s var(--lux) .1s,transform 1s var(--lux) .1s;}
+  .col.in .cor{opacity:1;transform:none;}
+
+  /* the client's own artwork, used as supplied — the copy is painted into it,
+     so it is written out in the img's alt for screen readers and search */
+  .cor-figure{margin:0;}
+  .cor-figure img{display:block;width:100%;height:auto;}
+
+  /* This plate is 1.5:1, not the 3.7:1 of the corridor strips, so it is centred
+     at a cap rather than bled to the band's edges — at full content width it
+     would stand ~800px tall and swamp the page it sits on. */
+  .cor-figure.plate{margin:0 auto;max-width:860px;}
+
+  /* the names are painted in; below this they would render at ~7px, so the
+     plate scrolls sideways at a legible size instead */
+  @media(max-width:760px){
+    .cor-figure.plate{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+    .cor-figure.plate img{width:820px;max-width:none;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .cor{opacity:1 !important;transform:none !important;}
+  }
+
   /* ===== LEAD POPUP — shared chrome, present in all eight files ===== */
   /* Layers between the nav (z 100) and the loader (z 9999): the cover must
      never end up being the thing the blurred backdrop is blurring. */
@@ -1355,6 +1390,17 @@
         <button aria-label="Next">&rsaquo;</button>
       </div>
 
+
+      <!-- associates plate: client artwork used whole, same rule as the corridor
+           banners on the sibling pages — the copy is painted in, so it is
+           repeated in the alt below -->
+      <div class="cor">
+        <div class="cor-figure plate">
+          <img src="assets/projects/associates.jpg" width="1094" height="728"
+               loading="lazy" decoding="async"
+               alt="Raajlaxmi Group associates and consultants — redeveloping homes, rebuilding lives. Architects: Sanat Mehta, Ajay Wade, Chirag Mistry, Kuldeep Patil, Umesh Kekre, Sanjay Narang, Himesh Gupta, Roshan Patil, and Kaushik Patel &amp; Associates. Engineers: Sailesh Pandey, Sanjay Belnekar, Mukesh Kumar, and Sura &amp; Associates. Chartered Accountants: Bharat Majithia and Vivek Sankhala. Advocates: Kalpana Mhatre, Yogesh Virarkar, N.B Deshmukh, and Anisha Shastri.">
+        </div>
+      </div>
 
       <!-- consultation strip -->
       <div class="col-cta">
