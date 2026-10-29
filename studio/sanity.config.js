@@ -120,6 +120,40 @@ const structure = (S) =>
                 .child(S.documentTypeList('project').title('Every project')),
             ]),
         ),
+
+      S.listItem()
+        .id('testimonials')
+        .title('Testimonials')
+        .child(
+          S.list()
+            .id('testimonials-inner')
+            .title('Testimonials')
+            .items([
+              S.listItem()
+                .id('testimonials-page')
+                .title('Page content')
+                .child(
+                  S.document()
+                    .schemaType('testimonialsPage')
+                    .documentId('testimonials-page')
+                    .title('Testimonials — page content'),
+                ),
+              S.divider(),
+              S.listItem()
+                .id('reviews')
+                .title('Reviews')
+                .child(
+                  S.documentList()
+                    .id('reviews-list')
+                    .title('Client reviews')
+                    .filter('_type == "testimonial"')
+                    .defaultOrdering([
+                      {field: 'order', direction: 'asc'},
+                      {field: '_createdAt', direction: 'asc'},
+                    ]),
+                ),
+            ]),
+        ),
     ])
 
 export default defineConfig({
@@ -136,7 +170,7 @@ export default defineConfig({
     templates: (prev) => [
       /* drop the singleton's generic template so it cannot be created a second
          time from the global "create" menu — it is reached through the sidebar */
-      ...prev.filter((t) => !['homepage', 'collectionPage'].includes(t.schemaType)),
+      ...prev.filter((t) => !['homepage', 'collectionPage', 'testimonialsPage'].includes(t.schemaType)),
       {
         id: 'project-by-stage',
         title: 'Project',

@@ -219,6 +219,12 @@ Anything that should animate in after the cover lifts registers with **`window.o
 
 ## Content management (Sanity)
 
+**Edits take about a minute to show.** The pages read `apicdn.sanity.io`, whose
+responses carry `cache-control: max-age=60`, so a change published in the Studio
+appears within roughly a minute — and a browser that already fetched the query may
+hold its own copy for that minute too. When something looks like it did not save,
+check the document in the Studio before suspecting the page.
+
 `studio/` is a Sanity Studio with two schemas: `project` — one document per
 project, feeding **all three collection pages and the detail page**
 (`projects.html`, `projects-ongoing.html`, `projects-redevelopment.html`,
@@ -252,6 +258,31 @@ The page-side block is **identical in all three collection files** — it works 
 which document it wants from the filename and the `?status=`, so there is
 nothing per-page to keep in step. It paints only the chrome; the cards still
 come from the `project` documents in the Section V block above it.
+
+**Testimonials.** `testimonial` is one document per review (quote, name, which
+home, portrait, stars, position); `testimonialsPage` is a singleton with fixed id
+`testimonials-page` holding the heading, the intro, the closing strip and **the
+client photo slider**. The carousel's five written-in reviews are the fallback —
+they show while the query is in flight, if it fails, and while nobody has
+published one, so it can never come up empty; a published set replaces them
+outright rather than merging, because a half-filled review list mixed with
+invented copy is worse than either. `studio/scripts/seed-testimonials.mjs` seeds
+the page and those five.
+
+Two headings on that page end in a gold phrase held in its own `<span class="gold">`
+— the title and the closing strip — so each is edited as plain text plus a
+separate "gold words" field, and the span node is kept and re-appended rather
+than rewritten. The carousel's card building was moved into a `render()` so the
+spread can be rebuilt and re-measured when the reviews arrive; its click and
+keyboard listeners are delegated to `track` and `dots`, which is what lets their
+children be replaced without rewiring.
+
+**The client photo slider** (`.tg`, between the carousel and the closing strip)
+is a `scroll-snap` scroller rather than a transform track, so touch, trackpad and
+keyboard all work without JS; the arrows just nudge the same scroller and are
+dimmed, not removed, at the ends. It ships with `hidden` on it and is revealed
+only once the CMS carries at least one photograph — the one place on the site
+where an empty block removes itself rather than falling back to markup.
 
 **Studio sidebar.** `Home page`, then **All Projects**, which holds the
 browse-everything page's own content and then one folder per stage —
@@ -352,7 +383,12 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
   designed, but it is probably not what was meant. Their **Listing** wants changing.
 - **No project is filed as Redevelopment yet**, so that page shows three clearly-marked placeholder cards (`[Society name]`, `[Locality]`, `[n] BHK`) above the associates plate. Set one project's **Listing** to Redevelopment in the Studio and they disappear for good. Likewise the two `Ready Possession` documents are in no listing until their Listing is set to Completed.
 - **Project names differ between pages.** `index.html` Signature Projects lists Heights / Villa / Crest / Essence; `projects.html` lists those plus Business Square, Enclave, Skyline, Vista. Keep the two consistent when adding projects.
-- **Every testimonial is written copy**, not a real client — quotes, names and portraits in the `T` array all need replacing before launch. This is the one section whose entire value is that it is true.
+- **Every testimonial is written copy**, not a real client. They now live in Sanity as
+  five `testimonial` documents (seeded from the `T` array, which stays in the file as
+  the fallback) — so replacing them is editing five records rather than editing HTML,
+  but they still **must** be replaced before launch. This is the one section whose
+  entire value is that it is true. The client photo slider under them is empty until
+  real photographs are added, and stays hidden while it is.
 - `project.html` carries its own placeholders, each marked with a `PLACEHOLDER` comment: **every figure in the fact bar** (~1,15,000 sq.ft, 8 towers, ~640+ units, Completed) is from the client's mock and unverified, as are the landmark distances and the direct line. Its five gallery shots are seeded `picsum.photos/seed/rl-rk-*` placeholders. "Request Brochure" has no brochure behind it and points at the enquiry form.
 - Romal Kirti **is** now published in Sanity and appears in the collection, so `project.html?p=romal-kirti` is reachable from a card. The hand-written fallback in `project.html` (used when the page is opened with no `?p=`) is still the unverified mock content.
 - Most nav links and CTAs are `href="#"`; only Projects and the cross-links resolve. Section II's "Discover our story" button and the "Raajlaxmi Group / Building trust. Creating legacy." signature are both gone — the accreditation strip replaced them, so About no longer offers a CTA or a sign-off of its own.

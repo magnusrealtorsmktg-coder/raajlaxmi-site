@@ -1473,6 +1473,62 @@
     .lead-card,.lead.on .lead-card{transition:none;transform:none;}
   }
 
+  /* ===== CLIENT PHOTO SLIDER (under the reviews) ===== */
+  /* Hidden until Sanity carries at least one photograph — an empty slider is
+     worse than no slider, so the markup ships with [hidden] on it. */
+  .tg{margin-top:clamp(3.5rem,7vw,6rem);opacity:0;transform:translateY(26px);
+    transition:opacity 1s var(--lux) .1s,transform 1s var(--lux) .1s;}
+  .tm.in .tg{opacity:1;transform:none;}
+  .tg[hidden]{display:none;}
+
+  .tg-head{text-align:center;margin-bottom:clamp(1.6rem,3vw,2.4rem);}
+  .tg-label{display:inline-block;font-family:"Inter",sans-serif;font-weight:600;
+    font-size:.64rem;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);}
+  .tg-title{margin-top:.75rem;font-family:"Playfair Display",serif;font-weight:600;
+    font-size:clamp(1.35rem,2.6vw,2rem);line-height:1.2;color:var(--charcoal);}
+  .tg-intro{margin:.7rem auto 0;max-width:46ch;font-family:"Inter",sans-serif;
+    font-weight:300;font-size:clamp(.88rem,1.5vw,.95rem);line-height:1.6;color:var(--body);}
+
+  .tg-stage{position:relative;}
+  /* scroll-snap rather than a transform track: it gives touch swipe, keyboard
+     and trackpad for free, and the arrows just nudge the same scroller */
+  .tg-track{display:flex;gap:clamp(.8rem,1.6vw,1.3rem);overflow-x:auto;
+    scroll-snap-type:x mandatory;scroll-behavior:smooth;
+    padding:.4rem clamp(.2rem,1vw,.6rem) 1rem;
+    scrollbar-width:none;-ms-overflow-style:none;}
+  .tg-track::-webkit-scrollbar{display:none;}
+  .tg-item{flex:0 0 clamp(210px,26vw,300px);scroll-snap-align:center;margin:0;}
+  .tg-ph{position:relative;aspect-ratio:4/3;border-radius:14px;overflow:hidden;
+    background:linear-gradient(160deg,#cdc4b4,#8a8072);
+    box-shadow:0 22px 50px -30px rgba(40,32,18,.55);}
+  .tg-ph img{width:100%;height:100%;object-fit:cover;display:block;
+    transition:transform 1.2s var(--lux);}
+  .tg-item:hover .tg-ph img{transform:scale(1.04);}
+  .tg-cap{margin-top:.7rem;text-align:center;font-family:"Inter",sans-serif;
+    font-weight:300;font-size:.82rem;line-height:1.5;color:var(--body);}
+
+  .tg-arw{position:absolute;top:calc(50% - 1.2rem);transform:translateY(-50%);
+    width:2.7rem;height:2.7rem;border-radius:50%;display:grid;place-items:center;
+    background:#fff;color:var(--charcoal);border:1px solid rgba(28,28,28,.1);
+    box-shadow:0 12px 30px -16px rgba(40,32,18,.5);z-index:2;
+    transition:color .3s,border-color .3s,transform .3s var(--lux),opacity .3s;}
+  .tg-arw:hover{color:var(--gold-deep);border-color:var(--gold);}
+  .tg-arw.prev{left:clamp(-.4rem,-1vw,0rem);}
+  .tg-arw.next{right:clamp(-.4rem,-1vw,0rem);}
+  /* an arrow with nowhere to go is dimmed rather than removed, so the row
+     does not jump as the slider reaches its ends */
+  .tg-arw[disabled]{opacity:.3;pointer-events:none;}
+
+  @media(max-width:620px){
+    .tg-item{flex:0 0 min(78vw,300px);}
+    .tg-arw{display:none;}          /* swipe is the obvious gesture here */
+  }
+  @media (prefers-reduced-motion:reduce){
+    .tg{opacity:1 !important;transform:none !important;}
+    .tg-track{scroll-behavior:auto;}
+    .tg-item:hover .tg-ph img{transform:none;}
+  }
+
 </style>
 </head>
 <body>
@@ -1568,6 +1624,30 @@
       </div>
 
       <!-- closing editorial strip -->
+
+      <!-- client photographs: filled from the testimonials page document in
+           Sanity, and hidden until there is at least one -->
+      <div class="tg" id="tmGallery" hidden>
+        <header class="tg-head">
+          <span class="tg-label" id="tgLabel">Our Clients</span>
+          <h3 class="tg-title" id="tgTitle">The Families Behind the Keys</h3>
+          <p class="tg-intro" id="tgIntro"></p>
+        </header>
+        <div class="tg-stage">
+          <button class="tg-arw prev" id="tgPrev" data-hover aria-label="Previous photographs">
+            <svg width="9" height="15" viewBox="0 0 9 15" fill="none" aria-hidden="true">
+              <path d="M7.5 1L1.5 7.5l6 6.5" stroke="currentColor" stroke-width="1.4"/>
+            </svg>
+          </button>
+          <div class="tg-track" id="tgTrack" tabindex="0" role="group" aria-label="Client photographs"></div>
+          <button class="tg-arw next" id="tgNext" data-hover aria-label="More photographs">
+            <svg width="9" height="15" viewBox="0 0 9 15" fill="none" aria-hidden="true">
+              <path d="M1.5 1l6 6.5-6 6.5" stroke="currentColor" stroke-width="1.4"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
       <div class="tm-strip">
         <svg class="tm-leaf" width="74" height="86" viewBox="0 0 74 86" fill="none" aria-hidden="true">
           <g stroke="currentColor" stroke-width="1.4" fill="none"
@@ -1754,10 +1834,16 @@
     const sec = document.getElementById('testimonials');
     if(!sec) return;
 
+    const SANITY = {
+      projectId : 'lc9w15ba',    // manage.sanity.io → Raajlaxmi Site → Settings
+      dataset   : 'production',
+      apiVersion: '2024-01-01',
+    };
+
     /* PLACEHOLDER: every quote, name and portrait below is written copy, not a
        real client. Replace with signed testimonials before launch — this is the
        one section whose whole value is that it is true. */
-    const T = [
+    const FALLBACK = [
       ['From the first visit to the day we moved in, everything was handled with such care and professionalism. The quality and attention to detail are truly exceptional.',
        'The Mehta Family', 'Raajlaxmi Heights, Mumbai', 'rl-voice-1'],
       ['Raajlaxmi doesn’t just build homes, they build trust. Every commitment was delivered with honesty and excellence.',
@@ -1780,29 +1866,46 @@
     const vp    = document.getElementById('tmViewport');
     const dots  = document.getElementById('tmDots');
 
-    track.innerHTML = T.map(([say,name,at,seed],i)=>`
+    const esc = v => String(v == null ? '' : v)
+      .replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+    /* the written-in five, normalised to the same shape the CMS answers in */
+    let T = FALLBACK.map(([say,name,at,seed]) =>
+      ({say, name, at, face: face(seed), stars: 5}));
+
+    let cards = [], dotEls = [], at = 0;
+
+    /* Built as a function rather than inline, because the reviews can arrive
+       from Sanity after this has already run and the whole spread then has to
+       be laid out again. The listeners below are delegated to `track` and
+       `dots`, which survive their children being replaced. */
+    function render(){
+      track.innerHTML = T.map((t,i)=>`
       <article class="tm-card" data-i="${i}" tabindex="0">
         <div class="tm-q" aria-hidden="true"></div>
-        <p class="tm-say">${say}</p>
+        <p class="tm-say">${esc(t.say)}</p>
         <div class="tm-rule" aria-hidden="true"></div>
         <div class="tm-who">
-          <div class="tm-face" style="background-image:${face(seed)}" role="img" aria-label="${name}"></div>
+          <div class="tm-face" style="background-image:${t.face}" role="img" aria-label="${esc(t.name)}"></div>
           <div>
-            <div class="tm-name">${name}</div>
-            <div class="tm-at">${at}</div>
-            <div class="tm-stars" aria-label="Five out of five">${STAR.repeat(5)}</div>
+            <div class="tm-name">${esc(t.name)}</div>
+            <div class="tm-at">${esc(t.at)}</div>
+            <div class="tm-stars" aria-label="${t.stars} out of five">${STAR.repeat(t.stars)}</div>
           </div>
         </div>
       </article>`).join('');
 
-    dots.innerHTML = T.map((_,i)=>
-      `<button class="tm-dot${i===0?' on':''}" data-i="${i}" role="tab"
-               aria-label="Testimonial ${i+1}"></button>`).join('');
+      dots.innerHTML = T.map((_,i)=>
+        `<button class="tm-dot${i===0?' on':''}" data-i="${i}" role="tab"
+                 aria-label="Testimonial ${i+1}"></button>`).join('');
 
-    const cards   = [...track.querySelectorAll('.tm-card')];
-    const dotEls  = [...dots.querySelectorAll('.tm-dot')];
+      cards  = [...track.querySelectorAll('.tm-card')];
+      dotEls = [...dots.querySelectorAll('.tm-dot')];
+    }
+
+    render();
     /* open on the middle card, the way the spread is composed */
-    let at = Math.floor(T.length / 2);
+    at = Math.floor(T.length / 2);
 
     /* centre the active card under the viewport's midpoint. Measuring the live
        offsets means the maths survives any card width the clamp resolves to. */
@@ -1837,6 +1940,37 @@
       const c = e.target.closest('.tm-card');
       if(c){ e.preventDefault(); go(+c.dataset.i); }
     });
+
+    /* --- the reviews, from Sanity ---------------------------------------
+       The five written into this file are the fallback: they show while the
+       query is in flight, if it fails, and if nobody has published a review
+       yet, so the carousel can never come up empty. A published set replaces
+       them outright — unlike the page wording, a half-filled review list is
+       not something to merge with invented copy. */
+    (function(){
+      const Q = encodeURIComponent(
+        `*[_type=="testimonial"]|order(order asc,_createdAt asc)` +
+        `{quote,name,at,stars,"portrait":portrait.asset->url}`);
+      fetch(`https://${SANITY.projectId}.apicdn.sanity.io/v${SANITY.apiVersion}` +
+            `/data/query/${SANITY.dataset}?query=${Q}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(({result}) => {
+          const live = (result || []).filter(r => r && r.quote && r.name);
+          if(!live.length) return;                 // keep the built-in five
+          T = live.map(r => ({
+            say  : r.quote,
+            name : r.name,
+            at   : r.at || '',
+            stars: Math.min(5, Math.max(1, parseInt(r.stars, 10) || 5)),
+            face : r.portrait
+              ? `url('${r.portrait}?w=160&h=160&fit=crop&crop=focalpoint&auto=format')`
+              : 'linear-gradient(160deg,#cdc4b4,#8a8072)',
+          }));
+          render();
+          go(Math.floor(T.length / 2));
+        })
+        .catch(err => console.warn('testimonials: keeping the built-in five —', err));
+    })();
 
     if(reduce){ sec.classList.add('in'); return; }
 
@@ -2020,6 +2154,151 @@
     });
 
     setTimeout(open, wait);
+  })();
+
+  /* ============ TESTIMONIALS PAGE CONTENT + CLIENT PHOTOS (Sanity) ============ */
+  /* The wording around the reviews, and the photo slider under them. Same rule
+     as the other pages: a blank field leaves the markup alone. The slider is
+     the one exception — it stays hidden until there are photographs. */
+  (function(){
+    const sec = document.getElementById('testimonials');
+    if(!sec) return;
+
+    const SANITY = {
+      projectId : 'lc9w15ba',
+      dataset   : 'production',
+      apiVersion: '2024-01-01',
+    };
+
+    const txt  = v => (typeof v === 'string' ? v.trim() : '');
+    const list = v => Array.isArray(v) ? v.map(txt).filter(Boolean) : [];
+    const esc  = v => txt(v).replace(/[&<>"]/g, c =>
+      ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const setText = (el, v) => { const s = txt(v); if(el && s) el.textContent = s; };
+
+    function fit(nodes, count, mount){
+      const out = [...nodes];
+      if(!out.length || count < 1) return out;
+      while(out.length > count) out.pop().remove();
+      while(out.length < count){
+        const clone = out[out.length - 1].cloneNode(true);
+        (mount || out[out.length - 1].parentNode).appendChild(clone);
+        out.push(clone);
+      }
+      return out;
+    }
+
+    const Q = encodeURIComponent(`*[_id=="testimonials-page"][0]{
+      label,heading,headingHighlight,introText,
+      galleryLabel,galleryTitle,galleryIntro,
+      gallery[]{caption,alt,"url":asset->url},
+      stripTitle,stripHighlight,stripText,stripButton
+    }`);
+
+    fetch(`https://${SANITY.projectId}.apicdn.sanity.io/v${SANITY.apiVersion}` +
+          `/data/query/${SANITY.dataset}?query=${Q}`)
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(({result:d}) => { if(d) paint(d); })
+      .catch(err => console.warn('testimonials page: keeping the built-in copy —', err));
+
+    /* the heading's last line ends in a gold phrase held in its own span —
+       keep that node and write the plain part before it */
+    function setSplitHeading(host, plain, gold){
+      if(!host) return;
+      const span = host.querySelector('.gold');
+      if(!span){ if(plain) host.textContent = plain; return; }
+      host.textContent = plain ? plain + ' ' : '';
+      if(gold) span.textContent = gold;
+      host.appendChild(span);
+    }
+
+    function paint(d){
+      setText(sec.querySelector('.tm-label'), d.label);
+
+      const head = list(d.heading);
+      if(head.length){
+        const h2 = sec.querySelector('.tm-title');
+        const lines = fit(h2 ? h2.querySelectorAll('.tm-ln') : [], head.length, h2);
+        lines.forEach((ln, i) => {
+          const it = ln.querySelector('i');
+          if(!it) return;
+          /* only the final line carries the gold phrase */
+          if(i === lines.length - 1 && it.querySelector('.gold'))
+            setSplitHeading(it, head[i], txt(d.headingHighlight));
+          else it.textContent = head[i];
+        });
+      }
+      setText(sec.querySelector('.tm-intro'), d.introText);
+
+      /* --- closing strip --- */
+      setSplitHeading(sec.querySelector('.tm-strip-mid h3'),
+                      txt(d.stripTitle), txt(d.stripHighlight));
+      setText(sec.querySelector('.tm-strip-mid p'), d.stripText);
+      const btn = sec.querySelector('.tm-btn');
+      if(btn && txt(d.stripButton)){
+        const arw = btn.querySelector('.arw');
+        btn.textContent = txt(d.stripButton);
+        if(arw) btn.appendChild(arw);
+      }
+
+      /* --- the client photo slider --- */
+      const shots = (Array.isArray(d.gallery) ? d.gallery : []).filter(g => g && txt(g.url));
+      if(!shots.length) return;                      // stays hidden
+
+      setText(document.getElementById('tgLabel'), d.galleryLabel);
+      setText(document.getElementById('tgTitle'), d.galleryTitle);
+      const intro = document.getElementById('tgIntro');
+      if(intro){
+        if(txt(d.galleryIntro)) intro.textContent = txt(d.galleryIntro);
+        else intro.remove();
+      }
+
+      const track = document.getElementById('tgTrack');
+      track.innerHTML = shots.map(g => {
+        const alt = esc(g.alt || g.caption || 'Raajlaxmi client');
+        return `<figure class="tg-item">
+          <div class="tg-ph">
+            <img src="${esc(g.url)}?w=760&h=570&fit=crop&crop=focalpoint&auto=format"
+                 loading="lazy" decoding="async" alt="${alt}">
+          </div>
+          ${txt(g.caption) ? `<figcaption class="tg-cap">${esc(g.caption)}</figcaption>` : ''}
+        </figure>`;
+      }).join('');
+
+      const wrap = document.getElementById('tmGallery');
+      wrap.hidden = false;
+
+      /* --- arrows nudge the same scroller the finger does --- */
+      const prev = document.getElementById('tgPrev'),
+            next = document.getElementById('tgNext');
+      const step = () => {
+        const first = track.querySelector('.tg-item');
+        if(!first) return track.clientWidth;
+        const gap = parseFloat(getComputedStyle(track).columnGap || '0') || 0;
+        return first.getBoundingClientRect().width + gap;
+      };
+      const nudge = dir => track.scrollBy({left: dir * step(),
+        behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+      prev?.addEventListener('click', ()=> nudge(-1));
+      next?.addEventListener('click', ()=> nudge(1));
+
+      /* an arrow with nowhere to go is dimmed rather than removed, so the row
+         does not jump when the slider reaches an end */
+      function ends(){
+        const max = track.scrollWidth - track.clientWidth;
+        if(prev) prev.disabled = track.scrollLeft <= 2;
+        if(next) next.disabled = track.scrollLeft >= max - 2;
+        const fits = max <= 2;
+        if(prev) prev.style.display = fits ? 'none' : '';
+        if(next) next.style.display = fits ? 'none' : '';
+      }
+      track.addEventListener('scroll', ends, {passive:true});
+      addEventListener('resize', ends, {passive:true});
+      /* images land after this runs and change scrollWidth */
+      addEventListener('load', ends);
+      setTimeout(ends, 0);
+      ends();
+    }
   })();
 
 </script>
