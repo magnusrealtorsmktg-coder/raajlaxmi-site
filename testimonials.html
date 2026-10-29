@@ -1240,10 +1240,17 @@
   /* the featured, centred card */
   .tm-card.on{transform:scale(1);opacity:1;border-color:rgba(198,161,91,.62);
     box-shadow:0 54px 100px -48px rgba(60,48,28,.45),0 14px 32px -20px rgba(60,48,28,.2);}
-  .tm-card:hover{transform:scale(.94) translateY(-8px);
-    box-shadow:0 46px 84px -44px rgba(60,48,28,.44),0 12px 26px -18px rgba(60,48,28,.18);}
-  .tm-card.on:hover{transform:scale(1) translateY(-8px);
-    box-shadow:0 66px 116px -48px rgba(60,48,28,.5),0 18px 38px -20px rgba(60,48,28,.24);}
+  /* The gold edge is the visible half of the pause: the script stops the
+     carousel while the pointer is over the stage, and the border says which
+     card is being held still. It is added to the rules that already own the
+     hover state rather than a rule of its own — a separate one would have had
+     to use !important and would have taken the lift's shadows with it. */
+  .tm-card:hover{transform:scale(.94) translateY(-8px);border-color:var(--champagne);
+    box-shadow:0 0 0 1px rgba(198,161,91,.5),
+               0 46px 84px -44px rgba(60,48,28,.44),0 12px 26px -18px rgba(60,48,28,.18);}
+  .tm-card.on:hover{transform:scale(1) translateY(-8px);border-color:var(--champagne);
+    box-shadow:0 0 0 1px rgba(198,161,91,.6),
+               0 66px 116px -48px rgba(60,48,28,.5),0 18px 38px -20px rgba(60,48,28,.24);}
 
   /* the decorative mark: opening on the side cards, closing on the featured one */
   .tm-q{font-family:"Playfair Display",serif;font-size:clamp(2.6rem,3.6vw,3.6rem);
@@ -2051,14 +2058,23 @@
     let auto = 0;
     function stopAuto(){ if(auto){ clearInterval(auto); auto = 0; } }
     function startAuto(){
-      if(reduce || document.hidden) return;
+      if(document.hidden) return;
       stopAuto();
       auto = setInterval(() => go(at + 1), AUTO);
     }
+    /* Note it does NOT bail out under prefers-reduced-motion. The reduced
+       branch already sets `.tm-track{transition:none}`, so the spread changes
+       without sliding — the reviews still rotate, nothing animates, and a
+       machine with that setting turned on does not simply show a carousel
+       that never moves. The arrows, dots and hover all remain as the way to
+       stop it. */
     /* a manual move restarts the clock rather than fighting the next tick */
     const nudge = () => { stopAuto(); startAuto(); };
     [prevBtn, nextBtn, dots, track].forEach(el => el && el.addEventListener('click', nudge));
-    [vp, dots].forEach(el => {
+    /* the stage, not the viewport: the side cards and the arrows sit outside
+       the viewport's box, and hovering those stopped nothing */
+    const stage = sec.querySelector('.tm-stage') || vp;
+    [stage].forEach(el => {
       if(!el) return;
       el.addEventListener('mouseenter', stopAuto);
       el.addEventListener('mouseleave', startAuto);

@@ -321,11 +321,21 @@ spread can be rebuilt and re-measured when the reviews arrive; its click and
 keyboard listeners are delegated to `track` and `dots`, which is what lets their
 children be replaced without rewiring.
 
-**The carousel advances by itself** every 5.2s, and yields to the reader: hovering,
-focusing or using any control stops the clock and restarts it afterwards, a hidden
-tab stops it entirely rather than racing through the set unseen, and
-`prefers-reduced-motion` opts out altogether — unrequested motion is exactly what
-that setting is asking about.
+**The carousel advances by itself** every 5.2s and yields to the reader: hovering
+or focusing **the stage** — not just the viewport, since the side cards and arrows
+sit outside its box — stops the clock and restarts it on leave, using any control
+restarts it rather than letting the next tick interrupt, and a hidden tab stops it
+entirely rather than racing through the set unseen. Hovering a card also draws a
+**gold border**: that is the visible half of the same gesture, saying which card is
+being held still. The border lives on the rules that already own `:hover` rather
+than a rule of its own — a separate one needed `!important` and took the lift's
+shadows with it.
+
+It deliberately **does not opt out under `prefers-reduced-motion`**. That branch
+already sets `.tm-track{transition:none}`, so the spread changes without sliding:
+the reviews still rotate, nothing animates, and a machine with the setting turned
+on does not simply show a carousel that never moves — which is what it looked like
+the first time round.
 
 **The circle beside the name holds initials, not a photograph.** The `portrait`
 field has been removed from the schema: nobody attaches a picture to a Google
