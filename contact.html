@@ -181,10 +181,15 @@
   .nav-wrap{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:center;
     padding:0;opacity:0;}
   /* scroll scrim: a soft fade for legibility, not a container */
-  .nav-wrap::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;
+  /* The scrim used to appear only once the page had scrolled, which left the
+     bar sitting unaided on the hero — the one place it has a photograph behind
+     it. It is on from the start and lifts over the ivory sections instead,
+     where `.on-light` has already flipped the type to charcoal. */
+  .nav-wrap::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:1;
     background:linear-gradient(to bottom, rgba(8,13,20,.62) 0%, rgba(8,13,20,.28) 58%, rgba(8,13,20,0) 100%);
     transition:opacity .6s var(--lux);}
   .nav-wrap.scrolled::before{opacity:1;}
+  .nav-wrap.on-light::before{opacity:0;}
 
   /* ---- adaptive nav: flips to charcoal over the ivory sections ----
      driven by sampling the real background behind the bar, so it also
@@ -195,7 +200,8 @@
     background:#F4F1EA;
     border-bottom:1px solid rgba(28,28,28,.08);
     box-shadow:0 8px 28px -18px rgba(40,32,18,.28);}
-  .nav-wrap.on-light .nav-links a{color:rgba(29,34,41,.66);}
+  /* no shadow over paper — it only muddies charcoal type */
+  .nav-wrap.on-light .nav-links a{color:rgba(29,34,41,.78);text-shadow:none;}
   .nav-wrap.on-light .nav-links a:hover,
   .nav-wrap.on-light .nav-links a.active{color:#1D2229;}
   .nav-wrap.on-light .nav-menu{background:rgba(255,255,255,.95);
@@ -203,7 +209,7 @@
   .nav-wrap.on-light .nav-menu a{color:rgba(29,34,41,.7);}
   .nav-wrap.on-light .nav-menu a:hover{color:#1D2229;background:rgba(201,161,90,.16);}
   .nav-wrap.on-light .nav-cta{color:#1D2229;border-color:rgba(29,34,41,.28);
-    background:rgba(29,34,41,.02);}
+    background:rgba(29,34,41,.02);text-shadow:none;}
   .nav-wrap.on-light .nav-cta:hover{border-color:var(--champagne);color:#8A6E33;
     background:rgba(203,169,107,.10);}
   .nav-wrap.on-light .burger span{background:#1D2229;}
@@ -232,8 +238,13 @@
   .brand-logo-light{position:absolute;left:0;top:50%;transform:translateY(-50%);opacity:0;}
   .nav.scrolled .brand-logo{height:clamp(30px,3vw,38px);}
   .nav-links{display:flex;gap:2.6rem;}
+  /* Full-strength paper, not the 66% tint it used to be: the hero is a
+     photograph now and can be a bright sunset, against which a translucent
+     cream label all but disappears. The shadow is the second half of that —
+     it carries the type over whatever happens to be behind it. */
   .nav-links a{position:relative;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;
-    color:var(--paper-dim);font-weight:400;padding:.3rem 0;transition:color .4s var(--lux);}
+    color:var(--paper);font-weight:400;padding:.3rem 0;
+    text-shadow:0 1px 12px rgba(8,13,20,.55);transition:color .4s var(--lux);}
   .nav-links a::after{content:"";position:absolute;left:0;bottom:-2px;height:1px;width:0;
     background:var(--champagne);transition:width .45s var(--lux);}
   .nav-links a:hover{color:var(--paper);}
@@ -259,8 +270,9 @@
   .nav-menu a:hover{color:var(--champagne-soft);background:rgba(203,169,107,.12);}
   .nav-cta{
     font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--paper);
-    padding:.72rem 1.35rem;border:1px solid var(--glass-line-2);border-radius:999px;
-    background:rgba(255,255,255,.02);transition:all .45s var(--lux);white-space:nowrap;
+    padding:.72rem 1.35rem;border:1px solid rgba(255,255,255,.42);border-radius:999px;
+    background:rgba(8,13,20,.18);text-shadow:0 1px 12px rgba(8,13,20,.55);
+    transition:all .45s var(--lux);white-space:nowrap;
   }
   .nav-cta:hover{border-color:var(--champagne);color:var(--champagne-soft);background:rgba(203,169,107,.08);}
   .burger{display:none;width:28px;height:16px;position:relative;cursor:pointer;}

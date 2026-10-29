@@ -219,6 +219,35 @@ Anything that should animate in after the cover lifts registers with **`window.o
 - `data-to` + `data-suffix` — counter target; counts once when its section arrives
 - `.in` on a wrapper — the reveal class every section's observer adds
 
+**Navbar legibility over photography.** The bar's links were `--paper-dim`, a 66%
+cream, and the scrim behind them only appeared once the page had scrolled. With a
+CMS hero that can be a bright sunset, that left the labels almost invisible on the
+one screen that has a photograph behind them. The links are now full-strength
+`--paper` with a soft shadow, the CTA has a firmer border and ground, and the scrim
+is **on from the start and lifts under `.on-light`** instead — over ivory the type
+is already charcoal and a dark veil there would be wrong. Shadows are cleared in the
+`.on-light` state, where they only muddy charcoal.
+
+**The hero search is built from the published projects.** Property and Location were
+a hand-typed list in the `homepage` singleton that matched nothing — a visitor could
+choose a locality the group does not build in, and the form merely scrolled the
+page. The block at the end of `index.html` now reads the completed projects and
+fills both lists from them, so every option has at least one property behind it, and
+submitting navigates to `projects.html?status=completed&type=…&loc=…`, which the
+three collection files read and AND with the status and the active city chip.
+
+Three details are load-bearing. `"2 & 3 BHK"` is **expanded into separate options**
+(`2 BHK`, `3 BHK`) on both sides, or a search for one would never match the other.
+The **town is the last part of the address**, not the first — the chips key off the
+first part, which is a sub-locality, so the link filters on a substring of the whole
+line rather than trying to agree with them; and `"Vasai (East)"` and `"Vasai East"`
+are **folded on a punctuation-free key** so one town does not appear twice and a
+search matches both spellings. Both blocks fill the same `<select>`s and their
+fetches race, so the project-derived list sets `dataset.src = 'projects'` and the
+CMS filler stands down — whichever lands second, the real data wins. **Budget hides
+itself** while fewer than two projects carry a price: a filter with nothing to sort
+on is worse than no filter, and it returns on its own once prices are filled in.
+
 **Adaptive navbar** (last IIFE, every file). It samples the actual painted background behind `#navWrap` at three x-positions per scroll tick, averages relative luminance, and toggles `.on-light` (charcoal text) above a threshold of 150. Reading the live background rather than tagging sections means it keeps working when light sections are added. Full-bleed overlays that darken a light section from above carry `pointer-events:none`, so `elementsFromPoint` can't see them — they're listed in the `DARK_OVERLAYS` array (currently `['veil']`) and tested by geometry/opacity instead. **If you add another full-bleed dark overlay, add its id to `DARK_OVERLAYS` in all eight files.**
 
 **Single-column grid tracks need `minmax(0,1fr)`, not `1fr`.** A `1fr` track floors at its content's min-width, so one nowrap child (the detail page's tab row) inflates the whole column past a narrow viewport instead of scrolling inside its own `overflow-x:auto` container. Every stacking rule in the Section VI media queries uses `minmax(0,…)` for this reason.
