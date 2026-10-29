@@ -1281,6 +1281,15 @@
   .pd-loc .bar{color:rgba(79,79,79,.4);}
 
   /* ---- fact bar ---- */
+  /* Sits between the location and the fact bar — the order a buyer reads in:
+     what it is, where it is, what it costs, then the detail. `hidden` holds it
+     out of the layout entirely until a price exists, so a project without one
+     shows no empty row. */
+  .pd-price{margin-top:clamp(1rem,1.8vw,1.4rem);font-family:"Inter",sans-serif;
+    font-weight:600;font-size:clamp(1.15rem,2vw,1.5rem);letter-spacing:.01em;
+    color:var(--gold-deep);}
+  .pd-price[hidden]{display:none;}
+
   .pd-facts{margin-top:clamp(1.6rem,2.6vw,2.2rem);background:#FBF9F5;
     border:1px solid rgba(28,28,28,.07);border-radius:14px;
     display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
@@ -1653,6 +1662,9 @@
           Nalasopara West <span class="bar">|</span> Commercial
         </div>
 
+        <!-- the price, when the project carries one; hidden until it does -->
+        <div class="pd-price" id="pdPrice" hidden></div>
+
         <!-- PLACEHOLDER: figures are the client's mock, unverified -->
         <div class="pd-facts" id="pdFacts"></div>
 
@@ -1948,6 +1960,12 @@
       if(heroP) heroP.textContent = DOC.heroText || [DOC.config, DOC.location]
         .filter(Boolean).join(' in ') || (DOC.status || '');
 
+      const price = document.getElementById('pdPrice');
+      if(price){
+        if(DOC.price){ price.textContent = DOC.price; price.hidden = false; }
+        else price.hidden = true;
+      }
+
       txt(sec.querySelector('.pd-h'), DOC.highlightsTitle);
 
       /* "Request Brochure" points at the enquiry form until a real file exists */
@@ -1985,10 +2003,11 @@
     const FACTS = (function(){
       if(!DOC) return FALLBACK.facts;
       if(DOC.specs?.length) return DOC.specs.slice(0,4).map(s=>[s.label, s.value]);
+      /* price is deliberately absent here: it has its own line above the bar,
+         and listing it twice read as two different numbers at a glance */
       return [
         DOC.config && ['Configuration', DOC.config],
-        DOC.price  && ['Starting From',  DOC.price],
-        DOC.status && ['Possession',     DOC.status]
+        DOC.status && ['Possession',    DOC.status]
       ].filter(Boolean);
     })();
     const factsEl = document.getElementById('pdFacts');

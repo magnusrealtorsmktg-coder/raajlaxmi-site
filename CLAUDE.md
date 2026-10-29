@@ -160,8 +160,18 @@ the Project Highlights heading is removed along with its paragraph when a projec
 has no `overview` — a heading left standing alone reads as content that failed to
 load.
 
+**Price** is its own field on every project and shows in two places: a gold line
+on the collection card, between the configuration/area row and "View Details",
+and a larger gold line on the detail page between the location and the fact bar
+— the order a buyer reads in (what it is, where it is, what it costs, then the
+detail). It is **absent from the fact-bar fallback on purpose**: printed there
+as well it read as two different numbers at a glance. A project with no price
+shows no line at all in either place rather than an empty row, and the field now
+sits beside Area in the Studio rather than inside the collapsed *Detail page*
+fieldset, because it is card content as much as detail content.
+
 The fact bar is filled from Sanity's free-form `specs[]` (first four label/value
-pairs), falling back to config / price / status when a project carries no specs.
+pairs), falling back to config / status when a project carries no specs.
 The hero's painted-on line ("Modern Living by the Arabian Sea") belongs to Romal
 Kirti, so a hydrated project gets its own name and configuration there instead of
 inheriting it.

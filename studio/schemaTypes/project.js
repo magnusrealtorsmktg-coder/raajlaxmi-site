@@ -106,6 +106,13 @@ export default {
       description: 'e.g. "850 – 1800 Sq. Ft."',
     },
     {
+      name: 'price',
+      title: 'Price',
+      type: 'string',
+      description:
+        'Printed on the project\'s card and again on its detail page — e.g. "₹1.8 Cr*" or "Price on request". Write it exactly as it should appear, symbol and all. Leave it empty and no price is shown anywhere.',
+    },
+    {
       name: 'detailUrl',
       title: 'Detail page',
       type: 'string',
@@ -116,13 +123,6 @@ export default {
     },
 
     /* ---------- detail page (project.html?p=<slug>) ---------- */
-    {
-      name: 'price',
-      title: 'Price line',
-      type: 'string',
-      description: 'Shown in the fact bar, e.g. "₹1.8 Cr*". Leave empty to hide it.',
-      fieldset: 'detail',
-    },
     {
       name: 'gallery',
       title: 'Gallery images',

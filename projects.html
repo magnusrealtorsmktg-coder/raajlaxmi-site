@@ -1065,6 +1065,11 @@
   .col-meta > div{display:flex;align-items:center;gap:.5rem;font-family:"Inter",sans-serif;
     font-size:.72rem;color:var(--charcoal);}
   .col-meta .ic{flex:none;color:#C6A15B;display:flex;}
+  /* the price, when the project carries one — the card simply omits the line
+     when it does not, rather than printing an empty row */
+  .col-price{margin-top:.95rem;font-family:"Inter",sans-serif;font-weight:600;
+    font-size:.95rem;letter-spacing:.01em;color:var(--gold-deep);}
+
   .col-details{display:inline-flex;align-items:center;gap:.6rem;margin-top:1.1rem;
     font-family:"Inter",sans-serif;font-size:.68rem;font-weight:600;letter-spacing:.12em;
     text-transform:uppercase;color:#C6A15B;transition:gap .4s var(--lux);}
@@ -1688,6 +1693,7 @@
               <div class="col-loc">${PIN}${p.location || ''}</div>
               <p class="col-desc">${p.blurb || ''}</p>
               <div class="col-meta"><div>${BED}${p.config || ''}</div><div>${AREA}${p.area || ''}</div></div>
+              ${p.price ? `<div class="col-price">${p.price}</div>` : ''}
               <a class="col-details" href="${detailHref(p)}" data-hover>View Details<i class="arw"></i></a>
             </div>
           </article>`).join('');
@@ -1718,7 +1724,7 @@
        listed under Settings → API → CORS origins in manage.sanity.io. */
     if(SANITY.projectId){
       const query = `*[_type=="project"]|order(order asc,_createdAt asc){
-        name,stage,status,category,location,blurb,config,area,detailUrl,
+        name,stage,status,category,location,blurb,config,area,price,detailUrl,
         "slug":slug.current,"imageUrl":image.asset->url
       }`;
       const url = `https://${SANITY.projectId}.apicdn.sanity.io/v${SANITY.apiVersion}` +
