@@ -1258,9 +1258,13 @@
   .tm-rule{height:1px;background:rgba(198,161,91,.34);margin:auto 0 0;
     padding-top:0;margin-top:clamp(1.4rem,2vw,1.9rem);}
   .tm-who{display:flex;align-items:center;gap:.9rem;margin-top:clamp(1rem,1.5vw,1.3rem);}
+  /* the reviewer's initials, not a photograph — nobody sends one with a Google
+     review, so the circle used to sit there as a grey placeholder for ever */
   .tm-face{flex:none;width:3.3rem;height:3.3rem;border-radius:50%;
-    background-size:cover;background-position:center;background-color:#E5DFD3;
-    border:1px solid rgba(198,161,91,.45);}
+    display:grid;place-items:center;
+    font-family:"Inter",sans-serif;font-weight:600;font-size:1rem;
+    letter-spacing:.04em;color:var(--paper);
+    border:1px solid rgba(255,255,255,.22);}
   .tm-name{font-family:"Inter",sans-serif;font-size:.92rem;font-weight:600;color:#B08A44;}
   .tm-at{font-family:"Inter",sans-serif;font-size:.78rem;font-weight:300;color:var(--body);
     margin-top:.15rem;}
@@ -1865,7 +1869,7 @@
       apiVersion: '2024-01-01',
     };
 
-    /* PLACEHOLDER: every quote, name and portrait below is written copy, not a
+    /* PLACEHOLDER: every quote and name below is written copy, not a
        real client. Replace with signed testimonials before launch — this is the
        one section whose whole value is that it is true. */
     const FALLBACK = [
@@ -1892,10 +1896,30 @@
       '</svg>';
 
     const STAR = '<svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M7 .8l1.9 3.9 4.3.6-3.1 3 .7 4.3L7 10.6 3.2 12.6l.7-4.3-3.1-3 4.3-.6z"/></svg>';
-    /* PLACEHOLDER portraits: seeded picsum over a tonal gradient, same
-       convention as the collection grid. */
-    const face = seed =>
-      `url('https://picsum.photos/seed/${seed}/160/160'),linear-gradient(160deg,#cdc4b4,#8a8072)`;
+    /* "Dhiraj Solanki" -> "DS". Honorifics are dropped so "Mr. Arvind Sharma"
+       gives AS rather than MA, and anything that is not a letter (the & in
+       "Mr. & Mrs. Deshpande", full stops) is stripped before the first letters
+       are taken. A single name falls back to its first two letters. */
+    const HONORIFIC = /^(mr|mrs|ms|miss|dr|shri|smt|sri|prof)$/i;
+    function initialsOf(name){
+      const parts = String(name || '')
+        .split(/\s+/)
+        .map(w => w.replace(/[^A-Za-z\u00C0-\u024F]/g, ''))
+        .filter(w => w && !HONORIFIC.test(w));
+      if(!parts.length) return '\u2014';
+      if(parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+
+    /* A fixed set of grounds from the site's own palette, all dark enough to
+       carry cream type. The name picks one, so the same person keeps the same
+       colour between visits rather than flickering on every render. */
+    const TONES = ['#1B3556', '#B08A3E', '#3A3732', '#5A6B7F', '#6B4F2A', '#4A5A43'];
+    function toneOf(name){
+      let n = 0;
+      for(const ch of String(name || '')) n = (n + ch.charCodeAt(0)) % 9973;
+      return TONES[n % TONES.length];
+    }
 
     const track = document.getElementById('tmTrack');
     const vp    = document.getElementById('tmViewport');
@@ -1905,8 +1929,8 @@
       .replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
     /* the written-in five, normalised to the same shape the CMS answers in */
-    let T = FALLBACK.map(([say,name,at,seed]) =>
-      ({say, name, at, face: face(seed), stars: 5, google: ''}));
+    let T = FALLBACK.map(([say,name,at]) =>
+      ({say, name, at, stars: 5, google: ''}));
 
     let cards = [], dotEls = [], at = 0;
 
@@ -1921,7 +1945,7 @@
         <p class="tm-say">${esc(t.say)}</p>
         <div class="tm-rule" aria-hidden="true"></div>
         <div class="tm-who">
-          <div class="tm-face" style="background-image:${t.face}" role="img" aria-label="${esc(t.name)}"></div>
+          <div class="tm-face" style="background:${toneOf(t.name)}" aria-hidden="true">${esc(initialsOf(t.name))}</div>
           <div>
             <div class="tm-name">${esc(t.name)}</div>
             <div class="tm-at">${esc(t.at)}</div>
@@ -1965,8 +1989,10 @@
     if(document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
     addEventListener('resize', layout, {passive:true});
 
-    document.getElementById('tmPrev').addEventListener('click', ()=> go(at - 1));
-    document.getElementById('tmNext').addEventListener('click', ()=> go(at + 1));
+    const prevBtn = document.getElementById('tmPrev'),
+          nextBtn = document.getElementById('tmNext');
+    prevBtn.addEventListener('click', ()=> go(at - 1));
+    nextBtn.addEventListener('click', ()=> go(at + 1));
     dots.addEventListener('click', e=>{
       const d = e.target.closest('.tm-dot'); if(d) go(+d.dataset.i);
     });
@@ -1994,7 +2020,7 @@
     (function(){
       const Q = encodeURIComponent(
         `*[_type=="testimonial"]|order(order asc,_createdAt asc)` +
-        `{quote,name,at,stars,googleUrl,"portrait":portrait.asset->url}`);
+        `{quote,name,at,stars,googleUrl}`);
       fetch(`https://${SANITY.projectId}.apicdn.sanity.io/v${SANITY.apiVersion}` +
             `/data/query/${SANITY.dataset}?query=${Q}`)
         .then(r => r.ok ? r.json() : Promise.reject(r.status))
@@ -2007,15 +2033,41 @@
             at   : r.at || '',
             stars: Math.min(5, Math.max(1, parseInt(r.stars, 10) || 5)),
             google: r.googleUrl || '',
-            face : r.portrait
-              ? `url('${r.portrait}?w=160&h=160&fit=crop&crop=focalpoint&auto=format')`
-              : 'linear-gradient(160deg,#cdc4b4,#8a8072)',
           }));
           render();
           go(Math.floor(T.length / 2));
         })
         .catch(err => console.warn('testimonials: keeping the built-in five —', err));
     })();
+
+    /* --- autoplay ------------------------------------------------------
+       The spread moves on by itself so the reviews are seen without anyone
+       having to touch the arrows. It yields to the reader: hovering, focusing
+       or using any control stops the clock and restarts it afterwards, and a
+       hidden tab stops it entirely rather than racing through the set while
+       nobody is looking. `reduce` opts out altogether — this is exactly the
+       kind of unrequested motion that setting is asking about. */
+    const AUTO = 5200;
+    let auto = 0;
+    function stopAuto(){ if(auto){ clearInterval(auto); auto = 0; } }
+    function startAuto(){
+      if(reduce || document.hidden) return;
+      stopAuto();
+      auto = setInterval(() => go(at + 1), AUTO);
+    }
+    /* a manual move restarts the clock rather than fighting the next tick */
+    const nudge = () => { stopAuto(); startAuto(); };
+    [prevBtn, nextBtn, dots, track].forEach(el => el && el.addEventListener('click', nudge));
+    [vp, dots].forEach(el => {
+      if(!el) return;
+      el.addEventListener('mouseenter', stopAuto);
+      el.addEventListener('mouseleave', startAuto);
+      el.addEventListener('focusin',  stopAuto);
+      el.addEventListener('focusout', startAuto);
+    });
+    document.addEventListener('visibilitychange',
+      () => document.hidden ? stopAuto() : startAuto());
+    startAuto();
 
     if(reduce){ sec.classList.add('in'); return; }
 

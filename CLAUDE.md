@@ -321,6 +321,20 @@ spread can be rebuilt and re-measured when the reviews arrive; its click and
 keyboard listeners are delegated to `track` and `dots`, which is what lets their
 children be replaced without rewiring.
 
+**The carousel advances by itself** every 5.2s, and yields to the reader: hovering,
+focusing or using any control stops the clock and restarts it afterwards, a hidden
+tab stops it entirely rather than racing through the set unseen, and
+`prefers-reduced-motion` opts out altogether — unrequested motion is exactly what
+that setting is asking about.
+
+**The circle beside the name holds initials, not a photograph.** The `portrait`
+field has been removed from the schema: nobody attaches a picture to a Google
+review, so it sat there as a grey placeholder for ever. `initialsOf()` drops
+honorifics and non-letters before taking the first and last initials — "Dhiraj
+Solanki" gives DS, "Mr. & Mrs. Deshpande" gives MD rather than M& — and `toneOf()`
+picks one of six dark grounds from the site palette by hashing the name, so a person
+keeps the same colour between visits instead of flickering on every render.
+
 Each review can carry a **Google review link** (`googleUrl`). When it does, a small
 four-colour Google button appears in the bottom-right corner of that card and opens
 the review in a new tab; a review without one shows no button. The mark is drawn in

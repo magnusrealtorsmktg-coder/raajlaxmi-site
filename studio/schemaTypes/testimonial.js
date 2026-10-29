@@ -30,14 +30,6 @@ export default {
       description: 'The line under the name — e.g. "Priti Darpan, Saphale".',
     },
     {
-      name: 'portrait',
-      title: 'Photograph',
-      type: 'image',
-      options: {hotspot: true},
-      description:
-        'The small round picture beside the name. It is cropped to a circle, so set the hotspot on the face. Leave blank and a plain tone is shown instead.',
-    },
-    {
       name: 'googleUrl',
       title: 'Google review link',
       type: 'url',
@@ -72,6 +64,6 @@ export default {
   ],
 
   preview: {
-    select: {title: 'name', subtitle: 'at', media: 'portrait'},
+    select: {title: 'name', subtitle: 'at'},
   },
 }
