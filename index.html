@@ -1340,6 +1340,17 @@
     .lead-card,.lead.on .lead-card{transition:none;transform:none;}
   }
 
+  /* ===== HERO BACKGROUND VIDEO (from Sanity) =====
+     Injected into .hero-media, which the mouse parallax already transforms, so
+     it drifts with the still it replaces. The background image stays underneath
+     as the fallback: if the file never loads, the hero is still a photograph. */
+  .hero-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+    z-index:0;pointer-events:none;border:0;}
+  @media (prefers-reduced-motion:reduce){
+    /* a looping background is exactly what this setting is asking not to see */
+    .hero-vid{display:none;}
+  }
+
 </style>
 </head>
 <body>
@@ -2431,6 +2442,7 @@
 
     const Q = encodeURIComponent(`*[_id=="homepage"][0]{
       heroHeadline,heroSub,heroPropertyOptions,heroLocationOptions,heroBudgetOptions,heroButton,
+      "heroImageUrl":heroImage.asset->url,"heroVideoUrl":heroVideo.asset->url,
       aboutLabel,aboutGhost,aboutHeading,aboutParagraphs,"aboutImageUrl":aboutImage.asset->url,
       stats,
       signatureLabel,signatureHeading,signatureIntro,
@@ -2444,6 +2456,47 @@
       .catch(err => console.warn('home page content: keeping the built-in copy —', err));
 
     function paint(d){
+      /* ---------- the hero's background ----------
+         Order of preference: the video, then the photograph, then the picture
+         built into this file. The photograph is painted even when a video is
+         set, because it is what shows while the video buffers, on phones, and
+         if the video fails outright. */
+      const media = document.getElementById('media');
+      const shot  = txt(d.heroImageUrl);
+      if(media && shot){
+        media.style.backgroundImage =
+          `url('${shot}?w=2400&q=80&auto=format&fit=max')`;
+      }
+
+      const film = txt(d.heroVideoUrl);
+      /* Skipped where it would cost a visitor real money or go against a stated
+         preference: on phones, on a metered or data-saver connection, and under
+         prefers-reduced-motion. All three fall back to the still above. */
+      const saveData = !!(navigator.connection && navigator.connection.saveData);
+      const small = matchMedia('(max-width:620px)').matches;
+      const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if(media && film && !saveData && !small && !still){
+        const v = document.createElement('video');
+        v.className = 'hero-vid';
+        v.src = film;
+        if(shot) v.poster = `${shot}?w=1600&q=70&auto=format&fit=max`;
+        v.muted = true;            // set before autoplay, or the browser blocks it
+        v.defaultMuted = true;
+        v.loop = true;
+        v.autoplay = true;
+        v.playsInline = true;
+        v.setAttribute('playsinline', '');      // older iOS reads the attribute
+        v.preload = 'auto';
+        v.tabIndex = -1;
+        v.setAttribute('aria-hidden', 'true');
+        /* a file that will not load leaves the still showing rather than a
+           black rectangle over the headline */
+        v.addEventListener('error', () => v.remove(), {once:true});
+        media.prepend(v);
+        const go = v.play();
+        if(go && go.catch) go.catch(() => v.remove());   // autoplay refused
+      }
+
       /* ---------- hero ---------- */
       const headline = list(d.heroHeadline);
       if(headline.length){

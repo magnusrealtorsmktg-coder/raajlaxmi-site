@@ -40,6 +40,27 @@ export default {
       ),
       group: 'hero',
     },
+    /* The hero's background. A video wins over a photograph, and a photograph
+       wins over the picture built into index.html — so the client can replace
+       the skyline without anyone touching the file. */
+    {
+      name: 'heroImage',
+      title: 'Background photograph',
+      type: 'image',
+      options: {hotspot: true},
+      description:
+        'Replaces the night skyline behind the headline. It is cropped to fill whatever shape the screen is, so set the hotspot on the part that must stay visible. A wide, dark-ish picture works best — the headline sits over the left of it in white. Leave blank to keep the built-in skyline.',
+      group: 'hero',
+    },
+    {
+      name: 'heroVideo',
+      title: 'Background video',
+      type: 'file',
+      options: {accept: 'video/mp4,video/webm,video/quicktime'},
+      description:
+        'Plays silently on a loop behind the headline, and is used instead of the photograph above when both are set. Keep it short and small — under about 10 seconds and 8MB — because every visitor downloads it. It is skipped on phones and when a visitor has data-saving on, so set a photograph above as well: that is what they will see.',
+      group: 'hero',
+    },
     {
       name: 'heroSub',
       title: 'Sub-headline',
