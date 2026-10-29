@@ -2464,6 +2464,64 @@
       .then(({result:d}) => { if(d) paint(d); })
       .catch(err => console.warn('home page content: keeping the built-in copy —', err));
 
+    /* The headline is written in the CMS now, so its length is not something
+       the design can assume. `.line-reveal` is `width:max-content` with
+       `max-width:100%`, which means a line too wide for the column does not
+       overflow — it *wraps*, turning four lines into six and pushing the
+       sub-head and the search form off the bottom of the screen while the top
+       line runs under the navbar.
+
+       So the type sizes itself: shrink until the longest line fits on one
+       line, then keep shrinking until the whole block clears the navbar and
+       the foot of the hero. A short headline still gets the full 96px. */
+    function fitHeadline(){
+      const h1   = document.querySelector('.headline');
+      const box  = document.getElementById('content');
+      const hero = document.getElementById('hero');
+      if(!h1 || !box || !hero) return;
+      const lines = [...h1.querySelectorAll('.line-inner')];
+      if(!lines.length) return;
+
+      /* the design's own size: the CSS clamp(2.5rem, 6.4vw, 6rem), floors and
+         all — without the 40px minimum a phone would get smaller type than it
+         had before any of this */
+      const base = Math.min(96, Math.max(40, innerWidth * 0.064));
+      h1.style.fontSize = base + 'px';
+
+      /* 1. width — on a wide screen, shrink until the longest line sits on one
+         line. On a phone that is the wrong trade: forcing "YOUR TRUSTED
+         PARTNER" onto one 420px line costs more in legibility than wrapping
+         does, so there the type keeps its size and is allowed to wrap. */
+      const narrow = innerWidth < 760;
+      const floor = narrow ? 28 : 22;
+      let size = base;
+      if(!narrow){
+        h1.style.whiteSpace = 'nowrap';
+        let widest = 0;
+        lines.forEach(l => { widest = Math.max(widest, l.scrollWidth); });
+        h1.style.whiteSpace = '';
+        const room = box.clientWidth;
+        if(widest > room && room > 0) size = Math.max(floor, Math.floor(base * room / widest));
+      }
+      h1.style.fontSize = size + 'px';
+
+      /* 2. height — the block is centred on 57% of the hero, so it may not
+         grow past twice the smaller of the two gaps around that line */
+      const H = hero.clientHeight, NAV = 104, FOOT = 44;
+      const allowed = 2 * Math.min(H * 0.57 - NAV, H * 0.43 - FOOT);
+      let guard = 0;
+      while(box.offsetHeight > allowed && size > floor && guard++ < 90){
+        size -= 1;
+        h1.style.fontSize = size + 'px';
+      }
+    }
+
+    /* fit what is in the file now; paint() fits again once the CMS answers */
+    fitHeadline();
+    addEventListener('resize', fitHeadline, {passive:true});
+    /* Archivo Black lands after first paint and changes every measurement */
+    if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitHeadline);
+
     /* A heading line whose last word carries the gold full stop as its own
        `.dot` node: keep that node and trim a trailing stop off the CMS text,
        or the line renders with two. */
@@ -2530,6 +2588,7 @@
         fit(h1 ? h1.querySelectorAll('.line-reveal') : [], headline.length, h1)
           .forEach((ln, i) => setText(ln.querySelector('.line-inner'), headline[i]));
       }
+      if(headline.length) fitHeadline();
       setText(document.querySelector('.hero-content .sub'), d.heroSub);
       paintSelect(document.getElementById('hsType'),   list(d.heroPropertyOptions));
       paintSelect(document.getElementById('hsLoc'),    list(d.heroLocationOptions));

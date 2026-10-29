@@ -305,6 +305,19 @@ paragraph depending on whether the CMS gives it a `link`, so "Business Hours"
 stays plain text while "Call Us" becomes a `tel:`. The **map pin is a geopoint**
 that drives both the directions button and the embedded Google frame.
 
+**The hero headline sizes itself.** Its length is CMS-written now, so the design
+cannot assume it. `.line-reveal` is `width:max-content` with `max-width:100%`,
+which means a line too wide for the column does not overflow — it *wraps*, and a
+long headline turned into six lines that ran under the navbar and pushed the
+search form off the bottom. `fitHeadline()` shrinks the type until the longest
+line sits on one line, then until the block clears the navbar and the foot of the
+hero (it is centred on 57%, so it may not exceed twice the smaller of the two
+gaps). It runs on load, on resize, on `fonts.ready` — Archivo Black lands after
+first paint and changes every measurement — and again once the CMS answers. Below
+760px the width step is skipped: forcing a long line onto one phone-width line
+costs more legibility than wrapping does. `base` honours the CSS clamp's 40px
+minimum, or a phone would get smaller type than it had before.
+
 **Hero, About and Why can each take a video.** `mountVideo()` in the home-page
 block is shared by all three: it drops a silent looping `<video>` into an element
 that is already showing a picture, and is **skipped on phones, on data-saver
