@@ -321,21 +321,32 @@ spread can be rebuilt and re-measured when the reviews arrive; its click and
 keyboard listeners are delegated to `track` and `dots`, which is what lets their
 children be replaced without rewiring.
 
-**The carousel advances by itself** every 5.2s and yields to the reader: hovering
-or focusing **the stage** — not just the viewport, since the side cards and arrows
-sit outside its box — stops the clock and restarts it on leave, using any control
-restarts it rather than letting the next tick interrupt, and a hidden tab stops it
-entirely rather than racing through the set unseen. Hovering a card also draws a
-**gold border**: that is the visible half of the same gesture, saying which card is
-being held still. The border lives on the rules that already own `:hover` rather
-than a rule of its own — a separate one needed `!important` and took the lift's
-shadows with it.
+**The reviews run as a continuous marquee**, not a stepped carousel. The set is
+rendered **twice**; the script measures one set's width into `--tm-loop` and turns
+it into `--tm-dur` at `SPEED` (70) pixels a second, and `@keyframes tm-marquee`
+translates by exactly one set width before starting over, so the seam is invisible.
+`SPEED` is the one number to turn.
 
-It deliberately **does not opt out under `prefers-reduced-motion`**. That branch
-already sets `.tm-track{transition:none}`, so the spread changes without sliding:
-the reviews still rotate, nothing animates, and a machine with the setting turned
-on does not simply show a carousel that never moves — which is what it looked like
-the first time round.
+It is **a CSS animation rather than a per-frame transform** for three reasons: the
+compositor drives it so it stays smooth while the main thread is busy;
+`.tm-stage:hover` pauses it with `animation-play-state` and no script at all; and a
+background tab stops it without being asked. It is also the only version that can
+be **verified locally** — headless Chrome throttles `requestAnimationFrame` to
+about three frames a second, so an rAF marquee looks frozen in every local check,
+while a CSS animation advances with virtual time and shows up in a screenshot diff.
+
+Hovering a card draws a **gold border**: the visible half of the same gesture,
+saying which card is being held still. The border lives on the rules that already
+own `:hover` rather than a rule of its own.
+
+Two consequences of never stopping. **Every card is equal** — there is no settled
+middle one to feature, and a card that grew as it drifted past would wobble the
+row — so `.tm-card`'s `scale(.94)`/`opacity:.62` side-card treatment is overridden.
+And the **arrows and dots are hidden**, because a strip with no discrete slides
+gives them nothing to point at; they are `display:none` rather than deleted, so
+dropping `.tm-stage .tm-arw` and `.tm-stage .tm-dots` brings the stepped controls
+back. Under `prefers-reduced-motion` the animation is `none` and the strip simply
+rests.
 
 **The circle beside the name holds initials, not a photograph.** The `portrait`
 field has been removed from the schema: nobody attaches a picture to a Google

@@ -1227,8 +1227,35 @@
   .tm-viewport{overflow:hidden;padding:1.6rem clamp(0px,1vw,1rem) 2.2rem;
     -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 7%,#000 93%,transparent 100%);
             mask-image:linear-gradient(90deg,transparent 0,#000 7%,#000 93%,transparent 100%);}
+  /* The strip runs continuously. One full set of cards is `--tm-loop` wide and
+     the set is rendered twice, so translating by exactly that much and
+     starting over is seamless. Both custom properties are written by the
+     script once the cards have been measured; until then the animation has
+     nothing to travel and simply sits still. */
+  @keyframes tm-marquee{
+    from{transform:translateX(0);}
+    to  {transform:translateX(calc(-1 * var(--tm-loop, 0px)));}
+  }
   .tm-track{display:flex;align-items:stretch;gap:clamp(1rem,1.8vw,1.9rem);
-    will-change:transform;transition:transform .95s var(--lux);}
+    will-change:transform;
+    animation:tm-marquee var(--tm-dur, 40s) linear infinite;}
+
+  /* hover or keyboard focus anywhere on the stage holds it still — the card
+     under the pointer takes the gold border, so the pause is visible */
+  .tm-stage:hover .tm-track,
+  .tm-stage:focus-within .tm-track{animation-play-state:paused;}
+
+  /* Every card is now equal: with the strip always moving there is no settled
+     middle one to feature, and a card that grew as it drifted past would
+     wobble the whole row. */
+  .tm-card{transform:none !important;opacity:1 !important;}
+  .tm-card:hover{transform:translateY(-8px) !important;}
+
+  /* The arrows and dots steered a carousel that moved one card at a time.
+     A strip that never stops has no discrete slides for them to point at.
+     Delete these two rules to bring them back. */
+  .tm-stage .tm-arw{display:none;}
+  .tm-stage .tm-dots{display:none;}
 
   .tm-card{position:relative;flex:0 0 clamp(268px,26vw,400px);display:flex;flex-direction:column;
     background:#fff;border-radius:28px;border:1px solid rgba(198,161,91,.2);
@@ -1369,7 +1396,7 @@
     .tm-label,.tm-orn,.tm-intro,.tm-arw,.tm-dots,.tm-strip{opacity:1 !important;transform:none !important;}
     .tm-orn i{transform:scaleX(1) !important;}
     .tm-ln i{transform:none !important;}
-    .tm-track{transition:none;}
+    .tm-track{animation:none;}
     .tm-card{transition:none;}
   }
   /* =====================================================================
@@ -1945,8 +1972,14 @@
        from Sanity after this has already run and the whole spread then has to
        be laid out again. The listeners below are delegated to `track` and
        `dots`, which survive their children being replaced. */
+    /* The spread is rendered TWICE. A marquee that never stops needs a second
+       copy to slide into: when the first set has travelled its own width the
+       offset jumps back by exactly that width, and because the identical set
+       is sitting there the seam is invisible. `data-i` stays the review's
+       index, so both copies of a card answer to the same dot. */
     function render(){
-      track.innerHTML = T.map((t,i)=>`
+      const twice = T.concat(T);
+      track.innerHTML = twice.map((t,n)=>{ const i = n % T.length; return `
       <article class="tm-card" data-i="${i}" tabindex="0">
         <div class="tm-q" aria-hidden="true"></div>
         <p class="tm-say">${esc(t.say)}</p>
@@ -1963,7 +1996,7 @@
                aria-label="Read ${esc(t.name)}'s review on Google"
                title="Read this review on Google">${GOOGLE_G}</a>` : ''}
         </div>
-      </article>`).join('');
+      </article>`; }).join('');
 
       dots.innerHTML = T.map((_,i)=>
         `<button class="tm-dot${i===0?' on':''}" data-i="${i}" role="tab"
@@ -1973,50 +2006,42 @@
       dotEls = [...dots.querySelectorAll('.tm-dot')];
     }
 
+    /* ---- the marquee ----------------------------------------------------
+       The spread used to sit still for five seconds and then jump a card.
+       It now runs continuously, and it runs as a CSS animation rather than a
+       per-frame transform: the compositor drives it, so it stays smooth while
+       the main thread is busy, it pauses for free on hover, and the browser
+       stops it in a background tab without being asked.
+
+       `--tm-loop` is the width of one full set of cards, measured after the
+       cards exist; `--tm-dur` turns that into a duration at SPEED pixels a
+       second, so the pace is the same whatever the card width resolves to.
+       Because the set is rendered twice, translating by exactly one set width
+       and starting over is seamless. */
+    const SPEED = 70;              // pixels per second — the one number to turn
+
+    function measure(){
+      if(cards.length < T.length + 1) return;
+      const loop = cards[T.length].offsetLeft - cards[0].offsetLeft;
+      if(loop <= 0) return;
+      track.style.setProperty('--tm-loop', loop + 'px');
+      track.style.setProperty('--tm-dur', (loop / SPEED) + 's');
+    }
+
     render();
-    /* open on the middle card, the way the spread is composed */
-    at = Math.floor(T.length / 2);
+    measure();
 
-    /* centre the active card under the viewport's midpoint. Measuring the live
-       offsets means the maths survives any card width the clamp resolves to. */
-    function layout(){
-      const card = cards[at];
-      const x = vp.clientWidth / 2 - (card.offsetLeft + card.offsetWidth / 2);
-      track.style.transform = `translateX(${x}px)`;
-    }
-    function go(i){
-      at = (i + T.length) % T.length;
-      cards.forEach((c,n)=> c.classList.toggle('on', n === at));
-      dotEls.forEach((d,n)=> d.classList.toggle('on', n === at));
-      layout();
-    }
-    go(at);
-    /* fonts land after first paint and change the card heights/offsets */
-    addEventListener('load', layout);
-    if(document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
-    addEventListener('resize', layout, {passive:true});
+    /* fonts land after first paint and change every width in here */
+    addEventListener('load', measure);
+    if(document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+    addEventListener('resize', measure, {passive:true});
 
-    const prevBtn = document.getElementById('tmPrev'),
-          nextBtn = document.getElementById('tmNext');
-    prevBtn.addEventListener('click', ()=> go(at - 1));
-    nextBtn.addEventListener('click', ()=> go(at + 1));
-    dots.addEventListener('click', e=>{
-      const d = e.target.closest('.tm-dot'); if(d) go(+d.dataset.i);
-    });
-    /* A side card is its own next/prev button — but the Google button is a real
-       link inside that card. Without these guards a click on it would also
-       advance the carousel, and Enter on it would be swallowed by the
-       preventDefault below instead of opening the review. */
-    track.addEventListener('click', e=>{
-      if(e.target.closest('a')) return;
-      const c = e.target.closest('.tm-card'); if(c) go(+c.dataset.i);
-    });
-    track.addEventListener('keydown', e=>{
-      if(e.key !== 'Enter' && e.key !== ' ') return;
-      if(e.target.closest('a')) return;
-      const c = e.target.closest('.tm-card');
-      if(c){ e.preventDefault(); go(+c.dataset.i); }
-    });
+    /* The arrows and dots were the controls for a carousel that moved one card
+       at a time. A strip that never stops has no discrete slides for them to
+       point at, so they are hidden rather than deleted — restoring them is a
+       matter of dropping the two display rules in the stylesheet. Hovering
+       still holds the strip still, which is the control that matters. */
+
 
     /* --- the reviews, from Sanity ---------------------------------------
        The five written into this file are the fallback: they show while the
@@ -2042,53 +2067,29 @@
             google: r.googleUrl || '',
           }));
           render();
-          go(Math.floor(T.length / 2));
+          measure();          // a new set of cards is a new loop width
         })
         .catch(err => console.warn('testimonials: keeping the built-in five —', err));
     })();
 
-    /* --- autoplay ------------------------------------------------------
-       The spread moves on by itself so the reviews are seen without anyone
-       having to touch the arrows. It yields to the reader: hovering, focusing
-       or using any control stops the clock and restarts it afterwards, and a
-       hidden tab stops it entirely rather than racing through the set while
-       nobody is looking. `reduce` opts out altogether — this is exactly the
-       kind of unrequested motion that setting is asking about. */
-    const AUTO = 5200;
-    let auto = 0;
-    function stopAuto(){ if(auto){ clearInterval(auto); auto = 0; } }
-    function startAuto(){
-      if(document.hidden) return;
-      stopAuto();
-      auto = setInterval(() => go(at + 1), AUTO);
-    }
-    /* Note it does NOT bail out under prefers-reduced-motion. The reduced
-       branch already sets `.tm-track{transition:none}`, so the spread changes
-       without sliding — the reviews still rotate, nothing animates, and a
-       machine with that setting turned on does not simply show a carousel
-       that never moves. The arrows, dots and hover all remain as the way to
-       stop it. */
-    /* a manual move restarts the clock rather than fighting the next tick */
-    const nudge = () => { stopAuto(); startAuto(); };
-    [prevBtn, nextBtn, dots, track].forEach(el => el && el.addEventListener('click', nudge));
-    /* the stage, not the viewport: the side cards and the arrows sit outside
-       the viewport's box, and hovering those stopped nothing */
-    const stage = sec.querySelector('.tm-stage') || vp;
-    [stage].forEach(el => {
-      if(!el) return;
-      el.addEventListener('mouseenter', stopAuto);
-      el.addEventListener('mouseleave', startAuto);
-      el.addEventListener('focusin',  stopAuto);
-      el.addEventListener('focusout', startAuto);
-    });
-    document.addEventListener('visibilitychange',
-      () => document.hidden ? stopAuto() : startAuto());
-    startAuto();
+    /* --- who may stop the drift -----------------------------------------
+       It yields to the reader: the pointer or the keyboard anywhere on the
+       stage holds it still (the card under the pointer takes the gold border,
+       so the pause is visible), and a hidden tab stops it rather than running
+       the set past nobody.
+
+       It does NOT opt out under prefers-reduced-motion. That branch sets
+       `.tm-track{transition:none}` for the stepped slide, and the drift is
+       driven frame by frame rather than by that transition — so the reviews
+       keep coming either way. Anyone who wants it still only has to point at
+       it. */
 
     if(reduce){ sec.classList.add('in'); return; }
 
+    /* measure again on reveal: `.in` changes the cards' size and spacing, so
+       the loop width taken a moment ago is now wrong */
     new IntersectionObserver((e,o)=>{e.forEach(x=>{if(x.isIntersecting){
-      sec.classList.add('in'); layout(); o.disconnect();}});},
+      sec.classList.add('in'); measure(); o.disconnect();}});},
       {threshold:.08}).observe(sec);
 
     /* --- very slow parallax on the corner sketches --- */
