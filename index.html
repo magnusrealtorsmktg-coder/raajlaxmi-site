@@ -2500,8 +2500,22 @@
         let widest = 0;
         lines.forEach(l => { widest = Math.max(widest, l.scrollWidth); });
         h1.style.whiteSpace = '';
-        const room = box.clientWidth;
-        if(widest > room && room > 0) size = Math.max(floor, Math.floor(base * room / widest));
+
+        /* The column is `position:absolute` and shrink-to-fit, so its
+           clientWidth is whatever its content happens to be mid-load — it
+           measured 387px during the entrance and 735px once settled, which
+           sized the headline at 27px instead of 52px. The computed max-width
+           is the stable number: it is what the column may grow to, and it does
+           not move while the page is assembling. */
+        const mw = parseFloat(getComputedStyle(box).maxWidth);
+        const room = (isFinite(mw) && mw > 0) ? mw : box.clientWidth;
+
+        /* Shrinking to keep one line is only worth it down to a point —
+           past this the headline stops reading as a headline, and wrapping is
+           the better trade. The height pass below picks it up from there. */
+        const WIDTH_FLOOR = 40;
+        if(widest > room && room > 0)
+          size = Math.max(WIDTH_FLOOR, Math.floor(base * room / widest));
       }
       h1.style.fontSize = size + 'px';
 
