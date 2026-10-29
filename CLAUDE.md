@@ -121,7 +121,7 @@ Check at 1440×900, 1024×800 and 420×860; scroll the full page; confirm no con
 
 | # | Section | id | What it does |
 |---|---------|-----|--------------|
-| I | Hero | `hero` | Night skyline (inline base64 JPEG), "Live Above The City", line-mask entrance, mouse parallax, property-selector form. |
+| I | Hero | `hero` | Night skyline (inline base64 JPEG), "Live Above The City", line-mask entrance, mouse parallax, property-selector form. **All of its copy, and the three dropdown lists, come from the `homepage` singleton** — the four localities hard-coded in the markup (Gomti Nagar, Hazratganj, Sushant Golf City, Vibhuti Khand) are in **Lucknow**, not this developer's corridor; the seeded CMS values replace them with Vasai / Nallasopara / Virar / Saphale. |
 | II | About | `about` | Ivory. Ghost word "Legacy" behind copy, architectural plate (`assets/about-plate.jpg`), four counting stats, then a full-width RERA / CREDAI-MCHI trust strip (`.ab-creds`, a sibling of `.ab-inner`, not inside the content column). |
 | III | Signature Projects | `signature` | Four project cards, corner blueprint decor with slow parallax, rotating seal. The section now ends on the card grid, so its **bottom** padding alone sets the run into Why — it mirrors `.about`'s (`clamp(5rem,14vh,140px)`) rather than its own top. |
 | IV | Why Raajlaxmi | `why` | Team photograph as the feature plate (`assets/why-team.jpg`), four numbered rows, a year timeline (2004→2026), closing quote + spinning seal. The auto-scrolling brand marquee (`.why-carousel`) that used to sit before the quote is gone — Section X replaced it. |
@@ -209,10 +209,36 @@ Anything that should animate in after the cover lifts registers with **`window.o
 
 ## Content management (Sanity)
 
-`studio/` is a Sanity Studio whose only schema is `project` — one document per
-project. It feeds **all three collection pages and the detail page**
+`studio/` is a Sanity Studio with two schemas: `project` — one document per
+project, feeding **all three collection pages and the detail page**
 (`projects.html`, `projects-ongoing.html`, `projects-redevelopment.html`,
-`project.html?p=<slug>`); every other page is still hand-edited HTML.
+`project.html?p=<slug>`) — and `homepage`, a **singleton** driving the whole of
+`index.html`. Every other page is still hand-edited HTML.
+
+**The `homepage` singleton.** One document, fixed id `homepage`, reached from
+its own sidebar entry (`sanity.config.js` → `structure`); its generic template
+is filtered out of the global "create" menu so a second one cannot be made. It
+carries three groups — Hero (headline lines, sub, the three dropdown lists,
+button label), About (label, ghost word, heading lines, paragraphs, photograph
+and the four counting figures) and Signature Projects (label, heading, intro and
+the four cards). `studio/scripts/seed-home.mjs` fills it with the copy that was
+written into `index.html` and uploads the About plate, so the client opens a
+filled form rather than a blank one; it is `createOrReplace`, so re-running it
+**discards their edits** — only run it on a fresh dataset.
+
+**Its hydration rule is the opposite of `project.html`'s**: a missing field
+*leaves the markup alone* rather than erasing it. The copy in `index.html` is
+real designed content, not another record's leftovers, so blank means "nothing
+to say" — which is what lets the client fill it in a piece at a time without the
+home page going blank in between. The block reuses the existing nodes (cloning
+the last one when the CMS has more rows, removing extras when it has fewer)
+rather than rebuilding markup, so every animation hook, `data-hover` and reveal
+class survives. Two details are load-bearing: the Signature heading's second
+line owns the gold full stop as its own `.dot` node, so a trailing stop is
+trimmed off the CMS text before that node is re-appended or the line renders
+with two; and the figures may arrive *after* the counters have already counted,
+so the block fires `rl:home-stats` and the Section II IIFE re-reads the cells
+and counts again.
 
 **`stage` is the field that decides which listing a project appears on** —
 `completed` / `ongoing` / `redevelopment`, required, radio. `status` is now only
@@ -248,9 +274,9 @@ The Studio is hosted at <https://raajlaxmi.sanity.studio> (project `lc9w15ba`);
 `npm run deploy` in `studio/` republishes it after a schema change.
 
 Setup — project id, CORS origins, dataset visibility — is in `studio/README.md`.
-**The id must be set in five places**: `studio/.env` and the `SANITY` block in
-`projects.html`, `projects-ongoing.html`, `projects-redevelopment.html` and
-`project.html`. Renaming a schema field means renaming it in each of those GROQ
+**The id must be set in six places**: `studio/.env` and the `SANITY` block in
+`projects.html`, `projects-ongoing.html`, `projects-redevelopment.html`,
+`project.html` and `index.html`. Renaming a schema field means renaming it in each of those GROQ
 queries too.
 
 Note the Studio's source sits inside the Netlify publish directory, so its config
@@ -273,7 +299,7 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
 - Section X fits every mark into an identical box with `object-fit:contain` rather than capping height alone — capping height left a 3x spread in optical weight between a wide lockup and a square roundel.
 - `assets/why-team.jpg` is the Section IV feature plate (the group photograph, 2000×1332). The plate is ~2.2:1 while the photo is 3:2, so the CSS biases the crop to `center 72%` to keep the front row's feet in frame, and below 820px the plate switches to `aspect-ratio:3/2` so a phone shows the whole line-up instead of cropping both ends off it.
 - Still placeholders: four `picsum.photos/seed/rl-*` URLs in `index.html` — the Signature Projects cards (Heights / Villa / Crest / Essence) — plus the seeded card art in the `projects.html` fallback list (real card images now come from Sanity). Replace by swapping the URL in the inline `background-image` (or the Sanity document) for the real asset. Earlier notes here claiming ten placeholders were stale.
-- The About plate is `assets/about-plate.jpg` (excavator on site, 810×1212), set as `background-image` on `.ab-photo` in CSS. It used to be copied off the hero by the About IIFE; that JS is gone, so **don't reintroduce an inline `style.backgroundImage` there** — it would override the stylesheet. The plate crops to `5/6.6` from the centre.
+- The About plate is `assets/about-plate.jpg` (excavator on site, 810×1212), set as `background-image` on `.ab-photo` in CSS. It used to be copied off the hero by the About IIFE; that JS is gone, so **don't reintroduce an inline `style.backgroundImage` there** — it would override the stylesheet. The one deliberate exception is the home-page content block, which sets an inline background **only when the `homepage` document actually carries a photograph**; with the field empty the stylesheet keeps this file. The plate crops to `5/6.6` from the centre.
 - `quote-strip.png` (the Vikram Raajlaxmi quote banner) has been **deleted** — Section III's `.sp-quote-img` figure was removed earlier. Recoverable from git if the quote is ever wanted back.
 - The root-level `Generate_*.jpeg` / `download.png` / `Minimalist_*.jpeg` source art has been **deleted** — it was working material, not site assets. `footer.png`, `Services_start.png`, the seals and the sketches are all still referenced and remain.
 - **Favicon**: `favicon.ico` (16/32/48, at the repo root so browsers find it unprompted) plus `assets/favicon-32.png`, `assets/favicon-192.png` and `assets/apple-touch-icon.png` (180). All eight pages link them from `<head>`, right after `</title>`. Cut from the logo's building glyph with its dark ground **keyed out to transparency** (unmatted, so no dark fringe survives onto a light tab bar), squared up and centred with ~12% margin — the mark has to survive being read at 16px, so it sits deliberately large in frame.
