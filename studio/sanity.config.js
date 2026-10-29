@@ -18,6 +18,58 @@ const STAGES = [
 /* One folder per listing, so the Studio sidebar mirrors the site. Creating a
    project inside a folder pre-fills its stage (see `templates` below), which
    is the whole point — you should not have to remember to set it. */
+/* One page-content document per listing, with a fixed id. There are four
+   rather than three because projects.html does double duty — it is both the
+   browse-all page and the Completed view, and the two want different
+   headings. */
+const PAGE_DOC = {
+  all: 'collection-all',
+  completed: 'collection-completed',
+  ongoing: 'collection-ongoing',
+  redevelopment: 'collection-redevelopment',
+}
+
+/* "Page content" + "Projects" inside each category folder, so the client edits
+   the wording of a listing and the properties on it in the same place. */
+const stageFolder = (S, value, title) =>
+  S.listItem()
+    .id(value)
+    .title(title)
+    .child(
+      S.list()
+        .id(value + '-inner')
+        .title(title)
+        .items([
+          S.listItem()
+            .id(value + '-page')
+            .title('Page content')
+            .child(
+              S.document()
+                .schemaType('collectionPage')
+                .documentId(PAGE_DOC[value])
+                .title(title + ' — page content'),
+            ),
+          S.divider(),
+          S.listItem()
+            .id(value + '-projects')
+            .title('Projects')
+            .child(
+              S.documentList()
+                .id(value + '-list')
+                .title(title + ' projects')
+                .filter('_type == "project" && stage == $stage')
+                .params({stage: value})
+                .defaultOrdering([
+                  {field: 'order', direction: 'asc'},
+                  {field: '_createdAt', direction: 'asc'},
+                ])
+                .initialValueTemplates([
+                  S.initialValueTemplateItem('project-by-stage', {stage: value}),
+                ]),
+            ),
+        ]),
+    )
+
 const structure = (S) =>
   S.list()
     .title('Content')
@@ -29,41 +81,45 @@ const structure = (S) =>
         .title('Home page')
         .child(S.document().schemaType('homepage').documentId('homepage').title('Home page')),
       S.divider(),
-      ...STAGES.map(([value, title]) =>
-        S.listItem()
-          .id(value)
-          .title(title)
-          .child(
-            S.documentList()
-              .id(value + '-list')
-              .title(title)
-              .filter('_type == "project" && stage == $stage')
-              .params({stage: value})
-              .defaultOrdering([
-                {field: 'order', direction: 'asc'},
-                {field: '_createdAt', direction: 'asc'},
-              ])
-              .initialValueTemplates([
-                S.initialValueTemplateItem('project-by-stage', {stage: value}),
-              ]),
-          ),
-      ),
-      S.divider(),
-      /* the safety net: anything with no stage set would otherwise be invisible
-         in the three folders above */
+
       S.listItem()
-        .id('unfiled')
-        .title('Not yet filed')
+        .id('all-projects')
+        .title('All Projects')
         .child(
-          S.documentList()
-            .id('unfiled-list')
-            .title('Projects with no listing set')
-            .filter('_type == "project" && !defined(stage)'),
+          S.list()
+            .id('all-projects-inner')
+            .title('All Projects')
+            .items([
+              /* the wording on the browse-everything page itself */
+              S.listItem()
+                .id('all-page')
+                .title('Page content')
+                .child(
+                  S.document()
+                    .schemaType('collectionPage')
+                    .documentId(PAGE_DOC.all)
+                    .title('All projects — page content'),
+                ),
+              S.divider(),
+              ...STAGES.map(([value, title]) => stageFolder(S, value, title)),
+              S.divider(),
+              /* the safety net: anything with no stage set would otherwise be
+                 invisible in the three folders above */
+              S.listItem()
+                .id('unfiled')
+                .title('Not yet filed')
+                .child(
+                  S.documentList()
+                    .id('unfiled-list')
+                    .title('Projects with no listing set')
+                    .filter('_type == "project" && !defined(stage)'),
+                ),
+              S.listItem()
+                .id('every-project')
+                .title('Every project')
+                .child(S.documentTypeList('project').title('Every project')),
+            ]),
         ),
-      S.listItem()
-        .id('all')
-        .title('All projects')
-        .child(S.documentTypeList('project').title('All projects')),
     ])
 
 export default defineConfig({
@@ -80,7 +136,7 @@ export default defineConfig({
     templates: (prev) => [
       /* drop the singleton's generic template so it cannot be created a second
          time from the global "create" menu — it is reached through the sidebar */
-      ...prev.filter((t) => t.schemaType !== 'homepage'),
+      ...prev.filter((t) => !['homepage', 'collectionPage'].includes(t.schemaType)),
       {
         id: 'project-by-stage',
         title: 'Project',

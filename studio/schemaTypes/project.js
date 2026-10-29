@@ -154,6 +154,54 @@ export default {
       description: 'The Project Highlights paragraph on the detail page.',
       fieldset: 'detail',
     },
+    /* The copy painted over the gallery. Without these the page falls back to
+       the project's own name and configuration, which reads fine but is the
+       same shape for every project. */
+    {
+      name: 'heroEyebrow',
+      title: 'Over-photo — small label',
+      type: 'string',
+      description: 'The little line above the headline on the photograph — e.g. "Premium Residences".',
+      fieldset: 'detail',
+    },
+    {
+      name: 'heroHeading',
+      title: 'Over-photo — headline',
+      type: 'string',
+      description:
+        'The large line on the photograph. Leave blank to use the project name. Press Enter for a line break.',
+      fieldset: 'detail',
+    },
+    {
+      name: 'heroText',
+      title: 'Over-photo — sentence',
+      type: 'text',
+      rows: 2,
+      description: 'The sentence under that headline. Leave blank to build one from the configuration and location.',
+      fieldset: 'detail',
+    },
+    {
+      name: 'highlightsTitle',
+      title: 'Highlights heading',
+      type: 'string',
+      description: 'The heading above the paragraph below — "Project Highlights" unless you change it.',
+      fieldset: 'detail',
+    },
+    {
+      name: 'brochureUrl',
+      title: 'Brochure link',
+      type: 'string',
+      description:
+        'Where the "Request Brochure" button goes. A full https:// link to a PDF, or leave blank to send people to the enquiry form.',
+      fieldset: 'detail',
+    },
+    {
+      name: 'phone',
+      title: 'Direct line',
+      type: 'string',
+      description: 'The telephone number printed at the foot of the detail page. Leave blank to hide it.',
+      fieldset: 'detail',
+    },
     {
       name: 'specs',
       title: 'Specification list',

@@ -1821,6 +1821,7 @@
       if(!wanted || !SANITY.projectId) return null;
       const query = `*[_type=="project" && slug.current==$p][0]{
         name,status,category,location,config,price,overview,address,
+        heroEyebrow,heroHeading,heroText,highlightsTitle,brochureUrl,phone,
         "slug":slug.current,
         specs[]{label,value},
         amenities[]{icon,label},
@@ -1927,17 +1928,54 @@
       }
 
       /* the hero's painted-on copy belongs to Romal Kirti — a different
-         project gets its own line rather than inheriting the Arabian Sea */
-      const heroH = document.getElementById('pdHeroH'),
+         project gets its own line rather than inheriting the Arabian Sea.
+         A document can now write all three lines itself; where it does not,
+         they are still built from the name, configuration and location. */
+      const heroE = document.getElementById('pdEyebrow'),
+            heroH = document.getElementById('pdHeroH'),
             heroP = document.getElementById('pdHeroP');
-      if(heroH && DOC.name) heroH.textContent = DOC.name;
-      if(heroP) heroP.textContent = [DOC.config, DOC.location]
+      if(heroE){
+        if(DOC.heroEyebrow) heroE.textContent = DOC.heroEyebrow;
+        else if(DOC.category) heroE.textContent = DOC.category;
+      }
+      if(heroH){
+        /* the only field on this page where a line break is meaningful */
+        if(DOC.heroHeading) heroH.innerHTML = String(DOC.heroHeading)
+          .replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))
+          .replace(/\r?\n/g, '<br>');
+        else if(DOC.name) heroH.textContent = DOC.name;
+      }
+      if(heroP) heroP.textContent = DOC.heroText || [DOC.config, DOC.location]
         .filter(Boolean).join(' in ') || (DOC.status || '');
+
+      txt(sec.querySelector('.pd-h'), DOC.highlightsTitle);
+
+      /* "Request Brochure" points at the enquiry form until a real file exists */
+      const broch = sec.querySelector('.pd-btn.gold');
+      if(broch && DOC.brochureUrl) broch.setAttribute('href', DOC.brochureUrl);
+
+      /* the direct line — removed outright when the document carries none,
+         rather than leaving the invented mock number on the page */
+      const cline = sec.querySelector('.pd-cline[href^="tel:"]');
+      if(cline){
+        if(DOC.phone){
+          cline.setAttribute('href', 'tel:' + String(DOC.phone).replace(/[^+\d]/g, ''));
+          txt(cline.querySelector('.t'), DOC.phone);
+        }else{
+          cline.nextElementSibling?.classList.contains('sep') && cline.nextElementSibling.remove();
+          cline.remove();
+        }
+      }
 
       const copy = document.getElementById('pdCopy');
       if(copy){
         if(DOC.overview) copy.innerHTML = `<strong>${DOC.name}</strong> ${DOC.overview}`;
-        else copy.remove();
+        else {
+          /* the heading goes with the paragraph — left on its own it reads as a
+             section whose content failed to load */
+          copy.remove();
+          sec.querySelector('.pd-h')?.remove();
+        }
       }
     }
 

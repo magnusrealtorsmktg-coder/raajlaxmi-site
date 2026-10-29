@@ -150,6 +150,16 @@ kind, location, fact bar, gallery, overview, amenities, landmarks and (given a
 `geo` pin) a live Google map. Collection cards link there automatically from
 their slug, so a new property needs **no new file**.
 
+The detail page's remaining hard-coded text is now editable too, under the
+**Detail page** fieldset: `heroEyebrow` / `heroHeading` / `heroText` (the copy
+painted over the gallery — blank falls back to the category, the name and the
+configuration-plus-location line), `highlightsTitle`, `brochureUrl` (blank sends
+"Request Brochure" to the enquiry form) and `phone`. The direct line is **removed
+outright when no number is set** rather than printing the invented mock one, and
+the Project Highlights heading is removed along with its paragraph when a project
+has no `overview` — a heading left standing alone reads as content that failed to
+load.
+
 The fact bar is filled from Sanity's free-form `specs[]` (first four label/value
 pairs), falling back to config / price / status when a project carries no specs.
 The hero's painted-on line ("Modern Living by the Arabian Sea") belongs to Romal
@@ -225,6 +235,30 @@ the four cards). `studio/scripts/seed-home.mjs` fills it with the copy that was
 written into `index.html` and uploads the About plate, so the client opens a
 filled form rather than a blank one; it is `createOrReplace`, so re-running it
 **discards their edits** — only run it on a fresh dataset.
+
+**The `collectionPage` documents.** Four of them, fixed ids, one per listing view:
+`collection-all` → `projects.html`, `collection-completed` → `projects.html?status=completed`,
+`collection-ongoing` and `collection-redevelopment` → their own files. Four rather
+than three because `projects.html` does double duty — it is both the
+browse-everything page and the Completed view, and the two want different
+headings. Each carries the small label, the heading lines, the intro, the banner
+artwork (with the painted-in copy written out as its description), the banner's
+own label and heading, the "nothing matches" line and the consultation strip.
+`studio/scripts/seed-collections.mjs` fills all four and uploads the three
+banner plates; like the home-page seed it is `createOrReplace`, so re-running it
+**discards client edits**.
+
+The page-side block is **identical in all three collection files** — it works out
+which document it wants from the filename and the `?status=`, so there is
+nothing per-page to keep in step. It paints only the chrome; the cards still
+come from the `project` documents in the Section V block above it.
+
+**Studio sidebar.** `Home page`, then **All Projects**, which holds the
+browse-everything page's own content and then one folder per stage —
+`Completed`, `Ongoing`, `Redevelopment` — each containing that listing's **Page
+content** and its **Projects** list, with the `project-by-stage` template so a
+project created inside a folder is already filed. `Not yet filed` and `Every
+project` sit at the bottom as the safety net.
 
 **Its hydration rule is the opposite of `project.html`'s**: a missing field
 *leaves the markup alone* rather than erasing it. The copy in `index.html` is
@@ -309,6 +343,13 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
 
 **`projects-ongoing.html` / `projects-redevelopment.html`** are copies of `projects.html` with four differences: the `<title>`, the `.col-head` label/title/intro, `STATUS` hard-coded instead of read from the URL, and the Western Line banner swapped: the ongoing page carries its own (`assets/projects/western-line-ongoing.jpg`, "Rising Along the Western Line" — Vasai / Virar / Saphale, five projects), and the redevelopment page carries the **associates plate** (`assets/projects/associates.jpg`) in that slot instead — it has no corridor banner of its own. Both banners are client artwork used whole, same rules as the completed one: the band takes the artwork's ground colour so it dissolves, and below 760px it scrolls sideways at a fixed 900px because the station names are painted in. The redevelopment page additionally carries **placeholder cards** and one extra rule in its Sanity handler — `if(!result.some(inStatus)) return;` — so the live list is ignored while it contains no redevelopment project, which would otherwise blank the page. Publish one with that status and the placeholders are never seen again.
 
+- **The dataset was replaced by the client (checked 29 Oct 2026).** The eight seeded
+  placeholders are gone; there are now **16 real projects with real photography**, and
+  **every one of them is filed as `completed`**. So `projects.html` lists 16, the
+  **Ongoing page is empty** (it shows its "nothing listed yet" line) and Redevelopment
+  still shows placeholders. Two projects — Midas Glory and Nakshatra Auris — carry the
+  badge "Ongoing" while filed as Completed; that is the status/stage split working as
+  designed, but it is probably not what was meant. Their **Listing** wants changing.
 - **No project is filed as Redevelopment yet**, so that page shows three clearly-marked placeholder cards (`[Society name]`, `[Locality]`, `[n] BHK`) above the associates plate. Set one project's **Listing** to Redevelopment in the Studio and they disappear for good. Likewise the two `Ready Possession` documents are in no listing until their Listing is set to Completed.
 - **Project names differ between pages.** `index.html` Signature Projects lists Heights / Villa / Crest / Essence; `projects.html` lists those plus Business Square, Enclave, Skyline, Vista. Keep the two consistent when adding projects.
 - **Every testimonial is written copy**, not a real client — quotes, names and portraits in the `T` array all need replacing before launch. This is the one section whose entire value is that it is true.

@@ -1695,7 +1695,8 @@
       const filtered = P.filter(p => (city === 'all' || cityOf(p) === city) && inStatus(p));
       if(grid){
         grid.innerHTML = !filtered.length
-          ? `<p class="col-empty">No ${STATUS || ''} properties are listed here yet.
+          ? `<p class="col-empty">${window.RL_EMPTY_MESSAGE ||
+               `No ${STATUS || ''} properties are listed here yet.`}
                <a href="projects.html">See the whole collection</a>.</p>`
           : filtered.map(p=>`
           <article class="col-card">
@@ -1957,6 +1958,120 @@
     });
 
     setTimeout(open, wait);
+  })();
+
+  /* ============ LISTING PAGE CONTENT (Sanity) ============ */
+  /* The wording and artwork around the cards — heading, intro, banner and the
+     consultation strip. The cards themselves come from the `project` documents
+     in the Section V block above; this is only the chrome.
+
+     Same rule as the home page, and the opposite of project.html's: a missing
+     field LEAVES the markup alone rather than erasing it, so a half-filled
+     document can never strip a page back to nothing.
+
+     This block is identical in all three collection files — it works out which
+     document it wants from the filename, so there is nothing per-page to keep
+     in step. */
+  (function(){
+    const SANITY = {
+      projectId : 'lc9w15ba',
+      dataset   : 'production',
+      apiVersion: '2024-01-01',
+    };
+    if(!SANITY.projectId) return;
+
+    /* projects.html does double duty — browse-everything, and the Completed
+       view via ?status=completed — so it reads whichever of the two documents
+       matches the URL it was opened with. */
+    const DOC_ID = (function(){
+      const page = (location.pathname.split('/').pop() || 'projects.html').toLowerCase();
+      if(page.indexOf('ongoing') > -1) return 'collection-ongoing';
+      if(page.indexOf('redevelopment') > -1) return 'collection-redevelopment';
+      const st = (new URLSearchParams(location.search).get('status') || '').toLowerCase();
+      return st === 'completed' ? 'collection-completed' : 'collection-all';
+    })();
+
+    const txt = v => (typeof v === 'string' ? v.trim() : '');
+    const list = v => Array.isArray(v) ? v.map(txt).filter(Boolean) : [];
+    const setText = (el, v) => { const s = txt(v); if(el && s) el.textContent = s; };
+
+    /* reuse the existing nodes rather than rebuilding them — clones keep every
+       class and hook the reveals depend on */
+    function fit(nodes, count, mount){
+      const out = [...nodes];
+      if(!out.length || count < 1) return out;
+      while(out.length > count) out.pop().remove();
+      while(out.length < count){
+        const clone = out[out.length - 1].cloneNode(true);
+        (mount || out[out.length - 1].parentNode).appendChild(clone);
+        out.push(clone);
+      }
+      return out;
+    }
+
+    /* a heading whose last line owns the gold full stop as its own node: trim a
+       trailing stop off the CMS text or the line renders with two */
+    function setLine(host, value){
+      if(!host) return;
+      const dot = host.querySelector('.dot');
+      host.textContent = dot ? value.replace(/\.+\s*$/, '') : value;
+      if(dot) host.appendChild(dot);
+    }
+
+    const Q = encodeURIComponent(
+      `*[_id=="${DOC_ID}"][0]{label,heading,intro,emptyMessage,` +
+      `bannerLabel,bannerTitle,"bannerUrl":banner.asset->url,"bannerAlt":banner.alt,` +
+      `ctaTitle,ctaText,ctaButton}`);
+
+    fetch(`https://${SANITY.projectId}.apicdn.sanity.io/v${SANITY.apiVersion}` +
+          `/data/query/${SANITY.dataset}?query=${Q}`)
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(({result:d}) => { if(d) paint(d); })
+      .catch(err => console.warn('listing page content: keeping the built-in copy —', err));
+
+    function paint(d){
+      setText(document.querySelector('.col-label'), d.label);
+
+      const head = list(d.heading);
+      if(head.length){
+        const h2 = document.querySelector('.col-title');
+        fit(h2 ? h2.querySelectorAll('.col-ln') : [], head.length, h2)
+          .forEach((ln, i) => setLine(ln.querySelector('i'), head[i]));
+      }
+      setText(document.querySelector('.col-intro'), d.intro);
+
+      /* --- the banner band --- */
+      setText(document.querySelector('.cor-label'), d.bannerLabel);
+      const corTitle = document.querySelector('.cor-title');
+      if(corTitle && txt(d.bannerTitle)) setLine(corTitle, txt(d.bannerTitle));
+
+      const img = document.querySelector('.cor-figure img');
+      if(img && txt(d.bannerUrl)){
+        img.src = txt(d.bannerUrl);
+        /* the copy is painted into these plates, so the description is the only
+           way a screen reader or a search engine ever reads it */
+        if(txt(d.bannerAlt)) img.alt = txt(d.bannerAlt);
+        img.removeAttribute('width');
+        img.removeAttribute('height');
+      }
+
+      /* --- the consultation strip --- */
+      setText(document.querySelector('.col-cta-mid h3'), d.ctaTitle);
+      setText(document.querySelector('.col-cta-mid p'),  d.ctaText);
+      const btn = document.querySelector('.col-cta-btn');
+      if(btn && txt(d.ctaButton)){
+        /* keep the arrow element, replace only the words before it */
+        const arw = btn.querySelector('.arw');
+        btn.textContent = txt(d.ctaButton);
+        if(arw) btn.appendChild(arw);
+      }
+
+      /* --- the "nothing matches" line, for whenever a filter empties the grid --- */
+      const empty = txt(d.emptyMessage);
+      if(empty) window.RL_EMPTY_MESSAGE = empty;
+      const shown = document.querySelector('.col-empty');
+      if(shown && empty) shown.childNodes[0].nodeValue = empty + ' ';
+    }
   })();
 
 </script>
