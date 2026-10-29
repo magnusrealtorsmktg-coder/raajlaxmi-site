@@ -1074,19 +1074,6 @@
     border-top:1px solid currentColor;border-right:1px solid currentColor;transform:rotate(45deg);}
   .col-card:hover .col-details .arw{transform:translateX(5px);}
 
-  /* ---- pagination ---- */
-  .col-page{display:flex;justify-content:center;align-items:center;gap:.6rem;
-    margin-top:clamp(2.5rem,4vw,3.5rem);
-    opacity:0;transition:opacity 1s var(--lux) .2s;}
-  .col.in .col-page{opacity:1;}
-  .col-page button{width:2.6rem;height:2.6rem;border-radius:10px;border:1px solid rgba(28,28,28,.14);
-    background:#fff;font-family:"Inter",sans-serif;font-size:.85rem;color:var(--charcoal);cursor:pointer;
-    display:grid;place-items:center;transition:all .4s var(--lux);}
-  .col-page button:hover{border-color:#C6A15B;color:#C6A15B;transform:translateY(-2px);}
-  .col-page button.on{background:#C6A15B;border-color:#C6A15B;color:#fff;}
-  .col-page button.on:hover{color:#fff;transform:none;}
-  .col-page .dots{color:var(--body);padding:0 .2rem;}
-
   /* ---- consultation strip ---- */
   .col-cta{display:grid;grid-template-columns:auto 1fr auto;align-items:center;
     gap:clamp(1.5rem,3.5vw,3.5rem);margin-top:clamp(3.5rem,6vw,5.5rem);
@@ -1133,7 +1120,7 @@
 
   @media (prefers-reduced-motion:reduce){
     .col-decor,.col-cimg{transform:none !important;}
-    .col-label,.col-intro,.col-ln i,.col-chips,.col-showing,.col-card,.col-page,.col-cta{
+    .col-label,.col-intro,.col-ln i,.col-chips,.col-showing,.col-card,.col-cta{
       opacity:1 !important;transform:none !important;}
     .col-media{clip-path:none !important;}
     .col-label::after{transform:scaleX(1) !important;}
@@ -1381,16 +1368,6 @@
 
       <!-- project grid -->
       <div class="col-grid" id="colGrid"></div>
-
-      <!-- pagination -->
-      <div class="col-page">
-        <button aria-label="Previous">&lsaquo;</button>
-        <button class="on">1</button>
-        <button>2</button>
-        <button>3</button>
-        <span class="dots">&hellip;</span>
-        <button aria-label="Next">&rsaquo;</button>
-      </div>
 
       <!-- delivered portfolio — the client's supplied line-map banner -->
       <div class="cor">
