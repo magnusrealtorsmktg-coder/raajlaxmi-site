@@ -22,6 +22,13 @@ const structure = (S) =>
   S.list()
     .title('Content')
     .items([
+      /* The home page is a singleton — one document, fixed id, no "create new".
+         Opening it goes straight to the form rather than to a list of one. */
+      S.listItem()
+        .id('homepage')
+        .title('Home page')
+        .child(S.document().schemaType('homepage').documentId('homepage').title('Home page')),
+      S.divider(),
       ...STAGES.map(([value, title]) =>
         S.listItem()
           .id(value)
@@ -71,7 +78,9 @@ export default defineConfig({
   schema: {
     types: schemaTypes,
     templates: (prev) => [
-      ...prev,
+      /* drop the singleton's generic template so it cannot be created a second
+         time from the global "create" menu — it is reached through the sidebar */
+      ...prev.filter((t) => t.schemaType !== 'homepage'),
       {
         id: 'project-by-stage',
         title: 'Project',

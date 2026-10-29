@@ -1964,6 +1964,18 @@
       n.innerHTML = face(n, n.dataset.to);
     });
 
+    /* The figures can arrive from Sanity after this block has already run — and
+       after the counters have counted. When they do, re-read the cells and
+       count them again, otherwise the section would keep showing the numbers
+       written into the markup. */
+    addEventListener('rl:home-stats', ()=>{
+      nums.length = 0;
+      nums.push(...about.querySelectorAll('.ab-num'));
+      nums.forEach(n => delete n.dataset.done);
+      if(reduce){ settle(); return; }
+      if(about.classList.contains('in')) nums.forEach(countUp);
+    });
+
     if(reduce){
       about.classList.add('in');
       settle();
@@ -2363,6 +2375,185 @@
     });
 
     setTimeout(open, wait);
+  })();
+
+  /* ============ HOME PAGE CONTENT (Sanity) ============ */
+  /* Paints the "homepage" singleton over the markup above. The rule here is the
+     OPPOSITE of project.html's: a missing field LEAVES the markup alone rather
+     than erasing it. The copy written into this file is real designed content,
+     not another record's leftovers, so blank means "nothing to say", not "clear
+     the page" — which is what lets the client fill this in a piece at a time
+     without the home page going blank in between. */
+  (function(){
+    const SANITY = {
+      projectId : 'lc9w15ba',    // manage.sanity.io → Raajlaxmi Site → Settings
+      dataset   : 'production',
+      apiVersion: '2024-01-01',
+    };
+    if(!SANITY.projectId) return;
+
+    const txt = v => (typeof v === 'string' ? v.trim() : '');
+    const list = v => Array.isArray(v) ? v.map(txt).filter(Boolean) : [];
+    const esc = v => txt(v).replace(/[&<>"]/g, c =>
+      ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+    /* set text only when there is something to set */
+    const setText = (el, v) => { const s = txt(v); if(el && s) el.textContent = s; };
+
+    /* Fit a list of values onto a list of existing elements, reusing the markup
+       rather than rebuilding it — clones keep every class, hook and attribute
+       the animations depend on. Extra elements are removed, extra values get a
+       clone of the last one. */
+    function fit(nodes, count, mount){
+      const out = [...nodes];
+      if(!out.length || count < 1) return out;
+      while(out.length > count) out.pop().remove();
+      while(out.length < count){
+        const clone = out[out.length - 1].cloneNode(true);
+        (mount || out[out.length - 1].parentNode).appendChild(clone);
+        out.push(clone);
+      }
+      return out;
+    }
+
+    function paintSelect(sel, values){
+      if(!sel || !values.length) return;
+      /* the first option is the "Any …" placeholder — keep it, replace the rest */
+      const keep = sel.querySelector('option[value=""]');
+      sel.innerHTML = '';
+      if(keep) sel.appendChild(keep);
+      values.forEach(v => {
+        const o = document.createElement('option');
+        o.textContent = v;
+        sel.appendChild(o);
+      });
+    }
+
+    const Q = encodeURIComponent(`*[_id=="homepage"][0]{
+      heroHeadline,heroSub,heroPropertyOptions,heroLocationOptions,heroBudgetOptions,heroButton,
+      aboutLabel,aboutGhost,aboutHeading,aboutParagraphs,"aboutImageUrl":aboutImage.asset->url,
+      stats,
+      signatureLabel,signatureHeading,signatureIntro,
+      signatureCards[]{name,category,location,description,link,"imageUrl":image.asset->url}
+    }`);
+
+    fetch(`https://${SANITY.projectId}.apicdn.sanity.io/v${SANITY.apiVersion}` +
+          `/data/query/${SANITY.dataset}?query=${Q}`)
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(({result:d}) => { if(d) paint(d); })
+      .catch(err => console.warn('home page content: keeping the built-in copy —', err));
+
+    function paint(d){
+      /* ---------- hero ---------- */
+      const headline = list(d.heroHeadline);
+      if(headline.length){
+        const h1 = document.querySelector('.headline');
+        fit(h1 ? h1.querySelectorAll('.line-reveal') : [], headline.length, h1)
+          .forEach((ln, i) => setText(ln.querySelector('.line-inner'), headline[i]));
+      }
+      setText(document.querySelector('.hero-content .sub'), d.heroSub);
+      paintSelect(document.getElementById('hsType'),   list(d.heroPropertyOptions));
+      paintSelect(document.getElementById('hsLoc'),    list(d.heroLocationOptions));
+      paintSelect(document.getElementById('hsBudget'), list(d.heroBudgetOptions));
+      setText(document.querySelector('.hs-submit'), d.heroButton);
+
+      /* ---------- about ---------- */
+      setText(document.querySelector('.ab-label'), d.aboutLabel);
+      setText(document.getElementById('abGhost'),  d.aboutGhost);
+
+      const head = list(d.aboutHeading);
+      if(head.length){
+        const h2 = document.querySelector('.ab-head');
+        fit(h2 ? h2.querySelectorAll('.ab-ln') : [], head.length, h2)
+          .forEach((ln, i) => setText(ln.querySelector('i'), head[i]));
+      }
+
+      const paras = list(d.aboutParagraphs);
+      if(paras.length){
+        const copy = document.querySelector('.ab-copy');
+        fit(copy ? copy.querySelectorAll('p') : [], paras.length, copy)
+          .forEach((p, i) => p.textContent = paras[i]);
+      }
+
+      /* The plate is painted from CSS. An inline background only goes on when
+         the CMS actually carries a photograph — otherwise the stylesheet keeps
+         assets/about-plate.jpg, which is why this is not set unconditionally. */
+      const plateUrl = txt(d.aboutImageUrl);
+      if(plateUrl){
+        const plate = document.getElementById('abPhoto');
+        if(plate) plate.style.backgroundImage = `url('${plateUrl}')`;
+      }
+
+      /* ---------- the figures ---------- */
+      const stats = Array.isArray(d.stats)
+        ? d.stats.filter(s => s && s.value !== undefined && s.value !== null) : [];
+      if(stats.length){
+        const wrap = document.getElementById('abStats');
+        fit(wrap ? wrap.querySelectorAll('.ab-stat') : [], stats.length, wrap)
+          .forEach((cell, i) => {
+            const s = stats[i];
+            const num = cell.querySelector('.ab-num');
+            if(num){
+              const dec = Number(s.decimals) > 0 ? String(Math.trunc(s.decimals)) : '';
+              num.dataset.to = String(s.value);
+              if(dec) num.dataset.dec = dec; else delete num.dataset.dec;
+              if(txt(s.unit)) num.dataset.unit = txt(s.unit); else delete num.dataset.unit;
+              if(txt(s.suffix)) num.dataset.suffix = txt(s.suffix); else delete num.dataset.suffix;
+            }
+            const cap = cell.querySelector('.ab-scap');
+            /* the caption is the one place a line break is meaningful */
+            if(cap && txt(s.caption)) cap.innerHTML = esc(s.caption).replace(/\r?\n/g, '<br>');
+          });
+        /* the counter block may already have run; tell it to read these again */
+        dispatchEvent(new Event('rl:home-stats'));
+      }
+
+      /* ---------- signature projects ---------- */
+      setText(document.querySelector('.sp-label'), d.signatureLabel);
+      const spHead = list(d.signatureHeading);
+      if(spHead.length){
+        const h2 = document.querySelector('.sp-title');
+        fit(h2 ? h2.querySelectorAll('.sp-ln') : [], spHead.length, h2)
+          .forEach((ln, i) => {
+            const it = ln.querySelector('i');
+            if(!it) return;
+            /* The last line carries the gold full stop as its own node. The
+               client writes "Timeless Living." naturally, so trim a trailing
+               stop off the text before re-appending that node — otherwise the
+               line renders with two. */
+            const dot = it.querySelector('.dot');
+            it.textContent = dot ? spHead[i].replace(/\.+\s*$/, '') : spHead[i];
+            if(dot) it.appendChild(dot);
+          });
+      }
+      setText(document.querySelector('.sp-intro'), d.signatureIntro);
+
+      const cards = Array.isArray(d.signatureCards)
+        ? d.signatureCards.filter(c => c && txt(c.name)) : [];
+      if(cards.length){
+        const grid = document.querySelector('.sp-grid');
+        fit(grid ? grid.querySelectorAll('.sp-card') : [], cards.length, grid)
+          .forEach((card, i) => {
+            const c = cards[i];
+            setText(card.querySelector('.sp-cat'),  c.category);
+            setText(card.querySelector('.sp-name'), c.name);
+
+            /* the location keeps its pin svg — replace only the text after it */
+            const loc = card.querySelector('.sp-loc');
+            if(loc && txt(c.location)){
+              [...loc.childNodes].forEach(n => { if(n.nodeType === 3) n.remove(); });
+              loc.appendChild(document.createTextNode(txt(c.location)));
+            }
+            setText(card.querySelector('.sp-desc'), c.description);
+
+            const img = card.querySelector('.sp-img');
+            if(img && txt(c.imageUrl)) img.style.backgroundImage = `url('${txt(c.imageUrl)}')`;
+
+            const btn = card.querySelector('.sp-btn');
+            if(btn && txt(c.link)) btn.setAttribute('href', txt(c.link));
+          });
+      }
+    }
   })();
 
 </script>
