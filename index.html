@@ -1344,11 +1344,17 @@
      Injected into .hero-media, which the mouse parallax already transforms, so
      it drifts with the still it replaces. The background image stays underneath
      as the fallback: if the file never loads, the hero is still a photograph. */
-  .hero-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  .hero-vid,.cms-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
     z-index:0;pointer-events:none;border:0;}
+  /* Both hosts are already positioned by their own rules — .ab-photo is
+     relative, .why-feature .img is absolute — so the video anchors to them
+     without help. Do NOT add position here: setting .why-feature .img to
+     relative drops its inset:-9% 0 and collapses the banner to zero height.
+     Only the clipping is needed, for .ab-photo's 30px radius. */
+  .ab-photo,.why-feature .img{overflow:hidden;}
   @media (prefers-reduced-motion:reduce){
     /* a looping background is exactly what this setting is asking not to see */
-    .hero-vid{display:none;}
+    .hero-vid,.cms-vid{display:none;}
   }
 
 </style>
@@ -2443,6 +2449,9 @@
     const Q = encodeURIComponent(`*[_id=="homepage"][0]{
       heroHeadline,heroSub,heroPropertyOptions,heroLocationOptions,heroBudgetOptions,heroButton,
       "heroImageUrl":heroImage.asset->url,"heroVideoUrl":heroVideo.asset->url,
+      "aboutVideoUrl":aboutVideo.asset->url,
+      whyLabel,whyHeading,whyIntro,whyRows,whyTimeline,whyQuote,whyQuoteBy,
+      "whyImageUrl":whyImage.asset->url,"whyVideoUrl":whyVideo.asset->url,
       aboutLabel,aboutGhost,aboutHeading,aboutParagraphs,"aboutImageUrl":aboutImage.asset->url,
       stats,
       signatureLabel,signatureHeading,signatureIntro,
@@ -2454,6 +2463,50 @@
       .then(r => r.ok ? r.json() : Promise.reject(r.status))
       .then(({result:d}) => { if(d) paint(d); })
       .catch(err => console.warn('home page content: keeping the built-in copy —', err));
+
+    /* A heading line whose last word carries the gold full stop as its own
+       `.dot` node: keep that node and trim a trailing stop off the CMS text,
+       or the line renders with two. */
+    function setLine(host, value){
+      if(!host) return;
+      const dot = host.querySelector('.dot');
+      host.textContent = dot ? value.replace(/\.+\s*$/, '') : value;
+      if(dot) host.appendChild(dot);
+    }
+
+    /* Drop a silent looping video into an element that is already showing a
+       picture. Used by the hero, the About plate and the Why banner.
+
+       It is skipped where it would cost a visitor real money or go against a
+       stated preference: on phones, on a data-saver connection, and under
+       prefers-reduced-motion. All three leave the still in place — which is why
+       the photograph is always painted first, even when a video is set. */
+    function mountVideo(host, url, posterUrl, cls){
+      if(!host || !url) return;
+      if(navigator.connection && navigator.connection.saveData) return;
+      if(matchMedia('(max-width:620px)').matches) return;
+      if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      const v = document.createElement('video');
+      v.className = cls || 'cms-vid';
+      v.src = url;
+      if(posterUrl) v.poster = `${posterUrl}?w=1600&q=70&auto=format&fit=max`;
+      v.muted = true;              // set before play(), or the browser blocks it
+      v.defaultMuted = true;
+      v.loop = true;
+      v.autoplay = true;
+      v.playsInline = true;
+      v.setAttribute('playsinline', '');        // older iOS reads the attribute
+      v.preload = 'auto';
+      v.tabIndex = -1;
+      v.setAttribute('aria-hidden', 'true');
+      /* a file that will not load leaves the still showing rather than a black
+         rectangle where the picture was */
+      v.addEventListener('error', () => v.remove(), {once:true});
+      host.prepend(v);
+      const go = v.play();
+      if(go && go.catch) go.catch(() => v.remove());      // autoplay refused
+    }
 
     function paint(d){
       /* ---------- the hero's background ----------
@@ -2468,34 +2521,7 @@
           `url('${shot}?w=2400&q=80&auto=format&fit=max')`;
       }
 
-      const film = txt(d.heroVideoUrl);
-      /* Skipped where it would cost a visitor real money or go against a stated
-         preference: on phones, on a metered or data-saver connection, and under
-         prefers-reduced-motion. All three fall back to the still above. */
-      const saveData = !!(navigator.connection && navigator.connection.saveData);
-      const small = matchMedia('(max-width:620px)').matches;
-      const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if(media && film && !saveData && !small && !still){
-        const v = document.createElement('video');
-        v.className = 'hero-vid';
-        v.src = film;
-        if(shot) v.poster = `${shot}?w=1600&q=70&auto=format&fit=max`;
-        v.muted = true;            // set before autoplay, or the browser blocks it
-        v.defaultMuted = true;
-        v.loop = true;
-        v.autoplay = true;
-        v.playsInline = true;
-        v.setAttribute('playsinline', '');      // older iOS reads the attribute
-        v.preload = 'auto';
-        v.tabIndex = -1;
-        v.setAttribute('aria-hidden', 'true');
-        /* a file that will not load leaves the still showing rather than a
-           black rectangle over the headline */
-        v.addEventListener('error', () => v.remove(), {once:true});
-        media.prepend(v);
-        const go = v.play();
-        if(go && go.catch) go.catch(() => v.remove());   // autoplay refused
-      }
+      mountVideo(media, txt(d.heroVideoUrl), shot, 'hero-vid');
 
       /* ---------- hero ---------- */
       const headline = list(d.heroHeadline);
@@ -2532,10 +2558,9 @@
          the CMS actually carries a photograph — otherwise the stylesheet keeps
          assets/about-plate.jpg, which is why this is not set unconditionally. */
       const plateUrl = txt(d.aboutImageUrl);
-      if(plateUrl){
-        const plate = document.getElementById('abPhoto');
-        if(plate) plate.style.backgroundImage = `url('${plateUrl}')`;
-      }
+      const plate = document.getElementById('abPhoto');
+      if(plate && plateUrl) plate.style.backgroundImage = `url('${plateUrl}')`;
+      mountVideo(plate, txt(d.aboutVideoUrl), plateUrl);
 
       /* ---------- the figures ---------- */
       const stats = Array.isArray(d.stats)
@@ -2561,23 +2586,71 @@
         dispatchEvent(new Event('rl:home-stats'));
       }
 
+      /* ---------- why raajlaxmi ---------- */
+      setText(document.querySelector('.why-label'), d.whyLabel);
+
+      const whyHead = list(d.whyHeading);
+      if(whyHead.length){
+        const h2 = document.querySelector('.why-title');
+        fit(h2 ? h2.querySelectorAll('.why-ln') : [], whyHead.length, h2)
+          .forEach((ln, i) => setLine(ln.querySelector('i'), whyHead[i]));
+      }
+      setText(document.querySelector('.why-intro'), d.whyIntro);
+
+      /* the banner is a div with a background, not an <img> */
+      const whyShot = txt(d.whyImageUrl);
+      const feature = document.querySelector('.why-feature .img');
+      if(feature && whyShot){
+        feature.style.backgroundImage =
+          `url('${whyShot}?w=2000&q=80&auto=format&fit=max')`;
+      }
+      mountVideo(feature, txt(d.whyVideoUrl), whyShot);
+
+      const rows = (Array.isArray(d.whyRows) ? d.whyRows : []).filter(r => r && txt(r.title));
+      if(rows.length){
+        const host = document.querySelector('.why-rows');
+        fit(host ? host.querySelectorAll('.why-row') : [], rows.length, host)
+          .forEach((row, i) => {
+            /* the numbers belong to the position, not to the content */
+            const n = row.querySelector('.rnum');
+            if(n) n.textContent = String(i + 1).padStart(2, '0');
+            setText(row.querySelector('.why-rtext h3'), rows[i].title);
+            const para = row.querySelector('.why-rtext p');
+            if(para){
+              if(txt(rows[i].text)) para.textContent = txt(rows[i].text);
+              else para.remove();
+            }
+          });
+      }
+
+      const evs = (Array.isArray(d.whyTimeline) ? d.whyTimeline : []).filter(e => e && txt(e.year));
+      if(evs.length){
+        const host = document.querySelector('.why-time');
+        /* the sketched tower is a sibling of the events and must not be counted
+           as one, or it would be removed when the list is shorter */
+        fit(host ? host.querySelectorAll('.why-ev') : [], evs.length, host)
+          .forEach((ev, i) => {
+            setText(ev.querySelector('.yr'), evs[i].year);
+            const tt = ev.querySelector('.tt');
+            if(tt && txt(evs[i].text))
+              tt.innerHTML = esc(evs[i].text).replace(/\r?\n/g, '<br>');
+          });
+        /* keep the tower last so the gold rail still runs behind the events */
+        const tower = host && host.querySelector('.why-tower');
+        if(tower) host.appendChild(tower);
+      }
+
+      setText(document.querySelector('.why-quote-in blockquote'), d.whyQuote);
+      const cite = document.querySelector('.why-quote-in cite');
+      if(cite && txt(d.whyQuoteBy)) cite.textContent = `— ${txt(d.whyQuoteBy)}`;
+
       /* ---------- signature projects ---------- */
       setText(document.querySelector('.sp-label'), d.signatureLabel);
       const spHead = list(d.signatureHeading);
       if(spHead.length){
         const h2 = document.querySelector('.sp-title');
         fit(h2 ? h2.querySelectorAll('.sp-ln') : [], spHead.length, h2)
-          .forEach((ln, i) => {
-            const it = ln.querySelector('i');
-            if(!it) return;
-            /* The last line carries the gold full stop as its own node. The
-               client writes "Timeless Living." naturally, so trim a trailing
-               stop off the text before re-appending that node — otherwise the
-               line renders with two. */
-            const dot = it.querySelector('.dot');
-            it.textContent = dot ? spHead[i].replace(/\.+\s*$/, '') : spHead[i];
-            if(dot) it.appendChild(dot);
-          });
+          .forEach((ln, i) => setLine(ln.querySelector('i'), spHead[i]));
       }
       setText(document.querySelector('.sp-intro'), d.signatureIntro);
 
@@ -2605,6 +2678,99 @@
             const btn = card.querySelector('.sp-btn');
             if(btn && txt(c.link)) btn.setAttribute('href', txt(c.link));
           });
+      }
+    }
+  })();
+
+  /* ============ SITE SETTINGS (Sanity) ============ */
+  /* The footer's social handles and contact details — the same on every page,
+     so this block is identical in all eight files and reads one document.
+
+     The four social icons were hard-coded with href="#". They are now built
+     from the CMS, and the row removes itself when no handles are set: four
+     buttons that go nowhere are worse than no buttons. */
+  (function(){
+    const SANITY = {
+      projectId : 'lc9w15ba',
+      dataset   : 'production',
+      apiVersion: '2024-01-01',
+    };
+    if(!SANITY.projectId) return;
+
+    const foot = document.querySelector('.ft');
+    if(!foot) return;
+
+    const txt = v => (typeof v === 'string' ? v.trim() : '');
+    const esc = v => txt(v).replace(/[&<>"]/g, c =>
+      ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+    /* drawn here rather than kept in the markup, so adding a network is one
+       entry in this object plus one option in the schema */
+    const ICON = {
+      instagram:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.1" fill="currentColor" stroke="none"/>',
+      facebook :'<path d="M14.5 8.5h2.5V5h-2.5A4 4 0 0 0 10.5 9v2H8v3.5h2.5V22h3.5v-7.5h2.6l.4-3.5h-3V9c0-.3.2-.5.5-.5z"/>',
+      linkedin :'<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7.5 10.5V17M7.5 7.6v.1M11.5 17v-3.6a2.2 2.2 0 0 1 4.4 0V17"/>',
+      youtube  :'<rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="M10.5 9.5l5 2.5-5 2.5z"/>',
+      x        :'<path d="M4 4l16 16M20 4L4 20"/>',
+      whatsapp :'<path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z"/><path d="M8.8 8.6c.3-.6.6-.6.9-.6h.6c.2 0 .5 0 .7.5l.8 1.9c.1.3 0 .5-.1.7l-.4.5c-.1.2-.3.4-.1.7a6 6 0 0 0 2.8 2.4c.3.1.5 0 .7-.2l.5-.6c.2-.2.4-.2.6-.1l1.8.9c.3.1.4.3.4.5a1.8 1.8 0 0 1-1.3 1.5c-.5.1-1.2.2-3.5-.8a9 9 0 0 1-4-4.3c-.7-1.6-.5-2.4-.4-3z"/>',
+    };
+    const LABEL = {
+      instagram:'Instagram', facebook:'Facebook', linkedin:'LinkedIn',
+      youtube:'YouTube', x:'X', whatsapp:'WhatsApp',
+    };
+
+    const Q = encodeURIComponent(
+      `*[_id=="site-settings"][0]{social[]{platform,url},phone,email,address,copyright}`);
+
+    fetch(`https://${SANITY.projectId}.apicdn.sanity.io/v${SANITY.apiVersion}` +
+          `/data/query/${SANITY.dataset}?query=${Q}`)
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then(({result:d}) => { if(d) paint(d); })
+      .catch(err => console.warn('site settings: keeping the built-in footer —', err));
+
+    function paint(d){
+      /* --- social handles --- */
+      const row = foot.querySelector('.ft-soc');
+      if(row){
+        const links = (Array.isArray(d.social) ? d.social : [])
+          .filter(x => x && txt(x.url) && ICON[txt(x.platform)]);
+        if(links.length){
+          row.innerHTML = links.map(x => {
+            const k = txt(x.platform);
+            return `<a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer"
+                       data-hover aria-label="${esc(LABEL[k] || k)}">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                           stroke="currentColor" stroke-width="1.4" aria-hidden="true">${ICON[k]}</svg>
+                    </a>`;
+          }).join('');
+        }else{
+          row.remove();       // nothing to link to
+        }
+      }
+
+      /* --- the Get In Touch column --- */
+      const cx = foot.querySelector('.ft-cx');
+      if(cx){
+        const addr = cx.querySelector('span');
+        if(addr && txt(d.address))
+          addr.innerHTML = esc(d.address).replace(/\r?\n/g, '<br>');
+
+        const tel = cx.querySelector('a[href^="tel:"]');
+        if(tel && txt(d.phone)){
+          tel.textContent = txt(d.phone);
+          tel.setAttribute('href', 'tel:' + txt(d.phone).replace(/[^+\d]/g, ''));
+        }
+        const mail = cx.querySelector('a[href^="mailto:"]');
+        if(mail && txt(d.email)){
+          mail.textContent = txt(d.email);
+          mail.setAttribute('href', 'mailto:' + txt(d.email));
+        }
+      }
+
+      /* --- the small line at the bottom --- */
+      if(txt(d.copyright)){
+        const bar = foot.querySelector('.ft-bar p');
+        if(bar) bar.textContent = txt(d.copyright);
       }
     }
   })();

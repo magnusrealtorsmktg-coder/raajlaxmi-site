@@ -234,10 +234,15 @@ project, feeding **all three collection pages and the detail page**
 **The `homepage` singleton.** One document, fixed id `homepage`, reached from
 its own sidebar entry (`sanity.config.js` → `structure`); its generic template
 is filtered out of the global "create" menu so a second one cannot be made. It
-carries three groups — Hero (headline lines, sub, the three dropdown lists,
-button label), About (label, ghost word, heading lines, paragraphs, photograph
-and the four counting figures) and Signature Projects (label, heading, intro and
-the four cards). `studio/scripts/seed-home.mjs` fills it with the copy that was
+carries four groups — Hero (headline lines, sub, the three dropdown lists,
+button label, and a background photograph or video), About (label, ghost word,
+heading lines, paragraphs, photograph or video, and the four counting figures),
+Why Raajlaxmi (label, heading, intro, banner photograph or video, the numbered
+points, the timeline, and the closing quote) and Signature Projects (label,
+heading, intro and the four cards). The numbered points are numbered by position,
+so the client never types "01"; the sketched tower in the timeline is a sibling of
+the dated events and is moved back to last after the list is rebuilt, or the gold
+rail stops running behind them. `studio/scripts/seed-home.mjs` fills it with the copy that was
 written into `index.html` and uploads the About plate, so the client opens a
 filled form rather than a blank one; it is `createOrReplace`, so re-running it
 **discards their edits** — only run it on a fresh dataset.
@@ -283,6 +288,36 @@ keyboard all work without JS; the arrows just nudge the same scroller and are
 dimmed, not removed, at the ends. It ships with `hidden` on it and is revealed
 only once the CMS carries at least one photograph — the one place on the site
 where an empty block removes itself rather than falling back to markup.
+
+**Site settings.** A singleton (`site-settings`) holding the **social handles**
+and the footer's telephone, email, address and copyright line. Its block is
+identical in all eight files and reads one document, so the number that used to
+be typed into every footer is now edited once. The four social icons were
+hard-coded with `href="#"`; they are now drawn from the CMS — the SVG paths live
+in an `ICON` map in that block, so adding a network is one entry there plus one
+option in the schema — and **the row removes itself when no handles are set**,
+because four buttons that go nowhere are worse than none.
+
+**Contact page.** A singleton (`contact-page`) covering the label, heading (plus
+its gold phrase), intro, the four info boxes, the enquiry card's wording, the
+thank-you state and the location card. Each info box swaps between a link and a
+paragraph depending on whether the CMS gives it a `link`, so "Business Hours"
+stays plain text while "Call Us" becomes a `tel:`. The **map pin is a geopoint**
+that drives both the directions button and the embedded Google frame.
+
+**Hero, About and Why can each take a video.** `mountVideo()` in the home-page
+block is shared by all three: it drops a silent looping `<video>` into an element
+that is already showing a picture, and is **skipped on phones, on data-saver
+connections and under `prefers-reduced-motion`**, removing itself if the file
+errors or autoplay is refused. The photograph is always painted first, which is
+what those four cases fall back to.
+
+**Do not give `.why-feature .img` a `position`.** It is `position:absolute;
+inset:-9% 0`, and setting it to `relative` drops the inset and collapses the
+banner to zero height — which is exactly what happened when the video CSS first
+tried to make it a positioning context. It and `.ab-photo` are both already
+positioned, so the video anchors without help; only `overflow:hidden` is needed,
+for the About plate's 30px radius.
 
 **Studio sidebar.** `Home page`, then **All Projects**, which holds the
 browse-everything page's own content and then one folder per stage —

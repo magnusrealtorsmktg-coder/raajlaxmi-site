@@ -154,6 +154,22 @@ const structure = (S) =>
                 ),
             ]),
         ),
+
+      S.listItem()
+        .id('contact-page')
+        .title('Contact page')
+        .child(
+          S.document().schemaType('contactPage').documentId('contact-page').title('Contact page'),
+        ),
+
+      S.divider(),
+      /* the handful of things that are the same on every page */
+      S.listItem()
+        .id('site-settings')
+        .title('Site settings')
+        .child(
+          S.document().schemaType('siteSettings').documentId('site-settings').title('Site settings'),
+        ),
     ])
 
 export default defineConfig({
@@ -170,7 +186,7 @@ export default defineConfig({
     templates: (prev) => [
       /* drop the singleton's generic template so it cannot be created a second
          time from the global "create" menu — it is reached through the sidebar */
-      ...prev.filter((t) => !['homepage', 'collectionPage', 'testimonialsPage'].includes(t.schemaType)),
+      ...prev.filter((t) => !['homepage', 'collectionPage', 'testimonialsPage', 'contactPage', 'siteSettings'].includes(t.schemaType)),
       {
         id: 'project-by-stage',
         title: 'Project',

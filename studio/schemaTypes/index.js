@@ -3,5 +3,9 @@ import homepage from './homepage.js'
 import collectionPage from './collectionPage.js'
 import testimonial from './testimonial.js'
 import testimonialsPage from './testimonialsPage.js'
+import contactPage from './contactPage.js'
+import siteSettings from './siteSettings.js'
 
-export const schemaTypes = [project, homepage, collectionPage, testimonial, testimonialsPage]
+export const schemaTypes = [
+  project, homepage, collectionPage, testimonial, testimonialsPage, contactPage, siteSettings,
+]

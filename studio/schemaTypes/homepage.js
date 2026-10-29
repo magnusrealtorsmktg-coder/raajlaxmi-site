@@ -27,6 +27,7 @@ export default {
   groups: [
     {name: 'hero', title: 'Hero', default: true},
     {name: 'about', title: 'About'},
+    {name: 'why', title: 'Why Raajlaxmi'},
     {name: 'signature', title: 'Signature Projects'},
   ],
 
@@ -126,6 +127,15 @@ export default {
       group: 'about',
     },
     {
+      name: 'aboutVideo',
+      title: 'Video instead of the photograph',
+      type: 'file',
+      options: {accept: 'video/mp4,video/webm,video/quicktime'},
+      description:
+        'Plays silently on a loop in place of the photograph above. Keep it short and small — under about 10 seconds and 8MB. It is skipped on phones and for visitors with data-saving on, so set the photograph as well: that is what they will see.',
+      group: 'about',
+    },
+    {
       name: 'stats',
       title: 'The figures',
       type: 'array',
@@ -179,6 +189,105 @@ export default {
         },
       ],
       group: 'about',
+    },
+
+    /* ---------------- WHY RAAJLAXMI ---------------- */
+    {
+      name: 'whyLabel',
+      title: 'Small label',
+      type: 'string',
+      group: 'why',
+    },
+    {
+      name: 'whyHeading',
+      title: 'Heading',
+      type: 'array',
+      of: [{type: 'string'}],
+      description: 'One line per row. Two lines is the design — the gold full stop is added for you.',
+      group: 'why',
+    },
+    {
+      name: 'whyIntro',
+      title: 'Intro paragraph',
+      type: 'text',
+      rows: 3,
+      group: 'why',
+    },
+    {
+      name: 'whyImage',
+      title: 'Banner photograph',
+      type: 'image',
+      options: {hotspot: true},
+      description:
+        'The wide picture under the heading — currently the group photograph. It is cropped wide, so set the hotspot on the people.',
+      group: 'why',
+    },
+    {
+      name: 'whyVideo',
+      title: 'Video instead of that photograph',
+      type: 'file',
+      options: {accept: 'video/mp4,video/webm,video/quicktime'},
+      description:
+        'Same rules as the others: silent, looping, skipped on phones and for data-saving visitors. Set the photograph above as well.',
+      group: 'why',
+    },
+    {
+      name: 'whyRows',
+      title: 'The numbered points',
+      type: 'array',
+      description: 'Four is the design. They are numbered 01, 02, 03… for you — do not type the numbers.',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            {name: 'title', title: 'Heading', type: 'string', validation: (R) => R.required()},
+            {name: 'text', title: 'Paragraph', type: 'text', rows: 3},
+          ],
+          preview: {select: {title: 'title', subtitle: 'text'}},
+        },
+      ],
+      group: 'why',
+    },
+    {
+      name: 'whyTimeline',
+      title: 'The timeline',
+      type: 'array',
+      description: 'The dated points down the gold line. Four is the design.',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            {name: 'year', title: 'Year', type: 'string', validation: (R) => R.required()},
+            {
+              name: 'text',
+              title: 'What happened',
+              type: 'text',
+              rows: 2,
+              description: 'Press Enter for a line break.',
+            },
+          ],
+          preview: {
+            select: {title: 'year', subtitle: 'text'},
+            prepare: ({title, subtitle}) => ({title, subtitle: (subtitle || '').replace(/\n/g, ' ')}),
+          },
+        },
+      ],
+      group: 'why',
+    },
+    {
+      name: 'whyQuote',
+      title: 'Closing quote',
+      type: 'text',
+      rows: 3,
+      description: 'No quotation marks — the section draws its own.',
+      group: 'why',
+    },
+    {
+      name: 'whyQuoteBy',
+      title: 'Quote — who said it',
+      type: 'string',
+      description: 'The line under the quote. The dash is added for you.',
+      group: 'why',
     },
 
     /* ---------------- SIGNATURE PROJECTS ---------------- */
