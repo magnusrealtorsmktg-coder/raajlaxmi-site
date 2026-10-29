@@ -38,6 +38,14 @@ export default {
         'The small round picture beside the name. It is cropped to a circle, so set the hotspot on the face. Leave blank and a plain tone is shown instead.',
     },
     {
+      name: 'googleUrl',
+      title: 'Google review link',
+      type: 'url',
+      description:
+        'Paste the link to this review on Google. A small Google button appears in the corner of the card and opens it in a new tab — leave this empty and no button is shown. To get it: find the review on your Google Business profile, use Share, and copy the link.',
+      validation: (R) => R.uri({scheme: ['http', 'https']}),
+    },
+    {
       name: 'stars',
       title: 'Stars',
       type: 'number',

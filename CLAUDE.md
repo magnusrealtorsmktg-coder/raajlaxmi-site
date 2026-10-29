@@ -321,6 +321,17 @@ spread can be rebuilt and re-measured when the reviews arrive; its click and
 keyboard listeners are delegated to `track` and `dots`, which is what lets their
 children be replaced without rewiring.
 
+Each review can carry a **Google review link** (`googleUrl`). When it does, a small
+four-colour Google button appears in the bottom-right corner of that card and opens
+the review in a new tab; a review without one shows no button. The mark is drawn in
+the script rather than loaded, and the button sits in the same row as the name with
+`margin-left:auto` rather than being positioned out of the flow, which would have
+let it ride over the stars on a narrow card. **The carousel's click and keyboard
+handlers now ignore anything inside an `<a>`** — a side card doubles as its own
+next/prev button, so without that guard clicking the Google button would also
+advance the carousel, and Enter on it would be swallowed by the handler's
+`preventDefault` instead of opening the review.
+
 **The client photo slider** (`.tg`, between the carousel and the closing strip)
 is a `scroll-snap` scroller rather than a transform track, so touch, trackpad and
 keyboard all work without JS; the arrows just nudge the same scroller and are

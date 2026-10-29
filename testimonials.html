@@ -1266,6 +1266,19 @@
     margin-top:.15rem;}
   .tm-stars{display:flex;gap:.28rem;margin-top:.5rem;color:#C6A15B;}
 
+  /* Google button, bottom-right of the card. `margin-left:auto` pushes it to
+     the far edge of the same row the name sits on, so it lands in the corner
+     without being positioned out of the flow — which would have let it ride
+     over the stars on a narrow card. */
+  .tm-goog{flex:none;margin-left:auto;align-self:flex-end;
+    width:2.5rem;height:2.5rem;border-radius:50%;display:grid;place-items:center;
+    background:#fff;border:1px solid rgba(28,28,28,.12);
+    box-shadow:0 10px 24px -14px rgba(40,32,18,.5);
+    transition:transform .35s var(--lux),box-shadow .35s var(--lux),border-color .35s var(--lux);}
+  .tm-goog:hover{transform:translateY(-2px);border-color:rgba(198,161,91,.55);
+    box-shadow:0 14px 30px -14px rgba(40,32,18,.55);}
+  .tm-goog svg{display:block;}
+
   /* ---- controls ---- */
   .tm-arw{position:absolute;top:50%;z-index:4;width:3.2rem;height:3.2rem;border-radius:50%;
     display:grid;place-items:center;background:#fff;color:#B08A44;
@@ -1868,6 +1881,16 @@
        'Ms. Ritika Nair', 'Raajlaxmi Essence, Mumbai', 'rl-voice-5']
     ];
 
+    /* the four-colour G, drawn rather than loaded — one less request, and it
+       cannot break if an external asset moves */
+    const GOOGLE_G =
+      '<svg width="15" height="15" viewBox="0 0 48 48" aria-hidden="true">' +
+      '<path fill="#4285F4" d="M45.1 24.5c0-1.6-.1-2.8-.4-4H24v7.3h12.1c-.2 2-1.6 5-4.5 7l6.9 5.4c4.1-3.8 6.6-9.4 6.6-15.7z"/>' +
+      '<path fill="#34A853" d="M24 46c5.9 0 10.9-2 14.5-5.3l-6.9-5.4c-1.8 1.3-4.3 2.2-7.6 2.2-5.8 0-10.8-3.8-12.5-9.1l-7.1 5.5C8.1 41.1 15.4 46 24 46z"/>' +
+      '<path fill="#FBBC05" d="M11.5 28.4c-.5-1.3-.7-2.7-.7-4.4s.3-3.1.7-4.4l-7.1-5.5C2.9 17 2 20.4 2 24s.9 7 2.4 9.9l7.1-5.5z"/>' +
+      '<path fill="#EA4335" d="M24 10.5c4.1 0 6.9 1.8 8.5 3.3l6.1-6C34.9 4.3 29.9 2 24 2 15.4 2 8.1 6.9 4.4 14.1l7.1 5.5c1.7-5.3 6.7-9.1 12.5-9.1z"/>' +
+      '</svg>';
+
     const STAR = '<svg width="13" height="13" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M7 .8l1.9 3.9 4.3.6-3.1 3 .7 4.3L7 10.6 3.2 12.6l.7-4.3-3.1-3 4.3-.6z"/></svg>';
     /* PLACEHOLDER portraits: seeded picsum over a tonal gradient, same
        convention as the collection grid. */
@@ -1883,7 +1906,7 @@
 
     /* the written-in five, normalised to the same shape the CMS answers in */
     let T = FALLBACK.map(([say,name,at,seed]) =>
-      ({say, name, at, face: face(seed), stars: 5}));
+      ({say, name, at, face: face(seed), stars: 5, google: ''}));
 
     let cards = [], dotEls = [], at = 0;
 
@@ -1904,6 +1927,10 @@
             <div class="tm-at">${esc(t.at)}</div>
             <div class="tm-stars" aria-label="${t.stars} out of five">${STAR.repeat(t.stars)}</div>
           </div>
+          ${t.google ? `<a class="tm-goog" href="${esc(t.google)}" target="_blank"
+               rel="noopener noreferrer" data-hover
+               aria-label="Read ${esc(t.name)}'s review on Google"
+               title="Read this review on Google">${GOOGLE_G}</a>` : ''}
         </div>
       </article>`).join('');
 
@@ -1943,12 +1970,17 @@
     dots.addEventListener('click', e=>{
       const d = e.target.closest('.tm-dot'); if(d) go(+d.dataset.i);
     });
-    /* a side card is its own next/prev button */
+    /* A side card is its own next/prev button — but the Google button is a real
+       link inside that card. Without these guards a click on it would also
+       advance the carousel, and Enter on it would be swallowed by the
+       preventDefault below instead of opening the review. */
     track.addEventListener('click', e=>{
+      if(e.target.closest('a')) return;
       const c = e.target.closest('.tm-card'); if(c) go(+c.dataset.i);
     });
     track.addEventListener('keydown', e=>{
       if(e.key !== 'Enter' && e.key !== ' ') return;
+      if(e.target.closest('a')) return;
       const c = e.target.closest('.tm-card');
       if(c){ e.preventDefault(); go(+c.dataset.i); }
     });
@@ -1962,7 +1994,7 @@
     (function(){
       const Q = encodeURIComponent(
         `*[_type=="testimonial"]|order(order asc,_createdAt asc)` +
-        `{quote,name,at,stars,"portrait":portrait.asset->url}`);
+        `{quote,name,at,stars,googleUrl,"portrait":portrait.asset->url}`);
       fetch(`https://${SANITY.projectId}.apicdn.sanity.io/v${SANITY.apiVersion}` +
             `/data/query/${SANITY.dataset}?query=${Q}`)
         .then(r => r.ok ? r.json() : Promise.reject(r.status))
@@ -1974,6 +2006,7 @@
             name : r.name,
             at   : r.at || '',
             stars: Math.min(5, Math.max(1, parseInt(r.stars, 10) || 5)),
+            google: r.googleUrl || '',
             face : r.portrait
               ? `url('${r.portrait}?w=160&h=160&fit=crop&crop=focalpoint&auto=format')`
               : 'linear-gradient(160deg,#cdc4b4,#8a8072)',
