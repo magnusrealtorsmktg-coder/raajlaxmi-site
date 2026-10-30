@@ -342,7 +342,7 @@ export default {
       group: 'owners',
     },
     {
-      ...lines('ownersHeading', 'Heading', 'One line per row. Two lines is the design; the gold full stop is added for you.'),
+      ...lines('ownersHeading', 'Heading', 'One line per row. The design is a single row — "Meet Our Owners" — but a second will stack beneath it. Type the full stop or leave it off; the gold one is kept either way.'),
       group: 'owners',
     },
     {
