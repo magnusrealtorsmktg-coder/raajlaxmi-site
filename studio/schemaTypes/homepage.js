@@ -29,6 +29,7 @@ export default {
     {name: 'about', title: 'About'},
     {name: 'why', title: 'Why Raajlaxmi'},
     {name: 'signature', title: 'Signature Projects'},
+    {name: 'owners', title: 'Meet Our Owners'},
   ],
 
   fields: [
@@ -330,6 +331,74 @@ export default {
         },
       ],
       group: 'signature',
+    },
+
+    /* ---------------- MEET OUR OWNERS ---------------- */
+    {
+      name: 'ownersLabel',
+      title: 'Small label',
+      type: 'string',
+      description: 'The little line above the heading — currently "Our Leadership".',
+      group: 'owners',
+    },
+    {
+      ...lines('ownersHeading', 'Heading', 'One line per row. Two lines is the design; the gold full stop is added for you.'),
+      group: 'owners',
+    },
+    {
+      name: 'ownersIntro',
+      title: 'Intro paragraph',
+      type: 'text',
+      rows: 3,
+      group: 'owners',
+    },
+    {
+      name: 'owners',
+      title: 'The owners',
+      type: 'array',
+      description:
+        'One card each. Six is what the grid was drawn for — three across, two rows. Fewer simply leaves the last row short; more wraps to a third row. Until someone is added here the whole section is left off the home page.',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            {
+              name: 'name',
+              title: 'Name',
+              type: 'string',
+              description: 'As it should read on the card — e.g. "Mr. Hemant Deepak Sampat".',
+              validation: (R) => R.required(),
+            },
+            {
+              name: 'role',
+              title: 'Role',
+              type: 'text',
+              rows: 3,
+              description:
+                'The gold line under the name. Set in capitals by the page, so type it normally — e.g. "Board Member – Sales Strategy & Administration | People-Centric Leader".',
+            },
+            {
+              name: 'bio',
+              title: 'One line about them',
+              type: 'text',
+              rows: 2,
+              description: 'The small line at the foot of the card — e.g. "16+ years of experience in sales and strategy."',
+            },
+            {
+              name: 'photo',
+              title: 'Portrait',
+              type: 'image',
+              options: {hotspot: true},
+              description:
+                'A portrait, taller than it is wide. The card is 3:4 and the copy sits over the bottom third, so leave room there — set the hotspot on the face if the crop needs steering.',
+            },
+          ],
+          preview: {
+            select: {title: 'name', subtitle: 'role', media: 'photo'},
+          },
+        },
+      ],
+      group: 'owners',
     },
   ],
 
