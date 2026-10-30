@@ -13,16 +13,27 @@ Deployed to Netlify from the CLI. There is no build step — but **do not publis
 ## Where this stands (handover, 30 Oct 2026)
 
 The site is **built, deployed and live** at
-<https://stirring-basbousa-6d4b4b.netlify.app>, and **almost every page is now
-driven by Sanity** — see *Content management*. Construction is essentially done.
+<https://raajlaxmi-site.netlify.app> (Netlify team `magnus realtorsmktg`,
+deployed from `magnusrealtorsmktg-coder/raajlaxmi-site` on GitHub), and **almost
+every page is now driven by Sanity** — see *Content management*. Construction is essentially done.
 What remains is **content** the client has to supply, plus the two launch
 blockers below.
 
-### Deploy: do not publish the repo root
+### Deploy: pushing to main is the deploy
 
-`.netlify/netlify.toml` still says `publish` = the project directory, but that
-directory now contains `studio/node_modules` — **562MB across 46,000 files**.
-Never run a bare `netlify deploy` from here. Publish exactly what is committed:
+The site is a Netlify project connected to this GitHub repository, so **`git
+push origin main` publishes it** — there is no build command and no deploy
+command to run. Netlify clones only the tracked files (87 of them, ~8.5MB),
+which is why this is the safe arrangement: `studio/node_modules` is 562MB
+across 46,000 files and lives in the working directory, not the repository.
+
+`netlify.toml` at the repo root carries the whole configuration (`publish = "."`,
+no build command). `.netlify/` is gitignored local CLI state and is **not**
+deploy config — its `publish` still points at one laptop's absolute path.
+
+**If you ever deploy from a laptop anyway**, never run a bare `netlify deploy`
+from here: it publishes the *working directory*, `node_modules` and all. Export
+the commit first:
 
 ```bash
 rm -rf /tmp/rl-deploy && mkdir -p /tmp/rl-deploy
@@ -30,18 +41,30 @@ git archive HEAD | tar -x -C /tmp/rl-deploy
 netlify deploy --prod --dir=/tmp/rl-deploy        # ~87 files, 8.6MB
 ```
 
-That also makes the deploy reproducible from any checkout. **The Studio deploys
-separately** (`cd studio && npm run deploy`) — it republishes the editing
-interface and does nothing to the website.
+**The Studio deploys separately** (`cd studio && npm run deploy`) — it
+republishes the editing interface and does nothing to the website.
 
-**Claude Code cannot run the production deploy itself**: the auto-mode
-classifier blocks it as `[Production Deploy]`, and blocks editing
+**Every origin the site is served from must be listed in Sanity's CORS
+allowlist** (manage.sanity.io → project `lc9w15ba` → API → CORS origins,
+credentials off). This is the one setting that breaks the site *silently*: a
+missing origin does not error, it falls through to the placeholder content
+written into the HTML — eight fictional Mumbai projects and five invented
+testimonials. Adding a custom domain later means adding that origin too.
+
+**Netlify rewrites the HTML it serves.** Asset post-processing reorders
+attributes, re-quotes them and strips `.html` from hrefs, so the live
+`projects.html` says `href='/projects?status=completed'` where the repo says
+`href="projects.html?status=completed"`. Both spellings are served (the `.html`
+URLs still return 200, no redirect), and JS-built links are untouched — which is
+why the banner hotspots still emit `project.html?p=<slug>` and still work. Grep
+the *repo* rather than the live page when checking whether something shipped.
+
+**Claude Code cannot run a CLI production deploy**: the auto-mode classifier
+blocks it as `[Production Deploy]`, and blocks editing
 `.claude/settings.local.json` to loosen that as `[Self-Modification]`. The
-`Bash(netlify deploy *)` permission rule is already present and is *not* what
-stops it — the classifier is a separate layer. So the working pattern is: Claude
-verifies locally, commits and pushes; the user runs the one deploy command. The
-user asked for this explicitly, to avoid spending Netlify credits on
-unverified builds — **check locally before proposing a deploy**.
+`Bash(netlify deploy *)` permission rule is present and is *not* what stops it.
+Since pushing is now the deploy, **a push to `main` publishes to production** —
+treat it as the outward-facing action it is and confirm before pushing.
 
 ### Verifying locally — and one headless trap
 
