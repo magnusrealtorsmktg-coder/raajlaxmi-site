@@ -208,10 +208,13 @@
     border-color:rgba(29,34,41,.1);box-shadow:0 30px 64px -34px rgba(40,32,18,.5);}
   .nav-wrap.on-light .nav-menu a{color:rgba(29,34,41,.7);}
   .nav-wrap.on-light .nav-menu a:hover{color:#1D2229;background:rgba(201,161,90,.16);}
-  .nav-wrap.on-light .nav-cta{color:#1D2229;border-color:rgba(29,34,41,.28);
-    background:rgba(29,34,41,.02);text-shadow:none;}
-  .nav-wrap.on-light .nav-cta:hover{border-color:var(--champagne);color:#8A6E33;
-    background:rgba(203,169,107,.10);}
+  /* the fill carries over ivory too — it is the same button, and the gold sits
+     as clearly on paper as it does on a photograph */
+  .nav-wrap.on-light .nav-cta{color:#14243C;border-color:var(--champagne);
+    background:var(--champagne);text-shadow:none;
+    box-shadow:0 10px 24px -16px rgba(40,32,18,.55);}
+  .nav-wrap.on-light .nav-cta:hover{border-color:var(--champagne-soft);color:#14243C;
+    background:var(--champagne-soft);}
   .nav-wrap.on-light .burger span{background:#1D2229;}
   /* two cuts of the mark: gold ink for dark grounds, brown ink for light paper */
   .nav-wrap.on-light .brand-logo-dark{opacity:0;}
@@ -269,12 +272,26 @@
   .nav-menu a::after{display:none;}            /* no underline sweep inside the menu */
   .nav-menu a:hover{color:var(--champagne-soft);background:rgba(203,169,107,.12);}
   .nav-cta{
+    /* `position:relative` is load-bearing: `.nav-wrap::before` is the scroll
+       scrim and it is absolutely positioned, so it paints over any in-flow
+       sibling. The nav links already carry relative for their underline and
+       so escape it — this button did not, and the scrim was being laid over
+       the one element on the bar anyone is meant to click. */
+    position:relative;
     font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--paper);
-    padding:.72rem 1.35rem;border:1px solid rgba(255,255,255,.42);border-radius:999px;
-    background:rgba(8,13,20,.18);text-shadow:0 1px 12px rgba(8,13,20,.55);
+    padding:.72rem 1.35rem;border:1px solid var(--champagne);border-radius:999px;
+    /* A filled pill, not an outline. As an outline it was the one element on
+       the bar with no ground of its own, so over a bright hero it dissolved
+       into the photograph — and it is the only thing up there anyone is meant
+       to click. Gold on dark ink is the same treatment the page's other
+       primary buttons use, so it reads as the same kind of thing. */
+    background:var(--champagne);color:#14243C;font-weight:500;
+    box-shadow:0 10px 26px -14px rgba(40,32,18,.65);
     transition:all .45s var(--lux);white-space:nowrap;
   }
-  .nav-cta:hover{border-color:var(--champagne);color:var(--champagne-soft);background:rgba(203,169,107,.08);}
+  .nav-cta:hover{border-color:var(--champagne-soft);color:#14243C;
+    background:var(--champagne-soft);transform:translateY(-1px);
+    box-shadow:0 14px 30px -14px rgba(40,32,18,.7);}
   .burger{display:none;width:28px;height:16px;position:relative;cursor:pointer;}
   .burger span{position:absolute;left:0;height:1px;width:100%;background:var(--paper);
     transition:transform .5s var(--lux),opacity .3s var(--lux);}

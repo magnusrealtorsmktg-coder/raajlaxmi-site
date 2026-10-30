@@ -228,6 +228,16 @@ is **on from the start and lifts under `.on-light`** instead — over ivory the 
 is already charcoal and a dark veil there would be wrong. Shadows are cleared in the
 `.on-light` state, where they only muddy charcoal.
 
+**The `Book Consultation` button is a filled gold pill, and carries
+`position:relative`.** That last part is load-bearing: `.nav-wrap::before` is the
+scroll scrim and it is absolutely positioned, so it paints over any in-flow
+sibling. The nav links already carry `relative` for their underline and so escape
+it; the button did not, and a dark veil was being laid over the one element on the
+bar anyone is meant to click. As an outline it was also the only thing up there
+with no ground of its own, so over a bright hero it dissolved into the photograph.
+Filled, it is `--champagne` on `#14243C` — a 7:1 contrast ratio, the same treatment
+the page's other primary buttons use — and it keeps that fill over ivory too.
+
 **The hero search is built from the published projects.** Property and Location were
 a hand-typed list in the `homepage` singleton that matched nothing — a visitor could
 choose a locality the group does not build in, and the form merely scrolled the
