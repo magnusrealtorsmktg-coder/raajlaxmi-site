@@ -605,8 +605,13 @@
     border-left:1px solid rgba(201,161,90,.45);}
   /* the CREDAI lockup is far wider than the RERA roundel — cap it so neither
      mark steals the caption's column */
-  .ab-cred img{height:clamp(44px,4.4vh,70px);width:auto;flex:none;
-    max-width:clamp(116px,11vw,164px);object-fit:contain;}
+  /* The marks were rendering 32-48px tall, which is smaller than their own
+     captions read. Raised — but not past ~78px: the source files are 173px and
+     402px wide, so beyond that the RERA roundel drops under 2x and goes soft on
+     a retina screen. The width cap rises with the height or the CREDAI lockup,
+     which is 2.36:1, stops growing before the roundel does. */
+  .ab-cred img{height:clamp(62px,6.4vh,78px);width:auto;flex:none;
+    max-width:clamp(150px,15vw,190px);object-fit:contain;}
   .ab-cred p{font-size:clamp(.78rem,.68vw,.9rem);line-height:1.7;
     color:var(--body);font-weight:300;}
 
@@ -623,7 +628,7 @@
     .ab-copy p{font-size:clamp(.85rem,.95vw,16px);line-height:1.55;}
     .ab-stat{padding:clamp(.7rem,1.4vh,1rem) clamp(.7rem,1vw,.95rem);}
     .ab-num{font-size:clamp(1.3rem,1.9vw,1.75rem);}
-    .ab-cred img{height:clamp(38px,3.6vh,52px);}
+    .ab-cred img{height:clamp(54px,5.2vh,66px);}
     .ab-cred p{font-size:clamp(.72rem,.62vw,.8rem);line-height:1.55;}
   }
   /* A second tier for genuinely short windows. The CMS copy runs longer than
@@ -641,7 +646,7 @@
     .ab-slab{margin:clamp(.3rem,.7vh,.5rem) 0;}
     .ab-scap{font-size:clamp(.66rem,.5vw,.74rem);}
     .ab-creds{margin-top:clamp(.9rem,2vh,1.5rem);}
-    .ab-cred img{height:clamp(32px,3vh,44px);}
+    .ab-cred img{height:clamp(44px,4.4vh,56px);}
   }
   /* Below this even the stepped-down version cannot clear the bar, and hiding
      content under the navbar is worse than a short scroll. */
