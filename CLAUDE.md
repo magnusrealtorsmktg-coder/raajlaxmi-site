@@ -493,11 +493,33 @@ advance the carousel, and Enter on it would be swallowed by the handler's
 `preventDefault` instead of opening the review.
 
 **The client photo slider** (`.tg`, between the carousel and the closing strip)
-is a `scroll-snap` scroller rather than a transform track, so touch, trackpad and
-keyboard all work without JS; the arrows just nudge the same scroller and are
-dimmed, not removed, at the ends. It ships with `hidden` on it and is revealed
-only once the CMS carries at least one photograph — the one place on the site
-where an empty block removes itself rather than falling back to markup.
+**runs as a continuous marquee, the same way the reviews above it do** — a CSS
+animation on `.tg-track` (`@keyframes tg-marquee`, `--tg-loop` / `--tg-dur`,
+`SPEED` 42 px/s, slower than the reviews' 70 because these are photographs
+rather than lines of text). The compositor drives it, `.tg-stage:hover` and
+`:focus-within` pause it with no script, a background tab stops it for free, and
+it is verifiable in headless Chrome. The stage carries the same edge-fade mask as
+the reviews. It ships with `hidden` on it and is revealed only once the CMS
+carries at least one photograph — the one place on the site where an empty block
+removes itself rather than falling back to markup.
+
+**The number of copies is computed, not fixed.** A marquee has to be at least one
+full set wider than its stage or translating by one set width runs off the end
+and shows a gap. The reviews can render exactly twice because six cards already
+overflow the stage; the gallery cannot, because it may hold a single photograph —
+with one, a 300px tile against a 1312px stage needs **six** copies. `build()`
+measures a tile, works out `max(2, ceil(stageWidth / setWidth) + 1)` sets, renders
+that many and re-measures; it re-runs on `load`, `fonts.ready` and `resize`,
+because a wider window needs more of them. Copies past the first carry
+`aria-hidden` and an empty `alt`.
+
+**Reduced motion keeps every photograph reachable**, which is where this differs
+from the reviews: that strip simply rests, leaving later cards unreachable. Here
+the branch renders a *single* set, puts `overflow-x:auto` and the scroll-snap
+back on the track, drops the mask and **brings the arrows back** (they are
+`display:none` in the marquee, where there are no discrete slides to point at).
+`ends()` returns early unless the branch is active, and the `change` listener on
+the media query rebuilds if the preference is toggled live.
 
 **The tiles are square** (`.tg-ph{aspect-ratio:1/1}`, requested at `w=760&h=760`).
 They were 4:3, which threw away 25% of the height of a 1:1 file — on the first

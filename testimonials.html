@@ -1569,15 +1569,27 @@
   .tg-intro{margin:.7rem auto 0;max-width:46ch;font-family:"Inter",sans-serif;
     font-weight:300;font-size:clamp(.88rem,1.5vw,.95rem);line-height:1.6;color:var(--body);}
 
-  .tg-stage{position:relative;}
-  /* scroll-snap rather than a transform track: it gives touch swipe, keyboard
-     and trackpad for free, and the arrows just nudge the same scroller */
-  .tg-track{display:flex;gap:clamp(.8rem,1.6vw,1.3rem);overflow-x:auto;
-    scroll-snap-type:x mandatory;scroll-behavior:smooth;
+  /* The photographs run continuously, the same way the reviews above them do:
+     a CSS animation rather than a per-frame transform, so the compositor drives
+     it, hover pauses it with no script, a background tab stops it for free, and
+     it can actually be verified in headless Chrome (which throttles rAF to about
+     three frames a second). The edges fade so tiles enter and leave rather than
+     being chopped off by the stage. */
+  .tg-stage{position:relative;overflow:hidden;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 7%,#000 93%,transparent 100%);
+            mask-image:linear-gradient(90deg,transparent 0,#000 7%,#000 93%,transparent 100%);}
+  @keyframes tg-marquee{
+    from{transform:translateX(0);}
+    to  {transform:translateX(calc(-1 * var(--tg-loop, 0px)));}
+  }
+  .tg-track{display:flex;gap:clamp(.8rem,1.6vw,1.3rem);
     padding:.4rem clamp(.2rem,1vw,.6rem) 1rem;
-    scrollbar-width:none;-ms-overflow-style:none;}
-  .tg-track::-webkit-scrollbar{display:none;}
-  .tg-item{flex:0 0 clamp(210px,26vw,300px);scroll-snap-align:center;margin:0;}
+    width:max-content;will-change:transform;
+    animation:tg-marquee var(--tg-dur, 40s) linear infinite;}
+  /* hover or keyboard focus holds the row still so a photograph can be looked at */
+  .tg-stage:hover .tg-track,
+  .tg-stage:focus-within .tg-track{animation-play-state:paused;}
+  .tg-item{flex:0 0 clamp(210px,26vw,300px);margin:0;}
   /* Square, because these are handover photographs and the client's are square
      posters — a 4:3 tile threw away 25% of a 1:1 file, which on the first one
      uploaded was exactly the "CONGRATULATIONS TO ..." line along the bottom.
@@ -1603,6 +1615,10 @@
   /* an arrow with nowhere to go is dimmed rather than removed, so the row
      does not jump as the slider reaches its ends */
   .tg-arw[disabled]{opacity:.3;pointer-events:none;}
+  /* A strip that never stops has no discrete slides for these to point at, so
+     they are hidden rather than deleted — dropping this rule brings the stepped
+     controls back, and the reduced-motion branch below does exactly that. */
+  .tg-arw{display:none;}
 
   @media(max-width:620px){
     .tg-item{flex:0 0 min(78vw,300px);}
@@ -1610,7 +1626,16 @@
   }
   @media (prefers-reduced-motion:reduce){
     .tg{opacity:1 !important;transform:none !important;}
-    .tg-track{scroll-behavior:auto;}
+    /* No drifting here — but the photographs must still all be reachable, so
+       the row goes back to being the scroller it used to be and the arrows
+       come back with it. The script renders a single set in this mode, so
+       there is nothing duplicated to scroll past. */
+    .tg-stage{overflow:visible;-webkit-mask-image:none;mask-image:none;}
+    .tg-track{animation:none;width:auto;overflow-x:auto;scroll-behavior:auto;
+      scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;}
+    .tg-track::-webkit-scrollbar{display:none;}
+    .tg-item{scroll-snap-align:center;}
+    .tg-arw{display:grid;}
     .tg-item:hover .tg-ph img{transform:none;}
   }
 
@@ -2390,21 +2415,77 @@
       }
 
       const track = document.getElementById('tgTrack');
-      track.innerHTML = shots.map(g => {
+      const wrap  = document.getElementById('tmGallery');
+      const stage = track.parentElement;
+      const slow  = matchMedia('(prefers-reduced-motion: reduce)');
+
+      const tile = (g, dup) => {
         const alt = esc(g.alt || g.caption || 'Raajlaxmi client');
-        return `<figure class="tg-item">
+        return `<figure class="tg-item"${dup ? ' aria-hidden="true"' : ''}>
           <div class="tg-ph">
             <img src="${esc(g.url)}?w=760&h=760&fit=crop&crop=focalpoint&auto=format"
-                 loading="lazy" decoding="async" alt="${alt}">
+                 loading="lazy" decoding="async" alt="${dup ? '' : alt}">
           </div>
           ${txt(g.caption) ? `<figcaption class="tg-cap">${esc(g.caption)}</figcaption>` : ''}
         </figure>`;
-      }).join('');
+      };
 
-      const wrap = document.getElementById('tmGallery');
+      /* reveal first: a hidden element measures zero, and every width below
+         is measured */
       wrap.hidden = false;
 
-      /* --- arrows nudge the same scroller the finger does --- */
+      /* SPEED is the one number to turn. Slower than the reviews' 70 — these
+         are photographs rather than lines of text, and they read better at a
+         drift than at a scroll. */
+      const SPEED = 42;
+      let sets = 0;
+
+      /* A marquee has to be at least one full set wider than its stage, or
+         translating by one set width runs off the end and shows a gap before
+         the loop restarts. With a single photograph published that means
+         repeating it several times over, so the number of copies is worked out
+         from the measured tile rather than assumed — and re-worked on resize,
+         because a wider window needs more of them. */
+      function build(){
+        if(slow.matches){                     /* one set; the row is a scroller */
+          if(sets !== 1){ track.innerHTML = shots.map(g => tile(g, false)).join(''); sets = 1; }
+          track.style.removeProperty('--tg-loop');
+          track.style.removeProperty('--tg-dur');
+          return;
+        }
+        if(!sets){ track.innerHTML = shots.map(g => tile(g, false)).join(''); sets = 1; }
+
+        const first = track.querySelector('.tg-item');
+        if(!first) return;
+        const gap  = parseFloat(getComputedStyle(track).columnGap) || 0;
+        const setW = shots.length * (first.getBoundingClientRect().width + gap);
+        if(setW <= 0) return;                 /* not laid out yet */
+
+        const want = Math.max(2, Math.ceil(stage.clientWidth / setW) + 1);
+        if(want !== sets){
+          let html = '';
+          for(let i = 0; i < want; i++) html += shots.map(g => tile(g, i > 0)).join('');
+          track.innerHTML = html;
+          sets = want;
+        }
+
+        const items = track.querySelectorAll('.tg-item');
+        if(items.length <= shots.length) return;
+        const loop = items[shots.length].offsetLeft - items[0].offsetLeft;
+        if(loop <= 0) return;
+        track.style.setProperty('--tg-loop', loop + 'px');
+        track.style.setProperty('--tg-dur', (loop / SPEED) + 's');
+      }
+
+      build();
+      /* the photographs land after this runs and change every width in here */
+      addEventListener('load', build);
+      if(document.fonts && document.fonts.ready) document.fonts.ready.then(build);
+      addEventListener('resize', build, {passive:true});
+      slow.addEventListener?.('change', () => { sets = 0; build(); });
+
+      /* --- arrows: only the reduced-motion branch shows them, and only there
+             is the row a scroller for them to nudge --- */
       const prev = document.getElementById('tgPrev'),
             next = document.getElementById('tgNext');
       const step = () => {
@@ -2413,14 +2494,12 @@
         const gap = parseFloat(getComputedStyle(track).columnGap || '0') || 0;
         return first.getBoundingClientRect().width + gap;
       };
-      const nudge = dir => track.scrollBy({left: dir * step(),
-        behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+      const nudge = dir => track.scrollBy({left: dir * step(), behavior:'auto'});
       prev?.addEventListener('click', ()=> nudge(-1));
       next?.addEventListener('click', ()=> nudge(1));
 
-      /* an arrow with nowhere to go is dimmed rather than removed, so the row
-         does not jump when the slider reaches an end */
       function ends(){
+        if(!slow.matches) return;             /* marquee: the arrows are hidden */
         const max = track.scrollWidth - track.clientWidth;
         if(prev) prev.disabled = track.scrollLeft <= 2;
         if(next) next.disabled = track.scrollLeft >= max - 2;
@@ -2430,7 +2509,6 @@
       }
       track.addEventListener('scroll', ends, {passive:true});
       addEventListener('resize', ends, {passive:true});
-      /* images land after this runs and change scrollWidth */
       addEventListener('load', ends);
       setTimeout(ends, 0);
       ends();
