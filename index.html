@@ -819,6 +819,11 @@
      the faint blueprints and the floating stats panel that overlaps downward
      without ever producing a horizontal scrollbar. */
   .why{position:relative;background:#F4F1EA;overflow-x:clip;
+    /* The team photograph is 3:2 and must be seen WHOLE, so the plate is sized
+       from this one number and its width follows the ratio. 58vw is the bound
+       that stops a short, wide window from making it wider than its column —
+       the same trap as the About plate. */
+    --why-h:min(70vh,760px,58vw);
     padding:clamp(6rem,17vh,170px) clamp(1.4rem,5vw,4rem) clamp(6rem,18vh,180px);}
   .why-wrap{position:relative;z-index:2;max-width:1450px;margin:0 auto;}
 
@@ -862,16 +867,31 @@
   .why.in .why-intro{opacity:1;transform:none;}
 
   /* ---- feature image + overlaps ---- */
-  .why-stage{position:relative;margin-top:clamp(2.5rem,4vw,3.5rem);}
-  .why-feature{position:relative;height:clamp(22rem,44vw,650px);border-radius:30px;overflow:hidden;
+  /* The stage is narrowed to the plate rather than the plate being centred
+     inside a full-width stage: the rotating seal is a SIBLING of .why-feature
+     (it has to be — the plate is overflow:hidden and the seal overhangs its
+     corner), so it only stays pinned to that corner if the stage is the same
+     width as the photograph. */
+  .why-stage{position:relative;width:min(100%,calc(var(--why-h) * 1.5));
+    margin:clamp(2.5rem,4vw,3.5rem) auto 0;}
+  .why-feature{position:relative;aspect-ratio:3/2;width:100%;border-radius:30px;overflow:hidden;
     box-shadow:0 60px 120px -48px rgba(40,32,18,.5),0 22px 54px -32px rgba(40,32,18,.26);
     clip-path:inset(0 0 100% 0);transition:clip-path 1.2s var(--lux);}
   .why.in .why-feature{clip-path:inset(0 0 0 0);}
-  /* the plate is ~2.2:1 and the team photo is 3:2, so a centred crop would cut
-     the front row's feet — bias it down onto the people, away from the ceiling */
-  .why-feature .img{position:absolute;inset:-9% 0;background-size:cover;
-    background-position:center 72%;
-    background-color:var(--navy);will-change:transform;}
+  /* The plate used to be ~2.2:1 against a 3:2 photograph, so `cover` ate the
+     ceiling and the front row's feet and the bias to `center 72%` only chose
+     WHICH part to lose. The plate now carries the photograph's own ratio and
+     the fill is `contain`, so the whole group is in frame and a differently
+     shaped file from the CMS letterboxes instead of losing its edges.
+     `no-repeat` is not optional with `contain`: without it any leftover strip
+     tiles a sliver of the image. The old `inset:-9%` overhang is gone too —
+     it existed for the parallax, and it cropped another 9% top and bottom. */
+  .why-feature .img{position:absolute;inset:0;
+    background-size:contain;background-position:center;background-repeat:no-repeat;
+    background-color:var(--navy);}
+  /* the banner is the content here, not a backdrop — same reasoning as the
+     About plate, so a video is shown whole rather than cropped to fill */
+  .why-feature .cms-vid{object-fit:contain;}
 
   /* rotating gold emblem, upper-left of the image */
   .seal{position:absolute;width:clamp(6rem,9vw,7.4rem);height:clamp(6rem,9vw,7.4rem);
@@ -975,9 +995,9 @@
     display:grid;place-items:center;justify-self:end;}
 
   @media(max-width:820px){
-    /* the plate's clamp floors at 22rem, which turns it near-square on a phone
-       and crops both ends off a hundred-person line-up — match the photo instead */
-    .why-feature{height:auto;aspect-ratio:3/2;}
+    /* the plate carries the photograph's ratio at every width now, so there is
+       nothing left to correct here — the stage simply takes the full column */
+    .why-stage{width:100%;}
   }
   @media(max-width:920px){
     .why-grid{grid-template-columns:1fr;gap:3.5rem;}
@@ -2314,8 +2334,7 @@
     if(!sec) return;
 
     const planL  = sec.querySelector('.why-plan-l'),
-          planR  = sec.querySelector('.why-plan-r'),
-          featImg= sec.querySelector('.why-feature .img');
+          planR  = sec.querySelector('.why-plan-r');
 
 
     if(reduce){ sec.classList.add('in'); return; }
@@ -2334,11 +2353,9 @@
       const p=(r.top+r.height/2-vh/2)/vh;            // -1 below → +1 above
       if(planL) planL.style.transform=`translateY(${p*46}px)`;
       if(planR) planR.style.transform=`translateY(${p*-40}px)`;
-      if(featImg){
-        const fr=featImg.parentElement.getBoundingClientRect();
-        const fp=(fr.top+fr.height/2-vh/2)/vh;
-        featImg.style.transform=`translateY(${fp*-40}px)`;
-      }
+      /* no parallax on the feature image: it is inset:0 now so the whole
+         photograph is in frame, and translating it would drag an edge off the
+         plate and show the ground behind it. The blueprints still drift. */
     }
     function onScroll(){ if(live && !ticking){ ticking=true; requestAnimationFrame(frame); } }
     new IntersectionObserver(([e])=>{live=e.isIntersecting; if(live) frame();},{threshold:0}).observe(sec);

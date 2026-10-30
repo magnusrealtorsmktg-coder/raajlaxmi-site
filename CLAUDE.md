@@ -164,7 +164,7 @@ Check at 1440×900, 1024×800 and 420×860; scroll the full page; confirm no con
 | I | Hero | `hero` | Night skyline (inline base64 JPEG), "Live Above The City", line-mask entrance, mouse parallax, property-selector form. **All of its copy, and the three dropdown lists, come from the `homepage` singleton** — the four localities hard-coded in the markup (Gomti Nagar, Hazratganj, Sushant Golf City, Vibhuti Khand) are in **Lucknow**, not this developer's corridor; the seeded CMS values replace them with Vasai / Nallasopara / Virar / Saphale. |
 | II | About | `about` | Ivory. Plate showing **the CMS's About video** (`assets/about-plate.jpg` is only the fallback underneath it), four counting stats, then a full-width RERA / CREDAI-MCHI trust strip (`.ab-creds`, a sibling of `.ab-inner`, not inside the content column). **It holds exactly one screen** — see *The About section holds one screen*. The ghost word "Legacy" that used to sit behind the copy is gone, markup, CSS, parallax and schema field alike. |
 | III | Signature Projects | `signature` | Four project cards, corner blueprint decor with slow parallax, rotating seal. The section now ends on the card grid, so its **bottom** padding alone sets the run into Why — it was written to mirror `.about`'s old `clamp(5rem,14vh,140px)`, which **no longer exists**: About was rebuilt to one screen and its padding is now much tighter, so this value is a standalone constant that only looks like it is paired with something. |
-| IV | Why Raajlaxmi | `why` | Team photograph as the feature plate (`assets/why-team.jpg`), four numbered rows, a year timeline (2004→2026), closing quote + spinning seal. The auto-scrolling brand marquee (`.why-carousel`) that used to sit before the quote is gone — Section X replaced it. |
+| IV | Why Raajlaxmi | `why` | Team photograph as the feature plate, **shown whole and sized to fit one screen** (see *The Why plate shows the whole photograph*), four numbered rows, a year timeline (2004→2026), closing quote + spinning seal. The auto-scrolling brand marquee (`.why-carousel`) that used to sit before the quote is gone — Section X replaced it. |
 | X | Brands We Use | `brands` | Follows Why in scroll order. `OUR PARTNERS` header, six category tabs (All / Structure / Interiors / Electrical / Fittings / Utilities) and a card grid, all rendered from the `BRANDS` array in the Section X IIFE — adding a supplier is one line of data, no markup. Each row is `[name, logo file, trade, tab]`: `trade` is the line from the client's sheet and prints on the card, `tab` is the coarser bucket the tabs filter by. Johnson and Hindware appear twice on purpose, under two different trades. Its header (`.br-head` / `.br-label` / `.br-title` / `.br-intro`) is a **copy of Section IV's** rather than a shared rule — change one and the other will not follow. |
 
 `projects.html` — one section, `#projects` ("Section V — Our Collection"): cards rendered from the `P` array in JS, city filter chips derived from each entry's location field, a **Western line corridor band** (`.cor`, between the pagination and the consultation strip) showing the delivered portfolio under four stations — Vasai / Nallasopara / Virar / Saphale. It is the client's finished banner used whole (`assets/projects/western-line.jpg`), **by explicit instruction — do not substitute a markup rebuild for it**. **Its twelve painted logos are clickable**: `.cor-hot` boxes inside `.cor-map` lie over the artwork as percentages of it, so they ride the image at every width — including the 900px plate inside the phone scroller, which is why the img is wrapped in `.cor-plate` (`.cor-figure` becomes the narrower scroll container and cannot be the positioning context). The boxes are measured from the ink, so **a recrop or a replacement banner invalidates all twelve**; `paint()` removes the whole layer if the CMS supplies a banner that is a *different* picture. It tells them apart by **SHA-1**: Sanity names an uploaded asset after the hash of its bytes, so the check is exact rather than a guess — and the usual answer is that they are the same file, because `seed-collections.mjs` uploaded this very banner and the live page therefore serves it from the CDN under a different URL. **Replacing `western-line.jpg` means updating `ART` in that guard**, or the boxes vanish the moment the CMS copy is re-uploaded. Each box carries `data-project` — the name *as the artwork paints it* — and `wireBanner()` matches it against the published projects to set the href, so a slug fixed in the Studio is picked up with no code change. `nameKey()` does the matching and is deliberately forgiving: it folds case and punctuation, collapses doubled letters (`Raajlaxmi`/`Rajlaxxmi` → `rajlaxmi`, `Pearrl` → `pearl`) and drops a trailing plural (`Towers` → `tower`), because the banner and the CMS do not spell the names the same way. **A box with no published project stays inert** — no href, no pointer, no hover tint; `Midas Heights` is painted on the banner but has no document, so today it is the one logo that does not respond. The layer is also inert with Sanity unreachable, which is correct: `project.html?p=` needs Sanity to render anything anyway; a `?status=` filter (exact case-insensitive match on `p.status`, ANDed with the active city chip, read once on load so the chips never clear it, with a `.col-empty` message when nothing matches) — the nav's **Projects** item *and* its **Completed** sub-item both deep-link to `?status=completed`, so the bar reaches the Completed view whether or not the dropdown is used and the browse-everything view is now reached only from the footer and the in-page "See the whole collection" / "Clear filters" links, a "showing N of M" line and a consultation CTA. **The pagination is gone** — the 1/2/3 buttons were decorative markup that never paged anything (every matching card always rendered), so they promised a second page that did not exist. Cross-links back to `index.html#about` / `index.html#signature`.
@@ -535,12 +535,42 @@ connections and under `prefers-reduced-motion`**, removing itself if the file
 errors or autoplay is refused. The photograph is always painted first, which is
 what those four cases fall back to.
 
-**Do not give `.why-feature .img` a `position`.** It is `position:absolute;
-inset:-9% 0`, and setting it to `relative` drops the inset and collapses the
-banner to zero height — which is exactly what happened when the video CSS first
-tried to make it a positioning context. It and `.ab-photo` are both already
-positioned, so the video anchors without help; only `overflow:hidden` is needed,
-for the About plate's 30px radius.
+**Do not give `.why-feature .img` a `position` other than `absolute`.** It is
+`position:absolute; inset:0`, and making it `relative` drops the inset and
+collapses the banner to zero height — which is exactly what happened when the
+video CSS first tried to make it a positioning context. It and `.ab-photo` are
+both already positioned, so the video anchors without help; only
+`overflow:hidden` is needed, for the About plate's 30px radius. (The inset used
+to be `-9% 0`, an overhang for the parallax; both are gone — see below.)
+
+**The Why plate shows the whole photograph.** The plate was `height:clamp(22rem,44vw,650px)`
+— about 2.2:1 — against a 3:2 photograph, so `background-size:cover` ate the
+ceiling and the front row's feet, and `background-position:center 72%` only chose
+*which* part to lose. The `.img` also carried `inset:-9% 0`, an overhang for the
+parallax, which cropped a further 9% top and bottom. Now:
+
+- `.why` declares **`--why-h:min(70vh,760px,58vw)`** and `.why-stage` is
+  `width:min(100%,calc(var(--why-h) * 1.5))`, so the plate is sized from the
+  viewport and its width follows the 3:2 ratio. `58vw` is the same bound the
+  About plate needs, for the same reason — it stops a short, wide window making
+  the plate wider than its column.
+- **The stage is narrowed to the plate, not the plate centred inside a
+  full-width stage.** The rotating seal is a *sibling* of `.why-feature` — it has
+  to be, because the plate is `overflow:hidden` and the seal overhangs its corner
+  — so it only stays pinned to that corner when the stage is exactly the
+  photograph's width.
+- `.why-feature` is `aspect-ratio:3/2; width:100%` and `.img` is `inset:0` with
+  **`background-size:contain` and `background-repeat:no-repeat`**. The `no-repeat`
+  is not optional with `contain`: without it, any leftover strip tiles a sliver of
+  the image. A video in this plate is `object-fit:contain` for the same reason as
+  the About plate.
+- **The feature image's parallax is gone.** With `inset:0` there is no overhang
+  left to slide, so translating it would drag an edge off the plate and show the
+  ground behind. The blueprint corners still drift.
+
+The CMS image is 3508x2340 and the committed fallback is 2000x1332 — both 3:2, so
+nothing letterboxes. A differently shaped file would letterbox onto the plate's
+navy ground rather than lose its edges.
 
 **Studio sidebar**, in order: `Home page`; **All Projects** — which holds the
 browse-everything page's own content and then one folder per stage
@@ -623,7 +653,7 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
 - The 12 individual `assets/projects/*.png` marks were left over from an earlier markup rebuild of this band and have been **deleted** (~300KB, recoverable from git if the banner is ever rebuilt). Only `western-line.jpg` and `western-line-ongoing.jpg` remain in that folder.
 - `assets/logos/` holds **30 brand marks** for Section X. Nine were already committed; the other 21 were cut out of the client's category sheet, so they are only ~175px wide — fine at display size, soft on a retina screen. Swap in vendor-supplied files when they arrive. **All 30 have been trimmed to their ink**, because each carried its own padding and the grid's sizing depends on them being tight; re-trim anything you replace.
 - Section X fits every mark into an identical box with `object-fit:contain` rather than capping height alone — capping height left a 3x spread in optical weight between a wide lockup and a square roundel.
-- `assets/why-team.jpg` is the Section IV feature plate (the group photograph, 2000×1332). The plate is ~2.2:1 while the photo is 3:2, so the CSS biases the crop to `center 72%` to keep the front row's feet in frame, and below 820px the plate switches to `aspect-ratio:3/2` so a phone shows the whole line-up instead of cropping both ends off it.
+- `assets/why-team.jpg` is the Section IV feature plate's **fallback** (the group photograph, 2000×1332, 3:2); the `homepage` document carries its own 3508×2340 copy of the same shot. The plate now carries that ratio itself and fills with `contain`, so the whole line-up is in frame at every width and nothing is cropped — see *The Why plate shows the whole photograph*.
 - Still placeholders: four `picsum.photos/seed/rl-*` URLs in `index.html` — the Signature Projects cards (Heights / Villa / Crest / Essence) — plus the seeded card art in the `projects.html` fallback list (real card images now come from Sanity). Replace by swapping the URL in the inline `background-image` (or the Sanity document) for the real asset. Earlier notes here claiming ten placeholders were stale.
 - The About plate is `assets/about-plate.jpg` (excavator on site, 810×1212), set as `background-image` on `.ab-photo` in CSS. It used to be copied off the hero by the About IIFE; that JS is gone, so **don't reintroduce an inline `style.backgroundImage` there** — it would override the stylesheet. The one deliberate exception is the home-page content block, which sets an inline background **only when the `homepage` document actually carries a photograph**; with the field empty the stylesheet keeps this file. It is now only the **fallback under the CMS video** — the `homepage`
   document carries a 630x830 `aboutVideo` and no `aboutImage`, so this file shows
