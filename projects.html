@@ -2214,11 +2214,17 @@
         img.removeAttribute('height');
 
         /* The clickable logos are boxes measured off the artwork that ships in
-           the repo. A banner uploaded in the Studio lays its logos out
-           differently, so the boxes would point at whatever happens to sit
-           under them — drop them rather than leave them lying. */
+           the repo, so they only hold while that is the picture on screen.
+           Sanity names an uploaded asset after the SHA-1 of its bytes, which
+           makes "is this the same artwork?" an exact question rather than a
+           guess — and the normal answer here is yes, because seed-collections.mjs
+           uploaded this very file, so the live page serves it from the CDN under
+           a different URL. A banner that is genuinely a different picture lays
+           its logos out somewhere else, and boxes left lying over it would point
+           at whatever happened to land underneath: drop them. */
+        const ART = '68ab2f4eb25d72c82211fd544ff8af48e27cd871';   /* sha1 of assets/projects/western-line.jpg */
         const map = document.getElementById('corMap');
-        if(map) map.remove();
+        if(map && txt(d.bannerUrl).indexOf(ART) === -1) map.remove();
       }
 
       /* --- the consultation strip --- */
