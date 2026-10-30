@@ -825,8 +825,11 @@
        wide window making the plate wider than its column (the About plate needs
        the same guard). */
     --why-h:min(50vh,540px,44vw);
+    /* the bottom padding is half what it was: it used to close a section that
+       ran straight into Brands, and with Owners between them the two paddings
+       stacked into a ~260px hole under the quote */
     padding:clamp(8.4rem,calc(7.4rem + 1.6vh),9.4rem) clamp(1.4rem,5vw,4rem)
-            clamp(6rem,18vh,180px);}
+            clamp(3.5rem,8vh,5.5rem);}
   .why-wrap{position:relative;z-index:2;max-width:1450px;margin:0 auto;}
 
   /* faint hand-drawn floor plans anchored in the top corners; multiply drops
@@ -1339,8 +1342,12 @@
      card, the copy laid over the foot of the photograph behind a gradient
      scrim — so the card IS the picture rather than a picture with a caption
      under it. Hovering one card blurs the other five. */
+  /* The top padding is deliberately lighter than the bottom: Why ends on its
+     closing quote and shares this exact ground colour, so the seam needs air
+     rather than a full section's worth of it. The foot keeps the usual run
+     into Brands, which is a different colour. */
   .ow{position:relative;background:#F4F1EA;overflow-x:clip;
-    padding:clamp(5rem,13vh,130px) clamp(1.4rem,5vw,4rem);}
+    padding:clamp(3rem,7vh,4.5rem) clamp(1.4rem,5vw,4rem) clamp(5rem,13vh,130px);}
   .ow-wrap{position:relative;z-index:2;max-width:1400px;margin:0 auto;}
 
   /* the header is Section IV's, to the pixel — same label, scale and entrance */
