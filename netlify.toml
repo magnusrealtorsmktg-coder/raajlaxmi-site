@@ -1,0 +1,24 @@
+# Deploy configuration for the Raajlaxmi Group site.
+#
+# This is a static site with no build step, so Netlify publishes the repository
+# as it stands. Only tracked files are cloned on a Git deploy — 87 files, ~8.5MB
+# — which is why this is the safe way to ship this project.
+#
+# WARNING, if you ever deploy from a laptop instead: `netlify deploy` publishes
+# the WORKING DIRECTORY, not the repository, and studio/node_modules lives there
+# (562MB, 46,000 files). Never run a bare `netlify deploy` from this folder.
+# Export the commit first and point the CLI at that:
+#
+#   rm -rf /tmp/rl-deploy && mkdir -p /tmp/rl-deploy
+#   git archive HEAD | tar -x -C /tmp/rl-deploy
+#   netlify deploy --prod --dir=/tmp/rl-deploy
+#
+# The Sanity Studio under studio/ is NOT deployed by this; it is hosted by
+# Sanity and published separately with `cd studio && npm run deploy`.
+#
+# NOTE: every origin this site is served from must also be listed under
+# CORS origins for Sanity project lc9w15ba (manage.sanity.io → API), or the
+# pages fall back to the placeholder content written into the HTML.
+
+[build]
+  publish = "."
