@@ -1561,13 +1561,18 @@
   .tm.in .tg{opacity:1;transform:none;}
   .tg[hidden]{display:none;}
 
-  .tg-head{text-align:center;margin-bottom:clamp(1.6rem,3vw,2.4rem);}
+  /* This is a sub-header under the reviews, so it stays a clear step below the
+     page's own (14px label / 72px title / 21px intro) — but it was set so far
+     down from those that it read as a caption rather than as the opening of a
+     section of its own. */
+  .tg-head{text-align:center;margin-bottom:clamp(2rem,3.4vw,2.8rem);}
   .tg-label{display:inline-block;font-family:"Inter",sans-serif;font-weight:600;
-    font-size:.64rem;letter-spacing:.28em;text-transform:uppercase;color:var(--gold);}
-  .tg-title{margin-top:.75rem;font-family:"Playfair Display",serif;font-weight:600;
-    font-size:clamp(1.35rem,2.6vw,2rem);line-height:1.2;color:var(--charcoal);}
-  .tg-intro{margin:.7rem auto 0;max-width:46ch;font-family:"Inter",sans-serif;
-    font-weight:300;font-size:clamp(.88rem,1.5vw,.95rem);line-height:1.6;color:var(--body);}
+    font-size:clamp(.74rem,.9vw,.82rem);letter-spacing:.28em;
+    text-transform:uppercase;color:var(--gold);}
+  .tg-title{margin-top:.9rem;font-family:"Playfair Display",serif;font-weight:600;
+    font-size:clamp(1.9rem,3.6vw,2.9rem);line-height:1.18;color:var(--charcoal);}
+  .tg-intro{margin:.9rem auto 0;max-width:48ch;font-family:"Inter",sans-serif;
+    font-weight:300;font-size:clamp(.95rem,1.1vw,1.05rem);line-height:1.7;color:var(--body);}
 
   /* The photographs run continuously, the same way the reviews above them do:
      a CSS animation rather than a per-frame transform, so the compositor drives
