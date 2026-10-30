@@ -499,6 +499,20 @@ dimmed, not removed, at the ends. It ships with `hidden` on it and is revealed
 only once the CMS carries at least one photograph — the one place on the site
 where an empty block removes itself rather than falling back to markup.
 
+**The tiles are square** (`.tg-ph{aspect-ratio:1/1}`, requested at `w=760&h=760`).
+They were 4:3, which threw away 25% of the height of a 1:1 file — on the first
+photograph the client uploaded, that was exactly the "CONGRATULATIONS TO …" line
+along the bottom. These are handover posters and the client's are square, so the
+tile matches the source and nothing is cropped. **The two have to be changed
+together**: the CSS ratio and the `h=` in the image request are what keep the
+request and the box in agreement. A non-square photograph added later *will*
+still be cropped to fill — switch the request to `fit=clip` if mixed shapes
+become the norm, which letterboxes instead.
+
+The field is **`gallery`**, not `photos`, and the intro is **`introText`**, not
+`intro` — worth knowing before concluding from a hand-written GROQ query that
+the client has not published anything.
+
 **Site settings.** A singleton (`site-settings`) holding the **social handles**
 and the footer's telephone, email, address and copyright line. Its block is
 identical in all eight files and reads one document, so the number that used to

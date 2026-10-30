@@ -1578,7 +1578,12 @@
     scrollbar-width:none;-ms-overflow-style:none;}
   .tg-track::-webkit-scrollbar{display:none;}
   .tg-item{flex:0 0 clamp(210px,26vw,300px);scroll-snap-align:center;margin:0;}
-  .tg-ph{position:relative;aspect-ratio:4/3;border-radius:14px;overflow:hidden;
+  /* Square, because these are handover photographs and the client's are square
+     posters — a 4:3 tile threw away 25% of a 1:1 file, which on the first one
+     uploaded was exactly the "CONGRATULATIONS TO ..." line along the bottom.
+     A non-square photograph added later WILL still be cropped to fill this;
+     switch the request below to fit=clip if that becomes the common case. */
+  .tg-ph{position:relative;aspect-ratio:1/1;border-radius:14px;overflow:hidden;
     background:linear-gradient(160deg,#cdc4b4,#8a8072);
     box-shadow:0 22px 50px -30px rgba(40,32,18,.55);}
   .tg-ph img{width:100%;height:100%;object-fit:cover;display:block;
@@ -2389,7 +2394,7 @@
         const alt = esc(g.alt || g.caption || 'Raajlaxmi client');
         return `<figure class="tg-item">
           <div class="tg-ph">
-            <img src="${esc(g.url)}?w=760&h=570&fit=crop&crop=focalpoint&auto=format"
+            <img src="${esc(g.url)}?w=760&h=760&fit=crop&crop=focalpoint&auto=format"
                  loading="lazy" decoding="async" alt="${alt}">
           </div>
           ${txt(g.caption) ? `<figcaption class="tg-cap">${esc(g.caption)}</figcaption>` : ''}
