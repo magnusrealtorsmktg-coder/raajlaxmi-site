@@ -162,7 +162,7 @@ Check at 1440×900, 1024×800 and 420×860; scroll the full page; confirm no con
 | # | Section | id | What it does |
 |---|---------|-----|--------------|
 | I | Hero | `hero` | Night skyline (inline base64 JPEG), "Live Above The City", line-mask entrance, mouse parallax, property-selector form. **All of its copy, and the three dropdown lists, come from the `homepage` singleton** — the four localities hard-coded in the markup (Gomti Nagar, Hazratganj, Sushant Golf City, Vibhuti Khand) are in **Lucknow**, not this developer's corridor; the seeded CMS values replace them with Vasai / Nallasopara / Virar / Saphale. |
-| II | About | `about` | Ivory. Architectural plate (`assets/about-plate.jpg`), four counting stats, then a full-width RERA / CREDAI-MCHI trust strip (`.ab-creds`, a sibling of `.ab-inner`, not inside the content column). **It holds exactly one screen** — see *The About section holds one screen*. The ghost word "Legacy" that used to sit behind the copy is gone, markup, CSS, parallax and schema field alike. |
+| II | About | `about` | Ivory. Plate showing **the CMS's About video** (`assets/about-plate.jpg` is only the fallback underneath it), four counting stats, then a full-width RERA / CREDAI-MCHI trust strip (`.ab-creds`, a sibling of `.ab-inner`, not inside the content column). **It holds exactly one screen** — see *The About section holds one screen*. The ghost word "Legacy" that used to sit behind the copy is gone, markup, CSS, parallax and schema field alike. |
 | III | Signature Projects | `signature` | Four project cards, corner blueprint decor with slow parallax, rotating seal. The section now ends on the card grid, so its **bottom** padding alone sets the run into Why — it was written to mirror `.about`'s old `clamp(5rem,14vh,140px)`, which **no longer exists**: About was rebuilt to one screen and its padding is now much tighter, so this value is a standalone constant that only looks like it is paired with something. |
 | IV | Why Raajlaxmi | `why` | Team photograph as the feature plate (`assets/why-team.jpg`), four numbered rows, a year timeline (2004→2026), closing quote + spinning seal. The auto-scrolling brand marquee (`.why-carousel`) that used to sit before the quote is gone — Section X replaced it. |
 | X | Brands We Use | `brands` | Follows Why in scroll order. `OUR PARTNERS` header, six category tabs (All / Structure / Interiors / Electrical / Fittings / Utilities) and a card grid, all rendered from the `BRANDS` array in the Section X IIFE — adding a supplier is one line of data, no markup. Each row is `[name, logo file, trade, tab]`: `trade` is the line from the client's sheet and prints on the card, `tab` is the coarser bucket the tabs filter by. Johnson and Hindware appear twice on purpose, under two different trades. Its header (`.br-head` / `.br-label` / `.br-title` / `.br-intro`) is a **copy of Section IV's** rather than a shared rule — change one and the other will not follow. |
@@ -241,9 +241,29 @@ fold. Four things are load-bearing:
   is the only thing keeping the eyebrow out from under the bar, and it has to
   grow with **both** axes — `clamp(7.2rem,calc(6.2rem + 4vh),8.4rem)`. A `vh`-only
   value left the label buried at 1536px wide, where the bar is tallest.
-- **`.ab-photo` is capped in `vh`** (`max-height:min(56vh,540px)`). The portrait
-  plate is what made the section taller than the screen; `background-size:cover`
-  absorbs the crop.
+- **`.ab-photo` is sized by HEIGHT, not width** —
+  `height:min(62vh,600px,42vw); width:auto; aspect-ratio:5/6.6`. The client put a
+  **630x830 video** in the About plate, which is that exact ratio, so driving the
+  box off the available height and letting the width follow is what shows the
+  whole frame. Width-driven it had to be ~785px tall, which is what put the stats
+  past the fold to begin with. The **`42vw` third bound is load-bearing**: an
+  explicit `height` beats `aspect-ratio` when `max-width` clamps the box, so on a
+  tall-but-narrow window (1024x800) the plate held its height, lost its width and
+  went off-ratio — letterboxing the video it exists to show whole.
+- **The plate's video is `object-fit:contain`** (`.ab-photo .cms-vid`), unlike the
+  hero's, which stays `cover`. Here the video *is* the content rather than a
+  background, so a differently-shaped file letterboxes onto the plate's ground
+  instead of losing its edges. Today's file matches the ratio to within 0.2%, so
+  nothing letterboxes in practice.
+- **The eyebrow sits over the right column, above the heading.** `.ab-top` mirrors
+  `.ab-inner`'s grid — both read `--ab-col-a` / `--ab-col-b` / `--ab-gap` off
+  `.about` — and the label is `grid-column:2`, so the two stay aligned at every
+  width with no padding guesswork. Columns are **38fr/62fr** (was 48/52): the
+  plate is height-driven now, so the extra width was dead space.
+- **Never put `margin:0 auto` on a child of `.about` again.** It is a flex column,
+  and an auto cross-axis margin beats `stretch` — which shrink-wrapped `.ab-top`
+  to its one short span and parked it in the middle of the page. Use
+  `width:100%` + `margin-inline:auto`.
 - **Two step-down tiers**, `max-height:880px` and `max-height:700px`, trim the
   type, the cards and the marks further. They exist because **the CMS copy runs
   longer than the fallback written into the file** — against the real `homepage`
@@ -605,10 +625,12 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
 - Section X fits every mark into an identical box with `object-fit:contain` rather than capping height alone — capping height left a 3x spread in optical weight between a wide lockup and a square roundel.
 - `assets/why-team.jpg` is the Section IV feature plate (the group photograph, 2000×1332). The plate is ~2.2:1 while the photo is 3:2, so the CSS biases the crop to `center 72%` to keep the front row's feet in frame, and below 820px the plate switches to `aspect-ratio:3/2` so a phone shows the whole line-up instead of cropping both ends off it.
 - Still placeholders: four `picsum.photos/seed/rl-*` URLs in `index.html` — the Signature Projects cards (Heights / Villa / Crest / Essence) — plus the seeded card art in the `projects.html` fallback list (real card images now come from Sanity). Replace by swapping the URL in the inline `background-image` (or the Sanity document) for the real asset. Earlier notes here claiming ten placeholders were stale.
-- The About plate is `assets/about-plate.jpg` (excavator on site, 810×1212), set as `background-image` on `.ab-photo` in CSS. It used to be copied off the hero by the About IIFE; that JS is gone, so **don't reintroduce an inline `style.backgroundImage` there** — it would override the stylesheet. The one deliberate exception is the home-page content block, which sets an inline background **only when the `homepage` document actually carries a photograph**; with the field empty the stylesheet keeps this file. The plate crops to `5/6.6` from the centre, **and is additionally capped in
-  `vh`** (`max-height:min(56vh,540px)`, 46vh on short windows) so it cannot push
-  Section II past one screen; `background-size:cover` absorbs the difference, so
-  on a short window the crop is tighter than 5/6.6.
+- The About plate is `assets/about-plate.jpg` (excavator on site, 810×1212), set as `background-image` on `.ab-photo` in CSS. It used to be copied off the hero by the About IIFE; that JS is gone, so **don't reintroduce an inline `style.backgroundImage` there** — it would override the stylesheet. The one deliberate exception is the home-page content block, which sets an inline background **only when the `homepage` document actually carries a photograph**; with the field empty the stylesheet keeps this file. It is now only the **fallback under the CMS video** — the `homepage`
+  document carries a 630x830 `aboutVideo` and no `aboutImage`, so this file shows
+  only while the video is loading, on phones, on data-saver, under
+  `prefers-reduced-motion`, or if the file fails. The plate keeps the `5/6.6`
+  ratio exactly (it is the video's ratio) and is sized by height — see *The About
+  section holds one screen*.
 - `quote-strip.png` (the Vikram Raajlaxmi quote banner) has been **deleted** — Section III's `.sp-quote-img` figure was removed earlier. Recoverable from git if the quote is ever wanted back.
 - The root-level `Generate_*.jpeg` / `download.png` / `Minimalist_*.jpeg` source art has been **deleted** — it was working material, not site assets. `footer.png`, `Services_start.png`, the seals and the sketches are all still referenced and remain.
 - **Favicon**: `favicon.ico` (16/32/48, at the repo root so browsers find it unprompted) plus `assets/favicon-32.png`, `assets/favicon-192.png` and `assets/apple-touch-icon.png` (180). All eight pages link them from `<head>`, right after `</title>`. Cut from the logo's building glyph with its dark ground **keyed out to transparency** (unmatted, so no dark fringe survives onto a light tab bar), squared up and centred with ~12% margin — the mark has to survive being read at 16px, so it sits deliberately large in frame.

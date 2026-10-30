@@ -449,6 +449,9 @@
      svh; svh is the one that excludes a phone's retracting toolbar. */
   .about{position:relative;overflow-x:clip;
     background-color:var(--ab-bg);
+    /* the two columns are declared once here so the eyebrow row can line its
+       label up with the heading instead of guessing the grid's maths */
+    --ab-col-a:38fr; --ab-col-b:62fr; --ab-gap:clamp(2rem,4vw,4.5rem);
     min-height:100vh;min-height:100svh;
     display:flex;flex-direction:column;justify-content:center;
     /* The navbar is fixed and ~103-122px tall depending on width, so once this
@@ -458,21 +461,33 @@
     padding:clamp(7.2rem,calc(6.2rem + 4vh),8.4rem) clamp(1.4rem,5vw,4rem)
             clamp(1.2rem,3vh,2.2rem);}
 
-  .ab-inner{position:relative;z-index:2;max-width:1400px;margin:0 auto;
-    display:grid;
-    /* fr (not %) so the columns fit AFTER the gap is subtracted — 48%+52%+gap
-       would otherwise overflow and clip the right-aligned signature */
-    grid-template-columns:minmax(0,48fr) minmax(0,52fr);
-    gap:clamp(2.5rem,5vw,5.5rem);align-items:center;}
+  /* fr (not %) so the columns fit AFTER the gap is subtracted — 48%+52%+gap
+     would otherwise overflow and clip the right-aligned signature. The plate
+     column is narrower than it was (38/62): the plate is sized by height now,
+     so the extra width was dead space and the copy reads better with it. */
+  .ab-inner{position:relative;z-index:2;max-width:1400px;width:100%;
+    margin-inline:auto;display:grid;
+    grid-template-columns:minmax(0,var(--ab-col-a)) minmax(0,var(--ab-col-b));
+    gap:var(--ab-gap);align-items:center;}
 
   /* ---- left: the massive architectural plate ---- */
   .ab-visual{position:relative;will-change:transform;}
   /* the plate is ~2.2:1 and the team photo is 3:2, so a centred crop would cut
      the front row's feet — bias it down onto the people, away from the ceiling */
-  .ab-photo{position:relative;aspect-ratio:5/6.6;width:100%;
-    /* the plate is portrait and is what pushed this section past the fold;
-       cap it against the viewport and let background-size:cover crop it */
-    max-height:min(56vh,540px);border-radius:30px;
+  /* Sized by HEIGHT, not width: the CMS video is 630x830, i.e. this very
+     ratio, so driving the box off the available height and letting the width
+     follow is what shows the whole frame instead of a cropped slice. A
+     width-driven box had to be ~785px tall here, which is what put the stats
+     past the fold in the first place. max-width keeps it inside its column on
+     a short, wide window, where the ratio then caps the height instead. */
+  .ab-photo{position:relative;aspect-ratio:5/6.6;
+    /* 42vw is the third bound and it is load-bearing: an explicit height beats
+       aspect-ratio when max-width clamps the box, so on a tall-but-narrow
+       window (1024x800) the plate kept its height, lost its width and went
+       off-ratio — which letterboxed the video it is meant to show whole.
+       Bounding the height by the width instead keeps the ratio exact. */
+    height:min(62vh,600px,42vw);width:auto;max-width:100%;margin-inline:auto;
+    border-radius:30px;
     background-image:url("assets/about-plate.jpg");
     background-size:cover;background-position:center;background-color:var(--charcoal);
     /* a subtle light hairline just inside the edge for a premium matte frame */
@@ -496,7 +511,17 @@
   .ab-text{position:relative;z-index:1;max-width:660px;}
 
   /* section eyebrow, lifted to the top-left of the whole section */
-  .ab-top{position:relative;z-index:3;max-width:1400px;margin:0 auto clamp(.9rem,2.2vh,1.7rem);}
+  /* The eyebrow sits over the RIGHT column, directly above the heading.
+     It mirrors .ab-inner's grid rather than using a padding guess, so the two
+     stay aligned at every width. `margin:0 auto` is deliberately NOT used: on a
+     flex item an auto cross-axis margin beats `stretch`, which shrink-wrapped
+     this row to its one short span and parked it in the middle of the page. */
+  .ab-top{position:relative;z-index:3;max-width:1400px;width:100%;
+    margin-inline:auto;margin-bottom:clamp(.9rem,2.2vh,1.7rem);
+    display:grid;
+    grid-template-columns:minmax(0,var(--ab-col-a)) minmax(0,var(--ab-col-b));
+    gap:var(--ab-gap);}
+  .ab-top .ab-label{grid-column:2;justify-self:start;}
   .ab-label{display:inline-block;font-family:"Inter",sans-serif;
     font-size:clamp(.86rem,1.05vw,1.06rem);font-weight:600;letter-spacing:.26em;
     text-transform:uppercase;color:var(--gold);
@@ -605,7 +630,7 @@
      the fallback written into this file, so the first step-down alone left the
      trust strip hanging a few pixels past the fold at 1024x640. */
   @media (min-width:1001px) and (max-height:700px){
-    .ab-photo{max-height:46vh;}
+    .ab-photo{height:min(52vh,420px);}
     .ab-head{font-size:clamp(1.5rem,2.2vw,1.9rem);}
     .ab-copy{margin-top:clamp(.7rem,1.6vh,1.1rem);}
     .ab-copy p{font-size:clamp(.8rem,.9vw,15px);line-height:1.5;}
@@ -631,9 +656,12 @@
        keep clearing it even though the section no longer holds one screen */
     .about{min-height:0;display:block;
       padding-block:clamp(6rem,13vh,8.5rem) clamp(3.5rem,8vh,5.5rem);}
+    /* stacked there is only one column, so the eyebrow goes back to the left
+       edge and the plate is width-driven again */
+    .ab-top{display:block;}
     .ab-inner{grid-template-columns:1fr;gap:2.4rem;}
     .ab-visual{order:1;max-width:32rem;}
-    .ab-photo{max-height:none;}
+    .ab-photo{height:auto;width:100%;max-width:100%;margin-inline:0;}
     .ab-content{order:2;}
   }
   /* below this the strip is too narrow for the marks side by side: they stack
@@ -1424,6 +1452,12 @@
      as the fallback: if the file never loads, the hero is still a photograph. */
   .hero-vid,.cms-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
     z-index:0;pointer-events:none;border:0;}
+  /* The About plate is the one place the video IS the content rather than a
+     background, so it is shown whole instead of cropped to fill. Today's file
+     is 630x830 — the plate's own ratio — so nothing letterboxes; a differently
+     shaped file would letterbox onto the plate's ground rather than lose its
+     edges, which is the behaviour that was asked for. */
+  .ab-photo .cms-vid{object-fit:contain;}
   /* Both hosts are already positioned by their own rules — .ab-photo is
      relative, .why-feature .img is absolute — so the video anchors to them
      without help. Do NOT add position here: setting .why-feature .img to
