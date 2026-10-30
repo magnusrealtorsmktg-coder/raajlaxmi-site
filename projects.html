@@ -1255,15 +1255,38 @@
   .cor-figure{margin:0 calc(-1 * clamp(1.2rem,2.6vw,2.6rem));}
   .cor-figure img{display:block;width:100%;height:auto;}
 
+  /* .cor-plate is the positioning context for the hotspots below. It has to be
+     the element that carries the artwork's width — not .cor-figure, which turns
+     into a narrower scroll container on a phone while the plate stays 900px. */
+  .cor-plate{position:relative;display:block;width:100%;}
+
+  /* Each logo painted into the banner is also a link to that project's detail
+     page. The boxes are percentages of the artwork, so they ride the image at
+     every width; they are measured from the ink in assets/projects/western-line.jpg
+     and a recrop or a replacement banner invalidates all of them. A hotspot whose
+     project is not in the CMS is left inert by the script and never shows a
+     pointer — see wireBanner(). */
+  .cor-hot{position:absolute;display:block;border-radius:12px;
+    background:transparent;outline:0;
+    transition:background .35s var(--lux),box-shadow .35s var(--lux),transform .35s var(--lux);}
+  .cor-hot:hover,.cor-hot:focus-visible{background:rgba(203,169,107,.17);
+    box-shadow:0 0 0 1px rgba(203,169,107,.55),0 10px 26px -14px rgba(40,32,18,.5);
+    transform:scale(1.035);}
+
   /* the banner is 3.7:1 with its copy painted in; below this it would render the
      station names at ~6px, so it scrolls sideways at a legible size instead */
   @media(max-width:760px){
     .cor-figure{overflow-x:auto;-webkit-overflow-scrolling:touch;}
     .cor-figure img{width:900px;max-width:none;}
+    .cor-plate{width:900px;max-width:none;}
   }
 
   @media (prefers-reduced-motion:reduce){
     .cor{opacity:1 !important;transform:none !important;}
+    /* the tint and ring stay — they are what says "this is a link"; only the
+       lift and the easing go */
+    .cor-hot{transition:none !important;}
+    .cor-hot:hover,.cor-hot:focus-visible{transform:none !important;}
   }
 
   /* ===== LEAD POPUP — shared chrome, present in all eight files ===== */
@@ -1412,8 +1435,42 @@
           <h3 class="cor-title">Delivered Along the Western Line<span class="dot">.</span></h3>
         </div>
         <div class="cor-figure">
-          <img src="assets/projects/western-line.jpg" width="1923" height="514"
-               loading="lazy" alt="Completed projects along the Western line. Vasai: Rajlaxmi Apartment, Raajlaxmi Towers, Shakun Solitaire (Vasai East). Nallasopara: Midas Glory and Midas Enclave (Nalasopara East), Nakshatra Auris. Virar: Midas Heights (Virar West), Raajlaxmi Avenue. Saphale: Priti Chaaya, Priti Darpan and Priti Pearrl (Saphale West), Rajlaxxmi Park.">
+          <div class="cor-plate">
+            <img src="assets/projects/western-line.jpg" width="1923" height="514"
+                 loading="lazy" alt="Completed projects along the Western line. Vasai: Rajlaxmi Apartment, Raajlaxmi Towers, Shakun Solitaire (Vasai East). Nallasopara: Midas Glory and Midas Enclave (Nalasopara East), Nakshatra Auris. Virar: Midas Heights (Virar West), Raajlaxmi Avenue. Saphale: Priti Chaaya, Priti Darpan and Priti Pearrl (Saphale West), Rajlaxxmi Park.">
+
+            <!-- Clickable logos. Each box is a percentage of the artwork, measured
+                 from the ink in western-line.jpg, so they track the image at any
+                 width. data-project is the name as painted on the banner; the script
+                 matches it against the published projects and only then turns the
+                 box into a link — see wireBanner() in the Section V block. -->
+            <div class="cor-map" id="corMap">
+              <a class="cor-hot" data-project="Rajlaxmi Apartment"
+                 style="left:2.08%;top:34.05%;width:11.65%;height:14.40%"></a>
+              <a class="cor-hot" data-project="Raajlaxmi Towers"
+                 style="left:13.94%;top:34.05%;width:13.31%;height:16.73%"></a>
+              <a class="cor-hot" data-project="Shakun Solitaire"
+                 style="left:6.86%;top:54.28%;width:15.39%;height:18.29%"></a>
+              <a class="cor-hot" data-project="Midas Glory"
+                 style="left:30.58%;top:35.60%;width:10.45%;height:20.62%"></a>
+              <a class="cor-hot" data-project="Midas Enclave"
+                 style="left:42.23%;top:35.60%;width:10.40%;height:20.62%"></a>
+              <a class="cor-hot" data-project="Nakshatra Auris"
+                 style="left:36.40%;top:58.17%;width:10.82%;height:40.08%"></a>
+              <a class="cor-hot" data-project="Midas Heights"
+                 style="left:60.53%;top:35.60%;width:11.02%;height:20.62%"></a>
+              <a class="cor-hot" data-project="Raajlaxmi Avenue"
+                 style="left:56.99%;top:69.07%;width:17.26%;height:19.07%"></a>
+              <a class="cor-hot" data-project="Priti Chaaya"
+                 style="left:81.54%;top:37.16%;width:6.97%;height:16.73%"></a>
+              <a class="cor-hot" data-project="Priti Darpan"
+                 style="left:89.24%;top:37.16%;width:6.86%;height:16.73%"></a>
+              <a class="cor-hot" data-project="Priti Pearrl"
+                 style="left:85.91%;top:54.28%;width:6.66%;height:15.18%"></a>
+              <a class="cor-hot" data-project="Rajlaxxmi Park"
+                 style="left:83.20%;top:73.74%;width:11.65%;height:25.29%"></a>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1658,6 +1715,53 @@
       return '#';
     }
 
+    /* --- the banner's logos, wired to their detail pages -----------------
+       The line-map is one flat JPEG, so each logo is an invisible box lying
+       over it (.cor-hot in the markup) carrying the name as the artwork
+       paints it. Matching it to a document by name rather than by a written-in
+       slug is what keeps the two from drifting: the client can fix a slug in
+       the Studio and these keep working.
+
+       nameKey() is deliberately forgiving, because the artwork and the CMS do
+       not spell things the same way — it folds case and punctuation, collapses
+       doubled letters ("Raajlaxmi"/"Rajlaxxmi" → rajlaxmi, "Pearrl" → pearl)
+       and drops a trailing plural ("Towers" → tower).
+
+       A box with no published project behind it stays inert: no href, no
+       pointer, no hover tint. Midas Heights is painted on the banner but has
+       no document yet, so today it is the one logo that does not respond. */
+    function nameKey(s){
+      return String(s || '').toLowerCase().replace(/[^a-z]+/g, ' ').trim()
+        .split(/\s+/)
+        .map(w => w.replace(/(.)\1+/g, '$1').replace(/s$/, ''))
+        .join('');
+    }
+
+    function wireBanner(){
+      const map = document.getElementById('corMap');
+      if(!map) return;
+
+      const byName = new Map();
+      P.forEach(p => { const k = nameKey(p.name); if(k && !byName.has(k)) byName.set(k, p); });
+
+      map.querySelectorAll('.cor-hot').forEach(hot => {
+        const p    = byName.get(nameKey(hot.dataset.project));
+        const href = p ? detailHref(p) : '';
+
+        if(!p || href === '#'){
+          hot.removeAttribute('href');
+          hot.removeAttribute('aria-label');
+          hot.removeAttribute('data-hover');
+          hot.style.pointerEvents = 'none';
+          return;
+        }
+        hot.href = href;
+        hot.setAttribute('aria-label', `${p.name} — view project`);
+        hot.setAttribute('data-hover', '');          /* grows the custom cursor ring */
+        hot.style.pointerEvents = '';
+      });
+    }
+
     /* a card's photograph: a Sanity asset if the document has one, otherwise
        the seeded placeholder, and a gradient underneath either way */
     function imgCss(p){
@@ -1785,6 +1889,7 @@
 
     let activeCity = buildChips('all') || 'all';
     renderCards(activeCity);
+    wireBanner();     /* inert until Sanity answers — the fallback names are invented */
 
     /* --- pull the live collection from Sanity ---------------------------
        Read-only, no token, no SDK: the query API answers plain JSON over
@@ -1807,6 +1912,7 @@
           P = result;
           activeCity = buildChips(activeCity) || 'all';
           renderCards(activeCity);
+          wireBanner();
         })
         .catch(err => console.warn('[collection] Sanity unreachable, showing built-in cards.', err));
     }
@@ -2106,6 +2212,13 @@
         if(txt(d.bannerAlt)) img.alt = txt(d.bannerAlt);
         img.removeAttribute('width');
         img.removeAttribute('height');
+
+        /* The clickable logos are boxes measured off the artwork that ships in
+           the repo. A banner uploaded in the Studio lays its logos out
+           differently, so the boxes would point at whatever happens to sit
+           under them — drop them rather than leave them lying. */
+        const map = document.getElementById('corMap');
+        if(map) map.remove();
       }
 
       /* --- the consultation strip --- */
