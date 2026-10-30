@@ -49,7 +49,6 @@ await client.createOrReplace({
 
   /* ---- about ---- */
   aboutLabel: 'About Raajlaxmi',
-  aboutGhost: 'Legacy',
   aboutHeading: ['Building More Than', 'Homes.'],
   aboutParagraphs: [
     'At Raajlaxmi Group, we are committed to delivering exceptional real estate projects with timely possession and completion.',

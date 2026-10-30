@@ -99,13 +99,6 @@ export default {
       group: 'about',
     },
     {
-      name: 'aboutGhost',
-      title: 'Ghost word',
-      type: 'string',
-      description: 'The large faint word set behind the copy — currently "Legacy". One word reads best.',
-      group: 'about',
-    },
-    {
       ...lines('aboutHeading', 'Heading', 'One line per row. Two lines is the design.'),
       group: 'about',
     },

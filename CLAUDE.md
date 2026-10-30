@@ -162,8 +162,8 @@ Check at 1440×900, 1024×800 and 420×860; scroll the full page; confirm no con
 | # | Section | id | What it does |
 |---|---------|-----|--------------|
 | I | Hero | `hero` | Night skyline (inline base64 JPEG), "Live Above The City", line-mask entrance, mouse parallax, property-selector form. **All of its copy, and the three dropdown lists, come from the `homepage` singleton** — the four localities hard-coded in the markup (Gomti Nagar, Hazratganj, Sushant Golf City, Vibhuti Khand) are in **Lucknow**, not this developer's corridor; the seeded CMS values replace them with Vasai / Nallasopara / Virar / Saphale. |
-| II | About | `about` | Ivory. Ghost word "Legacy" behind copy, architectural plate (`assets/about-plate.jpg`), four counting stats, then a full-width RERA / CREDAI-MCHI trust strip (`.ab-creds`, a sibling of `.ab-inner`, not inside the content column). |
-| III | Signature Projects | `signature` | Four project cards, corner blueprint decor with slow parallax, rotating seal. The section now ends on the card grid, so its **bottom** padding alone sets the run into Why — it mirrors `.about`'s (`clamp(5rem,14vh,140px)`) rather than its own top. |
+| II | About | `about` | Ivory. Architectural plate (`assets/about-plate.jpg`), four counting stats, then a full-width RERA / CREDAI-MCHI trust strip (`.ab-creds`, a sibling of `.ab-inner`, not inside the content column). **It holds exactly one screen** — see *The About section holds one screen*. The ghost word "Legacy" that used to sit behind the copy is gone, markup, CSS, parallax and schema field alike. |
+| III | Signature Projects | `signature` | Four project cards, corner blueprint decor with slow parallax, rotating seal. The section now ends on the card grid, so its **bottom** padding alone sets the run into Why — it was written to mirror `.about`'s old `clamp(5rem,14vh,140px)`, which **no longer exists**: About was rebuilt to one screen and its padding is now much tighter, so this value is a standalone constant that only looks like it is paired with something. |
 | IV | Why Raajlaxmi | `why` | Team photograph as the feature plate (`assets/why-team.jpg`), four numbered rows, a year timeline (2004→2026), closing quote + spinning seal. The auto-scrolling brand marquee (`.why-carousel`) that used to sit before the quote is gone — Section X replaced it. |
 | X | Brands We Use | `brands` | Follows Why in scroll order. `OUR PARTNERS` header, six category tabs (All / Structure / Interiors / Electrical / Fittings / Utilities) and a card grid, all rendered from the `BRANDS` array in the Section X IIFE — adding a supplier is one line of data, no markup. Each row is `[name, logo file, trade, tab]`: `trade` is the line from the client's sheet and prints on the card, `tab` is the coarser bucket the tabs filter by. Johnson and Hindware appear twice on purpose, under two different trades. Its header (`.br-head` / `.br-label` / `.br-title` / `.br-intro`) is a **copy of Section IV's** rather than a shared rule — change one and the other will not follow. |
 
@@ -228,6 +228,44 @@ the home page's Signature Projects cards still link to.
 ## Architecture
 
 **The `<head>` CSS is duplicated across all eight files.** Lines ~1–978 of `index.html`, `projects.html`, `projects-ongoing.html`, `projects-redevelopment.html`, `project.html`, `testimonials.html`, `services.html` and `contact.html` are the same stylesheet — base tokens, cursor, nav, mobile sheet, and the CSS for sections I–V — differing in only ~100 lines (title, nav/logo sizing on the inner pages). Each page then renders only its own sections. **Any edit to shared chrome (nav, `.nav-wrap.on-light`, cursor, burger/sheet, `:root` tokens, the hidden page scrollbar) must be applied to all eight files or the pages drift.** The page scrollbar is hidden by request (`html{scrollbar-width:none}` + `html::-webkit-scrollbar{display:none}`); it is scoped to `html`, **not** `*`, on purpose — the scrollbar on `.cor-figure` is the only cue that the line-map banner pans sideways on a phone, so a blanket rule would break that.
+
+**The About section holds one screen.** The client's complaint was that the
+counting stats were cut off at the fold. `.about` is now
+`min-height:100svh` (with `100vh` first as the fallback) and a centred flex
+column, and **every vertical step inside it is sized in `vh` rather than `rem`**
+so the whole composition shrinks with the window instead of spilling past the
+fold. Four things are load-bearing:
+
+- **The top padding clears the fixed navbar**, which is 76–122px depending on
+  width and scroll state. Once the section is exactly one viewport, that padding
+  is the only thing keeping the eyebrow out from under the bar, and it has to
+  grow with **both** axes — `clamp(7.2rem,calc(6.2rem + 4vh),8.4rem)`. A `vh`-only
+  value left the label buried at 1536px wide, where the bar is tallest.
+- **`.ab-photo` is capped in `vh`** (`max-height:min(56vh,540px)`). The portrait
+  plate is what made the section taller than the screen; `background-size:cover`
+  absorbs the crop.
+- **Two step-down tiers**, `max-height:880px` and `max-height:700px`, trim the
+  type, the cards and the marks further. They exist because **the CMS copy runs
+  longer than the fallback written into the file** — against the real `homepage`
+  document the first tier alone still left the trust strip 10px past the fold at
+  1024×640. Verify against live Sanity data, not the markup fallback.
+- Below `max-height:560px` it gives up and returns to natural flow: hiding
+  content under the navbar is worse than a short scroll. Likewise **below 1000px
+  it stacks and is no longer one screen** — the plate sits above the copy and it
+  cannot be — but its top padding still clears the bar.
+
+A long CMS heading is the thing that could still break it: there is no
+`fitHeadline()` here as there is on the hero, so a heading that wraps to four
+lines will push the strip past the fold again. Measured fits at 1440×900,
+1536×864, 1366×768, 1280×800, 1024×800, 1024×640, 1280×620 and 1680×1050.
+
+**Section II's CSS has drifted from the other seven files.** The `.ab-*` rules
+live in the shared head stylesheet, so all eight files carry a copy — but only
+`index.html` has the markup, so only its copy renders. The other seven were
+already carrying an **older** version (the ghost word at `top:-.44em`, `.ab-text`
+at 560px) before this change, and the one-screen rewrite was applied to
+`index.html` alone. Treat the Section II block in the other seven as dead code;
+do not "sync" it without checking which copy is current.
 
 **Page loader.** The **first** page of a visit opens with a navy cover (`.ld`, the first child of `<body>`) carrying the mark and a gold rule that creeps in CSS. Four things about it are load-bearing:
 
@@ -341,8 +379,8 @@ than replacing it.
 its own sidebar entry (`sanity.config.js` → `structure`); its generic template
 is filtered out of the global "create" menu so a second one cannot be made. It
 carries four groups — Hero (headline lines, sub, the three dropdown lists,
-button label, and a background photograph or video), About (label, ghost word,
-heading lines, paragraphs, photograph or video, and the four counting figures),
+button label, and a background photograph or video), About (label, heading
+lines, paragraphs, photograph or video, and the four counting figures),
 Why Raajlaxmi (label, heading, intro, banner photograph or video, the numbered
 points, the timeline, and the closing quote) and Signature Projects (label,
 heading, intro and the four cards). The numbered points are numbered by position,
@@ -567,7 +605,10 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
 - Section X fits every mark into an identical box with `object-fit:contain` rather than capping height alone — capping height left a 3x spread in optical weight between a wide lockup and a square roundel.
 - `assets/why-team.jpg` is the Section IV feature plate (the group photograph, 2000×1332). The plate is ~2.2:1 while the photo is 3:2, so the CSS biases the crop to `center 72%` to keep the front row's feet in frame, and below 820px the plate switches to `aspect-ratio:3/2` so a phone shows the whole line-up instead of cropping both ends off it.
 - Still placeholders: four `picsum.photos/seed/rl-*` URLs in `index.html` — the Signature Projects cards (Heights / Villa / Crest / Essence) — plus the seeded card art in the `projects.html` fallback list (real card images now come from Sanity). Replace by swapping the URL in the inline `background-image` (or the Sanity document) for the real asset. Earlier notes here claiming ten placeholders were stale.
-- The About plate is `assets/about-plate.jpg` (excavator on site, 810×1212), set as `background-image` on `.ab-photo` in CSS. It used to be copied off the hero by the About IIFE; that JS is gone, so **don't reintroduce an inline `style.backgroundImage` there** — it would override the stylesheet. The one deliberate exception is the home-page content block, which sets an inline background **only when the `homepage` document actually carries a photograph**; with the field empty the stylesheet keeps this file. The plate crops to `5/6.6` from the centre.
+- The About plate is `assets/about-plate.jpg` (excavator on site, 810×1212), set as `background-image` on `.ab-photo` in CSS. It used to be copied off the hero by the About IIFE; that JS is gone, so **don't reintroduce an inline `style.backgroundImage` there** — it would override the stylesheet. The one deliberate exception is the home-page content block, which sets an inline background **only when the `homepage` document actually carries a photograph**; with the field empty the stylesheet keeps this file. The plate crops to `5/6.6` from the centre, **and is additionally capped in
+  `vh`** (`max-height:min(56vh,540px)`, 46vh on short windows) so it cannot push
+  Section II past one screen; `background-size:cover` absorbs the difference, so
+  on a short window the crop is tighter than 5/6.6.
 - `quote-strip.png` (the Vikram Raajlaxmi quote banner) has been **deleted** — Section III's `.sp-quote-img` figure was removed earlier. Recoverable from git if the quote is ever wanted back.
 - The root-level `Generate_*.jpeg` / `download.png` / `Minimalist_*.jpeg` source art has been **deleted** — it was working material, not site assets. `footer.png`, `Services_start.png`, the seals and the sketches are all still referenced and remain.
 - **Favicon**: `favicon.ico` (16/32/48, at the repo root so browsers find it unprompted) plus `assets/favicon-32.png`, `assets/favicon-192.png` and `assets/apple-touch-icon.png` (180). All eight pages link them from `<head>`, right after `</title>`. Cut from the logo's building glyph with its dark ground **keyed out to transparency** (unmatted, so no dark fringe survives onto a light tab bar), squared up and centred with ~12% margin — the mark has to survive being read at 16px, so it sits deliberately large in frame.

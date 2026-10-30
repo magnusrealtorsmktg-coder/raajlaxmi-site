@@ -441,9 +441,22 @@
     --navy:#1B3556;
   }
 
+  /* This section is meant to read as ONE SCREEN, not a scroll: the stats were
+     being cut off at the fold. It holds exactly one viewport and centres its
+     three rows inside it, and every vertical step below is sized in vh rather
+     than rem so the whole composition shrinks with the window instead of
+     spilling past the fold. 100vh first as the fallback for browsers without
+     svh; svh is the one that excludes a phone's retracting toolbar. */
   .about{position:relative;overflow-x:clip;
     background-color:var(--ab-bg);
-    padding:clamp(6rem,14vh,140px) clamp(1.4rem,5vw,4rem);}
+    min-height:100vh;min-height:100svh;
+    display:flex;flex-direction:column;justify-content:center;
+    /* The navbar is fixed and ~103-122px tall depending on width, so once this
+       section fills the screen the top padding is the only thing keeping the
+       eyebrow out from under it. It has to grow with BOTH axes — the bar gets
+       taller on wide viewports, and vh alone left the label buried at 1536. */
+    padding:clamp(7.2rem,calc(6.2rem + 4vh),8.4rem) clamp(1.4rem,5vw,4rem)
+            clamp(1.2rem,3vh,2.2rem);}
 
   .ab-inner{position:relative;z-index:2;max-width:1400px;margin:0 auto;
     display:grid;
@@ -453,10 +466,13 @@
     gap:clamp(2.5rem,5vw,5.5rem);align-items:center;}
 
   /* ---- left: the massive architectural plate ---- */
-  .ab-visual{position:relative;will-change:transform;margin-bottom:-3.75rem;}
+  .ab-visual{position:relative;will-change:transform;}
   /* the plate is ~2.2:1 and the team photo is 3:2, so a centred crop would cut
      the front row's feet — bias it down onto the people, away from the ceiling */
-  .ab-photo{position:relative;aspect-ratio:5/6.6;width:100%;border-radius:30px;
+  .ab-photo{position:relative;aspect-ratio:5/6.6;width:100%;
+    /* the plate is portrait and is what pushed this section past the fold;
+       cap it against the viewport and let background-size:cover crop it */
+    max-height:min(56vh,540px);border-radius:30px;
     background-image:url("assets/about-plate.jpg");
     background-size:cover;background-position:center;background-color:var(--charcoal);
     /* a subtle light hairline just inside the edge for a premium matte frame */
@@ -474,22 +490,13 @@
 
   /* ---- right: content over the ghost word ---- */
   .ab-content{position:relative;}
-  /* the giant word, sized to sit fully inside the column so it reads whole;
-     Cinzel gives it an engraved, monumental luxury character */
-  /* lifted clear of the headline — the word reads as a watermark above it,
-     not through it (the heading is bold now, so overlap muddied both) */
-  .ab-ghost{position:absolute;z-index:0;top:-1.02em;right:0;
-    font-family:"Cinzel",serif;font-weight:500;line-height:.82;
-    font-size:clamp(3.4rem,10vw,140px);letter-spacing:.03em;text-transform:uppercase;
-    color:#C9A15A;opacity:.16;pointer-events:none;white-space:nowrap;
-    will-change:transform;}
 
   /* the bold headline needs a wider measure to keep 'Building More Than' on
      one line; the paragraphs keep the original 560px reading width */
   .ab-text{position:relative;z-index:1;max-width:660px;}
 
   /* section eyebrow, lifted to the top-left of the whole section */
-  .ab-top{position:relative;z-index:3;max-width:1400px;margin:0 auto clamp(2.4rem,4.5vw,3.8rem);}
+  .ab-top{position:relative;z-index:3;max-width:1400px;margin:0 auto clamp(.9rem,2.2vh,1.7rem);}
   .ab-label{display:inline-block;font-family:"Inter",sans-serif;
     font-size:clamp(.86rem,1.05vw,1.06rem);font-weight:600;letter-spacing:.26em;
     text-transform:uppercase;color:var(--gold);
@@ -502,7 +509,7 @@
   .about.in .ab-label::after{transform:scaleX(1);}
 
   .ab-head{font-family:"Playfair Display",serif;font-weight:700;
-    font-size:clamp(2.6rem,5vw,72px);line-height:1.05;letter-spacing:-.015em;
+    font-size:clamp(2rem,3.8vw,54px);line-height:1.06;letter-spacing:-.015em;
     color:var(--charcoal);}
   /* split reveal: each line rises out of its own clip mask */
   /* the mask has to clear the bold face's descenders — .05em was tuned for
@@ -514,22 +521,22 @@
   .about.in .ab-ln:nth-child(1) i{transition-delay:.2s;}
   .about.in .ab-ln:nth-child(2) i{transition-delay:.32s;}
 
-  .ab-copy{margin-top:2.4rem;max-width:560px;}
-  .ab-copy p{font-size:clamp(1rem,1.2vw,21px);line-height:1.9;font-weight:300;
+  .ab-copy{margin-top:clamp(1rem,2.2vh,1.7rem);max-width:560px;}
+  .ab-copy p{font-size:clamp(.92rem,1.05vw,18px);line-height:1.72;font-weight:300;
     color:var(--body);
     opacity:0;transform:translateY(22px);
     transition:opacity .9s var(--lux),transform .9s var(--lux);}
-  .ab-copy p + p{margin-top:1.5rem;}
+  .ab-copy p + p{margin-top:clamp(.6rem,1.3vh,1.05rem);}
   .about.in .ab-copy p{opacity:1;transform:none;}
   .about.in .ab-copy p:nth-child(1){transition-delay:.5s;}
   .about.in .ab-copy p:nth-child(2){transition-delay:.62s;}
   .about.in .ab-copy p:nth-child(3){transition-delay:.74s;}
 
   /* ---- statistics ---- */
-  .ab-stats{margin-top:clamp(2.6rem,4vw,3.4rem);display:grid;
+  .ab-stats{margin-top:clamp(1.1rem,2.4vh,1.9rem);display:grid;
     grid-template-columns:repeat(4,1fr);gap:clamp(.7rem,1vw,1rem);}
   .ab-stat{position:relative;background:#fff;border:1px solid rgba(28,28,28,.07);
-    border-radius:20px;padding:clamp(1.5rem,2vw,2rem) clamp(.95rem,1.15vw,1.2rem);
+    border-radius:18px;padding:clamp(.95rem,1.8vh,1.4rem) clamp(.8rem,1.1vw,1.1rem);
     box-shadow:0 18px 40px -30px rgba(40,32,18,.3);
     opacity:0;transform:translateY(26px);
     transition:opacity .8s var(--lux),transform .8s var(--lux),
@@ -547,11 +554,11 @@
   .about.in .ab-stat:hover{transform:translateY(-8px);border-color:rgba(201,161,90,.4);
     box-shadow:0 34px 60px -30px rgba(40,32,18,.4);}
   .ab-num{font-family:"Cormorant Garamond",serif;font-weight:400;line-height:1;
-    font-size:clamp(1.8rem,2.8vw,2.5rem);color:var(--charcoal);letter-spacing:-.01em;}
+    font-size:clamp(1.5rem,2.2vw,2.1rem);color:var(--charcoal);letter-spacing:-.01em;}
   .ab-num .u{color:var(--gold);}
   /* "Million" rides with the figure, smaller and in ink, so the gold + still reads as the accent */
   .ab-num .un{font-size:.6em;letter-spacing:.03em;margin-left:.24em;}
-  .ab-slab{width:1.5rem;height:1px;background:var(--gold);opacity:.7;margin:.85rem 0;}
+  .ab-slab{width:1.5rem;height:1px;background:var(--gold);opacity:.7;margin:clamp(.45rem,1vh,.75rem) 0;}
   /* the captions run long ("Sq.Ft Under Construction"), so they scale with the card */
   .ab-scap{font-size:clamp(.72rem,.56vw,.82rem);line-height:1.45;color:var(--body);font-weight:300;}
 
@@ -561,8 +568,7 @@
   /* a full-width trust strip under the two columns, so the marks can be large
      without starving their captions of line length */
   .ab-creds{position:relative;z-index:2;max-width:1400px;
-    /* .ab-visual carries margin-bottom:-3.75rem, so this has to clear that too */
-    margin:clamp(5.5rem,8vw,7.5rem) auto 0;
+    margin:clamp(1.3rem,3vh,2.3rem) auto 0;
     display:flex;align-items:center;gap:clamp(1.4rem,2.4vw,2.8rem);
     opacity:0;transform:translateY(22px);
     transition:opacity .8s var(--lux) 1.2s,transform .8s var(--lux) 1.2s;}
@@ -574,7 +580,7 @@
     border-left:1px solid rgba(201,161,90,.45);}
   /* the CREDAI lockup is far wider than the RERA roundel — cap it so neither
      mark steals the caption's column */
-  .ab-cred img{height:clamp(62px,5.6vw,86px);width:auto;flex:none;
+  .ab-cred img{height:clamp(44px,4.4vh,70px);width:auto;flex:none;
     max-width:clamp(116px,11vw,164px);object-fit:contain;}
   .ab-cred p{font-size:clamp(.78rem,.68vw,.9rem);line-height:1.7;
     color:var(--body);font-weight:300;}
@@ -583,11 +589,52 @@
   .cursor-ring.gold{width:66px;height:66px;mix-blend-mode:normal;
     border-color:var(--gold);background:rgba(201,161,90,.12);}
 
+  /* Short laptop viewports (a 1366x768 screen is ~640px of page): there is not
+     enough height to clear the navbar AND hold the composition at full size, so
+     step the type and the cards down rather than let it spill past the fold
+     again — which is the thing this section was rebuilt to stop doing. */
+  @media (min-width:1001px) and (max-height:880px){
+    .ab-head{font-size:clamp(1.7rem,2.6vw,2.2rem);}
+    .ab-copy p{font-size:clamp(.85rem,.95vw,16px);line-height:1.55;}
+    .ab-stat{padding:clamp(.7rem,1.4vh,1rem) clamp(.7rem,1vw,.95rem);}
+    .ab-num{font-size:clamp(1.3rem,1.9vw,1.75rem);}
+    .ab-cred img{height:clamp(38px,3.6vh,52px);}
+    .ab-cred p{font-size:clamp(.72rem,.62vw,.8rem);line-height:1.55;}
+  }
+  /* A second tier for genuinely short windows. The CMS copy runs longer than
+     the fallback written into this file, so the first step-down alone left the
+     trust strip hanging a few pixels past the fold at 1024x640. */
+  @media (min-width:1001px) and (max-height:700px){
+    .ab-photo{max-height:46vh;}
+    .ab-head{font-size:clamp(1.5rem,2.2vw,1.9rem);}
+    .ab-copy{margin-top:clamp(.7rem,1.6vh,1.1rem);}
+    .ab-copy p{font-size:clamp(.8rem,.9vw,15px);line-height:1.5;}
+    .ab-copy p + p{margin-top:clamp(.45rem,1vh,.75rem);}
+    .ab-stats{margin-top:clamp(.8rem,1.8vh,1.3rem);}
+    .ab-stat{padding:clamp(.55rem,1.1vh,.8rem) clamp(.6rem,.9vw,.85rem);}
+    .ab-num{font-size:clamp(1.15rem,1.7vw,1.5rem);}
+    .ab-slab{margin:clamp(.3rem,.7vh,.5rem) 0;}
+    .ab-scap{font-size:clamp(.66rem,.5vw,.74rem);}
+    .ab-creds{margin-top:clamp(.9rem,2vh,1.5rem);}
+    .ab-cred img{height:clamp(32px,3vh,44px);}
+  }
+  /* Below this even the stepped-down version cannot clear the bar, and hiding
+     content under the navbar is worse than a short scroll. */
+  @media (min-width:1001px) and (max-height:560px){
+    .about{min-height:0;}
+  }
+
   @media(max-width:1000px){
-    .ab-inner{grid-template-columns:1fr;gap:3rem;}
-    .ab-visual{order:1;margin-bottom:0;max-width:32rem;}
+    /* stacked, the plate sits above the copy and one screen is no longer
+       possible — give the height back instead of cramping everything */
+    /* the bar is ~70-80px here and still fixed, so the top padding has to
+       keep clearing it even though the section no longer holds one screen */
+    .about{min-height:0;display:block;
+      padding-block:clamp(6rem,13vh,8.5rem) clamp(3.5rem,8vh,5.5rem);}
+    .ab-inner{grid-template-columns:1fr;gap:2.4rem;}
+    .ab-visual{order:1;max-width:32rem;}
+    .ab-photo{max-height:none;}
     .ab-content{order:2;}
-    .ab-ghost{font-size:clamp(5rem,20vw,10rem);top:-1em;}
   }
   /* below this the strip is too narrow for the marks side by side: they stack
      and the dividing rule goes horizontal */
@@ -601,7 +648,7 @@
   }
 
   @media (prefers-reduced-motion:reduce){
-    .ab-visual,.ab-ghost{transform:none !important;}
+    .ab-visual{transform:none !important;}
     .ab-photo,.ab-label,.ab-ln i,.ab-copy p,.ab-stat,.ab-creds{
       opacity:1 !important;transform:none !important;}
     .ab-label::after{transform:scaleX(1) !important;}
@@ -1491,10 +1538,8 @@
         <div class="ab-photo" id="abPhoto" data-cursor-gold><span class="glow"></span></div>
       </div>
 
-      <!-- right: content over the ghost word -->
+      <!-- right: heading, copy and the counting stats -->
       <div class="ab-content">
-        <div class="ab-ghost" id="abGhost" aria-hidden="true">Legacy</div>
-
         <div class="ab-text">
           <h2 class="ab-head">
             <span class="ab-ln"><i>Building More Than</i></span>
@@ -2164,9 +2209,8 @@
       });
     }, {threshold:.2}).observe(about);
 
-    /* --- slow parallax on the plate + the ghost word --- */
-    const visual = document.getElementById('abVisual'),
-          ghost  = document.getElementById('abGhost');
+    /* --- slow parallax on the plate --- */
+    const visual = document.getElementById('abVisual');
     let live = false, ticking = false;
 
     function frame(){
@@ -2175,7 +2219,6 @@
       // -1 (section below) → +1 (section above), 0 when centred
       const prog = (r.top + r.height/2 - innerHeight/2) / innerHeight;
       if(visual) visual.style.transform = `translateY(${prog * -46}px)`;
-      if(ghost)  ghost.style.transform  = `translateY(${prog *  34}px)`;
     }
     function onScroll(){ if(live && !ticking){ ticking = true; requestAnimationFrame(frame); } }
 
@@ -2611,7 +2654,7 @@
       "aboutVideoUrl":aboutVideo.asset->url,
       whyLabel,whyHeading,whyIntro,whyRows,whyTimeline,whyQuote,whyQuoteBy,
       "whyImageUrl":whyImage.asset->url,"whyVideoUrl":whyVideo.asset->url,
-      aboutLabel,aboutGhost,aboutHeading,aboutParagraphs,"aboutImageUrl":aboutImage.asset->url,
+      aboutLabel,aboutHeading,aboutParagraphs,"aboutImageUrl":aboutImage.asset->url,
       stats,
       signatureLabel,signatureHeading,signatureIntro,
       signatureCards[]{name,category,location,description,link,"imageUrl":image.asset->url}
@@ -2770,7 +2813,6 @@
 
       /* ---------- about ---------- */
       setText(document.querySelector('.ab-label'), d.aboutLabel);
-      setText(document.getElementById('abGhost'),  d.aboutGhost);
 
       const head = list(d.aboutHeading);
       if(head.length){
