@@ -6,96 +6,113 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 An **eight-page** static marketing site for Raajlaxmi Group: `index.html` (home), `projects.html` (browse-all collection, and the Completed view via `?status=completed`), `projects-ongoing.html` and `projects-redevelopment.html` (the same collection UI locked to one status), `project.html` (one property's detail page), `testimonials.html` (client voices), `services.html` and `contact.html` (enquiry page). No build step, no package manager, no dependencies, no test suite. Each page is one self-contained document — `<style>` in `<head>`, markup in `<body>`, one `<script>` at the end — plus a handful of loose image files in the repo root and `assets/`.
 
-Deployed via Netlify as a plain static publish of the repo root (`.netlify/netlify.toml`, `publish` = the project directory). There is no build command; whatever is on disk is what ships.
+Deployed to Netlify from the CLI. There is no build step — but **do not publish the repo root**: `studio/node_modules` lives there now. Publish a `git archive` export instead; see *Where this stands*.
 
-**NOTE: `README.md` is stale** — it documents an earlier seven-section, single-file version of this site (Hero / The Long View / The Viewing Room / The Hours / The Exhibition / The Practice / The Six) that no longer exists in the markup. Don't take it as a description of the current build; update or ignore it, but don't propagate its section names.
+`README.md` was rewritten on 26 Sep and now describes this build accurately (it previously documented a seven-section, single-file version that no longer exists). It is the public GitHub landing page; **CLAUDE.md is the detailed reference** — keep architecture notes here, not there.
 
-## Where this stands (handover, 26 Sep 2026)
+## Where this stands (handover, 30 Oct 2026)
 
-The site is **complete and working end to end**: eight pages, all serving, all
-verified in a headless browser at 1440/1024/420 with no console errors. Sanity
-drives every project card and the detail page. What is left is content and
-deployment, not construction — see *Known content placeholders* and the three
-"do this first" items below.
+The site is **built, deployed and live** at
+<https://stirring-basbousa-6d4b4b.netlify.app>, and **almost every page is now
+driven by Sanity** — see *Content management*. Construction is essentially done.
+What remains is **content** the client has to supply, plus the two launch
+blockers below.
 
-### Do these first
+### Deploy: do not publish the repo root
 
-1. ~~**`git init`.**~~ **Done (26 Sep).** The directory is now a git repo with
-   an initial commit, pushed to
-   <https://github.com/magnusrealtorsmktg-coder/raajlaxmi-site> (public).
-   `studio/node_modules`, `studio/dist`, `studio/.env` and `.netlify/` are
-   gitignored — the last because its `netlify.toml` carries an absolute path to
-   one machine, so committing it would break a build-from-git setup. If Netlify
-   is ever switched from CLI deploys to deploying from GitHub, add a fresh
-   `netlify.toml` at the repo root with `publish = "."`.
-2. **Deploy the Studio.** `cd studio && npm run deploy`. The `stage` field and
-   the three-folder sidebar exist in the local schema and are validated
-   (`npx sanity schema validate` → 0 errors) but the **hosted Studio at
-   <https://raajlaxmi.sanity.studio> is still running the old schema**, so the
-   client cannot use any of it yet.
-3. **Set `stage` on the existing documents.** Checked against the live dataset
-   on 26 Sep: there are 8 projects and **not one has `stage` set** — the field is
-   new. The pages still work because `stageOf()` falls back to the old status
-   badge, so the four `Ongoing` and two `Completed` documents land correctly by
-   accident. The two `Ready Possession` ones (Heights, Enclave) match no listing
-   at all, and nothing is filed as Redevelopment, which is why that page shows
-   placeholder cards. `stage` is `required` in the schema, so anyone editing a
-   document will be made to pick one; the backlog is the eight that already
-   exist.
+`.netlify/netlify.toml` still says `publish` = the project directory, but that
+directory now contains `studio/node_modules` — **562MB across 46,000 files**.
+Never run a bare `netlify deploy` from here. Publish exactly what is committed:
 
-### A recovery happened — read this before trusting a detail
+```bash
+rm -rf /tmp/rl-deploy && mkdir -p /tmp/rl-deploy
+git archive HEAD | tar -x -C /tmp/rl-deploy
+netlify deploy --prod --dir=/tmp/rl-deploy        # ~87 files, 8.6MB
+```
 
-On 26 Sep a regex in this session matched a CSS comment instead of the JS block
-it was aimed at and **deleted most of all eight HTML files**. They were rebuilt
-from three sources: `contact.html` from the editor's local history (that morning's
-state, and the authoritative copy of the shared chrome), `project.html` from a
-backup plus saved Section VI blocks, and the other six from the **August Netlify
-deploy** with every subsequent change re-applied from the session transcript.
+That also makes the deploy reproducible from any checkout. **The Studio deploys
+separately** (`cd studio && npm run deploy`) — it republishes the editing
+interface and does nothing to the website.
 
-Everything known to have been in the files has been restored and verified, and
-`assets/`, `studio/` and all photography were never touched. But the four
-Netlify-derived pages were reconstructed rather than recovered, so **a small
-detail could have been missed**. If something looks subtly wrong — a spacing
-value, a comment, a copy tweak — treat "it was lost in the rebuild" as a live
-possibility rather than assuming it was never there.
+**Claude Code cannot run the production deploy itself**: the auto-mode
+classifier blocks it as `[Production Deploy]`, and blocks editing
+`.claude/settings.local.json` to loosen that as `[Self-Modification]`. The
+`Bash(netlify deploy *)` permission rule is already present and is *not* what
+stops it — the classifier is a separate layer. So the working pattern is: Claude
+verifies locally, commits and pushes; the user runs the one deploy command. The
+user asked for this explicitly, to avoid spending Netlify credits on
+unverified builds — **check locally before proposing a deploy**.
 
-Working copies are kept outside the repo, in this session's scratchpad under
-`recovery/`: `damaged/` (the broken files), `aug/` (the de-Netlified August
-copies), and two snapshots taken during the rebuild.
+### Verifying locally — and one headless trap
 
-### Verified working
+Serve the directory and check in a headless browser (recipe below). One thing
+will mislead you: **headless Chrome throttles `requestAnimationFrame` to about
+three frames a second**, so anything rAF-driven looks frozen locally even when
+it works in a real browser. It also often never plays the hero entrance, which
+leaves the navbar and hero copy invisible in screenshots. Prefer, in order:
+computed styles via a sized `<iframe>` harness; CSS animations (they advance
+with `--virtual-time-budget`, so two screenshots at different budgets can be
+diffed to prove motion); and `--force-prefers-reduced-motion` to settle
+compositions. `--window-size` is honored for `--screenshot` but **not** for
+`--dump-dom`, where `innerWidth` reports 756 regardless — size an iframe
+instead of trusting that number.
 
-Nav dropdown, mobile sheet, adaptive light/dark navbar, hidden scrollbar, loader
-and its `onIntro` handoff, favicon set, footer logo — all eight files, at parity.
-Home: About plate, the four counters, RERA/CREDAI strip, Signature, Why team
-plate, 32 Brands cards across six tabs. Collection: 8 cards, city chips, status
-filter, Western Line banner. Ongoing: 4 cards + its own banner. Redevelopment:
-3 placeholder cards. Detail page: hero, thumb strip, fact bar, amenities, map,
-and Sanity hydration via `?p=<slug>`.
+### The two launch blockers
+
+- **Neither form has a backend.** The contact form and the 30-second lead popup
+  both validate, swap to a thank-you and **send nothing**. The popup is the
+  sharper problem: it asks every visitor for a phone number 30 seconds in and
+  discards it. Wire both to Netlify Forms (`name="contact"` +
+  `data-netlify="true"`) before launch.
+- **The project detail pages are nearly empty.** Of 14 projects: **0 have a
+  gallery, 1 has an overview, 1 has specs, 1 has a price, and 7 of 14 have a
+  configuration**. Cards look right; `project.html?p=<slug>` is sparse, and the
+  7 with no configuration cannot appear in any property-type search.
+
+### Content the client still owes
+
+| Thing | State on 30 Oct |
+|---|---|
+| Projects | **14, all filed `completed`** — so the Ongoing page is empty and Redevelopment still shows its 3 placeholder cards |
+| Reviews | **6 real Google reviews**, all with Google links — the invented five are gone from the CMS |
+| Client photo slider | empty, so the whole block stays hidden |
+| Social handles | none set, so the footer row removes itself |
+| Hero background | a photograph is set; no video |
+
+Setting any project's **Listing** to Ongoing or Redevelopment fills those pages
+and retires the placeholders for good.
 
 ### Open decisions for the client
 
 - **13+ years** (Section II) contradicts the 2004 timeline and the "Est. 2004"
-  seal artwork. One founding date has to win; the seals are images, so that side
-  needs a re-export, not a code change.
+  seal artwork, which imply ~22 years. One founding date has to win; the seals
+  are images, so that side needs a re-export, not a code change.
 - **The services philosophy plate has a typo painted into it** — "feel as
   carefully designed the homes we create", missing the second "as". The live
   copy below 820px is correct, so the page says two different things depending
   on width. Only a redraw fixes it.
-- **Neither form has a backend.** The contact form and the 30-second lead
-  popup both validate and swap to a thank-you state; nothing is sent. Wire both
-  to Netlify Forms before launch or every enquiry is lost — the popup matters
-  most here, since it is the one that actively asks.
-- Testimonials are written copy, not real clients.
+- **The associates plate carries three copy errors** (see *Photography*), and
+  the **contact page and footer print different phone numbers**
+  (`+91 9890823288` vs `+91 77740 00939`). Both are CMS-editable now; someone
+  has to say which is right.
+- `project.html`'s hand-written fallback (no `?p=`) is still the client's
+  unverified mock: fact-bar figures, landmark distances and the direct line.
 
-### Deleted in the cleanup (recoverable from git)
+### History worth knowing
 
-`quote-strip.png`, `service_side.png`, the twelve `assets/projects/*.png`
-project marks and the root-level source art (`Generate_*.jpeg`,
-`Minimalist_*.jpeg`, `generate_*.jpeg`, `download.png`) were all removed once
-version control existed — 23 files, ~8MB, none of them referenced by any page.
-They are in the initial commit, so `git show <commit>:<path> > <path>` brings
-any of them back if a removed section is ever wanted again.
+On 26 Sep a regex matched a CSS comment instead of the JS block it was aimed at
+and **deleted most of all eight HTML files**. They were rebuilt from the
+editor's local history, a backup and the August Netlify deploy. Everything known
+to have been in them was restored and the pages have been edited and verified
+many times since, so this is unlikely to bite now — but if some small detail
+looks subtly wrong (a spacing value, a stray comment), "lost in the rebuild"
+remains a live possibility. **The repo has been under git since 26 Sep**, which
+is the real fix.
+
+`quote-strip.png`, `service_side.png`, the twelve `assets/projects/*.png` marks
+and the root-level source art were deleted once version control existed — 23
+files, ~8MB, none referenced. `git show <commit>:<path> > <path>` brings any of
+them back.
 
 ## Previewing and verifying
 
@@ -129,7 +146,7 @@ Check at 1440×900, 1024×800 and 420×860; scroll the full page; confirm no con
 
 `projects.html` — one section, `#projects` ("Section V — Our Collection"): cards rendered from the `P` array in JS, city filter chips derived from each entry's location field, a **Western line corridor band** (`.cor`, between the pagination and the consultation strip) showing the delivered portfolio under four stations — Vasai / Nallasopara / Virar / Saphale. It is the client's finished banner used whole (`assets/projects/western-line.jpg`), **by explicit instruction — do not substitute a markup rebuild for it**; a `?status=` filter (exact case-insensitive match on `p.status`, ANDed with the active city chip, read once on load so the chips never clear it, with a `.col-empty` message when nothing matches) — the nav's **Completed** item deep-links to `?status=completed`, a "showing N of M" line and a consultation CTA. **The pagination is gone** — the 1/2/3 buttons were decorative markup that never paged anything (every matching card always rendered), so they promised a second page that did not exist. Cross-links back to `index.html#about` / `index.html#signature`.
 
-`testimonials.html` — one section, `#testimonials` ("Section VII — Testimonials"): a five-entry carousel built from the `T` array, three cards visible with the centre one featured, circular arrows outside the track, pagination dots, and a closing consultation strip. The track holds every card and is translated so the active one sits under the viewport's midpoint (measured from live offsets, so it survives whatever width the clamp resolves to); a mask fades the cards leaving frame. The nav's Testimonials item points here from every page.
+`testimonials.html` — one section, `#testimonials` ("Section VII — Testimonials"): a **continuously scrolling marquee** of review cards, a hidden client-photo slider under it, and a closing consultation strip. The reviews come from Sanity (the five written into the `T` array are only the fallback); each card carries the reviewer's initials rather than a photograph, and a Google button when that review has a link. The arrows and dots are `display:none` — a strip with no discrete slides has nothing for them to point at. All the detail is under *Content management → Testimonials*. The nav's Testimonials item points here from every page.
 
 `services.html` — one section, `#services` ("Section IX — Services"), seven blocks: hero, philosophy, the five-step journey rail, six service cards, the six-step buying flow, a FAQ accordion and a closing CTA. Both rails fill their gold line from scroll position (`--fill` on `.sv-rail` / `.sv-flow`). Each block carries `data-rev` and gets its own observer, so the page reveals in movements rather than all at once. Its first two blocks are **finished artwork with the copy painted in**: `Services_start.png` is the hero band (`.sv-band`, full-bleed at its native 2164:380 — any max-height crops the label off the top; `.sv-mid` carries top padding so the plate below clears it rather than butting against it, which read as one accidental block of two photographs) and `assets/service-philosophy.jpg` is the philosophy plate (`.sv-side`, flush left at `--sv-side-w`, default 52%). The source artwork is 1376x768, **cropped on disk to 1376x513 (2.68:1)** — the extra height was empty cream above and below the copy and made the plate half again as tall as the banner. Any recrop must keep y150–635 of the original or it starts eating the paragraph, which is why it cannot reach the old 2.94:1 exactly. `--sv-side-w` is set by readability: much below ~40% the painted type stops being legible. The superseded `service_side.png` has been deleted (recoverable from git).
   - **The new plate's painted headline has a typo**: it reads "feel as carefully designed the homes we create", dropping the second "as". The live copy in the markup (which takes over below 820px) is correct, so the page says two different things depending on width. Only a redraw fixes the artwork. Both keep their copy in the markup for screen readers, and the plate swaps to live text below 820px where its painted type would render ~6px. **Everything else is an unfilled `.sv-slot` placeholder** reading `[INSERT … IMAGE HERE]` — to fill one, drop the inner `<span>` and set `background-image` on the slot; ratio, radius and shadow are already right.
@@ -274,11 +291,28 @@ appears within roughly a minute — and a browser that already fetched the query
 hold its own copy for that minute too. When something looks like it did not save,
 check the document in the Studio before suspecting the page.
 
-`studio/` is a Sanity Studio with two schemas: `project` — one document per
-project, feeding **all three collection pages and the detail page**
-(`projects.html`, `projects-ongoing.html`, `projects-redevelopment.html`,
-`project.html?p=<slug>`) — and `homepage`, a **singleton** driving the whole of
-`index.html`. Every other page is still hand-edited HTML.
+`studio/` is a Sanity Studio with **seven schemas** (`studio/schemaTypes/`), and
+by now it drives nearly every page:
+
+| Schema | Shape | Drives |
+|---|---|---|
+| `project` | one per property | the three collection pages and `project.html?p=<slug>` |
+| `homepage` | singleton `homepage` | all of `index.html` — hero, About, Why, Signature |
+| `collectionPage` | four fixed ids | the wording and banner on each listing view |
+| `testimonial` | one per review | the marquee cards on `testimonials.html` |
+| `testimonialsPage` | singleton | that page's wording and the client photo slider |
+| `contactPage` | singleton | all of `contact.html` |
+| `siteSettings` | singleton | social handles and the footer contact, on all eight pages |
+
+**`services.html` is the only page still entirely hand-edited**, and
+`project.html` keeps a hand-written Romal Kirti fallback for when it is opened
+with no `?p=`.
+
+Each schema has a seed script in `studio/scripts/` that fills it from the copy
+originally written into the HTML. **Every one is `createOrReplace` and will
+discard the client's edits** — they are for a fresh dataset only. `seed-rest.mjs`
+is the exception: it *patches* the Why fields onto the existing home page rather
+than replacing it.
 
 **The `homepage` singleton.** One document, fixed id `homepage`, reached from
 its own sidebar entry (`sanity.config.js` → `structure`); its generic template
@@ -427,12 +461,15 @@ tried to make it a positioning context. It and `.ab-photo` are both already
 positioned, so the video anchors without help; only `overflow:hidden` is needed,
 for the About plate's 30px radius.
 
-**Studio sidebar.** `Home page`, then **All Projects**, which holds the
-browse-everything page's own content and then one folder per stage —
-`Completed`, `Ongoing`, `Redevelopment` — each containing that listing's **Page
+**Studio sidebar**, in order: `Home page`; **All Projects** — which holds the
+browse-everything page's own content and then one folder per stage
+(`Completed`, `Ongoing`, `Redevelopment`), each containing that listing's **Page
 content** and its **Projects** list, with the `project-by-stage` template so a
-project created inside a folder is already filed. `Not yet filed` and `Every
-project` sit at the bottom as the safety net.
+project created inside a folder is already filed, plus `Not yet filed` and
+`Every project` at the bottom as the safety net; then `Testimonials` (Page
+content + Reviews), `Contact page`, a divider, and `Site settings`. Every
+singleton's generic template is filtered out of the global "create" menu, so a
+second copy cannot be made by accident.
 
 **Its hydration rule is the opposite of `project.html`'s**: a missing field
 *leaves the markup alone* rather than erasing it. The copy in `index.html` is
@@ -517,21 +554,22 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
 
 **`projects-ongoing.html` / `projects-redevelopment.html`** are copies of `projects.html` with four differences: the `<title>`, the `.col-head` label/title/intro, `STATUS` hard-coded instead of read from the URL, and the Western Line banner swapped: the ongoing page carries its own (`assets/projects/western-line-ongoing.jpg`, "Rising Along the Western Line" — Vasai / Virar / Saphale, five projects), and the redevelopment page carries the **associates plate** (`assets/projects/associates.jpg`) in that slot instead — it has no corridor banner of its own. Both banners are client artwork used whole, same rules as the completed one: the band takes the artwork's ground colour so it dissolves, and below 760px it scrolls sideways at a fixed 900px because the station names are painted in. The redevelopment page additionally carries **placeholder cards** and one extra rule in its Sanity handler — `if(!result.some(inStatus)) return;` — so the live list is ignored while it contains no redevelopment project, which would otherwise blank the page. Publish one with that status and the placeholders are never seen again.
 
-- **The dataset was replaced by the client (checked 29 Oct 2026).** The eight seeded
-  placeholders are gone; there are now **16 real projects with real photography**, and
-  **every one of them is filed as `completed`**. So `projects.html` lists 16, the
-  **Ongoing page is empty** (it shows its "nothing listed yet" line) and Redevelopment
-  still shows placeholders. Two projects — Midas Glory and Nakshatra Auris — carry the
-  badge "Ongoing" while filed as Completed; that is the status/stage split working as
-  designed, but it is probably not what was meant. Their **Listing** wants changing.
+- **The dataset is the client's own (checked 30 Oct 2026).** The seeded placeholders
+  are gone; there are **14 real projects with real photography**, and **every one is
+  filed as `completed`**. So the **Ongoing page is empty** (it shows its "nothing listed
+  yet" line) and Redevelopment still shows placeholders. Midas Glory and Nakshatra Auris
+  carry the badge "Ongoing" while filed as Completed — the status/stage split working as
+  designed, but probably not what was meant; their **Listing** wants changing. Note the
+  count fell from 16 to 14 between 29 and 30 Oct: the client deletes as well as adds, so
+  **re-check counts rather than trusting this line**.
 - **No project is filed as Redevelopment yet**, so that page shows three clearly-marked placeholder cards (`[Society name]`, `[Locality]`, `[n] BHK`) above the associates plate. Set one project's **Listing** to Redevelopment in the Studio and they disappear for good. Likewise the two `Ready Possession` documents are in no listing until their Listing is set to Completed.
 - **Project names differ between pages.** `index.html` Signature Projects lists Heights / Villa / Crest / Essence; `projects.html` lists those plus Business Square, Enclave, Skyline, Vista. Keep the two consistent when adding projects.
-- **Every testimonial is written copy**, not a real client. They now live in Sanity as
-  five `testimonial` documents (seeded from the `T` array, which stays in the file as
-  the fallback) — so replacing them is editing five records rather than editing HTML,
-  but they still **must** be replaced before launch. This is the one section whose
-  entire value is that it is true. The client photo slider under them is empty until
-  real photographs are added, and stays hidden while it is.
+- **The testimonials are now real.** The invented five have been replaced by **six
+  genuine Google reviews**, each with its Google review link, so this section is no
+  longer a launch blocker. The five written into the `T` array remain in the file as the
+  offline fallback and are still invented — they show only if the query fails, so do not
+  treat anything in that array as true. The client photo slider under the reviews is
+  empty and stays hidden until real photographs are added.
 - `project.html` carries its own placeholders, each marked with a `PLACEHOLDER` comment: **every figure in the fact bar** (~1,15,000 sq.ft, 8 towers, ~640+ units, Completed) is from the client's mock and unverified, as are the landmark distances and the direct line. Its five gallery shots are seeded `picsum.photos/seed/rl-rk-*` placeholders. "Request Brochure" has no brochure behind it and points at the enquiry form.
 - Romal Kirti **is** now published in Sanity and appears in the collection, so `project.html?p=romal-kirti` is reachable from a card. The hand-written fallback in `project.html` (used when the page is opened with no `?p=`) is still the unverified mock content.
 - Most nav links and CTAs are `href="#"`; only Projects and the cross-links resolve. Section II's "Discover our story" button and the "Raajlaxmi Group / Building trust. Creating legacy." signature are both gone — the accreditation strip replaced them, so About no longer offers a CTA or a sign-off of its own.
