@@ -307,26 +307,88 @@ export default {
       title: 'The four cards',
       type: 'array',
       description:
-        'The featured projects on the home page. Four is what the grid was drawn for — fewer will leave the row short, more will wrap to a second row.',
+        'The featured projects on the home page. Four is what the grid was drawn for — fewer will leave the row short, more will wrap to a second row. ' +
+        'The quickest way to fill a card is to pick a project and leave the rest of it blank.',
       of: [
         {
           type: 'object',
           fields: [
-            {name: 'name', title: 'Project name', type: 'string', validation: (R) => R.required()},
-            {name: 'category', title: 'Category', type: 'string', description: 'The small line above the name — e.g. "Residential".'},
-            {name: 'location', title: 'Location', type: 'string'},
-            {name: 'description', title: 'Short description', type: 'text', rows: 3},
-            {name: 'image', title: 'Card photograph', type: 'image', options: {hotspot: true}},
+            {
+              name: 'project',
+              title: 'Which project?',
+              type: 'reference',
+              to: [{type: 'project'}],
+              description:
+                'Pick one of your projects and the card fills itself in — the name, category, ' +
+                'location, short description, photograph and the "View Project" button all follow ' +
+                'that project, so editing the project keeps this card current. Everything below is ' +
+                'then optional: fill a field in only to say something different here than on the ' +
+                'collection card.',
+            },
+            {
+              name: 'name',
+              title: 'Project name',
+              type: 'string',
+              description: 'Leave blank to use the chosen project\'s own name.',
+              validation: (R) =>
+                R.custom((value, context) =>
+                  value || (context && context.parent && context.parent.project)
+                    ? true
+                    : 'Pick a project above, or type a name here.'),
+            },
+            {
+              name: 'category',
+              title: 'Category',
+              type: 'string',
+              description: 'The small line above the name — e.g. "Residential". Blank uses the chosen project\'s own.',
+            },
+            {
+              name: 'location',
+              title: 'Location',
+              type: 'string',
+              description: 'Blank uses the chosen project\'s own.',
+            },
+            {
+              name: 'description',
+              title: 'Short description',
+              type: 'text',
+              rows: 3,
+              description: 'Blank uses the chosen project\'s short description.',
+            },
+            {
+              name: 'image',
+              title: 'Card photograph',
+              type: 'image',
+              options: {hotspot: true},
+              description: 'Blank uses the chosen project\'s card image.',
+            },
             {
               name: 'link',
-              title: 'Link',
+              title: 'Custom link',
               type: 'string',
               description:
-                'Where "View Project" goes. Use project.html?p=the-slug to point at a project\'s detail page, or leave blank to keep the card unlinked.',
+                'Leave this blank. "View Project" then opens the chosen project\'s own detail page, ' +
+                'which is what you want for every card. Only set it to send this one card somewhere ' +
+                'else instead — a full web address, or project.html?p=the-slug.',
             },
           ],
           preview: {
-            select: {title: 'name', subtitle: 'location', media: 'image'},
+            /* Either half of the card may be empty: a card that only points at a
+               project has no name of its own to show, and one typed in by hand has
+               no project to read. Show whichever is there. */
+            select: {
+              title: 'name',
+              subtitle: 'location',
+              media: 'image',
+              refName: 'project.name',
+              refLocation: 'project.location',
+              refImage: 'project.image',
+            },
+            prepare: (sel) => ({
+              title: sel.title || sel.refName || 'Pick a project',
+              subtitle: sel.subtitle || sel.refLocation,
+              media: sel.media || sel.refImage,
+            }),
           },
         },
       ],

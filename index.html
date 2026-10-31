@@ -3028,7 +3028,10 @@
       aboutLabel,aboutHeading,aboutParagraphs,"aboutImageUrl":aboutImage.asset->url,
       stats,
       signatureLabel,signatureHeading,signatureIntro,
-      signatureCards[]{name,category,location,description,link,"imageUrl":image.asset->url},
+      signatureCards[]{name,category,location,description,link,"imageUrl":image.asset->url,
+        "ref":project->{name,category,location,blurb,detailUrl,"slug":slug.current,
+                        "imageUrl":image.asset->url}},
+      "projects":*[_type=="project" && defined(slug.current)]{name,detailUrl,"slug":slug.current},
       ownersLabel,ownersHeading,ownersIntro,
       owners[]{name,role,bio,"photoUrl":photo.asset->url}
     }`);
@@ -3301,8 +3304,55 @@
       }
       setText(document.querySelector('.sp-intro'), d.signatureIntro);
 
-      const cards = Array.isArray(d.signatureCards)
-        ? d.signatureCards.filter(c => c && txt(c.name)) : [];
+      /* A card may simply point at a project, in which case the project fills it
+         in — so a card's own fields are overrides rather than the only source,
+         and editing the project keeps the home page current. */
+      const pubs = Array.isArray(d.projects) ? d.projects : [];
+
+      /* The same forgiving key the banner hotspots use on the collection page:
+         fold case and punctuation, collapse doubled letters (Raajlaxmi /
+         Rajlaxxmi → rajlaxmi), so a card typed by hand still finds its
+         project when the two were not spelled the same way. */
+      const spKey = v => txt(v).toLowerCase()
+        .replace(/[^a-z0-9]+/g, '')
+        .replace(/(.)\1+/g, '$1');
+
+      const spByName = new Map();
+      pubs.forEach(p => {
+        const k = spKey(p.name);
+        if(k && !spByName.has(k)) spByName.set(k, p);
+      });
+
+      /* Where "View Project" goes, resolved in three steps: a custom link, the
+         chosen project's detail page, then a name match against the published
+         projects — that last one is what keeps the cards the client filled in
+         by hand pointing somewhere real, with no reference set.
+         A bare `project.html` is NOT a link: with no ?p= that file is the
+         hand-written Romal Kirti fallback, which is never this card's project. */
+      const spHref = (c, r) => {
+        const own = txt(c.link).replace(/^\.\//, '');
+        if(own && own !== 'project.html') return own;
+        const p = txt(r.slug) ? r : (spByName.get(spKey(c.name || r.name)) || {});
+        if(txt(p.detailUrl)) return txt(p.detailUrl);
+        return txt(p.slug) ? 'project.html?p=' + encodeURIComponent(txt(p.slug)) : '';
+      };
+
+      const cards = (Array.isArray(d.signatureCards) ? d.signatureCards : [])
+        .map(c => {
+          if(!c) return null;
+          const r = c.ref || {};
+          const row = {
+            name:        txt(c.name)        || txt(r.name),
+            category:    txt(c.category)    || txt(r.category),
+            location:    txt(c.location)    || txt(r.location),
+            description: txt(c.description) || txt(r.blurb),
+            imageUrl:    txt(c.imageUrl)    || txt(r.imageUrl),
+            href:        spHref(c, r),
+          };
+          return row.name ? row : null;
+        })
+        .filter(Boolean);
+
       if(cards.length){
         const grid = document.querySelector('.sp-grid');
         fit(grid ? grid.querySelectorAll('.sp-card') : [], cards.length, grid)
@@ -3313,17 +3363,23 @@
 
             /* the location keeps its pin svg — replace only the text after it */
             const loc = card.querySelector('.sp-loc');
-            if(loc && txt(c.location)){
+            if(loc && c.location){
               [...loc.childNodes].forEach(n => { if(n.nodeType === 3) n.remove(); });
-              loc.appendChild(document.createTextNode(txt(c.location)));
+              loc.appendChild(document.createTextNode(c.location));
             }
             setText(card.querySelector('.sp-desc'), c.description);
 
             const img = card.querySelector('.sp-img');
-            if(img && txt(c.imageUrl)) img.style.backgroundImage = `url('${txt(c.imageUrl)}')`;
+            if(img && c.imageUrl) img.style.backgroundImage = `url('${c.imageUrl}')`;
 
+            /* Nothing resolved means this card's project is not published — the
+               button is removed rather than left on the markup's href, which
+               would open a different property's page under this card's name. */
             const btn = card.querySelector('.sp-btn');
-            if(btn && txt(c.link)) btn.setAttribute('href', txt(c.link));
+            if(btn){
+              if(c.href) btn.setAttribute('href', c.href);
+              else btn.remove();
+            }
           });
       }
 

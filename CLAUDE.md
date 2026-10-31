@@ -223,8 +223,10 @@ rather than rendering blank — otherwise every project would inherit Romal Kirt
 copy, figures and amenities.
 
 Loaded **without** `?p=`, none of that runs and the file stands as the
-hand-written Romal Kirti page — that is the fallback, and what
-the home page's Signature Projects cards still link to.
+hand-written Romal Kirti page — that is the fallback. The home page's
+Signature Projects cards **no longer land there**: each one now resolves its own
+`project.html?p=<slug>` (see *The signature cards point at projects*), and a bare
+`project.html` typed into a card's link field is ignored for exactly that reason.
 
 ## Architecture
 
@@ -411,13 +413,43 @@ button label, and a background photograph or video), About (label, heading
 lines, paragraphs, photograph or video, and the four counting figures),
 Why Raajlaxmi (label, heading, intro, banner photograph or video, the numbered
 points, the timeline, and the closing quote) and Signature Projects (label,
-heading, intro and the four cards). The numbered points are numbered by position,
+heading, intro and the four cards — see below). The numbered points are numbered by position,
 so the client never types "01"; the sketched tower in the timeline is a sibling of
 the dated events and is moved back to last after the list is rebuilt, or the gold
 rail stops running behind them. `studio/scripts/seed-home.mjs` fills it with the copy that was
 written into `index.html` and uploads the About plate, so the client opens a
 filled form rather than a blank one; it is `createOrReplace`, so re-running it
 **discards their edits** — only run it on a fresh dataset.
+
+**The signature cards point at projects.** Each of the four cards on the home
+page carries a **reference to a `project` document**, and the project fills the
+card: name, category, location, short description (`blurb`), card photograph and
+the "View Project" link all come from it, so editing the property updates the home
+page too. Every other field on the card is an **override** — fill one in only to
+say something different there than on the collection card. The reference exists
+because the link used to be a hand-typed string: the client cannot reasonably be
+expected to write `project.html?p=the-slug`, and in practice typed `project.html`
+once and left the other three blank, so three of the four buttons were `href="#"`
+and the fourth opened Romal Kirti under another property's name.
+
+Three things in that resolution are load-bearing:
+
+- **`project.html` with no `?p=` is treated as *unset*.** That file is the
+  hand-written Romal Kirti fallback, which is never the card's own property, so
+  honouring it would send a card to the wrong building.
+- **A card with no reference is matched by name** against the published projects,
+  using the same forgiving key as the collection banner's hotspots (`spKey` —
+  folds case and punctuation, collapses doubled letters, so `Rajlaxxmi` and
+  `Raajlaxmi` agree). This is what makes the cards the client already typed by
+  hand link correctly with no CMS edit at all; the reference is then only needed
+  when the two spell a name differently. The lookup rides along in the home
+  page's existing query as `"projects":*[_type=="project" && …]` — no second
+  request.
+- **If nothing resolves, the button is removed** rather than left on the markup's
+  href. A "View Project" that opens a different property's page is worse than no
+  button, and its absence is the visible signal that the property has no document
+  yet. With Sanity unreachable `paint()` never runs, so the hand-written cards
+  keep their own buttons.
 
 **The `collectionPage` documents.** Four of them, fixed ids, one per listing view:
 `collection-all` → `projects.html`, `collection-completed` → `projects.html?status=completed`,
@@ -746,6 +778,15 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
 - **`Midas Heights` is painted on the Western line banner but has no `project` document**,
   so its hotspot is inert. Publishing it is all that is needed.
 - **No project is filed as Redevelopment yet**, so that page shows three clearly-marked placeholder cards (`[Society name]`, `[Locality]`, `[n] BHK`) above the associates plate. Set one project's **Listing** to Redevelopment in the Studio and they disappear for good. Likewise the two `Ready Possession` documents are in no listing until their Listing is set to Completed.
+- **`Shanti Niwas` is the first signature card but has no `project` document**, so
+  that card's "View Project" button removes itself. Publishing the project, or
+  pointing the card at a different one, brings it back — the same situation as
+  `Midas Heights` on the Western line banner. The other three cards resolve by name
+  to `rajlaxxmi-park`, `nakshatra-auris` and `aarvi-apartment`.
+- **The four signature descriptions are still the invented placeholder copy.** The
+  client replaced the names, locations and photographs but not the paragraphs, and
+  only two of the four matching projects carry a `blurb` for the card to fall back
+  to, so filling those in is content the client still owes.
 - **Project names differ between pages.** `index.html` Signature Projects lists Heights / Villa / Crest / Essence; `projects.html` lists those plus Business Square, Enclave, Skyline, Vista. Keep the two consistent when adding projects.
 - **The testimonials are now real.** The invented five have been replaced by **six
   genuine Google reviews**, each with its Google review link, so this section is no
