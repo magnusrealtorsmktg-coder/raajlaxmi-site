@@ -1174,11 +1174,29 @@
      The header is Section IV's, to the pixel — same label, scale and entrance.
      The top padding is a page's worth rather than a section's, because this is
      now the first thing under the fixed navbar. */
+  /* THE FIRST ROW HOLDS ONE SCREEN. The plate used to be sized by its grid
+     column — 40fr of 1400px is ~500px wide, which at 5:6 is ~600px tall, and
+     with the header above it the photograph ran ~130px past the fold on a
+     1440x900 window. The portrait is the first thing on this page and it was
+     cut in half on arrival.
+
+     So the plate is sized by the height that is LEFT, not by the width that is
+     available: `--ow-h` is the budget, the figure's width follows from it at
+     5:6, and the grid's first column is `auto` so it shrinks to whatever that
+     comes to. Every row gets the same treatment — they are a set, and one row
+     at a different size would read as a mistake.
+
+     The three bounds: 56vh is the share of a short window this can take; 560px
+     stops it ballooning on a tall one; and 38vw is the guard the About and Why
+     plates both need — on a short, wide window a vh-only value makes the plate
+     wider than the copy beside it. */
   .ow{position:relative;background:#F4F1EA;overflow-x:clip;
-    padding:clamp(8rem,16vh,180px) clamp(1.4rem,5vw,4rem) clamp(6rem,14vh,170px);}
+    --ow-h:min(50vh,560px,36vw);
+    padding:clamp(7.4rem,calc(6.6rem + 2.6vh),8.8rem) clamp(1.4rem,5vw,4rem)
+            clamp(6rem,14vh,170px);}
   .ow-wrap{position:relative;z-index:2;max-width:1400px;margin:0 auto;}
 
-  .ow-head{text-align:center;max-width:900px;margin:0 auto clamp(3.5rem,7vw,6rem);}
+  .ow-head{text-align:center;max-width:900px;margin:0 auto clamp(2.2rem,4vw,3.4rem);}
   .ow-label{display:inline-block;font-family:"Inter",sans-serif;font-weight:600;
     font-size:14px;letter-spacing:6px;text-transform:uppercase;color:var(--gold);
     margin-bottom:1.7rem;opacity:0;transform:translateY(16px);
@@ -1207,7 +1225,7 @@
      arriving at once — a page of six rows would otherwise have five of them
      animate out of sight. */
   .ow-list{display:flex;flex-direction:column;gap:clamp(3.5rem,8vw,7rem);}
-  .ow-row{display:grid;grid-template-columns:minmax(0,40fr) minmax(0,60fr);
+  .ow-row{display:grid;grid-template-columns:auto minmax(0,1fr);
     gap:clamp(1.8rem,4.5vw,5rem);align-items:center;}
   .ow-row .ow-figure,.ow-row .ow-body{opacity:0;transform:translateY(26px);
     transition:opacity .95s var(--lux),transform .95s var(--lux);}
@@ -1222,14 +1240,18 @@
 
      The gold hairline is offset BEHIND the plate rather than drawn on it: the
      same architectural detail the plates elsewhere on the site use. */
-  .ow-figure{--ow-off:clamp(10px,1.4vw,18px);position:relative;margin:0;}
+  /* width = height x 5/6, so the plate is exactly --ow-h tall. The figure has
+     to carry the width rather than the plate, or the `auto` column above has
+     nothing definite to measure and falls back to the picture's own size. */
+  .ow-figure{--ow-off:clamp(10px,1.4vw,18px);position:relative;margin:0;
+    width:calc(var(--ow-h) * 5 / 6);}
   .ow-figure::before{content:"";position:absolute;z-index:0;
     top:var(--ow-off);left:var(--ow-off);
     right:calc(-1 * var(--ow-off));bottom:calc(-1 * var(--ow-off));
     border:1px solid rgba(203,169,107,.55);border-radius:22px;}
   /* the portrait is a background rather than an <img> so a person with no
      photograph yet is a tonal panel instead of a broken image box */
-  .ow-ph{position:relative;z-index:1;aspect-ratio:5/6;border-radius:22px;overflow:hidden;
+  .ow-ph{position:relative;z-index:1;width:100%;aspect-ratio:5/6;border-radius:22px;overflow:hidden;
     background:linear-gradient(165deg,#36405a,#596579);
     box-shadow:0 40px 80px -46px rgba(20,24,34,.6);}
   .ow-img{position:absolute;inset:0;background-size:cover;background-position:center 18%;
@@ -1251,9 +1273,33 @@
   .ow-bio{margin-top:clamp(1.1rem,2vw,1.5rem);max-width:56ch;white-space:pre-line;
     font-size:clamp(.95rem,1.05vw,18px);line-height:1.8;font-weight:300;color:var(--body);}
 
+  /* Two short-window tiers. The budget above fits a 900px-tall window; below
+     that the header has to give ground too, or the plate shrinks towards
+     nothing trying to make room for type that never changes size. The same two
+     breakpoints the Why section uses, for the same reason. */
+  @media(max-height:820px){
+    .ow{--ow-h:min(53vh,520px,36vw);}
+    .ow-label{font-size:13px;margin-bottom:1.1rem;}
+    .ow-label::after{margin-top:.7rem;}
+    .ow-title{font-size:clamp(1.8rem,3vw,42px);}
+    .ow-intro{margin-top:.7rem;font-size:clamp(.9rem,1vw,16px);line-height:1.6;}
+    .ow-head{margin-bottom:clamp(1.7rem,2.8vw,2.4rem);}
+  }
+  @media(max-height:700px){
+    .ow{--ow-h:min(52vh,480px,34vw);
+      padding-top:clamp(6.8rem,calc(6.2rem + 1.8vh),7.8rem);}
+    .ow-label{font-size:12px;letter-spacing:5px;margin-bottom:.75rem;}
+    .ow-label::after{margin-top:.5rem;}
+    .ow-title{font-size:clamp(1.5rem,2.5vw,34px);}
+    .ow-intro{margin-top:.5rem;font-size:.88rem;line-height:1.5;}
+    .ow-head{margin-bottom:1.3rem;}
+  }
+
   @media(max-width:900px){
-    /* minmax(0,1fr) rather than 1fr: a 1fr track floors at its content's
-       min-width, which a long unbroken role line would then inflate */
+    /* Stacked, the plate sits above the copy and the two cannot share a
+       screen, so the height budget stops applying and width drives again.
+       minmax(0,1fr) rather than 1fr: a 1fr track floors at its content's
+       min-width, which a long unbroken role line would then inflate. */
     .ow-row{grid-template-columns:minmax(0,1fr);gap:clamp(1.6rem,4vw,2.4rem);}
     .ow-figure{width:min(100%,420px);}
     .ow-bio{max-width:none;}

@@ -194,6 +194,32 @@ Four things carry over or are worth knowing:
   hotspot crop disagree and the picture is cropped twice. `crop=focalpoint` is
   what makes the hotspot set in the Studio steer it, and it is worth setting:
   nothing covers the photograph on this layout, so the whole frame is on show.
+- **The first row holds one screen, and the plate is sized by HEIGHT to make it
+  do so.** It was sized by its grid column at first — 40fr of 1400px is ~500px
+  wide, which at 5:6 is ~600px tall, and the photograph then ran ~130px past the
+  fold on a 1440x900 window: the first thing on the page was cut in half on
+  arrival. `.ow` now declares **`--ow-h`**, the figure takes its *width* from it
+  (`calc(var(--ow-h) * 5 / 6)`), and the grid's first column is **`auto`** so it
+  shrinks to whatever that comes to. Three things follow from this:
+  - **The width has to live on `.ow-figure`, not `.ow-ph`.** An `auto` track
+    needs something definite to measure; with the width on the plate the column
+    falls back to the picture's own size.
+  - **Three bounds, and the `vw` one is load-bearing** — `min(50vh,560px,36vw)`.
+    It is the same guard the About and Why plates need: on a short, wide window
+    a `vh`-only value makes the plate wider than the copy beside it.
+  - **Two short-window tiers** (`max-height:820px` → 53vh, `max-height:700px`
+    → 52vh, each also stepping the header down). Below 900px the header has to
+    give ground as well, or the plate shrinks towards nothing making room for
+    type that never changes size. The `vh` fractions are set by the *bottom* of
+    each band, which is where the fixed header costs the most: 821px and 701px
+    are the tight cases, not 900px.
+
+  Measured at 1920x1080, 1680x1050, 1536x864, 1440x900, 1440x821, 1440x819,
+  1366x768, 1366x701, 1366x699, 1280x800, 1280x620, 1280x560, 1024x800 and
+  1024x640 — the plate and its gold frame clear the fold by 16–141px at every
+  one, and the label clears the navbar by 39–78px. Stacked (below 900px wide)
+  the budget stops applying and width drives again, since the plate sits above
+  the copy and the two cannot share a screen.
 - **The gold hairline is offset behind the plate**, not drawn on it
   (`.ow-figure::before`, `--ow-off`), the same architectural detail the other
   plates use.
