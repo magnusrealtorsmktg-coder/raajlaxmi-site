@@ -76,11 +76,11 @@ export default {
             },
             {
               name: 'bio',
-              title: 'One line about them',
+              title: 'About them',
               type: 'text',
-              rows: 2,
+              rows: 8,
               description:
-                'The small line at the foot of the card — e.g. "16+ years of experience in sales and strategy." Keep it to a line or two: it sits over the bottom of the photograph, and anything past three lines is cut off there.',
+                'Shown when someone opens this person from the home page — hovering their card enlarges it and opens a panel with the portrait on the left and this on the right. It is NOT printed on the card itself, so there is room: a few paragraphs read better here than one line, and the panel scrolls if it runs long. Blank simply leaves that half of the panel to the name and the role.',
             },
             {
               name: 'photo',

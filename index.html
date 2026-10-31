@@ -1434,18 +1434,12 @@
   .ow-role{margin-top:.55rem;font-family:"Inter",sans-serif;font-weight:600;
     font-size:clamp(.64rem,.76vw,.74rem);letter-spacing:.13em;line-height:1.6;
     text-transform:uppercase;color:#CBA96B;}
-  /* Clamped to three lines. The slot was drawn for one — "16+ years of
-     experience in sales and strategy" — and while the section briefly had a
-     page of its own the field was given room for a few sentences. It came back
-     to a card, where it sits over the foot of a portrait: a 670-character bio
-     is ~17 lines on a 320px card, filling the picture top to bottom and running
-     off the end of it. The clamp is what keeps the card a photograph with a
-     caption whatever gets typed into the field. */
-  .ow-bio{margin-top:.85rem;font-family:"Inter",sans-serif;font-weight:300;
-    font-size:clamp(.78rem,.92vw,.88rem);line-height:1.6;
-    color:rgba(255,255,255,.84);
-    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;
-    overflow:hidden;}
+  /* NO BIOGRAPHY ON THE CARD. It used to print here, over the foot of the
+     portrait, clamped to three lines because the slot was drawn for one. It is
+     the detail panel's content now: the card carries the person, the panel
+     carries what there is to say about them. The text rides on the card as
+     `data-bio` so the panel still has it without a second copy of the data —
+     see the OWNER DETAIL block. */
 
   /* Hover one, the rest recede. :focus-within carries the same thing for a
      keyboard, and both are scoped to the grid so nothing happens until the
@@ -2116,52 +2110,52 @@
 
       <div class="ow-stage">
       <div class="ow-grid" id="owGrid">
-        <article class="ow-card" tabindex="0">
+        <article class="ow-card" tabindex="0"
+                 data-bio="[A few sentences about them &mdash; the years behind them, what they lead, and what they are known for inside the group.]">
           <div class="ow-ph" id="owPh1" role="img" aria-label="Portrait"></div>
           <div class="ow-text">
             <h3 class="ow-name">[Owner name]</h3>
             <p class="ow-role">[Board role &ndash; area of responsibility]</p>
-            <p class="ow-bio">[One line about them &mdash; years of experience, what they lead.]</p>
           </div>
         </article>
-        <article class="ow-card" tabindex="0">
+        <article class="ow-card" tabindex="0"
+                 data-bio="[A few sentences about them &mdash; the years behind them, what they lead, and what they are known for inside the group.]">
           <div class="ow-ph" id="owPh2" role="img" aria-label="Portrait"></div>
           <div class="ow-text">
             <h3 class="ow-name">[Owner name]</h3>
             <p class="ow-role">[Board role &ndash; area of responsibility]</p>
-            <p class="ow-bio">[One line about them &mdash; years of experience, what they lead.]</p>
           </div>
         </article>
-        <article class="ow-card" tabindex="0">
+        <article class="ow-card" tabindex="0"
+                 data-bio="[A few sentences about them &mdash; the years behind them, what they lead, and what they are known for inside the group.]">
           <div class="ow-ph" id="owPh3" role="img" aria-label="Portrait"></div>
           <div class="ow-text">
             <h3 class="ow-name">[Owner name]</h3>
             <p class="ow-role">[Board role &ndash; area of responsibility]</p>
-            <p class="ow-bio">[One line about them &mdash; years of experience, what they lead.]</p>
           </div>
         </article>
-        <article class="ow-card" tabindex="0">
+        <article class="ow-card" tabindex="0"
+                 data-bio="[A few sentences about them &mdash; the years behind them, what they lead, and what they are known for inside the group.]">
           <div class="ow-ph" id="owPh4" role="img" aria-label="Portrait"></div>
           <div class="ow-text">
             <h3 class="ow-name">[Owner name]</h3>
             <p class="ow-role">[Board role &ndash; area of responsibility]</p>
-            <p class="ow-bio">[One line about them &mdash; years of experience, what they lead.]</p>
           </div>
         </article>
-        <article class="ow-card" tabindex="0">
+        <article class="ow-card" tabindex="0"
+                 data-bio="[A few sentences about them &mdash; the years behind them, what they lead, and what they are known for inside the group.]">
           <div class="ow-ph" id="owPh5" role="img" aria-label="Portrait"></div>
           <div class="ow-text">
             <h3 class="ow-name">[Owner name]</h3>
             <p class="ow-role">[Board role &ndash; area of responsibility]</p>
-            <p class="ow-bio">[One line about them &mdash; years of experience, what they lead.]</p>
           </div>
         </article>
-        <article class="ow-card" tabindex="0">
+        <article class="ow-card" tabindex="0"
+                 data-bio="[A few sentences about them &mdash; the years behind them, what they lead, and what they are known for inside the group.]">
           <div class="ow-ph" id="owPh6" role="img" aria-label="Portrait"></div>
           <div class="ow-text">
             <h3 class="ow-name">[Owner name]</h3>
             <p class="ow-role">[Board role &ndash; area of responsibility]</p>
-            <p class="ow-bio">[One line about them &mdash; years of experience, what they lead.]</p>
           </div>
         </article>
       </div>
@@ -2859,9 +2853,10 @@
       role.textContent = r;
       role.hidden = !r;
 
-      /* The card clamps its line to three; the panel is where the whole thing
-         is meant to be read, and textContent is the full string either way. */
-      const b = text(card.querySelector('.ow-bio'));
+      /* "About them" is the panel's own content — the card does not print it,
+         it only carries it. Falls back to a `data-bio` written into the markup,
+         which is what the hand-written placeholder cards have. */
+      const b = (card.dataset.bio || '').trim();
       bio.textContent = b;
       bio.hidden = !b;
 
@@ -3677,12 +3672,16 @@
             const o = owners[i];
             setText(card.querySelector('.ow-name'), o.name);
 
-            /* a card with no role or no line about them drops that paragraph
-               rather than printing an empty one over the photograph */
+            /* a card with no role drops that paragraph rather than printing
+               an empty one over the photograph */
             const role = card.querySelector('.ow-role');
             if(role){ if(txt(o.role)) role.textContent = txt(o.role); else role.remove(); }
-            const bio = card.querySelector('.ow-bio');
-            if(bio){ if(txt(o.bio))  bio.textContent  = txt(o.bio);  else bio.remove(); }
+
+            /* "About them" is NOT shown on the card — it is what the detail
+               panel opens to show. It rides here as an attribute so the panel
+               reads it off whichever card was opened, clones included. */
+            if(txt(o.bio)) card.dataset.bio = txt(o.bio);
+            else delete card.dataset.bio;
 
             /* the bare asset URL rides along on the card: the detail panel
                re-requests it at its own 5:6 rather than reusing the card's
