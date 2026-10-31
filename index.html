@@ -1380,10 +1380,28 @@
     transition:opacity 1s var(--lux) .4s,transform 1s var(--lux) .4s;}
   .ow.in .ow-intro{opacity:1;transform:none;}
 
-  .ow-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:clamp(1.1rem,2vw,1.9rem);}
+  /* The cards run continuously, the same way the reviews on testimonials.html
+     do: a CSS animation rather than a per-frame transform, so the compositor
+     drives it, hover pauses it with no script, a background tab stops it for
+     free, and it can be verified in headless Chrome. The edges fade so cards
+     enter and leave rather than being chopped off by the stage. */
+  .ow-stage{position:relative;overflow:hidden;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);
+            mask-image:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);}
+  @keyframes ow-marquee{
+    from{transform:translateX(0);}
+    to  {transform:translateX(calc(-1 * var(--ow-loop, 0px)));}
+  }
+  .ow-grid{display:flex;align-items:stretch;gap:clamp(1.1rem,2vw,1.9rem);
+    width:max-content;will-change:transform;
+    animation:ow-marquee var(--ow-dur, 60s) linear infinite;}
+  /* hover or keyboard focus holds the row still — which is what makes the blur
+     on the other cards readable rather than a smear going past */
+  .ow-stage:hover .ow-grid,
+  .ow-stage:focus-within .ow-grid{animation-play-state:paused;}
 
-  .ow-card{position:relative;aspect-ratio:3/4;border-radius:20px;overflow:hidden;
+  .ow-card{position:relative;flex:0 0 clamp(230px,23vw,320px);
+    aspect-ratio:3/4;border-radius:20px;overflow:hidden;
     background:linear-gradient(165deg,#36405a,#596579);
     box-shadow:0 34px 70px -40px rgba(20,24,34,.62);
     opacity:0;transform:translateY(28px);
@@ -1430,11 +1448,7 @@
   .ow-grid:focus-within .ow-card:focus-within{
     box-shadow:0 46px 90px -40px rgba(20,24,34,.75);}
 
-  @media(max-width:1000px){
-    .ow-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
-  }
   @media(max-width:620px){
-    .ow-grid{grid-template-columns:minmax(0,1fr);}
     /* a blurred neighbour is meaningless where there is no pointer, and on a
        touch screen :hover sticks after a tap */
     .ow-grid:hover .ow-card:not(:hover){filter:none;opacity:1;}
@@ -1444,6 +1458,14 @@
     .ow-ln i{transform:none !important;}
     .ow-card,.ow-ph{transition:none !important;}
     .ow-card:hover .ow-ph{transform:none;}
+    /* nothing drifts here, so the row goes back to being a scroller and the
+       script renders a single set — otherwise the later cards would sit off
+       the edge of a stage that no longer moves, unreachable */
+    .ow-stage{overflow:visible;-webkit-mask-image:none;mask-image:none;}
+    .ow-grid{animation:none;width:auto;overflow-x:auto;
+      scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;}
+    .ow-grid::-webkit-scrollbar{display:none;}
+    .ow-card{scroll-snap-align:center;}
     /* the dim is not motion, and the !important above (which is there so the
        cards are visible with JS off) was swallowing it — put it back, so the
        blur and the fade still arrive together here */
@@ -1987,6 +2009,7 @@
           behind every Raajlaxmi address.</p>
       </header>
 
+      <div class="ow-stage">
       <div class="ow-grid" id="owGrid">
         <article class="ow-card" tabindex="0">
           <div class="ow-ph" id="owPh1" role="img" aria-label="Portrait"></div>
@@ -2036,6 +2059,7 @@
             <p class="ow-bio">[One line about them &mdash; years of experience, what they lead.]</p>
           </div>
         </article>
+      </div>
       </div>
     </div>
   </section>
@@ -2586,8 +2610,73 @@
     if(!sec) return;
 
     /* The blur on the other cards is pure CSS (:hover / :focus-within on the
-       grid), so there is nothing to wire here — this block only reveals the
-       section. The cards themselves are filled by the home-page CMS block. */
+       grid), so there is nothing to wire for that. What this block does own is
+       the marquee: the cards drift right-to-left exactly as the reviews on
+       testimonials.html do. */
+    const grid  = document.getElementById('owGrid'),
+          stage = grid && grid.parentElement;
+
+    /* SPEED is the one number to turn. Slower than the reviews' 70 and the photo
+       strip's 42: these cards are tall, and a portrait going past at speed is
+       harder to read than a line of text. */
+    const SPEED = 30;
+    let base = [], sets = 0;
+
+    /* A marquee has to be at least one full set wider than its stage, or
+       translating by one set width runs off the end and shows a gap before the
+       loop restarts. Six cards at ~320px already overflow a wide stage, but the
+       client may publish two — so the count is worked out from the measured card
+       rather than assumed, and re-worked on resize. */
+    function build(){
+      if(!grid || !stage) return;
+      if(!base.length){
+        base = [...grid.children].map(el => el.cloneNode(true));
+        sets = 1;
+      }
+      if(!base.length) return;
+
+      if(reduce){                       /* one set; the row is a scroller */
+        if(sets !== 1){ grid.replaceChildren(...base.map(el => el.cloneNode(true))); sets = 1; }
+        grid.style.removeProperty('--ow-loop');
+        grid.style.removeProperty('--ow-dur');
+        return;
+      }
+
+      const first = grid.querySelector('.ow-card');
+      if(!first) return;
+      const gap  = parseFloat(getComputedStyle(grid).columnGap) || 0;
+      const setW = base.length * (first.getBoundingClientRect().width + gap);
+      if(setW <= 0) return;             /* not laid out yet */
+
+      const want = Math.max(2, Math.ceil(stage.clientWidth / setW) + 1);
+      if(want !== sets){
+        const out = [];
+        for(let i = 0; i < want; i++)
+          base.forEach(el => {
+            const c = el.cloneNode(true);
+            if(i > 0){ c.setAttribute('aria-hidden','true'); c.removeAttribute('tabindex'); }
+            out.push(c);
+          });
+        grid.replaceChildren(...out);
+        sets = want;
+      }
+
+      const items = grid.querySelectorAll('.ow-card');
+      if(items.length <= base.length) return;
+      const loop = items[base.length].offsetLeft - items[0].offsetLeft;
+      if(loop <= 0) return;
+      grid.style.setProperty('--ow-loop', loop + 'px');
+      grid.style.setProperty('--ow-dur', (loop / SPEED) + 's');
+    }
+
+    /* the CMS fills the six cards from a later block, so the strip is rebuilt
+       from whatever it leaves behind — the same handshake the counters use */
+    addEventListener('rl:owners', () => { base = []; sets = 0; build(); });
+    addEventListener('resize', build, {passive:true});
+    addEventListener('load', build);
+    if(document.fonts && document.fonts.ready) document.fonts.ready.then(build);
+    build();
+
     if(reduce){ sec.classList.add('in'); return; }
 
     new IntersectionObserver((e,o)=>{e.forEach(x=>{if(x.isIntersecting){sec.classList.add('in');o.disconnect();}});},
@@ -3282,6 +3371,9 @@
               ph.setAttribute('aria-label', txt(o.name) || 'Portrait');
             }
           });
+        /* the marquee was built from the placeholder cards; it has to be rebuilt
+           from these — see the Section XI block */
+        dispatchEvent(new Event('rl:owners'));
       }
     }
   })();
