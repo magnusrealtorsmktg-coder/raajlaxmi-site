@@ -1176,17 +1176,30 @@
   body{background:#F4F1EA;}
   .pd{position:relative;min-height:100vh;background:#F4F1EA;overflow-x:clip;
     padding:clamp(76px,6.6vw,96px) 0 0;}
+  /* `stretch`, not `start`: the left column has to be as tall as the facts
+     rail so the photograph can take up the slack and the thumbnails can sit on
+     its floor. With `start` each column was its own height and the strip ended
+     wherever the pictures happened to end. */
   .pd-grid{display:grid;grid-template-columns:minmax(0,1fr) clamp(22rem,33vw,33rem);
-    align-items:start;}
+    align-items:stretch;}
 
   /* ---------- left column ---------- */
-  .pd-left{position:relative;min-width:0;}
+  /* A flex column: the hero takes whatever height is left and the thumbnail
+     strip is pushed to the bottom by `margin-top:auto`. The Prime Location
+     block used to fill this space; with it gone the photograph gets it. */
+  .pd-left{position:relative;min-width:0;display:flex;flex-direction:column;}
 
   /* ---- hero ---- */
   /* width:100% is load-bearing — without a definite width, aspect-ratio resolves
-     against min-height instead and the hero grows wider than its column */
-  .pd-hero{position:relative;width:100%;min-width:0;
-    aspect-ratio:1045/477;min-height:20rem;overflow:hidden;
+     against min-height instead and the hero grows wider than its column.
+
+     `flex:1 1 auto` is what makes it TALLER than its ratio: the column has a
+     definite height (the grid row stretches it to the facts rail), so the hero
+     grows into whatever the thumbnails do not use. The ratio is the floor it
+     falls back to when the column has no definite height — which is the case
+     below 1080px, where the layout stacks. */
+  .pd-hero{position:relative;width:100%;min-width:0;flex:1 1 auto;
+    aspect-ratio:1045/520;min-height:22rem;overflow:hidden;
     background:var(--charcoal);
     opacity:0;transform:translateY(20px);
     transition:opacity 1s var(--lux),transform 1s var(--lux);}
@@ -1225,7 +1238,10 @@
   .pd-tick.on{background:#fff;}
 
   /* ---- thumbnail strip ---- */
-  .pd-thumbs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  /* margin-top:auto pins the strip to the bottom of the column, so it lines up
+     with the foot of the facts rail instead of floating under the picture */
+  .pd-thumbs{flex:none;margin-top:auto;
+    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
     gap:clamp(.5rem,.9vw,.9rem);padding:clamp(.5rem,.9vw,.9rem) 0 0
     clamp(.5rem,.9vw,.9rem);}
   .pd-thumb{position:relative;aspect-ratio:288/213;border-radius:10px;overflow:hidden;
@@ -1245,43 +1261,6 @@
     display:flex;align-items:center;gap:.45rem;color:#fff;
     font-size:.68rem;letter-spacing:.02em;text-align:left;}
   .pd-thumb .cap svg{flex:none;opacity:.85;}
-
-  /* ---- place + drawn map ---- */
-  /* the map hangs off the right edge, so the copy has to stop short of it or
-     the last landmark disappears underneath */
-  .pd-place{position:relative;display:flex;align-items:center;flex-wrap:wrap;
-    gap:clamp(1.2rem,2.4vw,2.6rem);min-height:11rem;
-    padding:clamp(1.6rem,2.6vw,2.4rem) calc(min(36%,24rem) + clamp(1.2rem,2vw,2rem))
-            clamp(1.6rem,2.6vw,2.4rem) clamp(1.6rem,4.2vw,4.2rem);
-    opacity:0;transform:translateY(18px);
-    transition:opacity .9s var(--lux) .25s,transform .9s var(--lux) .25s;}
-  .pd.in .pd-place{opacity:1;transform:none;}
-  .pd-place-main{display:flex;align-items:flex-start;gap:.9rem;}
-  .pd-pin-lg{flex:none;color:var(--gold);margin-top:.15rem;}
-  .pd-place-main .k{font-size:.72rem;letter-spacing:.04em;color:var(--body);}
-  .pd-place-main .v{margin-top:.25rem;font-family:"Playfair Display",serif;
-    font-weight:500;font-size:clamp(1.15rem,1.7vw,1.55rem);color:var(--charcoal);}
-  .pd-place-main .s{margin-top:.4rem;font-size:.72rem;color:rgba(79,79,79,.72);}
-
-  .pd-near{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;
-    gap:1rem clamp(1.4rem,2.6vw,2.6rem);}
-  .pd-near li{display:flex;align-items:flex-start;gap:.7rem;}
-  .pd-near .ic{flex:none;color:var(--gold);margin-top:.1rem;}
-  .pd-near .l{font-size:.7rem;color:var(--body);line-height:1.5;}
-  .pd-near .d{margin-top:.3rem;font-size:.72rem;color:var(--charcoal);}
-
-  /* the map hangs off the right edge of the left column */
-  .pd-map{position:absolute;right:0;top:0;bottom:0;width:min(36%,24rem);
-    overflow:hidden;background:#EAE6DE;}
-  .pd-map svg{display:block;width:100%;height:100%;}
-  .pd-map iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}
-  .pd-map-chip{position:absolute;z-index:2;left:50%;top:50%;
-    transform:translate(-50%,-50%);display:flex;align-items:center;gap:.5rem;
-    background:#fff;border-radius:999px;padding:.4rem .9rem .4rem .45rem;
-    box-shadow:0 12px 26px -14px rgba(40,32,18,.5);
-    font-size:.7rem;color:var(--charcoal);white-space:nowrap;}
-  .pd-map-chip .dot{width:1.5rem;height:1.5rem;border-radius:50%;flex:none;
-    background:var(--gold);display:grid;place-items:center;color:#fff;}
 
   /* ---------- right column ---------- */
   .pd-right{padding:clamp(1.2rem,1.8vw,2rem) clamp(1.6rem,3.4vw,3.4rem)
@@ -1379,10 +1358,8 @@
   @media(max-width:1100px){
     .pd-grid{grid-template-columns:minmax(0,1fr);}
     .pd-right{padding:clamp(2rem,4vw,3rem) clamp(1.4rem,5vw,4rem) clamp(4rem,8vh,6rem);}
+    .pd-left{display:block;}          /* no shared height to divide up */
     .pd-hero{aspect-ratio:16/9;}
-    .pd-map{position:relative;right:auto;top:auto;bottom:auto;width:100%;
-      height:14rem;border-radius:14px;margin-top:.5rem;}
-    .pd-place{padding-right:clamp(1.6rem,4.2vw,4.2rem);}
   }
   @media(max-width:760px){
     .pd-thumbs{grid-template-columns:repeat(2,minmax(0,1fr));
@@ -1396,11 +1373,10 @@
   @media(max-width:520px){
     .pd-ctas{grid-template-columns:minmax(0,1fr);}
     .pd-am-grid{grid-template-columns:minmax(0,1fr);}
-    .pd-near{flex-direction:column;gap:.9rem;}
   }
 
   @media (prefers-reduced-motion:reduce){
-    .pd-hero,.pd-thumb,.pd-place,.pd-right{opacity:1 !important;transform:none !important;}
+    .pd-hero,.pd-thumb,.pd-right{opacity:1 !important;transform:none !important;}
     .pd-slide{transition:opacity .2s linear;}
     .pd-btn:hover{transform:none;}
   }
@@ -1619,52 +1595,6 @@
 
         <div class="pd-thumbs" id="pdThumbs"></div>
 
-        <div class="pd-place">
-          <div class="pd-place-main">
-            <span class="pd-pin-lg" aria-hidden="true">
-              <svg width="20" height="25" viewBox="0 0 9 12" fill="none">
-                <path d="M4.5.5C2.3.5.5 2.3.5 4.5c0 3 4 7 4 7s4-4 4-7C8.5 2.3 6.7.5 4.5.5z" stroke="currentColor"/>
-                <circle cx="4.5" cy="4.5" r="1.5" stroke="currentColor"/>
-              </svg>
-            </span>
-            <div>
-              <div class="k">Prime Location</div>
-              <div class="v" id="pdPlace">Nalasopara West</div>
-              <div class="s">Close to everything you need</div>
-            </div>
-          </div>
-          <ul class="pd-near" id="pdNear"></ul>
-
-          <!-- drawn rather than embedded: no third-party script, works offline.
-               A project with a `geo` pin swaps this for a live Google map. -->
-          <div class="pd-map" id="pdMap">
-            <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-              <rect width="320" height="200" fill="#EDE9E1"/>
-              <path d="M0 0h96c-14 34-20 68-14 104 5 34 1 66-14 96H0z" fill="#CBD9DF"/>
-              <path d="M96 0c-14 34-20 68-14 104 5 34 1 66-14 96" stroke="#AEC2CB" stroke-width="1.5" fill="none"/>
-              <g stroke="#D9D2C6" stroke-width="7" fill="none" stroke-linecap="round">
-                <path d="M120 -10v220M96 58h230M150 200l60-120"/>
-              </g>
-              <g stroke="#E6E0D4" stroke-width="2.5" fill="none">
-                <path d="M170 0v200M96 132h230M240 0l-60 200"/>
-              </g>
-              <g fill="#E2DCCF">
-                <rect x="196" y="20" width="30" height="24" rx="3"/>
-                <rect x="132" y="150" width="26" height="22" rx="3"/>
-                <rect x="252" y="100" width="34" height="26" rx="3"/>
-              </g>
-            </svg>
-            <span class="pd-map-chip">
-              <span class="dot" aria-hidden="true">
-                <svg width="9" height="11" viewBox="0 0 9 12" fill="none">
-                  <path d="M4.5.5C2.3.5.5 2.3.5 4.5c0 3 4 7 4 7s4-4 4-7C8.5 2.3 6.7.5 4.5.5z" stroke="currentColor"/>
-                  <circle cx="4.5" cy="4.5" r="1.5" stroke="currentColor"/>
-                </svg>
-              </span>
-              <span id="pdMapName">Romal Kirti</span>
-            </span>
-          </div>
-        </div>
       </div>
 
       <!-- ================= right: the facts ================= -->
@@ -1730,19 +1660,6 @@
               </svg>
             </span>
             <span class="t">+91 22 4123 4567</span>
-          </a>
-          <span class="sep" aria-hidden="true"></span>
-          <a class="pd-cline" href="contact.html#ctForm" data-hover>
-            <span class="ic" aria-hidden="true">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.5"/>
-                <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" stroke="currentColor" stroke-width="1.5"/>
-              </svg>
-            </span>
-            <span>
-              <span class="t">Contact Agent</span>
-              <span class="s" style="display:block">Get expert advice</span>
-            </span>
           </a>
         </div>
       </aside>
@@ -1866,8 +1783,6 @@
         "slug":slug.current,
         specs[]{label,value},
         amenities[]{icon,label},
-        landmarks[]{label,distance},
-        geo,
         "cardUrl":image.asset->url,
         "gallery":gallery[]{alt,"url":asset->url}
       }`;
@@ -1933,17 +1848,7 @@
         ['security','24&times;7 Security'], ['parking','Covered Parking'],
         ['lift','High-Speed Lifts'],        ['power','Power Backup'],
         ['play','Play Area &amp; Kids Zone'], ['garden','Landscaped Garden']
-      ],
-      near: [
-        ['train','Nalasopara Station','5 mins'],
-        ['road','Western Express Highway','15 mins'],
-        ['air','Mumbai Airport','60 mins']
       ]
-    };
-    const NEAR_ICON = {
-      train: S('<path d="M6 3h12v12H6zM6 9h12M9 19l-2 3M15 19l2 3M6 15h12l1 4H5z"/>'),
-      road:  S('<path d="M8 3L5 21M16 3l3 18M12 4v3M12 11v3M12 18v3"/>'),
-      air:   S('<path d="M21 14l-9-3V5a1.5 1.5 0 00-3 0v6l-9 3v2l9-2v4l-3 2v1l4.5-1 4.5 1v-1l-3-2v-4l9 2z"/>')
     };
 
     /* --- paint the document over the markup -----------------------------
@@ -1952,8 +1857,6 @@
     if(DOC){
       document.title = `${DOC.name} — Raajlaxmi Group`;
       txt(sec.querySelector('.pd-crumb .here'), DOC.name);
-      txt(document.getElementById('pdMapName'), DOC.name);
-      txt(document.getElementById('pdPlace'), DOC.location);
 
       const title = sec.querySelector('.pd-title');
       if(title && DOC.name) title.innerHTML = `${DOC.name}<span class="dot">.</span>`;
@@ -2009,8 +1912,13 @@
           cline.setAttribute('href', 'tel:' + String(DOC.phone).replace(/[^+\d]/g, ''));
           txt(cline.querySelector('.t'), DOC.phone);
         }else{
-          cline.nextElementSibling?.classList.contains('sep') && cline.nextElementSibling.remove();
+          /* The agent line used to sit beside this one and kept the row
+             populated; it is gone, so the phone is the only thing in there and
+             an empty `.pd-contact` is left drawing its top border across the
+             rail. Take the row with it. */
+          const row = cline.closest('.pd-contact');
           cline.remove();
+          if(row && !row.querySelector('a')) row.remove();
         }
       }
 
@@ -2059,37 +1967,6 @@
         amenEl.innerHTML = AMEN.slice(0,6).map(([k,t])=>
           `<div class="pd-am"><span class="ic">${ICON[k]}</span><div class="t">${t}</div></div>`).join('');
       else amenEl.remove();
-    }
-
-    /* --- what is nearby --------------------------------------------------- */
-    const NEAR = DOC
-      ? (DOC.landmarks || []).map(l=>['road', l.label, l.distance])
-      : FALLBACK.near;
-    const nearEl = document.getElementById('pdNear');
-    if(nearEl){
-      if(NEAR.length)
-        nearEl.innerHTML = NEAR.slice(0,3).map(([k,l,d])=>
-          `<li><span class="ic">${NEAR_ICON[k] || NEAR_ICON.road}</span>
-             <div><div class="l">${l || ''}</div><div class="d">${d || ''}</div></div></li>`).join('');
-      else nearEl.remove();
-    }
-
-    /* --- a pinned project gets a live map; without one the drawing stays --- */
-    const mapEl = document.getElementById('pdMap');
-    if(mapEl && DOC?.geo?.lat && DOC?.geo?.lng){
-      const probe = new Image();
-      probe.onload = ()=>{
-        const fr = document.createElement('iframe');
-        fr.src = `https://maps.google.com/maps?q=${DOC.geo.lat},${DOC.geo.lng}&z=16&hl=en&output=embed`;
-        fr.title = `Map showing ${DOC.name}`;
-        fr.loading = 'lazy';
-        fr.referrerPolicy = 'no-referrer-when-downgrade';
-        fr.allowFullscreen = true;
-        mapEl.querySelector('svg')?.remove();
-        mapEl.querySelector('.pd-map-chip')?.remove();
-        mapEl.appendChild(fr);
-      };
-      probe.src = 'https://www.google.com/favicon.ico?' + Date.now();
     }
 
     /* --- gallery ---------------------------------------------------------- */

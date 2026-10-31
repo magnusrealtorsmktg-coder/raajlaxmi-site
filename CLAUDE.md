@@ -180,7 +180,30 @@ Check at 1440×900, 1024×800 and 420×860; scroll the full page; confirm no con
 
 **Every consultation CTA on the site points here**: the nav/sheet `Book Consultation` on every page, `Schedule a Consultation` (collection), `Book a Private Consultation` (testimonials) and `Schedule a Site Visit` (detail page) — the last three deep-link to `contact.html#ctForm`, which scrolls the card into view.
 
-`project.html` — one section, `#project` ("Section VI — Project Detail"), **rebuilt from the client's mock** and currently written for **Romal Kirti only**. Two columns: the left bleeds to the viewport edge and carries the photography and the place (hero with painted-on copy, crossfading slides, arrows, slide ticks, a four-up captioned thumb strip, then the Prime Location block with three landmarks and a map); the right is a padded rail of facts (breadcrumb, kind, title, location, a four-cell fact bar, Project Highlights, six amenity chips, two CTAs and the contact line). Arrow keys still drive the gallery. The location map is drawn as inline SVG rather than embedded — no third-party script, works offline.
+`project.html` — one section, `#project` ("Section VI — Project Detail"), **rebuilt from the client's mock** and currently written for **Romal Kirti only**. Two columns: the left bleeds to the viewport edge and carries the photography (hero with painted-on copy, crossfading slides, arrows, slide ticks, and a four-up captioned thumb strip under it); the right is a padded rail of facts (breadcrumb, kind, title, location, price, a four-cell fact bar, Project Highlights, six amenity chips, two CTAs and the direct line). Arrow keys still drive the gallery.
+
+**The two columns share a height, and that is what sizes the photograph.**
+`.pd-grid` is `align-items:stretch` rather than `start`, `.pd-left` is a flex
+column, the hero is `flex:1 1 auto` and the thumb strip is `margin-top:auto`. So
+the hero takes whatever height the facts rail does not, and the strip sits on the
+floor of the column, level with the foot of the rail — instead of each column
+ending wherever its own content happened to stop. The hero's `aspect-ratio`
+(`1045/520`) is the **floor** it falls back to when the column has no definite
+height, which is the case below 1100px where the layout stacks and `.pd-left`
+goes back to `display:block`.
+
+**The Prime Location block is gone** — the pin, the three landmarks and the drawn
+map that used to sit under the thumb strip, along with `.pd-place`, `.pd-near`,
+`.pd-map` and their CSS, the `NEAR_ICON` set and the hand-written fallback
+landmarks. `landmarks` and `geo` are **no longer queried** from Sanity; both are
+still on the `project` schema, so the data survives — the same situation
+`floorPlans` is in. The inline-SVG map and the live-Google-map swap went with it.
+
+**"Contact Agent" is gone too**, leaving the direct line as the only thing in
+`.pd-contact`. That made an existing bug visible: with no `phone` on the document
+the line removes itself, which used to leave the agent beside it but now leaves
+an **empty row still drawing its top border** across the rail. The row now
+removes itself when no link is left in it.
 
 **The tabbed card is gone.** The old Project Overview / Floor Plans / Amenities / Location Map tab set, the `#amenities`-style hash linking, the persistent enquiry rail and the corner artwork were all removed with it — every fact is now on screen at once. `floorPlans` is no longer queried from Sanity or rendered anywhere; the data is still in the CMS, it just has nowhere to go on this layout.
 
