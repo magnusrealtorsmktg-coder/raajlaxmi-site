@@ -417,9 +417,34 @@ line rather than trying to agree with them; and `"Vasai (East)"` and `"Vasai Eas
 are **folded on a punctuation-free key** so one town does not appear twice and a
 search matches both spellings. Both blocks fill the same `<select>`s and their
 fetches race, so the project-derived list sets `dataset.src = 'projects'` and the
-CMS filler stands down — whichever lands second, the real data wins. **Budget hides
-itself** while fewer than two projects carry a price: a filter with nothing to sort
-on is worse than no filter, and it returns on its own once prices are filled in.
+CMS filler stands down — whichever lands second, the real data wins.
+
+**Budget is the exception: it is bands, not prices, and it is always shown.** It
+used to be filled from the projects like the other two — a dropdown of the literal
+figures the client had typed ("₹1.8 Cr") — and to remove itself below two of them,
+so the field came and went as prices were entered. It now reads a fixed set of
+bands from `heroBudgetOptions` on the `homepage` document and is painted by the
+home-page content block like any other CMS copy.
+
+That only works because **the collection pages match a band by overlapping RANGES,
+not by string equality**. Compared with `===`, as it was, a band could only ever
+match a project whose `price` was that exact text, so every band returned nothing.
+`money()` (in the Section V block of all three collection files) turns either side
+into a `[low, high]` pair in rupees and tests for overlap. Four things it handles,
+each of them a real case from this dataset:
+
+- **Lacs / Lakhs / Cr / Crore / K**, so "₹48 Lacs" and "₹1.8 Cr" are comparable.
+- **The unit comes from the LAST figure when the first has none** — "45 – 65 Lacs"
+  is 45 *lacs* to 65 lacs, not 45 rupees.
+- **A trailing `+`, `onwards`, `above` or `plus`** means no upper bound.
+- **Commas are stripped, not spaced.** Spacing them turned "1,25,00,000" into four
+  separate numbers and the smallest won, which read as ₹0.
+- Text with **no number in it** ("Price on request") returns `null`, which keeps
+  such a project out of every specific band while leaving it in "Any budget".
+
+Only one project carries a price today (`Raajlaxmi Apartment`, ₹1.8 Cr), so most
+bands correctly return the "nothing matches" line. Verified end to end: no band
+→ 14 cards; ₹80 Lacs + → that one project; ₹45 – 65 Lacs → none.
 
 **The navbar's `Book Consultation` went nowhere on six of eight pages.** It was
 `href="#ctForm"` — a same-page anchor, and `#ctForm` is the enquiry card on

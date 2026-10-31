@@ -1853,10 +1853,11 @@
           <label for="hsBudget">Budget</label>
           <select id="hsBudget" name="budget">
             <option value="">Any budget</option>
-            <option>₹1 – 2 Cr</option>
-            <option>₹2 – 4 Cr</option>
-            <option>₹4 – 7 Cr</option>
-            <option>₹7 Cr +</option>
+            <option>₹18 – 25 Lacs</option>
+            <option>₹35 – 45 Lacs</option>
+            <option>₹45 – 65 Lacs</option>
+            <option>₹65 – 80 Lacs</option>
+            <option>₹80 Lacs +</option>
           </select>
         </div>
         <button type="submit" class="hs-submit" data-hover data-magnetic>View residences</button>
@@ -2476,9 +2477,7 @@
       const q = new URLSearchParams({status: 'completed'});
       if(typeSel && typeSel.value) q.set('type', typeSel.value);
       if(locSel  && locSel.value)  q.set('loc',  locSel.value);
-      const bField = budgetSel && budgetSel.closest('.hs-field');
-      if(budgetSel && budgetSel.value && bField && !bField.hidden)
-        q.set('budget', budgetSel.value);
+      if(budgetSel && budgetSel.value) q.set('budget', budgetSel.value);
       location.href = 'projects.html?' + q.toString();
     });
 
@@ -2562,15 +2561,20 @@
           if(t && !townMap.has(key(t))) townMap.set(key(t), t);
         });
         const towns = [...townMap.values()].sort();
-        const prices = [...new Set(rows.map(r => txt(r.price)).filter(Boolean))];
 
         if(types.length) fill(typeSel, types);
         if(towns.length) fill(locSel, towns);
 
-        /* a dropdown of one price sorts nothing */
-        const field = budgetSel && budgetSel.closest('.hs-field');
-        if(prices.length >= 2) fill(budgetSel, prices.sort());
-        else if(field) field.hidden = true;
+        /* BUDGET IS NOT FILLED FROM THE PROJECTS, and is no longer hidden when
+           few of them carry a price. It used to list the distinct prices
+           themselves and remove itself below two of them — which made it a
+           dropdown of literal figures ("₹1.8 Cr") that came and went as the
+           client typed. It is a fixed set of BANDS now, written in the CMS
+           (`heroBudgetOptions`) and painted by the home-page content block, so
+           it reads the same whether one project is priced or all of them. The
+           collection pages match a band by overlapping RANGES rather than by
+           string equality, which is what lets a band find a price nobody typed
+           to match it. */
       })
       .catch(err => console.warn('hero search: keeping the built-in lists —', err));
   })();

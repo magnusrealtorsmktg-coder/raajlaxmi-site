@@ -1825,8 +1825,41 @@
     const locKey = t => (t || '').toLowerCase().replace(/[()]/g, '').replace(/\s+/g, ' ').trim();
     const WANT_LOC_KEY = locKey(WANT_LOC);
     const inLoc = p => !WANT_LOC_KEY || locKey(p.location).includes(WANT_LOC_KEY);
-    const inBudget = p => !WANT_BUDGET ||
-      (p.price || '').trim().toLowerCase() === WANT_BUDGET;
+    /* BUDGET IS MATCHED AS A RANGE, not as a string. The hero offers bands
+       ("₹45 – 65 Lacs"), the client types prices free-hand ("₹1.8 Cr",
+       "₹80 Lacs onwards", "Price on request"), and the two will never be the
+       same text — compared with === , every band returned nothing.
+
+       `money()` turns either side into a [low, high] pair in rupees and the
+       test is whether the two overlap. It reads Lacs / Lakhs / Cr / K, takes
+       the unit from the last figure when the first has none ("45 – 65 Lacs"
+       is 45 LACS to 65 lacs, not 45 rupees), and treats a trailing "+",
+       "onwards" or "above" as no upper bound. Text with no number in it —
+       "Price on request" — returns null, which is what keeps such a project
+       out of every specific band while leaving it in "Any budget". */
+    function money(raw){
+      /* commas are STRIPPED, not spaced: "1,25,00,000" is one number, and
+         spacing them made it four, the smallest of which won */
+      const s = (raw || '').toLowerCase().replace(/,/g, '').replace(/[\u20b9*]/g, ' ');
+      const mul = u => u.startsWith('cr') ? 1e7
+                     : (u.startsWith('lac') || u.startsWith('lakh')) ? 1e5
+                     : u.startsWith('k') ? 1e3 : 1;
+      const re = /(\d+(?:\.\d+)?)\s*(cr(?:ore)?s?|lacs?|lakhs?|k)?/g;
+      const hits = []; let m;
+      while((m = re.exec(s))) hits.push({n: parseFloat(m[1]), u: m[2] || ''});
+      if(!hits.length) return null;
+      const tail = hits[hits.length - 1].u;
+      const vals = hits.map(h => h.n * mul(h.u || tail));
+      const open = /\+|onwards|above|plus/.test(s);
+      return [Math.min(...vals), open ? Infinity : Math.max(...vals)];
+    }
+    const WANT_BUDGET_RANGE = money(WANT_BUDGET);
+    const inBudget = p => {
+      if(!WANT_BUDGET || !WANT_BUDGET_RANGE) return true;
+      const have = money(p.price);
+      if(!have) return false;
+      return have[0] <= WANT_BUDGET_RANGE[1] && have[1] >= WANT_BUDGET_RANGE[0];
+    };
 
     const wanted = p => inStatus(p) && inType(p) && inLoc(p) && inBudget(p);
 
