@@ -182,15 +182,35 @@ Check at 1440×900, 1024×800 and 420×860; scroll the full page; confirm no con
 
 `project.html` — one section, `#project` ("Section VI — Project Detail"), **rebuilt from the client's mock** and currently written for **Romal Kirti only**. Two columns: the left bleeds to the viewport edge and carries the photography (hero with painted-on copy, crossfading slides, arrows, slide ticks, and a four-up captioned thumb strip under it); the right is a padded rail of facts (breadcrumb, kind, title, location, price, a four-cell fact bar, Project Highlights, six amenity chips, two CTAs and the direct line). Arrow keys still drive the gallery.
 
-**The two columns share a height, and that is what sizes the photograph.**
-`.pd-grid` is `align-items:stretch` rather than `start`, `.pd-left` is a flex
-column, the hero is `flex:1 1 auto` and the thumb strip is `margin-top:auto`. So
-the hero takes whatever height the facts rail does not, and the strip sits on the
-floor of the column, level with the foot of the rail — instead of each column
-ending wherever its own content happened to stop. The hero's `aspect-ratio`
-(`1045/520`) is the **floor** it falls back to when the column has no definite
-height, which is the case below 1100px where the layout stacks and `.pd-left`
-goes back to `display:block`.
+**The first screen is a full screen, and that is what sizes the photograph.**
+`.pd-grid` is `align-items:stretch` with
+`min-height:calc(100svh - var(--pd-top))` (`--pd-top` is the section's own top
+padding, the thing that clears the fixed navbar), `.pd-left` is a flex column and
+the hero is `flex:1 1 auto`. So the hero absorbs whatever the facts rail does not
+use, and the thumb strip lands exactly on the bottom of the screen.
+
+Four parts of that are load-bearing:
+
+- **`min-height`, not `height`.** Every project today is sparse — none has an
+  overview, amenities or specs — so the rail is short and the photograph takes
+  the slack. A project with real copy makes the rail taller than the screen, and
+  the row has to grow with it rather than scroll inside itself.
+- **The hero is capped at one screen** (`max-height:calc(100svh - var(--pd-top))`).
+  Without it, that same tall rail dragged the photograph to 1340px on a 900px
+  screen.
+- **The strip is NOT `margin-top:auto`.** It was, briefly. The hero is the thing
+  that grows, so the strip follows it onto the floor of the column anyway when the
+  rail is short — and pinning it opened a gap between the picture and its own
+  thumbnails once the hero hit its cap.
+- **The `aspect-ratio` (`1045/520`) is the floor**, used when the column has no
+  definite height: below 1100px, where the layout stacks, `.pd-left` returns to
+  `display:block` and the grid's `min-height` is reset to 0.
+
+Measured at 1920x1080, 1440x900, 1366x768 and 1280x800: the strip's bottom edge
+is level with the foot of the screen to the pixel, with no gap above it. **Below
+about 660px of height the page scrolls, and that is the facts rail, not the
+photograph** — at 1280x620 the rail alone is 588px against 535px of screen, so
+no amount of shrinking the hero would fit it.
 
 **The Prime Location block is gone** — the pin, the three landmarks and the drawn
 map that used to sit under the thumb strip, along with `.pd-place`, `.pd-near`,
