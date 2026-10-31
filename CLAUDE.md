@@ -351,6 +351,17 @@ Five things about it are deliberate:
   far larger copy of the same photograph anyway.
 - **It closes on `rl:owners`.** The strip is rebuilt from scratch when the CMS
   lands, so the card it was opened from no longer exists by then.
+- **The blossom sketch sits in its top-right corner** (`.owd-art`,
+  `assets/project-floral-right.png` — the same drawing the collection pages
+  carry down their right edge). **The file has no alpha channel**: it is an
+  opaque near-white rectangle, its ground sampling at 254–255, so it is dropped
+  in with `mix-blend-mode:multiply`, which takes the white to nothing and leaves
+  only the ink over the panel's cream. That is the idiom `.col-decor` already
+  uses; a plain `<img>` would paint a pale box over the corner. A radial mask
+  fades it out before it reaches the copy, and it sits at `z-index:0` with the
+  figure and the body lifted to 1 and the close button to 2. `.owd-card` gained
+  **`overflow:hidden`** so the artwork stops at the 26px radius rather than
+  spilling past it.
 
 The role and the biography are **removed when empty** rather than left as blank
 paragraphs, and the biography is justified with `hyphens:auto` (left-aligned
@@ -815,7 +826,7 @@ by design, and `.env` is gitignored), but don't put a write token there.
 
 Photography is a mix of committed local files and `picsum.photos` placeholders layered over a tonal gradient fallback (so the composition holds offline).
 
-- Committed and referenced: `seal-top.png`, `seal-bottom.png`, `sketch-tower.jpg`, `house-sketch.jpg`, `floor-plan.jpg`, `floor-plan-l.jpg`, `assets/project-blueprint-left.png`, `assets/project-floral-right.png`.
+- Committed and referenced: `seal-top.png`, `seal-bottom.png`, `sketch-tower.jpg`, `house-sketch.jpg`, `floor-plan.jpg`, `floor-plan-l.jpg`, `assets/project-blueprint-left.png`, `assets/project-floral-right.png` (760x424, **no alpha** — every use of it is `mix-blend-mode:multiply` over a cream ground, on the three collection pages, `testimonials.html` and now the owner detail panel on `index.html`).
 - `assets/cert-maharera.png` and `assets/cert-credai-mchi.png` are the accreditation marks in Section II's `.ab-creds` row, cut out of one flat client sheet and keyed transparent. Their captions are live HTML, not baked into the artwork, so they reflow and stay readable — keep it that way if the marks are ever re-exported.
 - `assets/projects/western-line.jpg` is the corridor banner (1923x514, JPEG q94 — PNG was 498KB for no visible gain). Its copy is painted into the artwork, so the same content is written out in the `img`'s `alt` for screen readers and search. The band's background is set to the artwork's own ground (`#F4F0EF`) so the banner dissolves into it rather than showing as a rectangle, and one stray white pixel column was cropped off the left edge to make that work.
 - The banner is 3.7:1 with baked-in type, so below 760px it would render the station names at ~6px. It is put in a horizontal scroller at a fixed 900px instead.

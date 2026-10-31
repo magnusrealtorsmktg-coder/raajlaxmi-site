@@ -1516,7 +1516,7 @@
   }
   .owd.on .owd-scrim{opacity:1;}
 
-  .owd-card{position:relative;z-index:1;
+  .owd-card{position:relative;z-index:1;overflow:hidden;
     display:grid;grid-template-columns:minmax(0,38fr) minmax(0,62fr);
     gap:clamp(1.3rem,3vw,2.8rem);align-items:center;
     width:min(1000px,94vw);background:#FBF8F3;border-radius:26px;
@@ -1527,14 +1527,32 @@
     transition:opacity .5s var(--lux) .08s,transform .6s var(--lux) .08s;}
   .owd.on .owd-card{opacity:1;transform:none;}
 
-  .owd-fig{margin:0;}
+  /* A corner of the blossom sketch — the same drawing the collection pages
+     carry down their right edge. The file has NO alpha channel: it is an opaque
+     near-white rectangle (its ground samples at 254–255), so it is dropped in
+     with `mix-blend-mode:multiply`, which takes the white to nothing and leaves
+     only the ink over the panel's cream. That is the idiom `.col-decor` already
+     uses on the collection pages; do not swap it for a plain <img>, which would
+     paint a pale box over the corner.
+
+     The radial mask fades it out before it reaches the copy, and it sits at
+     z-index 0 — under the close button and under the text, both of which are
+     lifted to 1. */
+  .owd-art{position:absolute;top:0;right:0;z-index:0;pointer-events:none;
+    width:clamp(165px,30%,300px);aspect-ratio:760/424;
+    background:url('assets/project-floral-right.png') no-repeat right top/contain;
+    opacity:.5;mix-blend-mode:multiply;
+    -webkit-mask-image:radial-gradient(78% 88% at 84% 18%,#000 36%,transparent 82%);
+            mask-image:radial-gradient(78% 88% at 84% 18%,#000 36%,transparent 82%);}
+
+  .owd-fig{position:relative;z-index:1;margin:0;}
   .owd-ph{position:relative;aspect-ratio:5/6;border-radius:18px;overflow:hidden;
     background:linear-gradient(165deg,#36405a,#596579) center/cover no-repeat;
     box-shadow:0 30px 60px -36px rgba(20,24,34,.6);}
 
   /* The copy scrolls rather than the panel growing: a long biography should not
      push the portrait off a short window. */
-  .owd-body{max-height:min(66vh,560px);overflow-y:auto;padding-right:.5rem;}
+  .owd-body{position:relative;z-index:1;max-height:min(66vh,560px);overflow-y:auto;padding-right:.5rem;}
   .owd-name{font-family:"Playfair Display",serif;font-weight:700;
     font-size:clamp(1.5rem,2.6vw,2.3rem);line-height:1.12;letter-spacing:-.015em;
     color:var(--charcoal);}
@@ -1562,6 +1580,7 @@
     .owd-card{grid-template-columns:minmax(0,1fr);gap:1.1rem;
       max-height:88vh;overflow-y:auto;}
     .owd-fig{width:min(100%,220px);margin-inline:auto;}
+    .owd-art{width:clamp(130px,42%,190px);opacity:.42;}
     .owd-body{max-height:none;overflow:visible;}
     .owd-bio{text-align:left;hyphens:manual;}
   }
@@ -2263,6 +2282,7 @@
 <div class="owd" id="owDetail" role="dialog" aria-modal="true" aria-labelledby="owdName" hidden>
   <div class="owd-scrim" id="owdScrim"></div>
   <div class="owd-card">
+    <div class="owd-art" aria-hidden="true"></div>
     <button class="owd-x" id="owdClose" type="button" aria-label="Close" data-hover>
       <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
         <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.6"/>
