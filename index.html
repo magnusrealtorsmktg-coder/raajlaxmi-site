@@ -1482,6 +1482,102 @@
     .ow-grid:focus-within .ow-card:not(:focus-within){opacity:.5 !important;}
   }
 
+
+  /* ---- the detail panel ---- */
+  /* Hovering a card opens a centred panel with the whole of that owner on it:
+     the portrait on the left, the name, role and biography on the right. It is
+     the layout the section briefly had as a page of its own, kept as the thing
+     behind each card rather than instead of them.
+
+     Three decisions worth knowing:
+
+     - IT OPENS ON HOVER-INTENT, NOT ON HOVER. The strip is always moving and
+       cards pass under a still pointer, so a bare :hover would flash the panel
+       open and shut as the row drifts by. OPEN_MS is the dwell required.
+     - IT DOES NOT CLOSE ON POINTER-OUT. The panel is centred and the card may
+       be anywhere, so the pointer has to cross the scrim to reach it; closing
+       on leave would make the panel unreadable. Esc, the close button and a
+       click on the scrim close it, which is also what works on a touch screen.
+     - THE CARD STAYS ENLARGED UNDERNEATH and blurs with the rest of the page.
+       Keeping it sharp above the scrim is not possible from inside `.ow-stage`,
+       which clips and so creates its own stacking context — and the panel is
+       carrying a far larger copy of the same photograph anyway. */
+  .ow-card.is-open{transform:scale(1.07) !important;
+    box-shadow:0 52px 100px -38px rgba(20,24,34,.78);
+    filter:none !important;opacity:1 !important;}
+
+  html.owd-open{overflow:hidden;}
+  /* between the nav (100) and the lead popup (900), so the popup is never the
+     thing being blurred and never ends up underneath this */
+  .owd{position:fixed;inset:0;z-index:880;display:grid;place-items:center;
+    padding:clamp(1rem,4vw,2.5rem);}
+  .owd[hidden]{display:none;}
+  .owd-scrim{position:absolute;inset:0;background:rgba(10,14,22,.52);
+    -webkit-backdrop-filter:blur(14px) saturate(.9);backdrop-filter:blur(14px) saturate(.9);
+    opacity:0;transition:opacity .45s var(--lux);}
+  /* where the property is unavailable the veil goes nearly opaque instead, so
+     the panel is never read against live page content */
+  @supports not ((backdrop-filter:blur(2px)) or (-webkit-backdrop-filter:blur(2px))){
+    .owd-scrim{background:rgba(10,14,22,.94);}
+  }
+  .owd.on .owd-scrim{opacity:1;}
+
+  .owd-card{position:relative;z-index:1;
+    display:grid;grid-template-columns:minmax(0,38fr) minmax(0,62fr);
+    gap:clamp(1.3rem,3vw,2.8rem);align-items:center;
+    width:min(1000px,94vw);background:#FBF8F3;border-radius:26px;
+    padding:clamp(1.3rem,2.4vw,2.2rem);
+    border:1px solid rgba(203,169,107,.34);
+    box-shadow:0 60px 120px -50px rgba(14,18,26,.72);
+    opacity:0;transform:translateY(20px) scale(.965);
+    transition:opacity .5s var(--lux) .08s,transform .6s var(--lux) .08s;}
+  .owd.on .owd-card{opacity:1;transform:none;}
+
+  .owd-fig{margin:0;}
+  .owd-ph{position:relative;aspect-ratio:5/6;border-radius:18px;overflow:hidden;
+    background:linear-gradient(165deg,#36405a,#596579) center/cover no-repeat;
+    box-shadow:0 30px 60px -36px rgba(20,24,34,.6);}
+
+  /* The copy scrolls rather than the panel growing: a long biography should not
+     push the portrait off a short window. */
+  .owd-body{max-height:min(66vh,560px);overflow-y:auto;padding-right:.5rem;}
+  .owd-name{font-family:"Playfair Display",serif;font-weight:700;
+    font-size:clamp(1.5rem,2.6vw,2.3rem);line-height:1.12;letter-spacing:-.015em;
+    color:var(--charcoal);}
+  .owd-role{margin-top:.8rem;font-family:"Inter",sans-serif;font-weight:600;
+    font-size:clamp(.66rem,.8vw,.76rem);letter-spacing:.14em;line-height:1.7;
+    text-transform:uppercase;color:var(--gold);}
+  .owd-role::after{content:"";display:block;width:3.2rem;height:1px;
+    background:var(--gold);margin-top:clamp(1rem,1.8vw,1.4rem);}
+  /* justified, so the paragraph ends flush against the plate beside it;
+     hyphens stop justification opening word gaps into rivers at this measure */
+  .owd-bio{margin-top:clamp(1rem,1.8vw,1.4rem);white-space:pre-line;
+    text-align:justify;-webkit-hyphens:auto;hyphens:auto;
+    font-family:"Inter",sans-serif;font-weight:300;
+    font-size:clamp(.9rem,1vw,1.02rem);line-height:1.8;color:var(--body);}
+
+  .owd-x{position:absolute;top:.7rem;right:.7rem;z-index:2;
+    width:38px;height:38px;border-radius:50%;cursor:pointer;
+    display:grid;place-items:center;
+    background:rgba(20,24,34,.06);border:1px solid rgba(20,24,34,.12);
+    color:var(--charcoal);transition:background .3s var(--lux),transform .3s var(--lux);}
+  .owd-x:hover{background:rgba(20,24,34,.12);transform:rotate(90deg);}
+  .owd-x svg{width:14px;height:14px;}
+
+  @media(max-width:760px){
+    .owd-card{grid-template-columns:minmax(0,1fr);gap:1.1rem;
+      max-height:88vh;overflow-y:auto;}
+    .owd-fig{width:min(100%,220px);margin-inline:auto;}
+    .owd-body{max-height:none;overflow:visible;}
+    .owd-bio{text-align:left;hyphens:manual;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .owd-scrim,.owd-card{transition:none !important;}
+    .owd-card{transform:none !important;}
+    .ow-card.is-open{transform:none !important;}
+    .owd-x:hover{transform:none;}
+  }
+
   /* ============ SECTION X — BRANDS WE USE ============ */
   /* A specification list, not a logo wall: one card per brand, tagged with the
      trade it belongs to, filtered by a row of category tabs. The cards are
@@ -2167,6 +2263,28 @@
 </footer>
 
 
+<!-- Owner detail panel. Opened by hovering (or tapping, or Enter-ing) a card in
+     Section XI; see the OWNER DETAIL block in the trailing script. Empty until
+     then — every field is filled from the card that opened it. -->
+<div class="owd" id="owDetail" role="dialog" aria-modal="true" aria-labelledby="owdName" hidden>
+  <div class="owd-scrim" id="owdScrim"></div>
+  <div class="owd-card">
+    <button class="owd-x" id="owdClose" type="button" aria-label="Close" data-hover>
+      <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.6"/>
+      </svg>
+    </button>
+    <figure class="owd-fig">
+      <div class="owd-ph" id="owdPh" role="img" aria-label="Portrait"></div>
+    </figure>
+    <div class="owd-body">
+      <h3 class="owd-name" id="owdName"></h3>
+      <p class="owd-role" id="owdRole"></p>
+      <p class="owd-bio" id="owdBio"></p>
+    </div>
+  </div>
+</div>
+
 <!-- Lead popup. Opens 30s into a visit; see the LEAD POPUP IIFE at the end of
      the trailing script. This markup sits *before* that script so the shared
      [data-hover] / [data-magnetic] pass picks up its button. -->
@@ -2700,6 +2818,129 @@
       });
     }
   })();
+  /* ============ OWNER DETAIL PANEL ============ */
+  /* Hovering a card in Section XI opens a centred panel carrying the whole of
+     that owner: portrait on the left, name, role and biography on the right.
+
+     It reads the CARD, not the CMS. The cards are already painted by the home
+     page block, and the marquee clones them — so taking the content off
+     whichever card was opened means this works for the duplicates, for the
+     hand-written fallback cards when Sanity is unreachable, and with no second
+     copy of the data to keep in step. The one thing the card cannot give is an
+     uncropped portrait, so the paint step leaves the bare asset URL on
+     `dataset.photo` and this re-requests it at the panel's own ratio. */
+  (function(){
+    const sec = document.getElementById('owners'),
+          dlg = document.getElementById('owDetail');
+    if(!sec || !dlg) return;
+
+    const ph   = document.getElementById('owdPh'),
+          name = document.getElementById('owdName'),
+          role = document.getElementById('owdRole'),
+          bio  = document.getElementById('owdBio'),
+          xBtn = document.getElementById('owdClose'),
+          scrim= document.getElementById('owdScrim'),
+          root = document.documentElement;
+
+    /* How long the pointer has to rest on a card before it opens. The strip is
+       always moving and cards pass under a still pointer, so opening on the
+       first :hover would flash the panel as the row drifts by. */
+    const OPEN_MS = 300;
+
+    let timer = null, openedBy = null, lastFocus = null;
+
+    const text = el => (el ? el.textContent.trim() : '');
+
+    function fill(card){
+      const n = text(card.querySelector('.ow-name'));
+      name.textContent = n;
+
+      const r = text(card.querySelector('.ow-role'));
+      role.textContent = r;
+      role.hidden = !r;
+
+      /* The card clamps its line to three; the panel is where the whole thing
+         is meant to be read, and textContent is the full string either way. */
+      const b = text(card.querySelector('.ow-bio'));
+      bio.textContent = b;
+      bio.hidden = !b;
+
+      /* 900x1080 is 5:6, which is what .owd-ph is. Falling back to the card's
+         own painted background keeps the hand-written cards working. */
+      const src = card.dataset.photo;
+      const cardPh = card.querySelector('.ow-ph');
+      ph.style.backgroundImage = src
+        ? `url('${src}?w=900&h=1080&fit=crop&crop=focalpoint&auto=format')`
+        : (cardPh ? getComputedStyle(cardPh).backgroundImage : '');
+      ph.setAttribute('aria-label', n ? 'Portrait of ' + n : 'Portrait');
+    }
+
+    function open(card){
+      if(openedBy === card) return;
+      clearTimeout(timer);
+      if(openedBy) openedBy.classList.remove('is-open');
+      openedBy = card;
+      card.classList.add('is-open');
+      fill(card);
+
+      lastFocus = document.activeElement;
+      dlg.hidden = false;
+      root.classList.add('owd-open');
+      /* one frame, so the transition has a state to move away from */
+      requestAnimationFrame(() => dlg.classList.add('on'));
+      xBtn.focus({preventScroll:true});
+    }
+
+    function close(){
+      clearTimeout(timer);
+      if(!openedBy && dlg.hidden) return;
+      dlg.classList.remove('on');
+      root.classList.remove('owd-open');
+      if(openedBy){ openedBy.classList.remove('is-open'); openedBy = null; }
+      const done = () => { dlg.hidden = true; };
+      if(reduce) done();
+      else setTimeout(done, 480);
+      if(lastFocus && lastFocus.focus) lastFocus.focus({preventScroll:true});
+      lastFocus = null;
+    }
+
+    /* Delegated, because build() replaces the cards whenever the strip is
+       re-measured and whenever the CMS answers. */
+    sec.addEventListener('pointerover', e => {
+      const card = e.target.closest('.ow-card');
+      if(!card || card === openedBy) return;
+      /* a touch "hover" fires once on tap and would race the click below */
+      if(e.pointerType === 'touch') return;
+      clearTimeout(timer);
+      timer = setTimeout(() => open(card), OPEN_MS);
+    });
+    sec.addEventListener('pointerout', e => {
+      /* only cancels a pending open — an open panel stays open, since reaching
+         it means crossing the scrim and a leave-to-close would make it
+         unreadable */
+      if(e.target.closest('.ow-card')) clearTimeout(timer);
+    });
+
+    /* tap, and the keyboard */
+    sec.addEventListener('click', e => {
+      const card = e.target.closest('.ow-card');
+      if(card) open(card);
+    });
+    sec.addEventListener('keydown', e => {
+      if(e.key !== 'Enter' && e.key !== ' ') return;
+      const card = e.target.closest('.ow-card');
+      if(!card) return;
+      e.preventDefault();
+      open(card);
+    });
+
+    xBtn.addEventListener('click', close);
+    scrim.addEventListener('click', close);
+    addEventListener('keydown', e => { if(e.key === 'Escape') close(); });
+    /* the strip is rebuilt from scratch when the CMS lands; the card this was
+       opened from no longer exists by then */
+    addEventListener('rl:owners', close);
+  })();
   /* ============ SECTION X — BRANDS WE USE ============ */
   (function(){
     const sec = document.getElementById('brands');
@@ -2969,7 +3210,16 @@
       setTimeout(close, 2800);
     });
 
-    setTimeout(open, wait);
+    /* Not while the visitor is reading something else. The owner detail panel
+       sits just below this one, so a popup landing on top of it would bury the
+       thing they deliberately opened — wait and try again once it is closed.
+       Nothing is marked as seen in the meantime, so the popup is not spent. */
+    (function arm(ms){
+      setTimeout(() => {
+        if(document.documentElement.classList.contains('owd-open')) return arm(4000);
+        open();
+      }, ms);
+    })(wait);
   })();
 
   /* ============ HOME PAGE CONTENT (Sanity) ============ */
@@ -3433,6 +3683,12 @@
             if(role){ if(txt(o.role)) role.textContent = txt(o.role); else role.remove(); }
             const bio = card.querySelector('.ow-bio');
             if(bio){ if(txt(o.bio))  bio.textContent  = txt(o.bio);  else bio.remove(); }
+
+            /* the bare asset URL rides along on the card: the detail panel
+               re-requests it at its own 5:6 rather than reusing the card's
+               3:4 crop (see the OWNER DETAIL block) */
+            if(txt(o.photoUrl)) card.dataset.photo = txt(o.photoUrl);
+            else delete card.dataset.photo;
 
             const ph = card.querySelector('.ow-ph');
             if(ph){
