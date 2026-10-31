@@ -1,6 +1,6 @@
 # Raajlaxmi Group — site
 
-A static marketing site for Raajlaxmi Group. Nine hand-written HTML pages, no
+A static marketing site for Raajlaxmi Group. Eight hand-written HTML pages, no
 build step, no package manager, no dependencies. Netlify publishes the
 directory as-is, so whatever is on disk is what ships.
 
@@ -8,12 +8,11 @@ directory as-is, so whatever is on disk is what ships.
 
 | File | What it is |
 |------|------------|
-| `index.html` | Home — Hero, About, Signature Projects, Why Raajlaxmi, Brands We Use |
+| `index.html` | Home — Hero, About, Signature Projects, Why Raajlaxmi, Meet Our Owners, Brands We Use |
 | `projects.html` | Our Collection; `?status=completed` gives the Completed view |
 | `projects-ongoing.html` | The same collection UI locked to Ongoing |
 | `projects-redevelopment.html` | The same, locked to Redevelopment |
 | `project.html` | One property's detail page — `project.html?p=<slug>` |
-| `owners.html` | Meet Our Owners — one row per owner, portrait beside their details |
 | `testimonials.html` | Client voices |
 | `services.html` | Services, journey rails and FAQ |
 | `contact.html` | Enquiry page |
@@ -50,6 +49,6 @@ listing it appears on. Setup notes are in `studio/README.md`.
 ## Working on this
 
 `CLAUDE.md` carries the detailed architecture notes — the duplicated shared
-chrome across all nine files, the page loader's constraints, the adaptive
+chrome across all eight files, the page loader's constraints, the adaptive
 navbar, and the current content placeholders. Read it before making structural
 changes; several of its rules exist because of specific bugs.

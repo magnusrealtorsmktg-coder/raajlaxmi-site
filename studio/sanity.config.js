@@ -155,14 +155,15 @@ const structure = (S) =>
             ]),
         ),
 
-      /* The owners used to be a group on the home-page document, back when the
-         section lived on the home page. The section is its own page now, so
-         the document is too. */
+      /* The home page's owners strip. Its own document rather than a group on
+         the home-page one: it was briefly its own page, and the content stayed
+         where it was put when the section came back. The id still says
+         "owners-page" for that reason. */
       S.listItem()
         .id('owners-page')
-        .title('Owners page')
+        .title('Meet Our Owners')
         .child(
-          S.document().schemaType('ownersPage').documentId('owners-page').title('Owners page'),
+          S.document().schemaType('ownersPage').documentId('owners-page').title('Meet Our Owners'),
         ),
 
       S.listItem()

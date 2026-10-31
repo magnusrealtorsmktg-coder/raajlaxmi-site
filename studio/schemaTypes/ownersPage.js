@@ -1,20 +1,22 @@
-/* The Owners page, as one editable document.
+/* Meet Our Owners — the home page's portrait marquee, as one editable document.
 
    This is a *singleton*: there is exactly one, with the fixed id "owners-page"
-   (see sanity.config.js → structure). owners.html reads it and paints it over
-   the hand-written markup.
+   (see sanity.config.js → structure). index.html reads it and paints it over
+   the hand-written cards in Section XI.
 
-   These fields used to be a fifth group on the "homepage" document, when the
-   owners were a marquee between Why Raajlaxmi and Brands We Use. They moved
-   here with the section itself; `scripts/move-owners.mjs` carries the client's
-   entries across and clears the old fields off the home page. Until that is
-   run, owners.html falls back to reading them from "homepage", so the page is
-   never empty in between.
+   The id is a leftover and is kept deliberately. These fields began as a fifth
+   group on the "homepage" document; on 31 Oct the section was given a page of
+   its own and `scripts/move-owners.mjs` moved them here; later the same day the
+   page was dropped and the marquee went back to the home page — but the content
+   stayed put, because the client had filled it in by then and moving a document
+   a second time to tidy up an id would have risked their work for nothing.
 
    The rule is the home page's, not project.html's: an empty field LEAVES the
-   markup alone rather than erasing it. The exception is the list of people —
-   publishing anyone replaces the bracketed placeholder rows outright, because
-   a real owner shown next to "[Owner name]" is worse than either on its own. */
+   markup alone rather than erasing it. The list of people is the exception, and
+   goes further than the rest of the home page: publishing anyone replaces the
+   placeholder cards outright, and publishing NOBODY removes the whole section,
+   because "[Owner name]" six times on a public home page is worse than no
+   section at all. */
 
 const lines = (name, title, description) => ({
   name,
@@ -26,7 +28,7 @@ const lines = (name, title, description) => ({
 
 export default {
   name: 'ownersPage',
-  title: 'Owners page',
+  title: 'Meet Our Owners',
   type: 'document',
 
   fields: [
@@ -52,7 +54,7 @@ export default {
       title: 'The owners',
       type: 'array',
       description:
-        'One row each, in this order: the portrait on the left, everything you write here on the right. Add as many as you like — the rows simply continue down the page. Publishing anyone here replaces the placeholder rows on the page.',
+        'One card each, on the home page. They run past as a slow right-to-left strip, and hovering one holds the strip still and dims the others. Add as many as you like — the strip works out how many copies it needs. Until someone is added here the whole section is left off the home page.',
       of: [
         {
           type: 'object',
@@ -74,11 +76,11 @@ export default {
             },
             {
               name: 'bio',
-              title: 'About them',
+              title: 'One line about them',
               type: 'text',
-              rows: 6,
+              rows: 2,
               description:
-                'The paragraph beside the portrait. This has room now that it is not sitting on top of the photograph — a few sentences read better here than one line.',
+                'The small line at the foot of the card — e.g. "16+ years of experience in sales and strategy." Keep it to a line or two: it sits over the bottom of the photograph, and anything past three lines is cut off there.',
             },
             {
               name: 'photo',
@@ -86,7 +88,7 @@ export default {
               type: 'image',
               options: {hotspot: true},
               description:
-                'A portrait, taller than it is wide. The plate is 5:6 and nothing covers it any more, so the whole picture is on show — set the hotspot on the face and the crop follows it.',
+                'A portrait, taller than it is wide. The card is 3:4 and the copy sits over the bottom third, so leave room there — set the hotspot on the face if the crop needs steering.',
             },
           ],
           preview: {
@@ -98,6 +100,6 @@ export default {
   ],
 
   preview: {
-    prepare: () => ({title: 'Owners page'}),
+    prepare: () => ({title: 'Meet Our Owners'}),
   },
 }

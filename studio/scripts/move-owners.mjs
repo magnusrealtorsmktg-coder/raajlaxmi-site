@@ -66,5 +66,5 @@ if (stale.length) {
   console.log('homepage had no owners fields left to clear')
 }
 
-console.log('\ndone. owners.html reads "owners-page" first and falls back to the')
-console.log('home-page document, so the page was never empty in between.')
+console.log('\ndone. index.html reads "owners-page" for its Section XI marquee.')
+console.log('This script has already been run; it is a no-op from here on.')
