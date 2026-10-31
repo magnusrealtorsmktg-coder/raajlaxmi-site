@@ -155,6 +155,16 @@ const structure = (S) =>
             ]),
         ),
 
+      /* The owners used to be a group on the home-page document, back when the
+         section lived on the home page. The section is its own page now, so
+         the document is too. */
+      S.listItem()
+        .id('owners-page')
+        .title('Owners page')
+        .child(
+          S.document().schemaType('ownersPage').documentId('owners-page').title('Owners page'),
+        ),
+
       S.listItem()
         .id('contact-page')
         .title('Contact page')
@@ -186,7 +196,7 @@ export default defineConfig({
     templates: (prev) => [
       /* drop the singleton's generic template so it cannot be created a second
          time from the global "create" menu — it is reached through the sidebar */
-      ...prev.filter((t) => !['homepage', 'collectionPage', 'testimonialsPage', 'contactPage', 'siteSettings'].includes(t.schemaType)),
+      ...prev.filter((t) => !['homepage', 'ownersPage', 'collectionPage', 'testimonialsPage', 'contactPage', 'siteSettings'].includes(t.schemaType)),
       {
         id: 'project-by-stage',
         title: 'Project',

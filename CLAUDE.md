@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-An **eight-page** static marketing site for Raajlaxmi Group: `index.html` (home), `projects.html` (browse-all collection, and the Completed view via `?status=completed`), `projects-ongoing.html` and `projects-redevelopment.html` (the same collection UI locked to one status), `project.html` (one property's detail page), `testimonials.html` (client voices), `services.html` and `contact.html` (enquiry page). No build step, no package manager, no dependencies, no test suite. Each page is one self-contained document — `<style>` in `<head>`, markup in `<body>`, one `<script>` at the end — plus a handful of loose image files in the repo root and `assets/`.
+A **nine-page** static marketing site for Raajlaxmi Group: `index.html` (home), `projects.html` (browse-all collection, and the Completed view via `?status=completed`), `projects-ongoing.html` and `projects-redevelopment.html` (the same collection UI locked to one status), `project.html` (one property's detail page), `owners.html` (the people behind the group), `testimonials.html` (client voices), `services.html` and `contact.html` (enquiry page). No build step, no package manager, no dependencies, no test suite. Each page is one self-contained document — `<style>` in `<head>`, markup in `<body>`, one `<script>` at the end — plus a handful of loose image files in the repo root and `assets/`.
 
 Deployed to Netlify from the CLI. There is no build step — but **do not publish the repo root**: `studio/node_modules` lives there now. Publish a `git archive` export instead; see *Where this stands*.
 
@@ -98,6 +98,7 @@ instead of trusting that number.
 |---|---|
 | Projects | **14, all filed `completed`** — so the Ongoing page is empty and Redevelopment still shows its 3 placeholder cards |
 | Reviews | **6 real Google reviews**, all with Google links — the invented five are gone from the CMS |
+| Owners | **6 entries, all of them the same person** — "Mr. Dhruv Dilip Mehta", one portrait, one role, no bio. `owners.html` therefore prints the same row six times |
 | Client photo slider | empty, so the whole block stays hidden |
 | Social handles | none set, so the footer row removes itself |
 | Hero background | a photograph is set; no video |
@@ -124,7 +125,7 @@ and retires the placeholders for good.
 ### History worth knowing
 
 On 26 Sep a regex matched a CSS comment instead of the JS block it was aimed at
-and **deleted most of all eight HTML files**. They were rebuilt from the
+and **deleted most of all eight HTML files** (there were eight then). They were rebuilt from the
 editor's local history, a backup and the August Netlify deploy. Everything known
 to have been in them was restored and the pages have been edited and verified
 many times since, so this is unlikely to bite now — but if some small detail
@@ -165,10 +166,49 @@ Check at 1440×900, 1024×800 and 420×860; scroll the full page; confirm no con
 | II | About | `about` | Ivory. Plate showing **the CMS's About video** (`assets/about-plate.jpg` is only the fallback underneath it), four counting stats, then a full-width RERA / CREDAI-MCHI trust strip (`.ab-creds`, a sibling of `.ab-inner`, not inside the content column). **It holds exactly one screen** — see *The About section holds one screen*. The ghost word "Legacy" that used to sit behind the copy is gone, markup, CSS, parallax and schema field alike. |
 | III | Signature Projects | `signature` | Four project cards, corner blueprint decor with slow parallax, rotating seal. The section now ends on the card grid, so its **bottom** padding alone sets the run into Why — it was written to mirror `.about`'s old `clamp(5rem,14vh,140px)`, which **no longer exists**: About was rebuilt to one screen and its padding is now much tighter, so this value is a standalone constant that only looks like it is paired with something. |
 | IV | Why Raajlaxmi | `why` | Team photograph as the feature plate, **sized so the heading and the photograph share one screen** (see *The Why heading and photograph share one screen*), four numbered rows, a year timeline (2004→2026), closing quote + spinning seal. The auto-scrolling brand marquee (`.why-carousel`) that used to sit before the quote is gone — Section X replaced it. |
-| XI | Meet Our Owners | `owners` | **Sits between Why and Brands in scroll order**, despite the number. Portrait cards running as a **continuous right-to-left marquee**, the same mechanism as the reviews on `testimonials.html` — a CSS animation on `.ow-grid` (`@keyframes ow-marquee`, `--ow-loop` / `--ow-dur`, `SPEED` 30 px/s, the slowest of the three strips because a tall portrait going past at speed is harder to read than a line of text). `.ow-stage` carries `overflow:hidden` and the edge-fade mask. The copy sits over the foot of the photograph behind a gradient scrim, so the card *is* the picture rather than a picture with a caption under it. **Hovering one card pauses the strip and blurs and dims the others** — pure CSS (`.ow-stage:hover .ow-grid` for the pause, `.ow-grid:hover .ow-card:not(:hover)` for the blur), with `:focus-within` carrying both for a keyboard, and the blur dropped below 620px where `:hover` sticks after a tap. **Copies are computed, not fixed**, exactly as the client photo strip does it: `build()` measures a card, renders `max(2, ceil(stageWidth / setWidth) + 1)` sets and re-measures, so two published owners loop as cleanly as six. **The CMS fills the cards from a later block**, so that block fires **`rl:owners`** and this one rebuilds the strip from whatever it left — the same handshake the About counters use with `rl:home-stats`. Reduced motion renders a single set, puts the scroller and scroll-snap back and drops the mask, so no card is stranded off a stage that no longer moves. Driven by the `owners` list on the `homepage` singleton. **Its six cards are bracketed placeholders and it is the one section on the home page that removes itself**: an empty `owners` list deletes the section rather than printing "[Owner name]" six times to the public, and it returns the moment anyone is published. With Sanity unreachable the placeholders stay, so a failed fetch never costs the design. |
 | X | Brands We Use | `brands` | Follows Why in scroll order. `OUR PARTNERS` header, six category tabs (All / Structure / Interiors / Electrical / Fittings / Utilities) and a card grid, all rendered from the `BRANDS` array in the Section X IIFE — adding a supplier is one line of data, no markup. Each row is `[name, logo file, trade, tab]`: `trade` is the line from the client's sheet and prints on the card, `tab` is the coarser bucket the tabs filter by. Johnson and Hindware appear twice on purpose, under two different trades. Its header (`.br-head` / `.br-label` / `.br-title` / `.br-intro`) is a **copy of Section IV's** rather than a shared rule — change one and the other will not follow. |
 
 `projects.html` — one section, `#projects` ("Section V — Our Collection"): cards rendered from the `P` array in JS, city filter chips derived from each entry's location field, a **Western line corridor band** (`.cor`, between the pagination and the consultation strip) showing the delivered portfolio under four stations — Vasai / Nallasopara / Virar / Saphale. It is the client's finished banner used whole (`assets/projects/western-line.jpg`), **by explicit instruction — do not substitute a markup rebuild for it**. **Its twelve painted logos are clickable**: `.cor-hot` boxes inside `.cor-map` lie over the artwork as percentages of it, so they ride the image at every width — including the 900px plate inside the phone scroller, which is why the img is wrapped in `.cor-plate` (`.cor-figure` becomes the narrower scroll container and cannot be the positioning context). The boxes are measured from the ink, so **a recrop or a replacement banner invalidates all twelve**; `paint()` removes the whole layer if the CMS supplies a banner that is a *different* picture. It tells them apart by **SHA-1**: Sanity names an uploaded asset after the hash of its bytes, so the check is exact rather than a guess — and the usual answer is that they are the same file, because `seed-collections.mjs` uploaded this very banner and the live page therefore serves it from the CDN under a different URL. **Replacing `western-line.jpg` means updating `ART` in that guard**, or the boxes vanish the moment the CMS copy is re-uploaded. Each box carries `data-project` — the name *as the artwork paints it* — and `wireBanner()` matches it against the published projects to set the href, so a slug fixed in the Studio is picked up with no code change. `nameKey()` does the matching and is deliberately forgiving: it folds case and punctuation, collapses doubled letters (`Raajlaxmi`/`Rajlaxxmi` → `rajlaxmi`, `Pearrl` → `pearl`) and drops a trailing plural (`Towers` → `tower`), because the banner and the CMS do not spell the names the same way. **A box with no published project stays inert** — no href, no pointer, no hover tint; `Midas Heights` is painted on the banner but has no document, so today it is the one logo that does not respond. The layer is also inert with Sanity unreachable, which is correct: `project.html?p=` needs Sanity to render anything anyway; a `?status=` filter (exact case-insensitive match on `p.status`, ANDed with the active city chip, read once on load so the chips never clear it, with a `.col-empty` message when nothing matches) — the nav's **Projects** item *and* its **Completed** sub-item both deep-link to `?status=completed`, so the bar reaches the Completed view whether or not the dropdown is used and the browse-everything view is now reached only from the footer and the in-page "See the whole collection" / "Clear filters" links, a "showing N of M" line and a consultation CTA. **The pagination is gone** — the 1/2/3 buttons were decorative markup that never paged anything (every matching card always rendered), so they promised a second page that did not exist. Cross-links back to `index.html#about` / `index.html#signature`.
+
+`owners.html` — one section, `#owners` ("Section XI — Meet Our Owners"): the
+people behind the group, **one row per owner — the portrait on the left, the
+name, role and biography beside it on the right**, running down the page.
+
+It was a section of the home page until 31 Oct, sitting between Why (IV) and
+Brands (X) as a right-to-left marquee of portrait cards with each person's copy
+laid over the foot of their photograph. The client asked for the people to be
+read rather than driven past, so it moved to its own page and changed format
+with the move: **there is no marquee, no stage, no edge-fade mask and no
+blur-the-others hover** — all of that went with the cards. `index.html` no longer
+carries the section, its CSS, its IIFE or its fields in any form; do not go
+looking for a shared copy, because unlike Section II there isn't one.
+
+Four things carry over or are worth knowing:
+
+- **The header is Section IV's, to the pixel** (`.ow-label` / `.ow-title` /
+  `.ow-ln` / `.ow-intro`), as it was before. The top padding is a *page's*
+  worth rather than a section's, because this is now the first thing under the
+  fixed navbar.
+- **The plate is `aspect-ratio:5/6` and the portrait is requested at
+  `w=900&h=1080`** — the two have to be changed together or the box and the
+  hotspot crop disagree and the picture is cropped twice. `crop=focalpoint` is
+  what makes the hotspot set in the Studio steer it, and it is worth setting:
+  nothing covers the photograph on this layout, so the whole frame is on show.
+- **The gold hairline is offset behind the plate**, not drawn on it
+  (`.ow-figure::before`, `--ow-off`), the same architectural detail the other
+  plates use.
+- **Each row reveals as it is reached**, not the whole list at once — six rows
+  would otherwise animate five of them out of sight. The observer is rebuilt on
+  **`rl:owners`**, because the rows it was watching are replaced when the CMS
+  answers; that is the same handshake the home page's counters use with
+  `rl:home-stats`. The bio is `white-space:pre-line`, so paragraph breaks typed
+  into the field survive.
+
+Its three rows are bracketed placeholders, replaced wholesale when anyone is
+published. An empty slot (no role, no bio) is **removed** rather than left on
+its placeholder, since a bracketed stand-in beside a real person's name reads as
+content that failed to load — and the gold rule belongs to the role, so it
+leaves with it. The nav's **Owners** item points here from every page.
 
 `testimonials.html` — one section, `#testimonials` ("Section VII — Testimonials"): a **continuously scrolling marquee** of review cards, a hidden client-photo slider under it, and a closing consultation strip. The reviews come from Sanity (the five written into the `T` array are only the fallback); each card carries the reviewer's initials rather than a photograph, and a Google button when that review has a link. The arrows and dots are `display:none` — a strip with no discrete slides has nothing for them to point at. All the detail is under *Content management → Testimonials*. The nav's Testimonials item points here from every page.
 
@@ -230,7 +270,7 @@ Signature Projects cards **no longer land there**: each one now resolves its own
 
 ## Architecture
 
-**The `<head>` CSS is duplicated across all eight files.** Lines ~1–978 of `index.html`, `projects.html`, `projects-ongoing.html`, `projects-redevelopment.html`, `project.html`, `testimonials.html`, `services.html` and `contact.html` are the same stylesheet — base tokens, cursor, nav, mobile sheet, and the CSS for sections I–V — differing in only ~100 lines (title, nav/logo sizing on the inner pages). Each page then renders only its own sections. **Any edit to shared chrome (nav, `.nav-wrap.on-light`, cursor, burger/sheet, `:root` tokens, the hidden page scrollbar) must be applied to all eight files or the pages drift.** The page scrollbar is hidden by request (`html{scrollbar-width:none}` + `html::-webkit-scrollbar{display:none}`); it is scoped to `html`, **not** `*`, on purpose — the scrollbar on `.cor-figure` is the only cue that the line-map banner pans sideways on a phone, so a blanket rule would break that.
+**The `<head>` CSS is duplicated across all nine files.** Lines ~1–978 of `index.html`, `projects.html`, `projects-ongoing.html`, `projects-redevelopment.html`, `project.html`, `owners.html`, `testimonials.html`, `services.html` and `contact.html` are the same stylesheet — base tokens, cursor, nav, mobile sheet, and the CSS for sections I–V — differing in only ~100 lines (title, nav/logo sizing on the inner pages). Each page then renders only its own sections. **Any edit to shared chrome (nav, `.nav-wrap.on-light`, cursor, burger/sheet, `:root` tokens, the hidden page scrollbar) must be applied to all nine files or the pages drift.** The page scrollbar is hidden by request (`html{scrollbar-width:none}` + `html::-webkit-scrollbar{display:none}`); it is scoped to `html`, **not** `*`, on purpose — the scrollbar on `.cor-figure` is the only cue that the line-map banner pans sideways on a phone, so a blanket rule would break that.
 
 **The About section holds one screen.** The client's complaint was that the
 counting stats were cut off at the fold. `.about` is now
@@ -283,11 +323,11 @@ lines will push the strip past the fold again. Measured fits at 1440×900,
 1536×864, 1366×768, 1280×800, 1024×800, 1024×640, 1280×620 and 1680×1050.
 
 **Section II's CSS has drifted from the other seven files.** The `.ab-*` rules
-live in the shared head stylesheet, so all eight files carry a copy — but only
-`index.html` has the markup, so only its copy renders. The other seven were
+live in the shared head stylesheet, so all nine files carry a copy — but only
+`index.html` has the markup, so only its copy renders. The other eight were
 already carrying an **older** version (the ghost word at `top:-.44em`, `.ab-text`
 at 560px) before this change, and the one-screen rewrite was applied to
-`index.html` alone. Treat the Section II block in the other seven as dead code;
+`index.html` alone. Treat the Section II block in the other eight as dead code;
 do not "sync" it without checking which copy is current.
 
 **Page loader.** The **first** page of a visit opens with a navy cover (`.ld`, the first child of `<body>`) carrying the mark and a gold rule that creeps in CSS. Four things about it are load-bearing:
@@ -307,7 +347,7 @@ do not "sync" it without checking which copy is current.
 
 Its location list is the `LOCATIONS` array in the IIFE (one line to edit) and the `<select>` is populated from it. **Like the contact form, it has no backend** — it validates, swaps to a thank-you and sends nothing.
 
-Anything that should animate in after the cover lifts registers with **`window.onIntro(fn)`**, not `window.load` — on load the cover is still up and the sequence would play out of sight. `index.html`'s hero choreography is the only current caller. When the cover is removed the block fires a synthetic `resize`, because the adaptive nav sampled the cover rather than the page and would otherwise be stuck in the wrong state. The two status pages are clones of `projects.html`, so they duplicate its whole Section V as well — a fix to a collection card, chip or the Sanity query has to be made in three files, not one. That now includes the Projects dropdown: `.nav-drop` / `.nav-menu` in the bar and `.sheet-sub` in the mobile sheet, both present in all eight files. The menu is pure CSS — `:hover` plus `:focus-within` for keyboards — with an invisible `::after` bridge spanning the gap so the pointer can travel down without it closing. It sits inside `#navWrap`, which the adaptive-nav sampler skips wholesale, so it cannot confuse the light/dark detection. Section-specific CSS still lives only where it is used, under its `/* ===== SECTION N — NAME ===== */` banner; `project.html`, `testimonials.html`, `contact.html` and `services.html` each append their own section block (VI–IX) after that shared run.
+Anything that should animate in after the cover lifts registers with **`window.onIntro(fn)`**, not `window.load` — on load the cover is still up and the sequence would play out of sight. `index.html`'s hero choreography is the only current caller. When the cover is removed the block fires a synthetic `resize`, because the adaptive nav sampled the cover rather than the page and would otherwise be stuck in the wrong state. The two status pages are clones of `projects.html`, so they duplicate its whole Section V as well — a fix to a collection card, chip or the Sanity query has to be made in three files, not one. That now includes the Projects dropdown: `.nav-drop` / `.nav-menu` in the bar and `.sheet-sub` in the mobile sheet, both present in all nine files. The menu is pure CSS — `:hover` plus `:focus-within` for keyboards — with an invisible `::after` bridge spanning the gap so the pointer can travel down without it closing. It sits inside `#navWrap`, which the adaptive-nav sampler skips wholesale, so it cannot confuse the light/dark detection. Section-specific CSS still lives only where it is used, under its `/* ===== SECTION N — NAME ===== */` banner; `project.html`, `testimonials.html`, `contact.html` and `services.html` each append their own section block (VI–IX) after that shared run.
 
 **One IIFE per section, in markup order.** The trailing `<script>` opens with shared behavior (entrance choreography, navbar scrolled state, mouse parallax, custom cursor + magnetic buttons, mobile menu), then one self-contained IIFE per section, then the adaptive-nav block. Each IIFE owns its own `IntersectionObserver`s and scroll-progress math — no shared state between sections, so a section can be rewritten or ported (GSAP `ScrollTrigger`, Framer `useScroll`) in isolation.
 
@@ -359,7 +399,14 @@ CMS filler stands down — whichever lands second, the real data wins. **Budget 
 itself** while fewer than two projects carry a price: a filter with nothing to sort
 on is worse than no filter, and it returns on its own once prices are filled in.
 
-**Adaptive navbar** (last IIFE, every file). It samples the actual painted background behind `#navWrap` at three x-positions per scroll tick, averages relative luminance, and toggles `.on-light` (charcoal text) above a threshold of 150. Reading the live background rather than tagging sections means it keeps working when light sections are added. Full-bleed overlays that darken a light section from above carry `pointer-events:none`, so `elementsFromPoint` can't see them — they're listed in the `DARK_OVERLAYS` array (currently `['veil']`) and tested by geometry/opacity instead. **If you add another full-bleed dark overlay, add its id to `DARK_OVERLAYS` in all eight files.**
+**The navbar's `Book Consultation` went nowhere on seven of eight pages.** It
+was `href="#ctForm"` — a same-page anchor, and `#ctForm` is the enquiry card on
+`contact.html` alone. Everywhere else the bar's one primary button, and the
+mobile sheet's, simply did nothing. Both are `contact.html#ctForm` now on every
+page but `contact.html` itself, where the bare anchor is correct. (`project.html`
+was already pointing at `contact.html`, so it needed no change.)
+
+**Adaptive navbar** (last IIFE, every file). It samples the actual painted background behind `#navWrap` at three x-positions per scroll tick, averages relative luminance, and toggles `.on-light` (charcoal text) above a threshold of 150. Reading the live background rather than tagging sections means it keeps working when light sections are added. Full-bleed overlays that darken a light section from above carry `pointer-events:none`, so `elementsFromPoint` can't see them — they're listed in the `DARK_OVERLAYS` array (currently `['veil']`) and tested by geometry/opacity instead. **If you add another full-bleed dark overlay, add its id to `DARK_OVERLAYS` in all nine files.**
 
 **Single-column grid tracks need `minmax(0,1fr)`, not `1fr`.** A `1fr` track floors at its content's min-width, so one nowrap child (the detail page's tab row) inflates the whole column past a narrow viewport instead of scrolling inside its own `overflow-x:auto` container. Every stacking rule in the Section VI media queries uses `minmax(0,…)` for this reason.
 
@@ -383,17 +430,36 @@ by now it drives nearly every page:
 | `project` | one per property | the three collection pages and `project.html?p=<slug>` |
 | `homepage` | singleton `homepage` | all of `index.html` — hero, About, Why, Signature |
 | `collectionPage` | four fixed ids | the wording and banner on each listing view |
+| `ownersPage` | singleton | all of `owners.html` |
 | `testimonial` | one per review | the marquee cards on `testimonials.html` |
 | `testimonialsPage` | singleton | that page's wording and the client photo slider |
 | `contactPage` | singleton | all of `contact.html` |
-| `siteSettings` | singleton | social handles and the footer contact, on all eight pages |
+| `siteSettings` | singleton | social handles and the footer contact, on all nine pages |
 
-The `homepage` singleton gained a fifth group, **Meet Our Owners**
-(`ownersLabel`, `ownersHeading`, `ownersIntro` and the `owners` array of
-name / role / bio / portrait). The portrait is requested at
-`w=900&h=1200&fit=crop&crop=focalpoint`, so the **hotspot steers the crop** —
-worth setting on the face, because the card is 3:4 and the copy covers its
-bottom third.
+**The owners moved off the home page on 31 Oct.** They were a fifth group on
+the `homepage` singleton (`ownersLabel`, `ownersHeading`, `ownersIntro`, `owners`)
+back when the section lived there; they are now the **`ownersPage` singleton**,
+fixed id `owners-page`, with those fields renamed to `label` / `heading` /
+`intro` / `owners` and its own sidebar entry.
+
+**The move needs one command run once:**
+
+```bash
+cd studio && npx sanity exec scripts/move-owners.mjs --with-user-token
+```
+
+That script is *not* a seed — it invents nothing and does not
+`createOrReplace`. It copies what the client has written onto the new document
+(as image *references*, so nothing is re-uploaded and the hotspots survive),
+then unsets the four stale fields on `homepage` so the Studio stops reporting
+them as unknown. It refuses to overwrite anything already on the owners page, so
+it is safe to re-run.
+
+**Until it is run, `owners.html` reads the old fields off `homepage` as a
+fallback** — field by field, so a half-migrated dataset still shows everything
+it has rather than the emptier of the two documents. That is the `"legacy"` half
+of the page's query; once the script has run it returns nulls and can be
+deleted.
 
 **`services.html` is the only page still entirely hand-edited**, and
 `project.html` keeps a hand-written Romal Kirti fallback for when it is opened
@@ -577,7 +643,7 @@ the client has not published anything.
 
 **Site settings.** A singleton (`site-settings`) holding the **social handles**
 and the footer's telephone, email, address and copyright line. Its block is
-identical in all eight files and reads one document, so the number that used to
+identical in all nine files and reads one document, so the number that used to
 be typed into every footer is now edited once. The four social icons were
 hard-coded with `href="#"`; they are now drawn from the CMS — the SVG paths live
 in an `ICON` map in that block, so adding a network is one entry there plus one
@@ -670,7 +736,8 @@ browse-everything page's own content and then one folder per stage
 content** and its **Projects** list, with the `project-by-stage` template so a
 project created inside a folder is already filed, plus `Not yet filed` and
 `Every project` at the bottom as the safety net; then `Testimonials` (Page
-content + Reviews), `Contact page`, a divider, and `Site settings`. Every
+content + Reviews), `Owners page`, `Contact page`, a divider, and
+`Site settings`. Every
 singleton's generic template is filtered out of the global "create" menu, so a
 second copy cannot be made by accident.
 
@@ -755,7 +822,7 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
   section holds one screen*.
 - `quote-strip.png` (the Vikram Raajlaxmi quote banner) has been **deleted** — Section III's `.sp-quote-img` figure was removed earlier. Recoverable from git if the quote is ever wanted back.
 - The root-level `Generate_*.jpeg` / `download.png` / `Minimalist_*.jpeg` source art has been **deleted** — it was working material, not site assets. `footer.png`, `Services_start.png`, the seals and the sketches are all still referenced and remain.
-- **Favicon**: `favicon.ico` (16/32/48, at the repo root so browsers find it unprompted) plus `assets/favicon-32.png`, `assets/favicon-192.png` and `assets/apple-touch-icon.png` (180). All eight pages link them from `<head>`, right after `</title>`. Cut from the logo's building glyph with its dark ground **keyed out to transparency** (unmatted, so no dark fringe survives onto a light tab bar), squared up and centred with ~12% margin — the mark has to survive being read at 16px, so it sits deliberately large in frame.
+- **Favicon**: `favicon.ico` (16/32/48, at the repo root so browsers find it unprompted) plus `assets/favicon-32.png`, `assets/favicon-192.png` and `assets/apple-touch-icon.png` (180). All nine pages link them from `<head>`, right after `</title>`. Cut from the logo's building glyph with its dark ground **keyed out to transparency** (unmatted, so no dark fringe survives onto a light tab bar), squared up and centred with ~12% margin — the mark has to survive being read at 16px, so it sits deliberately large in frame.
 - The logo ships as **two external PNGs**, `assets/logo.png` (brown/charcoal ink, for ivory grounds) and `assets/logo-light.png` (gold/cream ink, for the dark navbar **and the footer** — `.ft-mark`, which used to be the word RAAJLAXMI set in Cinzel with a tagline span under it; the artwork already carries both, so the text version was removed), both ~17KB with a transparent ground. The nav carries both stacked inside `.brand`; `.nav-wrap.on-light` crossfades between them via opacity, replacing the old `filter:` hack. Regenerating either from a new master means keying out its flat background and re-cutting both variants — edit them as a pair or the two states drift.
 
 ## Known content placeholders

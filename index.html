@@ -1342,137 +1342,6 @@
     .ft-bar{justify-content:flex-start;}
   }
 
-  /* ============ SECTION XI — MEET OUR OWNERS ============ */
-  /* Sits between Why (IV) and Brands (X) in scroll order. One portrait per
-     card, the copy laid over the foot of the photograph behind a gradient
-     scrim — so the card IS the picture rather than a picture with a caption
-     under it. Hovering one card blurs the other five. */
-  /* The top padding is deliberately lighter than the bottom: Why ends on its
-     closing quote and shares this exact ground colour, so the seam needs air
-     rather than a full section's worth of it. The foot keeps the usual run
-     into Brands, which is a different colour. */
-  .ow{position:relative;background:#F4F1EA;overflow-x:clip;
-    padding:clamp(3rem,7vh,4.5rem) clamp(1.4rem,5vw,4rem) clamp(5rem,13vh,130px);}
-  .ow-wrap{position:relative;z-index:2;max-width:1400px;margin:0 auto;}
-
-  /* the header is Section IV's, to the pixel — same label, scale and entrance */
-  .ow-head{text-align:center;max-width:900px;margin:0 auto clamp(3rem,5vw,4.2rem);}
-  .ow-label{display:inline-block;font-family:"Inter",sans-serif;font-weight:600;
-    font-size:14px;letter-spacing:6px;text-transform:uppercase;color:var(--gold);
-    margin-bottom:1.7rem;opacity:0;transform:translateY(16px);
-    transition:opacity .9s var(--lux),transform .9s var(--lux);}
-  .ow-label::after{content:"";display:block;width:2.6rem;height:1px;background:var(--gold);
-    margin:1rem auto 0;transform:scaleX(0);transition:transform 1s var(--lux) .2s;}
-  .ow.in .ow-label{opacity:1;transform:none;}
-  .ow.in .ow-label::after{transform:scaleX(1);}
-  .ow-title{font-family:"Playfair Display",serif;font-weight:700;
-    font-size:clamp(2rem,3.6vw,52px);line-height:1.06;letter-spacing:-.015em;color:var(--charcoal);}
-  .ow-title .dot{color:var(--gold);}
-  .ow-ln{display:block;overflow:hidden;padding-bottom:.04em;}
-  .ow-ln i{display:block;font-style:normal;transform:translateY(115%);
-    transition:transform 1s var(--lux);}
-  .ow.in .ow-ln i{transform:translateY(0);}
-  .ow.in .ow-ln:nth-child(1) i{transition-delay:.12s;}
-  .ow.in .ow-ln:nth-child(2) i{transition-delay:.24s;}
-  .ow-intro{max-width:700px;margin:clamp(1rem,1.8vh,1.5rem) auto 0;
-    font-size:clamp(.95rem,1.05vw,18px);line-height:1.7;font-weight:300;color:var(--body);
-    opacity:0;transform:translateY(18px);
-    transition:opacity 1s var(--lux) .4s,transform 1s var(--lux) .4s;}
-  .ow.in .ow-intro{opacity:1;transform:none;}
-
-  /* The cards run continuously, the same way the reviews on testimonials.html
-     do: a CSS animation rather than a per-frame transform, so the compositor
-     drives it, hover pauses it with no script, a background tab stops it for
-     free, and it can be verified in headless Chrome. The edges fade so cards
-     enter and leave rather than being chopped off by the stage. */
-  .ow-stage{position:relative;overflow:hidden;
-    -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);
-            mask-image:linear-gradient(90deg,transparent 0,#000 6%,#000 94%,transparent 100%);}
-  @keyframes ow-marquee{
-    from{transform:translateX(0);}
-    to  {transform:translateX(calc(-1 * var(--ow-loop, 0px)));}
-  }
-  .ow-grid{display:flex;align-items:stretch;gap:clamp(1.1rem,2vw,1.9rem);
-    width:max-content;will-change:transform;
-    animation:ow-marquee var(--ow-dur, 60s) linear infinite;}
-  /* hover or keyboard focus holds the row still — which is what makes the blur
-     on the other cards readable rather than a smear going past */
-  .ow-stage:hover .ow-grid,
-  .ow-stage:focus-within .ow-grid{animation-play-state:paused;}
-
-  .ow-card{position:relative;flex:0 0 clamp(230px,23vw,320px);
-    aspect-ratio:3/4;border-radius:20px;overflow:hidden;
-    background:linear-gradient(165deg,#36405a,#596579);
-    box-shadow:0 34px 70px -40px rgba(20,24,34,.62);
-    opacity:0;transform:translateY(28px);
-    transition:opacity .9s var(--lux),transform .9s var(--lux),
-               filter .55s var(--lux),box-shadow .55s var(--lux);}
-  .ow.in .ow-card{opacity:1;transform:none;}
-  .ow.in .ow-card:nth-child(1){transition-delay:.10s;}
-  .ow.in .ow-card:nth-child(2){transition-delay:.18s;}
-  .ow.in .ow-card:nth-child(3){transition-delay:.26s;}
-  .ow.in .ow-card:nth-child(4){transition-delay:.34s;}
-  .ow.in .ow-card:nth-child(5){transition-delay:.42s;}
-  .ow.in .ow-card:nth-child(6){transition-delay:.50s;}
-
-  /* the portrait is a background rather than an <img> so a card with no
-     photograph yet is a tonal panel instead of a broken image box */
-  .ow-ph{position:absolute;inset:0;background-size:cover;background-position:center 15%;
-    transition:transform 1.4s var(--lux);}
-  .ow-card:hover .ow-ph{transform:scale(1.045);}
-  /* the scrim the copy sits on — dense at the foot, gone by two-thirds up */
-  .ow-card::after{content:"";position:absolute;inset:0;pointer-events:none;
-    background:linear-gradient(to top,
-      rgba(9,13,21,.95) 0%, rgba(9,13,21,.88) 22%,
-      rgba(9,13,21,.45) 46%, rgba(9,13,21,.08) 66%, transparent 80%);}
-
-  .ow-text{position:absolute;left:0;right:0;bottom:0;z-index:2;
-    padding:clamp(1.1rem,1.7vw,1.6rem) clamp(1.1rem,1.7vw,1.6rem) clamp(1.3rem,2vw,1.8rem);}
-  .ow-name{font-family:"Playfair Display",serif;font-weight:600;
-    font-size:clamp(1.1rem,1.5vw,1.45rem);line-height:1.25;color:#fff;
-    letter-spacing:-.005em;}
-  .ow-role{margin-top:.55rem;font-family:"Inter",sans-serif;font-weight:600;
-    font-size:clamp(.64rem,.76vw,.74rem);letter-spacing:.13em;line-height:1.6;
-    text-transform:uppercase;color:#CBA96B;}
-  .ow-bio{margin-top:.85rem;font-family:"Inter",sans-serif;font-weight:300;
-    font-size:clamp(.78rem,.92vw,.88rem);line-height:1.6;
-    color:rgba(255,255,255,.84);}
-
-  /* Hover one, the rest recede. :focus-within carries the same thing for a
-     keyboard, and both are scoped to the grid so nothing happens until the
-     pointer is actually inside it. */
-  .ow-grid:hover .ow-card:not(:hover),
-  .ow-grid:focus-within .ow-card:not(:focus-within){
-    filter:blur(4px) saturate(.82);opacity:.5;}
-  .ow-grid:hover .ow-card:hover,
-  .ow-grid:focus-within .ow-card:focus-within{
-    box-shadow:0 46px 90px -40px rgba(20,24,34,.75);}
-
-  @media(max-width:620px){
-    /* a blurred neighbour is meaningless where there is no pointer, and on a
-       touch screen :hover sticks after a tap */
-    .ow-grid:hover .ow-card:not(:hover){filter:none;opacity:1;}
-  }
-  @media (prefers-reduced-motion:reduce){
-    .ow-card,.ow-label,.ow-intro{opacity:1 !important;transform:none !important;}
-    .ow-ln i{transform:none !important;}
-    .ow-card,.ow-ph{transition:none !important;}
-    .ow-card:hover .ow-ph{transform:none;}
-    /* nothing drifts here, so the row goes back to being a scroller and the
-       script renders a single set — otherwise the later cards would sit off
-       the edge of a stage that no longer moves, unreachable */
-    .ow-stage{overflow:visible;-webkit-mask-image:none;mask-image:none;}
-    .ow-grid{animation:none;width:auto;overflow-x:auto;
-      scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;}
-    .ow-grid::-webkit-scrollbar{display:none;}
-    .ow-card{scroll-snap-align:center;}
-    /* the dim is not motion, and the !important above (which is there so the
-       cards are visible with JS off) was swallowing it — put it back, so the
-       blur and the fade still arrive together here */
-    .ow-grid:hover .ow-card:not(:hover),
-    .ow-grid:focus-within .ow-card:not(:focus-within){opacity:.5 !important;}
-  }
-
   /* ============ SECTION X — BRANDS WE USE ============ */
   /* A specification list, not a logo wall: one card per brand, tagged with the
      trade it belongs to, filtered by a row of category tabs. The cards are
@@ -1561,7 +1430,7 @@
     .br-label::after{transform:scaleX(1) !important;}
   }
 
-  /* ===== LEAD POPUP — shared chrome, present in all eight files ===== */
+  /* ===== LEAD POPUP — shared chrome, present in all nine files ===== */
   /* Layers between the nav (z 100) and the loader (z 9999): the cover must
      never end up being the thing the blurred backdrop is blurring. */
   html.lead-open{overflow:hidden;}
@@ -1680,11 +1549,12 @@
           <a href="projects-redevelopment.html" data-hover>Redevelopment</a>
         </div>
       </span>
+      <a href="owners.html" data-hover>Owners</a>
       <a href="services.html" data-hover>Services</a>
       <a href="testimonials.html" data-hover>Testimonials</a>
       <a href="contact.html" data-hover>Contact</a>
     </div>
-    <a href="#ctForm" class="nav-cta" data-hover data-magnetic>Book Consultation</a>
+    <a href="contact.html#ctForm" class="nav-cta" data-hover data-magnetic>Book Consultation</a>
     <div class="burger" id="burger"><span></span><span></span><span></span></div>
   </nav>
 </div>
@@ -1692,9 +1562,10 @@
 <div class="sheet" id="sheet">
   <a href="#about">About</a><a href="projects.html?status=completed">Projects</a>
   <div class="sheet-sub"><a href="projects.html?status=completed">Completed</a><a href="projects-ongoing.html">Ongoing</a><a href="projects-redevelopment.html">Redevelopment</a></div>
+  <a href="owners.html">Owners</a>
   <a href="services.html">Services</a>
   <a href="testimonials.html">Testimonials</a><a href="contact.html">Contact</a>
-  <a href="#ctForm" class="sheet-cta">Book Consultation</a>
+  <a href="contact.html#ctForm" class="sheet-cta">Book Consultation</a>
 </div>
 
 <main>
@@ -1990,76 +1861,6 @@
                  alt="Built with trust · Crafted for life · Est. 2004">
           </div>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ SECTION XI — MEET OUR OWNERS ============ -->
-  <!-- PLACEHOLDER: the six cards below are bracketed stand-ins. They are
-       replaced wholesale the moment the `owners` list on the homepage document
-       carries anyone — see the Owners block in the trailing script. -->
-  <section class="ow" id="owners">
-    <div class="ow-wrap">
-      <header class="ow-head">
-        <span class="ow-label">Our Leadership</span>
-        <h2 class="ow-title">
-          <span class="ow-ln"><i>Meet Our Owners<span class="dot">.</span></i></span>
-        </h2>
-        <p class="ow-intro">The people who carry the name &mdash; and the decisions
-          behind every Raajlaxmi address.</p>
-      </header>
-
-      <div class="ow-stage">
-      <div class="ow-grid" id="owGrid">
-        <article class="ow-card" tabindex="0">
-          <div class="ow-ph" id="owPh1" role="img" aria-label="Portrait"></div>
-          <div class="ow-text">
-            <h3 class="ow-name">[Owner name]</h3>
-            <p class="ow-role">[Board role &ndash; area of responsibility]</p>
-            <p class="ow-bio">[One line about them &mdash; years of experience, what they lead.]</p>
-          </div>
-        </article>
-        <article class="ow-card" tabindex="0">
-          <div class="ow-ph" id="owPh2" role="img" aria-label="Portrait"></div>
-          <div class="ow-text">
-            <h3 class="ow-name">[Owner name]</h3>
-            <p class="ow-role">[Board role &ndash; area of responsibility]</p>
-            <p class="ow-bio">[One line about them &mdash; years of experience, what they lead.]</p>
-          </div>
-        </article>
-        <article class="ow-card" tabindex="0">
-          <div class="ow-ph" id="owPh3" role="img" aria-label="Portrait"></div>
-          <div class="ow-text">
-            <h3 class="ow-name">[Owner name]</h3>
-            <p class="ow-role">[Board role &ndash; area of responsibility]</p>
-            <p class="ow-bio">[One line about them &mdash; years of experience, what they lead.]</p>
-          </div>
-        </article>
-        <article class="ow-card" tabindex="0">
-          <div class="ow-ph" id="owPh4" role="img" aria-label="Portrait"></div>
-          <div class="ow-text">
-            <h3 class="ow-name">[Owner name]</h3>
-            <p class="ow-role">[Board role &ndash; area of responsibility]</p>
-            <p class="ow-bio">[One line about them &mdash; years of experience, what they lead.]</p>
-          </div>
-        </article>
-        <article class="ow-card" tabindex="0">
-          <div class="ow-ph" id="owPh5" role="img" aria-label="Portrait"></div>
-          <div class="ow-text">
-            <h3 class="ow-name">[Owner name]</h3>
-            <p class="ow-role">[Board role &ndash; area of responsibility]</p>
-            <p class="ow-bio">[One line about them &mdash; years of experience, what they lead.]</p>
-          </div>
-        </article>
-        <article class="ow-card" tabindex="0">
-          <div class="ow-ph" id="owPh6" role="img" aria-label="Portrait"></div>
-          <div class="ow-text">
-            <h3 class="ow-name">[Owner name]</h3>
-            <p class="ow-role">[Board role &ndash; area of responsibility]</p>
-            <p class="ow-bio">[One line about them &mdash; years of experience, what they lead.]</p>
-          </div>
-        </article>
-      </div>
       </div>
     </div>
   </section>
@@ -2604,93 +2405,6 @@
       });
     }
   })();
-  /* ============ SECTION XI — MEET OUR OWNERS ============ */
-  (function(){
-    const sec = document.getElementById('owners');
-    if(!sec) return;
-
-    /* The blur on the other cards is pure CSS (:hover / :focus-within on the
-       grid), so there is nothing to wire for that. What this block does own is
-       the marquee: the cards drift right-to-left exactly as the reviews on
-       testimonials.html do. */
-    const grid  = document.getElementById('owGrid'),
-          stage = grid && grid.parentElement;
-
-    /* SPEED is the one number to turn. Slower than the reviews' 70 and the photo
-       strip's 42: these cards are tall, and a portrait going past at speed is
-       harder to read than a line of text. */
-    const SPEED = 30;
-    let base = [], sets = 0;
-
-    /* A marquee has to be at least one full set wider than its stage, or
-       translating by one set width runs off the end and shows a gap before the
-       loop restarts. Six cards at ~320px already overflow a wide stage, but the
-       client may publish two — so the count is worked out from the measured card
-       rather than assumed, and re-worked on resize. */
-    function build(){
-      if(!grid || !stage) return;
-      if(!base.length){
-        base = [...grid.children].map(el => el.cloneNode(true));
-        sets = 1;
-      }
-      if(!base.length) return;
-
-      if(reduce){                       /* one set; the row is a scroller */
-        if(sets !== 1){ grid.replaceChildren(...base.map(el => el.cloneNode(true))); sets = 1; }
-        grid.style.removeProperty('--ow-loop');
-        grid.style.removeProperty('--ow-dur');
-        return;
-      }
-
-      const first = grid.querySelector('.ow-card');
-      if(!first) return;
-      const gap  = parseFloat(getComputedStyle(grid).columnGap) || 0;
-      const setW = base.length * (first.getBoundingClientRect().width + gap);
-      if(setW <= 0) return;             /* not laid out yet */
-
-      const want = Math.max(2, Math.ceil(stage.clientWidth / setW) + 1);
-      if(want !== sets){
-        const out = [];
-        for(let i = 0; i < want; i++)
-          base.forEach(el => {
-            const c = el.cloneNode(true);
-            if(i > 0){ c.setAttribute('aria-hidden','true'); c.removeAttribute('tabindex'); }
-            out.push(c);
-          });
-        grid.replaceChildren(...out);
-        sets = want;
-      }
-
-      const items = grid.querySelectorAll('.ow-card');
-      if(items.length <= base.length) return;
-      const loop = items[base.length].offsetLeft - items[0].offsetLeft;
-      if(loop <= 0) return;
-      grid.style.setProperty('--ow-loop', loop + 'px');
-      grid.style.setProperty('--ow-dur', (loop / SPEED) + 's');
-    }
-
-    /* the CMS fills the six cards from a later block, so the strip is rebuilt
-       from whatever it leaves behind — the same handshake the counters use */
-    addEventListener('rl:owners', () => { base = []; sets = 0; build(); });
-    addEventListener('resize', build, {passive:true});
-    addEventListener('load', build);
-    if(document.fonts && document.fonts.ready) document.fonts.ready.then(build);
-    build();
-
-    if(reduce){ sec.classList.add('in'); return; }
-
-    new IntersectionObserver((e,o)=>{e.forEach(x=>{if(x.isIntersecting){sec.classList.add('in');o.disconnect();}});},
-      {threshold:.12}).observe(sec);
-
-    /* gold cursor over the portraits, the same as the other imagery */
-    const ring = document.getElementById('ring');
-    if(ring && matchMedia('(hover:hover)').matches){
-      sec.querySelectorAll('.ow-card').forEach(el=>{
-        el.addEventListener('mouseenter',()=> ring.classList.add('gold'));
-        el.addEventListener('mouseleave',()=> ring.classList.remove('gold'));
-      });
-    }
-  })();
   /* ============ SECTION X — BRANDS WE USE ============ */
   (function(){
     const sec = document.getElementById('brands');
@@ -3031,9 +2745,7 @@
       signatureCards[]{name,category,location,description,link,"imageUrl":image.asset->url,
         "ref":project->{name,category,location,blurb,detailUrl,"slug":slug.current,
                         "imageUrl":image.asset->url}},
-      "projects":*[_type=="project" && defined(slug.current)]{name,detailUrl,"slug":slug.current},
-      ownersLabel,ownersHeading,ownersIntro,
-      owners[]{name,role,bio,"photoUrl":photo.asset->url}
+      "projects":*[_type=="project" && defined(slug.current)]{name,detailUrl,"slug":slug.current}
     }`);
 
     fetch(`https://${SANITY.projectId}.apicdn.sanity.io/v${SANITY.apiVersion}` +
@@ -3381,55 +3093,6 @@
               else btn.remove();
             }
           });
-      }
-
-      /* ---------- the owners ---------- */
-      setText(document.querySelector('.ow-label'), d.ownersLabel);
-      const owHead = list(d.ownersHeading);
-      if(owHead.length){
-        const h2 = document.querySelector('.ow-title');
-        fit(h2 ? h2.querySelectorAll('.ow-ln') : [], owHead.length, h2)
-          .forEach((ln, i) => setLine(ln.querySelector('i'), owHead[i]));
-      }
-      setText(document.querySelector('.ow-intro'), d.ownersIntro);
-
-      const owners = Array.isArray(d.owners)
-        ? d.owners.filter(o => o && txt(o.name)) : [];
-      const owSec = document.getElementById('owners');
-
-      /* This section is the one exception to the rule above it. Its six cards
-         are bracketed placeholders rather than real designed copy, and this is
-         the public home page — so an empty list REMOVES the section instead of
-         leaving "[Owner name]" on screen six times. It returns the moment
-         anyone is published. With Sanity unreachable the placeholders stay, so
-         the design is never lost to a failed fetch. */
-      if(!owners.length){
-        if(owSec) owSec.remove();
-      } else if(owSec){
-        const grid = document.getElementById('owGrid');
-        fit(grid ? grid.querySelectorAll('.ow-card') : [], owners.length, grid)
-          .forEach((card, i) => {
-            const o = owners[i];
-            setText(card.querySelector('.ow-name'), o.name);
-
-            /* a card with no role or no line about them drops that paragraph
-               rather than printing an empty one over the photograph */
-            const role = card.querySelector('.ow-role');
-            if(role){ if(txt(o.role)) role.textContent = txt(o.role); else role.remove(); }
-            const bio = card.querySelector('.ow-bio');
-            if(bio){ if(txt(o.bio))  bio.textContent  = txt(o.bio);  else bio.remove(); }
-
-            const ph = card.querySelector('.ow-ph');
-            if(ph){
-              if(txt(o.photoUrl))
-                ph.style.backgroundImage =
-                  `url('${txt(o.photoUrl)}?w=900&h=1200&fit=crop&crop=focalpoint&auto=format')`;
-              ph.setAttribute('aria-label', txt(o.name) || 'Portrait');
-            }
-          });
-        /* the marquee was built from the placeholder cards; it has to be rebuilt
-           from these — see the Section XI block */
-        dispatchEvent(new Event('rl:owners'));
       }
     }
   })();
