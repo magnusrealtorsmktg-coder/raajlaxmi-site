@@ -602,24 +602,25 @@
   /* specificity must beat `.about.in .ab-stat` so the hover lift lands */
   .about.in .ab-stat:hover{transform:translateY(-8px);border-color:rgba(201,161,90,.4);
     box-shadow:0 34px 60px -30px rgba(40,32,18,.4);}
-  /* The stat figures are set in Valuta Solid by request. It is NOT a Google
-     font and no file has been supplied yet, so this declaration is the hook:
-     drop the files into assets/fonts/ under these names and the numbers change
-     with nothing else to edit. `local()` comes first so a machine that already
-     has the face installed uses its own copy. Until a file exists the
-     @font-face simply fails to load and the figures stay in Cormorant Garamond
-     -- the fallback named in .ab-num below -- so nothing breaks meanwhile.
-     It is loaded here rather than from Google because it is not there; the
-     five families in the <head> link are unchanged. */
-  @font-face{font-family:"Valuta Solid";font-style:normal;font-weight:400;
-    font-display:swap;
-    src:local("Valuta Solid"),local("ValutaSolid"),local("Valuta-Solid"),
-        url("assets/fonts/valuta-solid.woff2") format("woff2"),
-        url("assets/fonts/valuta-solid.woff") format("woff"),
-        url("assets/fonts/valuta-solid.otf") format("opentype");}
-  .ab-num{font-family:"Valuta Solid","Cormorant Garamond",serif;font-weight:400;line-height:1;
+  /* The figures are PLAYFAIR DISPLAY, not the Cormorant Garamond the rest of
+     this section is set in, and the reason is the numeral design rather than
+     taste. Cormorant's default figures are OLD-STYLE: the 1 is a short stroke
+     with no flag and no foot, so "14+" rendered as "I4+" and "1 Million+" as
+     "I Million+" -- the figure was being read as a capital I. Playfair is
+     LINING (every digit cap-height, sitting on the baseline), so 1 is
+     unmistakably one.
+     600 rather than 400: these are the only figures on the page and they are
+     the thing the section is selling, so they carry weight. Playfair is
+     already in the <head> font link at 500/600/700 for the headings, so this
+     costs no extra request and no extra bytes.
+     `lnum` is belt-and-braces -- Playfair is lining by default, but asking for
+     it explicitly means a future family swap cannot silently bring old-style
+     figures back and re-create the "I4" bug. */
+  .ab-num{font-family:"Playfair Display",serif;font-weight:600;line-height:1;
+    font-feature-settings:"lnum" 1;font-variant-numeric:lining-nums;
     font-size:clamp(1.5rem,2.2vw,2.1rem);color:var(--charcoal);letter-spacing:-.01em;}
-  .ab-num .u{color:var(--gold);}
+  /* the + is a separate node, so it needs the weight said again to sit with the figure */
+  .ab-num .u{color:var(--gold);font-weight:600;}
   /* "Million" rides with the figure, smaller and in ink, so the gold + still reads as the accent */
   .ab-num .un{font-size:.6em;letter-spacing:.03em;margin-left:.24em;}
   .ab-slab{width:1.5rem;height:1px;background:var(--gold);opacity:.7;margin:clamp(.45rem,1vh,.75rem) 0;}

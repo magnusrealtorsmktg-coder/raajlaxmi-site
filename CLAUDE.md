@@ -1059,22 +1059,28 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
 - Most nav links and CTAs are `href="#"`; only Projects and the cross-links resolve. Section II's "Discover our story" button and the "Raajlaxmi Group / Building trust. Creating legacy." signature are both gone — the accreditation strip replaced them, so About no longer offers a CTA or a sign-off of its own.
 - Section IV's statistics panel (`.why-stats`, the old 20+ / 1500+ / 45+ / 98% placeholders) has been **deleted** — markup, CSS, counter JS and all. Section II's row is now the only set of figures on the page. Its `.why-float` interior card went with it: it overlapped the team photo and hid a dozen faces.
 - 13+ years in Section II contradicts the timeline (2004→2026) and "Est. 2004" on the seals (`seal-top.png`, and the Section VII strip art) — those imply ~22 years. Pick one founding date and make the artwork, timeline and counters agree.
-- **The stat figures are set in `Valuta Solid`, and the font file is missing.**
-  The client asked for that face on the four counting numbers. It is **not a
-  Google font** and no file was supplied, so `index.html` carries an
-  `@font-face` next to `.ab-num` that names `assets/fonts/valuta-solid.woff2`
-  (then `.woff`, then `.otf`) and tries `local()` first. **Nothing is broken
-  while it is absent** — the face fails to load and the figures stay in
-  Cormorant Garamond, which is the next name in `.ab-num`'s stack. Verified:
-  the computed family is the full chain and `document.fonts` reports
-  `Valuta Solid: error`, which is the fallback working as intended.
-  `assets/fonts/README.md` carries the filenames, the `fonttools` conversion
-  line and the licence warning (a desktop licence does not cover serving a
-  webfont). **It is in `index.html` only**, like the rest of the live Section II
-  CSS — the other ten files carry a dead copy of these rules and must not be
-  synced. When the file does land, re-check Section II's one-screen fit: a
-  solid display face sets wider and heavier than Cormorant, and "0.9 Million+"
-  is the line that will wrap first.
+- **The stat figures are Playfair Display, and the reason is numeral design,
+  not taste.** Cormorant Garamond — which the rest of Section II is set in —
+  has **old-style figures** by default: the 1 is a short stroke with no flag and
+  no foot, so `14+` rendered as `I4+` and `1 Million+` as `I Million+`, with the
+  figure reading as a capital I. Playfair is **lining** (every digit cap-height,
+  on the baseline), so a 1 is unmistakably a one. It is weight **600**, because
+  these are the only figures left on the page and they are what the section is
+  selling, and it is already in the `<head>` font link at 500/600/700 for the
+  headings — **no extra request, no extra bytes**. `.ab-num .u` (the gold `+`)
+  repeats the 600, because it is a separate node and would otherwise inherit
+  nothing. `font-feature-settings:"lnum"` plus `font-variant-numeric` is
+  belt-and-braces: Playfair is lining anyway, but asking explicitly means a
+  future family swap cannot quietly bring old-style figures back and re-create
+  the bug. **`index.html` only**, like the rest of the live Section II CSS — the
+  other ten files carry a dead copy of these rules and must not be synced.
+  Measured after the change: one line per figure at 1440x900 (31.7px) and at
+  390x844 (24px), `0.9 Million+` being the longest, and the trust strip still
+  22px inside the section's bottom edge, so Section II still holds one screen.
+  The client first asked for **Valuta Solid**; it is not on Google Fonts, is not
+  on the machine, and no file was supplied — the nearest real family is
+  *Valute*, a different name, sold by Authentype. That request was dropped
+  rather than shipped as a dead font name.
 - The About counters take `data-to` / `data-suffix` plus two additions: `data-dec` (decimal places, so 0.9 does not round to 1) and `data-unit` (a word set in ink between the figure and the gold suffix, e.g. "Million"). They are the only counters left on the page.
 
 ## Performance follow-ups (not yet done)
