@@ -409,17 +409,41 @@
     padding:.85rem 1.6rem;border-radius:999px;cursor:pointer;white-space:nowrap;
     transition:background .45s var(--lux),color .45s var(--lux);}
   .hs-submit:hover{background:transparent;color:var(--champagne-soft);}
+  /* ===== PHONE: THE HERO FLOWS, IT NO LONGER CENTRES =====
+     `.hero-content` is absolutely positioned and centred on 57% of a 100vh
+     hero. That is right on a desktop and wrong on a phone: below 520px the
+     search form flips to a column and stands ~287px tall, which makes the
+     whole block taller than the screen — so centring pushed its top UNDER the
+     fixed navbar and its bottom past the fold. Measured at 360x640: the
+     navbar is 90px, the headline started at y=56 (34px inside the bar) and
+     the submit button ended 10px below the fold. Pulling the block to 52%, as
+     this tier used to, moves the collision rather than removing it.
+
+     So on a phone the block is taken out of absolute centring and allowed to
+     flow, with top padding that clears the bar and `margin:auto` centring it
+     in whatever is left. The hero keeps `min-height:100svh`, so a short
+     headline still fills the screen; a long CMS sub-heading now costs a short
+     scroll instead of hiding the headline, which is the same trade the About
+     section already makes. `svh` rather than `vh` because a phone's address
+     bar otherwise takes a slice off the bottom. */
+  /* `max-height` as well as `max-width`, because a phone in LANDSCAPE is wide
+     (844px) and short (390px) — a width-only query misses it entirely, and
+     short is exactly the case this tier exists for. */
+  @media(max-width:620px),(max-height:560px){
+    .hero{height:auto;min-height:100vh;min-height:100svh;display:flex;}
+    .hero-content{position:relative;z-index:10;left:auto;top:auto;translate:none;
+      width:100%;max-width:none;margin:auto;
+      /* 90px is the measured navbar height at phone widths */
+      padding:calc(90px + 1.3rem) clamp(1.6rem,7vw,7rem) clamp(1.6rem,4vh,2.6rem);}
+  }
   @media(max-width:520px){
     .hero-search{flex-direction:column;align-items:stretch;gap:1.1rem;padding:1.1rem;}
     /* stop the fields growing to fill the column — they stretch into
        huge gaps once flex-direction flips to column */
     .hs-field{flex:0 0 auto;}
     .hs-submit{width:100%;}
-    /* the stacked form is tall: pull the block up and tighten the copy
-       so nothing collides with the logo or runs off the bottom */
-    .hero-content{top:52%;}
-    .headline{margin-bottom:1.4rem;}
-    .sub{margin-bottom:1.6rem;font-size:.98rem;line-height:1.6;}
+    .headline{margin-bottom:1.2rem;}
+    .sub{margin-bottom:1.4rem;font-size:.98rem;line-height:1.55;}
   }
 
   @media (prefers-reduced-motion:reduce){
@@ -1770,6 +1794,54 @@
     .hero-vid,.cms-vid{display:none;}
   }
 
+
+  /* ===== PHONE: A READABLE FLOOR FOR THE LABEL TYPE =====
+     Present in all eleven files and IDENTICAL in each, like the rest of the
+     shared chrome. A selector that does not exist on a given page costs
+     nothing, and one string copied eleven times cannot drift the way eleven
+     tailored ones would.
+
+     The site sets its small-caps labels between .58rem and .68rem with .16em
+     to .34em of tracking. On a desktop that reads as fine detailing. On a
+     phone it measured 9.3px for the hero's PROPERTY / LOCATION / BUDGET
+     labels, 9.6px for a project card's category, 9.9px for the lead popup's
+     eyebrow and 9.3px for the detail page's buttons — under the ~11px both
+     platforms treat as the floor for secondary text, and worse than the
+     number suggests, because wide tracking costs legibility fastest at small
+     sizes. So the tracking eases wherever it was .22em or more.
+
+     Nothing here moves a layout; it only raises type that had shrunk out of
+     readability. */
+  /* Narrow OR short OR touch. Narrow alone misses a phone in landscape,
+     which is 844px wide and 390px tall; `hover:none` catches tablets and
+     phones whatever their size; and a narrow desktop window gets the same
+     treatment, because the type is just as small there. */
+  @media (hover:none),(max-width:620px),(max-height:560px){
+    .hs-field > label{font-size:.72rem;letter-spacing:.18em;}
+    .hs-submit{font-size:.74rem;}
+    .sheet-sub a{font-size:.74rem;}
+    .nav-menu a{font-size:.74rem;}
+    .eyebrow{font-size:.72rem;letter-spacing:.26em;}
+    .lead-label{font-size:.72rem;letter-spacing:.22em;}
+    .sp-cat{font-size:.72rem;letter-spacing:.16em;}
+    .sp-btn{font-size:.72rem;}
+    .br-tab{font-size:.74rem;}
+    .ow-role{font-size:.72rem;}
+    .pd-btn{font-size:.72rem;}
+    .col-badge{font-size:.72rem;letter-spacing:.1em;}
+    .ft-h{font-size:.74rem;letter-spacing:.18em;}
+    .col-cat{font-size:.72rem;letter-spacing:.16em;}
+    .col-details{font-size:.74rem;}
+    .cor-label{font-size:.74rem;}
+    .br-cat{font-size:.72rem;}
+    .sv-num{font-size:.74rem;}
+    /* `.sv-card .sv-slot span` is the more specific rule and was winning at
+       .56rem, so the floor has to match its specificity to reach it */
+    .sv-slot span,.sv-card .sv-slot span{font-size:.72rem;letter-spacing:.1em;}
+    .pd-eyebrow{font-size:.72rem;letter-spacing:.2em;}
+    .pd-kind{font-size:.74rem;}
+    .pd-fact .l{font-size:.72rem;}
+  }
 </style>
 </head>
 <body>

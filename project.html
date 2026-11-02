@@ -1542,6 +1542,54 @@
     .lead-card,.lead.on .lead-card{transition:none;transform:none;}
   }
 
+
+  /* ===== PHONE: A READABLE FLOOR FOR THE LABEL TYPE =====
+     Present in all eleven files and IDENTICAL in each, like the rest of the
+     shared chrome. A selector that does not exist on a given page costs
+     nothing, and one string copied eleven times cannot drift the way eleven
+     tailored ones would.
+
+     The site sets its small-caps labels between .58rem and .68rem with .16em
+     to .34em of tracking. On a desktop that reads as fine detailing. On a
+     phone it measured 9.3px for the hero's PROPERTY / LOCATION / BUDGET
+     labels, 9.6px for a project card's category, 9.9px for the lead popup's
+     eyebrow and 9.3px for the detail page's buttons — under the ~11px both
+     platforms treat as the floor for secondary text, and worse than the
+     number suggests, because wide tracking costs legibility fastest at small
+     sizes. So the tracking eases wherever it was .22em or more.
+
+     Nothing here moves a layout; it only raises type that had shrunk out of
+     readability. */
+  /* Narrow OR short OR touch. Narrow alone misses a phone in landscape,
+     which is 844px wide and 390px tall; `hover:none` catches tablets and
+     phones whatever their size; and a narrow desktop window gets the same
+     treatment, because the type is just as small there. */
+  @media (hover:none),(max-width:620px),(max-height:560px){
+    .hs-field > label{font-size:.72rem;letter-spacing:.18em;}
+    .hs-submit{font-size:.74rem;}
+    .sheet-sub a{font-size:.74rem;}
+    .nav-menu a{font-size:.74rem;}
+    .eyebrow{font-size:.72rem;letter-spacing:.26em;}
+    .lead-label{font-size:.72rem;letter-spacing:.22em;}
+    .sp-cat{font-size:.72rem;letter-spacing:.16em;}
+    .sp-btn{font-size:.72rem;}
+    .br-tab{font-size:.74rem;}
+    .ow-role{font-size:.72rem;}
+    .pd-btn{font-size:.72rem;}
+    .col-badge{font-size:.72rem;letter-spacing:.1em;}
+    .ft-h{font-size:.74rem;letter-spacing:.18em;}
+    .col-cat{font-size:.72rem;letter-spacing:.16em;}
+    .col-details{font-size:.74rem;}
+    .cor-label{font-size:.74rem;}
+    .br-cat{font-size:.72rem;}
+    .sv-num{font-size:.74rem;}
+    /* `.sv-card .sv-slot span` is the more specific rule and was winning at
+       .56rem, so the floor has to match its specificity to reach it */
+    .sv-slot span,.sv-card .sv-slot span{font-size:.72rem;letter-spacing:.1em;}
+    .pd-eyebrow{font-size:.72rem;letter-spacing:.2em;}
+    .pd-kind{font-size:.74rem;}
+    .pd-fact .l{font-size:.72rem;}
+  }
 </style>
 </head>
 <body>

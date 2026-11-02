@@ -543,6 +543,59 @@ mobile sheet's, simply did nothing. Both are `contact.html#ctForm` now on every
 page but `contact.html` itself, where the bare anchor is correct. (`project.html`
 was already pointing at `contact.html`, so it needed no change.)
 
+**Phones were audited across twelve viewports** — 280x653 (Fold closed),
+320x568, 360x640, 360x780, 375x667, 390x844, 393x852, 412x915, 414x896,
+430x932, and both landscapes (667x375, 844x390) — on all eleven pages. The good
+news first: **there was no horizontal overflow anywhere**, at any size, on any
+page. The layout already held. Two things did not.
+
+**1. The home hero collided with the navbar on short screens.** `.hero-content`
+is absolutely positioned and centred on 57% of a 100vh hero, which is right on a
+desktop. Below 520px the search form flips to a column and stands ~287px tall,
+making the whole block taller than the screen — so centring pushed its top under
+the fixed bar and its bottom past the fold. Measured at 360x640: navbar 90px,
+headline top at y=56 (34px *inside* the bar), submit button 10px below the fold.
+The old tier's answer, pulling the block to 52%, moves the collision rather than
+removing it.
+
+On a phone the block now **flows** instead: `.hero` becomes `height:auto` with
+`min-height:100svh`, `.hero-content` drops out of absolute centring and takes
+`margin:auto` with top padding that clears the bar. A short headline still fills
+the screen; a long CMS sub-heading now costs a short scroll rather than hiding
+the headline — the same trade the About section already makes. Measured after:
+the headline clears the bar by 21px at every size down to 280px wide, the hero
+always grows to fit its content, and the submit button is always inside it.
+
+**The tier is `(max-width:620px),(max-height:560px)`, and the second half is
+load-bearing**: a phone in landscape is **844px wide and 390px tall**, so a
+width-only query misses it completely — and short is exactly the case this
+exists for.
+
+**2. The label type fell under 11px.** The site sets its small-caps labels
+between .58rem and .68rem with .16em to .34em of tracking; on a phone that
+measured 9.3px for the hero's PROPERTY / LOCATION / BUDGET, 9.6px for a project
+card's category, 9.9px for the lead popup's eyebrow and the detail page's fact
+labels, and 9.0px for the brand-card trades. That is under the ~11px both
+platforms treat as the floor for secondary text, and worse than the number looks
+because wide tracking costs legibility fastest at small sizes.
+
+One block, **identical in all eleven files**, floors seventeen selectors at
+.72–.74rem (11.5–11.8px) and eases the tracking wherever it was .22em or more.
+It is identical rather than tailored on purpose: a selector that does not exist
+on a given page costs nothing, and one string copied eleven times cannot drift
+the way eleven tailored ones would. It changes no layout.
+
+Two details worth keeping: the tier is scoped
+`(hover:none),(max-width:620px),(max-height:560px)` for the same landscape
+reason, with `hover:none` catching tablets; and **`.sv-card .sv-slot span` had
+to be named explicitly**, because it is more specific than `.sv-slot span` and
+was still winning at .56rem.
+
+**One audit result is a false positive, and will be again.** `services.html`
+reports its first heading 7px under the navbar at every size. That heading is
+`h1.sv-sr` — the screen-reader-only alt text for the painted hero band, clipped
+to a 1px box. Nothing visible is colliding.
+
 **Adaptive navbar** (last IIFE, every file). It samples the actual painted background behind `#navWrap` at three x-positions per scroll tick, averages relative luminance, and toggles `.on-light` (charcoal text) above a threshold of 150. Reading the live background rather than tagging sections means it keeps working when light sections are added. Full-bleed overlays that darken a light section from above carry `pointer-events:none`, so `elementsFromPoint` can't see them — they're listed in the `DARK_OVERLAYS` array (currently `['veil']`) and tested by geometry/opacity instead. **If you add another full-bleed dark overlay, add its id to `DARK_OVERLAYS` in all eleven files.**
 
 **Single-column grid tracks need `minmax(0,1fr)`, not `1fr`.** A `1fr` track floors at its content's min-width, so one nowrap child (the detail page's tab row) inflates the whole column past a narrow viewport instead of scrolling inside its own `overflow-x:auto` container. Every stacking rule in the Section VI media queries uses `minmax(0,…)` for this reason.
