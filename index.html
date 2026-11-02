@@ -602,7 +602,22 @@
   /* specificity must beat `.about.in .ab-stat` so the hover lift lands */
   .about.in .ab-stat:hover{transform:translateY(-8px);border-color:rgba(201,161,90,.4);
     box-shadow:0 34px 60px -30px rgba(40,32,18,.4);}
-  .ab-num{font-family:"Cormorant Garamond",serif;font-weight:400;line-height:1;
+  /* The stat figures are set in Valuta Solid by request. It is NOT a Google
+     font and no file has been supplied yet, so this declaration is the hook:
+     drop the files into assets/fonts/ under these names and the numbers change
+     with nothing else to edit. `local()` comes first so a machine that already
+     has the face installed uses its own copy. Until a file exists the
+     @font-face simply fails to load and the figures stay in Cormorant Garamond
+     -- the fallback named in .ab-num below -- so nothing breaks meanwhile.
+     It is loaded here rather than from Google because it is not there; the
+     five families in the <head> link are unchanged. */
+  @font-face{font-family:"Valuta Solid";font-style:normal;font-weight:400;
+    font-display:swap;
+    src:local("Valuta Solid"),local("ValutaSolid"),local("Valuta-Solid"),
+        url("assets/fonts/valuta-solid.woff2") format("woff2"),
+        url("assets/fonts/valuta-solid.woff") format("woff"),
+        url("assets/fonts/valuta-solid.otf") format("opentype");}
+  .ab-num{font-family:"Valuta Solid","Cormorant Garamond",serif;font-weight:400;line-height:1;
     font-size:clamp(1.5rem,2.2vw,2.1rem);color:var(--charcoal);letter-spacing:-.01em;}
   .ab-num .u{color:var(--gold);}
   /* "Million" rides with the figure, smaller and in ink, so the gold + still reads as the accent */
