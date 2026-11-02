@@ -173,6 +173,41 @@ const structure = (S) =>
           S.document().schemaType('contactPage').documentId('contact-page').title('Contact page'),
         ),
 
+      /* The three legal pages. A folder rather than three top-level entries:
+         they are read far more often than they are edited, and they belong
+         together. Fixed ids, one per file — see schemaTypes/legalPage.js. */
+      S.listItem()
+        .id('legal')
+        .title('Legal pages')
+        .child(
+          S.list()
+            .id('legal-inner')
+            .title('Legal pages')
+            .items([
+              S.listItem()
+                .id('legal-privacy')
+                .title('Privacy Policy')
+                .child(
+                  S.document().schemaType('legalPage').documentId('legal-privacy')
+                    .title('Privacy Policy'),
+                ),
+              S.listItem()
+                .id('legal-terms')
+                .title('Terms of Use')
+                .child(
+                  S.document().schemaType('legalPage').documentId('legal-terms')
+                    .title('Terms of Use'),
+                ),
+              S.listItem()
+                .id('legal-disclaimer')
+                .title('Disclaimer')
+                .child(
+                  S.document().schemaType('legalPage').documentId('legal-disclaimer')
+                    .title('Disclaimer'),
+                ),
+            ]),
+        ),
+
       S.divider(),
       /* the handful of things that are the same on every page */
       S.listItem()
@@ -197,7 +232,7 @@ export default defineConfig({
     templates: (prev) => [
       /* drop the singleton's generic template so it cannot be created a second
          time from the global "create" menu — it is reached through the sidebar */
-      ...prev.filter((t) => !['homepage', 'ownersPage', 'collectionPage', 'testimonialsPage', 'contactPage', 'siteSettings'].includes(t.schemaType)),
+      ...prev.filter((t) => !['homepage', 'ownersPage', 'collectionPage', 'testimonialsPage', 'contactPage', 'legalPage', 'siteSettings'].includes(t.schemaType)),
       {
         id: 'project-by-stage',
         title: 'Project',

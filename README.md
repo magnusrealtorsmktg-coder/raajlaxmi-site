@@ -1,6 +1,6 @@
 # Raajlaxmi Group — site
 
-A static marketing site for Raajlaxmi Group. Eight hand-written HTML pages, no
+A static marketing site for Raajlaxmi Group. Eleven hand-written HTML pages, no
 build step, no package manager, no dependencies. Netlify publishes the
 directory as-is, so whatever is on disk is what ships.
 
@@ -16,6 +16,9 @@ directory as-is, so whatever is on disk is what ships.
 | `testimonials.html` | Client voices |
 | `services.html` | Services, journey rails and FAQ |
 | `contact.html` | Enquiry page |
+| `privacy.html` | Privacy Policy |
+| `terms.html` | Terms of Use |
+| `disclaimer.html` | Disclaimer |
 
 Each page is one self-contained document: `<style>` in `<head>`, markup in
 `<body>`, one `<script>` at the end.
@@ -49,6 +52,6 @@ listing it appears on. Setup notes are in `studio/README.md`.
 ## Working on this
 
 `CLAUDE.md` carries the detailed architecture notes — the duplicated shared
-chrome across all eight files, the page loader's constraints, the adaptive
+chrome across all eleven files, the page loader's constraints, the adaptive
 navbar, and the current content placeholders. Read it before making structural
 changes; several of its rules exist because of specific bugs.

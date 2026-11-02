@@ -5,9 +5,10 @@ import ownersPage from './ownersPage.js'
 import testimonial from './testimonial.js'
 import testimonialsPage from './testimonialsPage.js'
 import contactPage from './contactPage.js'
+import legalPage from './legalPage.js'
 import siteSettings from './siteSettings.js'
 
 export const schemaTypes = [
   project, homepage, ownersPage, collectionPage,
-  testimonial, testimonialsPage, contactPage, siteSettings,
+  testimonial, testimonialsPage, contactPage, legalPage, siteSettings,
 ]
