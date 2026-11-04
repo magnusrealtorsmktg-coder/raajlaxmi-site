@@ -911,9 +911,90 @@ minimum, or a phone would get smaller type than it had before.
 **Hero, About and Why can each take a video.** `mountVideo()` in the home-page
 block is shared by all three: it drops a silent looping `<video>` into an element
 that is already showing a picture, and is **skipped on phones, on data-saver
-connections and under `prefers-reduced-motion`**, removing itself if the file
-errors or autoplay is refused. The photograph is always painted first, which is
-what those four cases fall back to.
+connections, on a 2G-class link and under `prefers-reduced-motion`**, removing
+itself if the file errors or autoplay is refused. The photograph is always
+painted first, which is what every one of those cases falls back to. The CSS is
+**`index.html`-only** — `.hero-vid` / `.cms-vid` appear in no other file — so
+unlike the rest of the shared stylesheet there is nothing here to sync.
+
+**The video never appears until it can actually play, and that rule is the
+whole design.** On 4 Nov the client uploaded the edit master into the hero slot:
+**3840x2160, 24fps, 81.5 Mbps, 265.6 MB**, with a 317 kbps AAC track on a video
+the site plays muted. A visitor needs 81.5 Mbps *sustained* to keep up with that,
+which no consumer connection delivers. Measured on a 12 Mbps link with the old
+code: the element went to **opacity 1 at 254ms with `readyState` 0**, first
+frames at 5.6s, then stalled at 6.0s, 10.1s and 14.0s — **24 seconds of wall
+clock bought 1.63 seconds of playback.** That is the "laggy, keeps pausing" bug.
+
+Four rules now stand between the file and the visitor, and each one is that
+failure:
+
+- **It is not fetched until the page has loaded** (`whenQuiet`, capped at 2.5s so
+  one hanging image cannot hold it for ever). It is the biggest thing the page
+  fetches and nobody is waiting for it; starting it at once makes everything that
+  *is* being waited for late.
+- **It is revealed only on a promise about the future** — `canplaythrough`, or a
+  real runway of five buffered seconds ahead (the whole clip, for one shorter
+  than that). An earlier draft fell back to `readyState >= 3` on a timer, which
+  is HAVE_FUTURE_DATA, *"the next frame exists"* — true of a 265MB file three
+  seconds in, so it faded the video up and straight into the stutter. **Having a
+  next frame is not the same as being able to keep having one.**
+- **Three visible stalls and the photograph wins.** Stalls before it is shown are
+  not counted; the visitor cannot see those, and counting them would retire a
+  video that was merely buffering.
+- **Never ready at 20s and it is dropped**, so a visitor's data is not spent on
+  something they will never see.
+
+It fades in over .9s (`.on`), stops when off-screen or the tab is hidden, and
+every exit leaves the still showing rather than a black box.
+
+**Only a `NotAllowedError` from `play()` may remove the video, and that is not
+a nicety.** The observer pauses a video mounted below the fold a frame or two
+after `play()` is called, and that pause **rejects the pending promise with
+`AbortError`**. A blanket `go.catch(kill)` therefore deleted the About plate's
+video the instant it mounted — while the hero survived, because it happens to
+be on screen, so nothing ever interrupted its `play()`. The symptom was a
+section whose video silently reverted to its photograph with no console error
+of any kind. A rejected `play()` is not by itself a refused autoplay.
+
+Measured on the fixed page: with the hero on screen and About below the fold,
+`hero-vid on paused=false | cms-vid on paused=true` — the About video mounted,
+ready and correctly held; scrolled to About it resumes (`paused=false`); at the
+foot of the page **both** are paused, where the old code left both decoding for
+ever. Measured with the
+265MB file still in place: **opacity 0.00 for the whole visit, zero visible
+stutter, the photograph holding** — so the code alone fixes the symptom even
+before the file is replaced. With a 7.5MB 1080p encode: mounted 2.5s,
+`canplaythrough` 2.54s, dissolved in 2.75s, **zero stalls**, real-time playback.
+
+**Both CMS videos are camera masters and want re-encoding.** Neither is a code
+problem; both are an asset swap, and `studio/scripts/replace-hero-video.mjs`
+does it (it uploads, patches `homepage`, prints the old asset ids first, and
+never deletes the original, so it is reversible). Measured against the master,
+scaled to 1080p, as the SSIM reference:
+
+| | size | vs now | SSIM |
+|---|---|---|---|
+| hero, as uploaded (4K, 81.5 Mbps) | 265.6 MB | — | — |
+| hero 1080p CRF 23 | 14.2 MB | 19x smaller | 0.983 |
+| hero 1080p CRF 26 | 9.6 MB | 28x smaller | 0.977 |
+| hero 1080p CRF 28 | 7.5 MB | 35x smaller | 0.972 |
+| hero 1080p CRF 30 | 5.9 MB | 45x smaller | 0.967 |
+| About, as uploaded (630x830, 11 Mbps, 4.5s) | 6.13 MB | — | — |
+| About CRF 23 | 0.59 MB | 10x smaller | — |
+
+Encoded with `-an` (the site plays them muted, so the audio track is waste),
+`-movflags +faststart` and `-g 48`. Denoising first was tried and bought nothing
+on this footage. **1440p was measured too and is not worth it** — 15.7 MB for a
+background behind a dark scrim. The schema's own advice ("under about 10 seconds
+and 8MB") is the right target and was simply not followed.
+
+**A note on the still underneath.** `heroImage` is **empty** on the `homepage`
+document, so the hero's fallback is the inline base64 night skyline built into
+`index.html` — while the video is a sunlit interior cutting to a golden-hour
+aerial. The dissolve is therefore a change of scene, not a cross-fade. Setting
+`heroImage` to a frame from the video would make the hand-off invisible; it is
+a content decision and has not been made.
 
 **Do not give `.why-feature .img` a `position` other than `absolute`.** It is
 `position:absolute; inset:0`, and making it `relative` drops the inset and

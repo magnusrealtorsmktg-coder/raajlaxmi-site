@@ -1884,7 +1884,15 @@
      it drifts with the still it replaces. The background image stays underneath
      as the fallback: if the file never loads, the hero is still a photograph. */
   .hero-vid,.cms-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
-    z-index:0;pointer-events:none;border:0;}
+    z-index:0;pointer-events:none;border:0;
+    /* It arrives as a DISSOLVE, not a cut, and that is the whole trick. The
+       element has to be in the DOM before it can buffer, so revealing it on
+       arrival is exactly what shows a black rectangle, then one frame, then a
+       pause. It is faded in only once the browser says it can play THROUGH
+       (see mountVideo). If that never happens, the photograph underneath
+       simply stays and nothing has flickered. */
+    opacity:0;transition:opacity .9s var(--lux);}
+  .hero-vid.on,.cms-vid.on{opacity:1;}
   /* The About plate is the one place the video IS the content rather than a
      background, so it is shown whole instead of cropped to fill. Today's file
      is 630x830 — the plate's own ratio — so nothing letterboxes; a differently
@@ -3531,38 +3539,152 @@
       if(dot) host.appendChild(dot);
     }
 
+    /* Decoration waits for the page.
+
+       This video is the single biggest thing the page fetches, and it is
+       background texture — nobody is waiting for it. Started at once it
+       competes with the stylesheet, the fonts, the CMS answers and the hero
+       still for the first screen's bandwidth, making everything that IS being
+       waited for late in order to hurry up something that is not. So it goes
+       after `load`, with a cap so that one hanging image cannot hold it for
+       ever. */
+    function whenQuiet(fn){
+      let done = false;
+      const run = () => { if(done) return; done = true; fn(); };
+      if(document.readyState === 'complete') setTimeout(run, 120);
+      else addEventListener('load', () => setTimeout(run, 120), {once:true});
+      setTimeout(run, 2500);
+    }
+
     /* Drop a silent looping video into an element that is already showing a
        picture. Used by the hero, the About plate and the Why banner.
 
        It is skipped where it would cost a visitor real money or go against a
-       stated preference: on phones, on a data-saver connection, and under
-       prefers-reduced-motion. All three leave the still in place — which is why
-       the photograph is always painted first, even when a video is set. */
+       stated preference: on phones, on a data-saver connection, on a 2G-class
+       link, and under prefers-reduced-motion. All of those leave the still in
+       place — which is why the photograph is always painted first, even when a
+       video is set.
+
+       Everything else here exists to stop the video being WORSE than the
+       photograph it covers. Four rules, and each one is a failure that was
+       actually observed with a 4K master in this slot:
+
+       - It is revealed on `canplaythrough`, not on the first decoded frame.
+         Revealing early IS the black-rectangle-then-stutter bug.
+       - It gets THREE visible stalls and then the photograph wins. A file the
+         connection cannot sustain is dissolved away rather than stuttering for
+         ever: a still photograph beats a video that keeps pausing. Stalls
+         before it is shown are not counted — the visitor cannot see those, and
+         counting them would retire a video that was merely buffering.
+       - If it is never ready at all, it is dropped at 20s. Downloading
+         something the visitor will never see is the one case worse than not
+         having it.
+       - It stops when off-screen or the tab is hidden. A background texture
+         decoded behind content already scrolled past is pure cost, in battery
+         as much as bandwidth.
+
+       Every exit leaves the still showing rather than a black box: only the
+       video element goes, and the background-image underneath is never
+       touched. */
     function mountVideo(host, url, posterUrl, cls){
       if(!host || !url) return;
-      if(navigator.connection && navigator.connection.saveData) return;
+      const conn = navigator.connection;
+      if(conn && conn.saveData) return;
+      if(conn && /2g/.test(conn.effectiveType || '')) return;
       if(matchMedia('(max-width:620px)').matches) return;
       if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-      const v = document.createElement('video');
-      v.className = cls || 'cms-vid';
-      v.src = url;
-      if(posterUrl) v.poster = `${posterUrl}?w=1600&q=70&auto=format&fit=max`;
-      v.muted = true;              // set before play(), or the browser blocks it
-      v.defaultMuted = true;
-      v.loop = true;
-      v.autoplay = true;
-      v.playsInline = true;
-      v.setAttribute('playsinline', '');        // older iOS reads the attribute
-      v.preload = 'auto';
-      v.tabIndex = -1;
-      v.setAttribute('aria-hidden', 'true');
-      /* a file that will not load leaves the still showing rather than a black
-         rectangle where the picture was */
-      v.addEventListener('error', () => v.remove(), {once:true});
-      host.prepend(v);
-      const go = v.play();
-      if(go && go.catch) go.catch(() => v.remove());      // autoplay refused
+      whenQuiet(() => {
+        const v = document.createElement('video');
+        v.className = cls || 'cms-vid';
+        if(posterUrl) v.poster = `${posterUrl}?w=1600&q=70&auto=format&fit=max`;
+        v.muted = true;              // set before play(), or the browser blocks it
+        v.defaultMuted = true;
+        v.loop = true;
+        v.autoplay = true;
+        v.playsInline = true;
+        v.setAttribute('playsinline', '');        // older iOS reads the attribute
+        v.preload = 'auto';
+        v.tabIndex = -1;
+        v.setAttribute('aria-hidden', 'true');
+        v.disablePictureInPicture = true;         // no PiP button over the hero
+        v.setAttribute('disableremoteplayback', '');
+
+        let io = null, onScreen = true, stalls = 0;
+        const shown = () => v.classList.contains('on');
+
+        function onVis(){ document.hidden ? v.pause() : resume(); }
+        const unwire = () => {
+          if(io){ io.disconnect(); io = null; }
+          document.removeEventListener('visibilitychange', onVis);
+        };
+        /* never shown, or shown and then found wanting — the two exits */
+        const kill = () => { unwire(); v.remove(); };
+        const retire = () => {
+          unwire(); v.classList.remove('on'); v.pause();
+          setTimeout(() => v.remove(), 900);      // after the fade, not during
+        };
+        function resume(){
+          if(!v.isConnected || document.hidden || !onScreen) return;
+          const p = v.play(); if(p && p.catch) p.catch(() => {});
+        }
+
+        v.addEventListener('error', kill, {once:true});
+
+        /* TWO independent ways to earn the dissolve, and both of them are a
+           promise about the FUTURE rather than about the current frame:
+
+           - `canplaythrough`, the browser's own estimate that it can play the
+             file to the end without stopping; and
+           - a real runway: decodable, with five seconds buffered ahead (or the
+             whole clip, for one shorter than that).
+
+           An earlier draft fell back to `readyState >= 3` on a timer, which is
+           HAVE_FUTURE_DATA — "the next frame exists". That is true of a 265MB
+           file three seconds in, so it faded the video up and straight into
+           the stutter this is all meant to prevent. Having a next frame is not
+           the same as being able to keep having one. */
+        const show = () => { if(v.isConnected) v.classList.add('on'); };
+        const runway = () => {
+          if(v.readyState < 3 || !v.buffered.length) return 0;
+          return v.buffered.end(v.buffered.length - 1) - v.currentTime;
+        };
+        const enough = () => {
+          const r = runway();
+          return r >= 5 || (v.duration && r >= v.duration - 0.25);
+        };
+        const maybe = () => { if(!shown() && enough()) show(); };
+        v.addEventListener('canplaythrough', show);
+        v.addEventListener('progress', maybe);
+        v.addEventListener('timeupdate', maybe);
+        /* never earned it: stop spending a visitor's data on something they
+           are never going to see */
+        setTimeout(() => { if(v.isConnected && !shown()) kill(); }, 20000);
+
+        v.addEventListener('waiting', () => { if(shown() && ++stalls >= 3) retire(); });
+
+        document.addEventListener('visibilitychange', onVis);
+        if(window.IntersectionObserver){
+          io = new IntersectionObserver(es => {
+            onScreen = es[0].isIntersecting;
+            onScreen ? resume() : v.pause();
+          }, {threshold:0});
+          io.observe(host);
+        }
+
+        host.prepend(v);
+        v.src = url;                 // set last, so no event can be missed
+
+        /* Only a REFUSAL kills the video. A rejected play() is not necessarily
+           one: a video mounted below the fold is paused by the observer above
+           a frame or two after this call, and that pause rejects this promise
+           with AbortError. Treating every rejection as "autoplay refused"
+           removed the About plate's video the instant it mounted — the hero
+           survived only because it happens to be on screen, so nothing ever
+           interrupted its play(). */
+        const go = v.play();
+        if(go && go.catch) go.catch(err => { if(err && err.name === 'NotAllowedError') kill(); });
+      });
     }
 
     function paint(d){
