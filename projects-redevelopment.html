@@ -1103,21 +1103,39 @@
     transition:opacity 1s var(--lux) .4s,transform 1s var(--lux) .4s;}
   .col.in .col-intro{opacity:1;transform:none;}
 
-  /* ---- city filter chips ---- */
-  .col-chips{display:flex;flex-wrap:wrap;align-items:center;gap:.6rem;
+  /* ---- town filter: ONE CAPSULE, not loose chips ----
+     The segments sit inside a single white pill on the page's cream ground, so
+     they read as one control with one answer. The old outlined chips were
+     separate objects with their own borders, which says "tick any of these" —
+     wrong for a filter that is exclusive.
+
+     Colours are sampled from the client's mock rather than guessed: #94502D on
+     white is 6.1:1 and #111A31 on white is 17.3:1, so both clear AA as they
+     are. Neither is a :root token — they appear nowhere else on the site, and
+     adding tokens would mean touching the shared block in all ten files to
+     serve one control. */
+  .col-chips{display:inline-flex;vertical-align:top;align-items:center;gap:.2rem;
+    background:#fff;border-radius:999px;padding:.4rem;max-width:100%;
+    box-shadow:0 1px 2px rgba(28,28,28,.05),0 6px 20px rgba(28,28,28,.07);
     margin-bottom:clamp(1rem,1.6vw,1.4rem);
+    /* Five towns do not fit a phone. The capsule PANS rather than wraps: a
+       pill broken over two rows stops looking like one control. The scrollbar
+       is hidden because it would draw a grey line through the pill; the last
+       segment sitting half-cut is the affordance instead. */
+    overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;
     opacity:0;transform:translateY(18px);
     transition:opacity 1s var(--lux) .5s,transform 1s var(--lux) .5s;}
+  .col-chips::-webkit-scrollbar{display:none;}
   .col.in .col-chips{opacity:1;transform:none;}
   .col-chip{display:inline-flex;align-items:center;justify-content:center;
-    font-family:"Inter",sans-serif;font-size:.82rem;font-weight:500;
-    letter-spacing:.02em;color:var(--charcoal);background:#fff;
-    border:1px solid rgba(28,28,28,.18);border-radius:999px;
-    padding:.62rem 1.35rem;cursor:pointer;white-space:nowrap;
-    transition:all .4s var(--lux);user-select:none;}
-  .col-chip:hover{border-color:rgba(28,28,28,.4);background:rgba(28,28,28,.04);}
-  .col-chip.active{background:var(--charcoal);color:#fff;border-color:var(--charcoal);}
-  .col-chip.active:hover{background:#333;border-color:#333;}
+    font-family:"Inter",sans-serif;font-size:.78rem;font-weight:600;
+    letter-spacing:.12em;text-transform:uppercase;
+    color:#111A31;background:transparent;border:0;border-radius:999px;
+    padding:.72rem clamp(.95rem,1.5vw,1.6rem);cursor:pointer;white-space:nowrap;
+    transition:background .4s var(--lux),color .4s var(--lux);user-select:none;}
+  .col-chip:hover{background:rgba(148,80,45,.08);}
+  .col-chip.active,.col-chip.active:hover{background:#94502D;color:#fff;}
+  .col-chip:focus-visible{outline:2px solid #94502D;outline-offset:2px;}
 
   .col-showing{font-family:"Inter",sans-serif;font-size:.84rem;font-weight:300;
     color:var(--body);margin-bottom:clamp(1.6rem,2.5vw,2.2rem);
@@ -1529,8 +1547,8 @@
         <p class="col-intro">Society redevelopment handled end to end — approvals, rehousing and a finished building the members are glad they waited for.</p>
       </header>
 
-      <!-- city filter chips -->
-      <div class="col-chips" id="colChips"></div>
+      <!-- town filter: one capsule of exclusive segments, see .col-chips -->
+      <div class="col-chips" id="colChips" role="group" aria-label="Filter projects by town"></div>
       <p class="col-showing" id="colShowing"></p>
 
       <!-- project grid -->
@@ -1798,9 +1816,28 @@
     const chipsWrap = document.getElementById('colChips');
     const showingEl = document.getElementById('colShowing');
 
-    /* city filter chips, derived from the part of `location` before the comma
-       (e.g. "Borivali West, Mumbai" → "Borivali West") */
-    function cityOf(p){ return (p.location || '').split(',')[0].trim(); }
+    /* THE TOWN, not the sub-locality. `location` is written
+       "<landmark>, <sub-locality>, <Town> (East|West)", so the filter used to
+       key off the part BEFORE the first comma and produced a chip per
+       landmark — "Oswal Nagari", "Opp. Saraswati School", "Near ICICI Bank".
+       Ten chips, none of them a place anyone searches for.
+
+       The town is the LAST comma-separated part, and it has to be read from
+       there rather than searched for anywhere in the line: "Virar-Nallasopara
+       Link Road, Nallasopara (West)" names two of the four towns and belongs
+       to the second. Matching the whole string would file it under Virar.
+
+       `townKey` folds case, drops everything that is not a letter and
+       collapses doubled letters, so "Nallasopara (West)", "Nalasopara" and
+       "NALLASOPARA" are one town — the same forgiving key the banner hotspots
+       use, and the reason a re-typed address does not split a chip in two. */
+    const TOWNS = ['Vasai', 'Nallasopara', 'Virar', 'Saphale'];
+    const townKey = s => (s || '').toLowerCase().replace(/[^a-z]/g, '').replace(/(.)\1+/g, '$1');
+    function townOf(p){
+      const parts = (p.location || '').split(',');
+      const tail  = townKey(parts[parts.length - 1]);
+      return TOWNS.find(t => tail.includes(townKey(t))) || '';
+    }
 
     /* This page is one status. The list is filtered to it on top of whichever
        city chip is active — the chips never clear it. */
@@ -1837,8 +1874,9 @@
         .filter(Boolean);
     }
     const inType = p => !WANT_TYPE || typesOf(p.config).includes(WANT_TYPE);
-    /* the town is matched anywhere in the address line — the chips key off the
-       first part of it, which is a sub-locality, not the town */
+    /* ?loc= is matched anywhere in the address line, which is looser than the
+       chips (they read the last part only). That is deliberate: a deep link may
+       name a sub-locality the chips do not offer. */
     /* fold punctuation and case so "Vasai (East)" matches a project whose
        address was typed "Vasai East" — the same town, two spellings */
     const locKey = t => (t || '').toLowerCase().replace(/[()]/g, '').replace(/\s+/g, ' ').trim();
@@ -1884,20 +1922,23 @@
 
     function buildChips(active){
       if(!chipsWrap) return;
-      /* only the cities that actually have a project in THIS status — otherwise
-         a chip can be clicked into a guaranteed "Showing 0" */
-      const cities = [...new Set(P.filter(wanted).map(cityOf).filter(Boolean))];
-      const cur = cities.includes(active) ? active : 'all';
-      chipsWrap.innerHTML =
-        `<button class="col-chip${cur === 'all' ? ' active' : ''}" data-city="all">All Cities</button>` +
-        cities.map(c =>
-          `<button class="col-chip${c === cur ? ' active' : ''}" data-city="${c}">${c}</button>`).join('');
+      /* The four towns in Western-line order — the order the corridor banner
+         and the hero search already use — rather than whatever order the
+         documents happen to come back in. Only the towns that actually have a
+         project in THIS view are offered: a chip that can only ever show
+         "Showing 0" is worse than no chip. */
+      const present = TOWNS.filter(t => P.some(p => wanted(p) && townOf(p) === t));
+      const cur = present.includes(active) ? active : 'all';
+      const chip = (val, label) =>
+        `<button type="button" class="col-chip${val === cur ? ' active' : ''}" ` +
+        `data-city="${val}" aria-pressed="${val === cur}">${label}</button>`;
+      chipsWrap.innerHTML = chip('all', 'All') + present.map(t => chip(t, t)).join('');
       return cur;
     }
 
     /* render cards */
     function renderCards(city){
-      const filtered = P.filter(p => (city === 'all' || cityOf(p) === city) && wanted(p));
+      const filtered = P.filter(p => (city === 'all' || townOf(p) === city) && wanted(p));
       if(grid){
         grid.innerHTML = !filtered.length
           ? `<p class="col-empty">${window.RL_EMPTY_MESSAGE ||
@@ -1939,7 +1980,19 @@
       }
     }
 
-    let activeCity = buildChips('all') || 'all';
+    /* A visitor arriving from the hero search (?loc=Virar) should SEE which
+       town is selected, not just a shortened list, so the matching chip starts
+       active. `?loc=` still filters on its own; this only agrees with it. */
+    const LOC_TOWN = TOWNS.find(t => townKey(WANT_LOC).includes(townKey(t))) || 'all';
+    /* The deep link's town has to SURVIVE the first build. This first call runs
+       against the fallback cards written into the file, which are invented
+       Mumbai addresses — no Vasai, no Virar — so `LOC_TOWN` is not among the
+       towns present and buildChips correctly drops it to 'all'. If the rebuild
+       that follows Sanity then passed that 'all' back in, the deep link would
+       be silently lost every time. It is re-offered until the visitor picks a
+       chip themselves, at which point their choice wins. */
+    let userPicked = false;
+    let activeCity = buildChips(LOC_TOWN) || 'all';
     renderCards(activeCity);
 
     /* --- pull the live collection from Sanity ---------------------------
@@ -1959,7 +2012,7 @@
              list wins and the placeholders are never seen again. */
           if(!result.some(inStatus)) return;
           P = result;
-          activeCity = buildChips(activeCity) || 'all';
+          activeCity = buildChips(userPicked ? activeCity : LOC_TOWN) || 'all';
           renderCards(activeCity);
         })
         .catch(err => console.warn('[collection] Sanity unreachable, showing built-in cards.', err));
@@ -1970,8 +2023,13 @@
       chipsWrap.addEventListener('click', e => {
         const chip = e.target.closest('.col-chip');
         if(!chip) return;
-        chipsWrap.querySelectorAll('.col-chip').forEach(c => c.classList.remove('active'));
+        chipsWrap.querySelectorAll('.col-chip').forEach(c => {
+          c.classList.remove('active');
+          c.setAttribute('aria-pressed', 'false');
+        });
         chip.classList.add('active');
+        chip.setAttribute('aria-pressed', 'true');
+        userPicked = true;
         activeCity = chip.dataset.city;
         renderCards(activeCity);
       });
