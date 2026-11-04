@@ -429,9 +429,18 @@
 
   .hero-content{position:absolute;z-index:10;
     left:clamp(1.6rem,7vw,7rem);
-    /* centering uses `translate`, not `transform`, so the reduced-motion
-       rule below can clear the parallax transform without dropping it */
-    top:57%;translate:0 -50%;
+    /* The search form sits low in the hero, and it is anchored to the FOOT
+       rather than centred on a percentage. It used to be `top:57%` with a
+       `translate:0 -50%`, which was right when this box held a headline, a
+       paragraph and the form: the stack was centred as a composition. The
+       form is all that is left, and a percentage top means the gap under it
+       shrinks as the window gets shorter — at 1024x640 a centre of 88.8%
+       leaves under 30px of floor. Anchoring to the bottom keeps that gap
+       constant instead, which is what "sit near the bottom" actually means.
+       The clamp floors it at 40px on a short window and caps it at 88px on a
+       tall one. No `translate` is needed now; the parallax still arrives as
+       `transform`, which the reduced-motion rule below clears on its own. */
+    top:auto;bottom:clamp(2.5rem,6.5vh,5.5rem);
     max-width:min(46rem,64vw);will-change:transform;}
   .eyebrow{display:flex;align-items:center;gap:.9rem;
     font-size:.66rem;letter-spacing:.34em;text-transform:uppercase;color:var(--champagne-soft);
@@ -495,8 +504,10 @@
     transition:background .45s var(--lux),color .45s var(--lux);}
   .hs-submit:hover{background:transparent;color:var(--champagne-soft);}
   /* ===== PHONE: THE HERO FLOWS, IT NO LONGER CENTRES =====
-     `.hero-content` is absolutely positioned and centred on 57% of a 100vh
-     hero. That is right on a desktop and wrong on a phone: below 520px the
+     `.hero-content` is absolutely positioned and anchored near the foot of a
+     100vh hero (it was centred on 57% when it still held a headline and a
+     paragraph; the reasoning for both is on that rule).
+     That is right on a desktop and wrong on a phone: below 520px the
      search form flips to a column and stands ~287px tall, which makes the
      whole block taller than the screen — so centring pushed its top UNDER the
      fixed navbar and its bottom past the fold. Measured at 360x640: the
@@ -516,7 +527,11 @@
      short is exactly the case this tier exists for. */
   @media(max-width:620px),(max-height:560px){
     .hero{height:auto;min-height:100vh;min-height:100svh;display:flex;}
-    .hero-content{position:relative;z-index:10;left:auto;top:auto;translate:none;
+    /* `bottom:auto` is load-bearing, not tidiness: the base rule anchors the
+       form to the foot with a `bottom`, and on a `position:relative` element
+       a leftover `bottom` does not anchor anything — it SHIFTS the box
+       upwards by that much, lifting the form back under the navbar. */
+    .hero-content{position:relative;z-index:10;left:auto;top:auto;bottom:auto;translate:none;
       width:100%;max-width:none;margin:auto;
       /* 90px is the measured navbar height at phone widths */
       padding:calc(90px + 1.3rem) clamp(1.6rem,7vw,7rem) clamp(1.6rem,4vh,2.6rem);}

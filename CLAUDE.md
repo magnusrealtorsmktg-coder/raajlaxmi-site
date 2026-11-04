@@ -559,8 +559,9 @@ news first: **there was no horizontal overflow anywhere**, at any size, on any
 page. The layout already held. Two things did not.
 
 **1. The home hero collided with the navbar on short screens.** `.hero-content`
-is absolutely positioned and centred on 57% of a 100vh hero, which is right on a
-desktop. Below 520px the search form flips to a column and stands ~287px tall,
+was absolutely positioned and centred on 57% of a 100vh hero (it is anchored to
+the foot now — see *The search form is anchored to the foot of the hero*), which
+is right on a desktop. Below 520px the search form flips to a column and stands ~287px tall,
 making the whole block taller than the screen — so centring pushed its top under
 the fixed bar and its bottom past the fold. Measured at 360x640: navbar 90px,
 headline top at y=56 (34px *inside* the bar), submit button 10px below the fold.
@@ -947,6 +948,35 @@ traps that cost time here: reading the form mid-entrance reports `opacity:0` and
 looks like a broken reveal (it is up by ~5s — `delay 1820ms` + `1200ms`, timed
 from when the loader lifts); and **`set -- $s` does not word-split in zsh**, so
 a viewport loop silently passes `W=NaN` and every row comes back 756.
+
+**The search form is anchored to the foot of the hero, not centred on a
+percentage.** `.hero-content` was `top:57%` with `translate:0 -50%`, which was
+right while the box held a headline, a paragraph and the form and the three were
+centred as one composition. The form is all that is left of it, and the client
+asked for it lower — measured off their marked-up screenshot, a box centred at
+**88.8%** of a 1600x997 viewport.
+
+A percentage top would have delivered that at one size only: the gap under the
+form shrinks as the window gets shorter, and at 1024x640 a centre of 88.8% leaves
+under 30px of floor. So it is `top:auto` with
+**`bottom:clamp(2.5rem,6.5vh,5.5rem)`** — a constant gap from the fold, floored
+at 40px on a short window and capped at 88px on a tall one. Measured, that lands
+the centre at 88.8% at 1440x900 and 89.2% at the client's own 1600x997, inside
+4px of where they drew it. No `translate` is needed any more; the mouse parallax
+still arrives as `transform`, which the reduced-motion rule clears by itself.
+
+**The phone tier's `bottom:auto` is load-bearing.** That tier takes
+`.hero-content` out of absolute positioning (`position:relative`, `margin:auto`),
+and on a relative element a leftover `bottom` does not anchor anything — it
+*shifts the box upward* by that much, which would lift the form back under the
+navbar on exactly the screens that tier exists to protect.
+
+Measured at 1600x997, 1440x900, 1920x1080, 1366x768, 1024x640, 1024x800, and the
+phones 844x390, 390x844, 360x640 and 280x653: no horizontal overflow anywhere,
+the form clears the navbar and stays inside the fold at every size, and the
+phones are untouched (they still flow). Note the form is **two rows at and below
+1024px wide**, so it stands ~142px rather than ~86px there and its centre sits
+higher (82–85%) — that is the form wrapping, not the anchor failing.
 
 **Hero, About and Why can each take a video.** `mountVideo()` in the home-page
 block is shared by all three: it drops a silent looping `<video>` into an element
