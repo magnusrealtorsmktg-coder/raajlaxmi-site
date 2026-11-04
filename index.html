@@ -1441,7 +1441,7 @@
   .ow-stage:focus-within .ow-grid{animation-play-state:paused;}
 
   .ow-card{position:relative;flex:0 0 clamp(230px,23vw,320px);
-    aspect-ratio:3/4;border-radius:20px;overflow:hidden;
+    aspect-ratio:3/4;border-radius:20px;overflow:hidden;cursor:pointer;
     background:linear-gradient(165deg,#36405a,#596579);
     box-shadow:0 34px 70px -40px rgba(20,24,34,.62);
     opacity:0;transform:translateY(28px);
@@ -1518,16 +1518,20 @@
 
 
   /* ---- the detail panel ---- */
-  /* Hovering a card opens a centred panel with the whole of that owner on it:
+  /* Clicking a card opens a centred panel with the whole of that owner on it:
      the portrait on the left, the name, role and biography on the right. It is
      the layout the section briefly had as a page of its own, kept as the thing
      behind each card rather than instead of them.
 
      Three decisions worth knowing:
 
-     - IT OPENS ON HOVER-INTENT, NOT ON HOVER. The strip is always moving and
-       cards pass under a still pointer, so a bare :hover would flash the panel
-       open and shut as the row drifts by. OPEN_MS is the dwell required.
+     - IT OPENS ON CLICK, NOT ON HOVER. It used to open on hover-intent, a
+       300ms dwell. But the strip never stops, so a card could drift under a
+       still pointer and open a panel for somebody the visitor had not chosen,
+       and a pointer travelling across the row to reach the card it wanted
+       could trip over the ones in between. A click names the card. Hover is
+       still the invitation -- it pauses the strip and recedes the neighbours --
+       and the click is the choice.
      - IT DOES NOT CLOSE ON POINTER-OUT. The panel is centred and the card may
        be anywhere, so the pointer has to cross the scrim to reach it; closing
        on leave would make the panel unreadable. Esc, the close button and a
@@ -2218,7 +2222,7 @@
 
       <div class="ow-stage">
       <div class="ow-grid" id="owGrid">
-        <article class="ow-card" tabindex="0"
+        <article class="ow-card" tabindex="0" aria-haspopup="dialog"
                  data-bio="[A few sentences about them &mdash; the years behind them, what they lead, and what they are known for inside the group.]">
           <div class="ow-ph" id="owPh1" role="img" aria-label="Portrait"></div>
           <div class="ow-text">
@@ -2226,7 +2230,7 @@
             <p class="ow-role">[Board role &ndash; area of responsibility]</p>
           </div>
         </article>
-        <article class="ow-card" tabindex="0"
+        <article class="ow-card" tabindex="0" aria-haspopup="dialog"
                  data-bio="[A few sentences about them &mdash; the years behind them, what they lead, and what they are known for inside the group.]">
           <div class="ow-ph" id="owPh2" role="img" aria-label="Portrait"></div>
           <div class="ow-text">
@@ -2234,7 +2238,7 @@
             <p class="ow-role">[Board role &ndash; area of responsibility]</p>
           </div>
         </article>
-        <article class="ow-card" tabindex="0"
+        <article class="ow-card" tabindex="0" aria-haspopup="dialog"
                  data-bio="[A few sentences about them &mdash; the years behind them, what they lead, and what they are known for inside the group.]">
           <div class="ow-ph" id="owPh3" role="img" aria-label="Portrait"></div>
           <div class="ow-text">
@@ -2242,7 +2246,7 @@
             <p class="ow-role">[Board role &ndash; area of responsibility]</p>
           </div>
         </article>
-        <article class="ow-card" tabindex="0"
+        <article class="ow-card" tabindex="0" aria-haspopup="dialog"
                  data-bio="[A few sentences about them &mdash; the years behind them, what they lead, and what they are known for inside the group.]">
           <div class="ow-ph" id="owPh4" role="img" aria-label="Portrait"></div>
           <div class="ow-text">
@@ -2250,7 +2254,7 @@
             <p class="ow-role">[Board role &ndash; area of responsibility]</p>
           </div>
         </article>
-        <article class="ow-card" tabindex="0"
+        <article class="ow-card" tabindex="0" aria-haspopup="dialog"
                  data-bio="[A few sentences about them &mdash; the years behind them, what they lead, and what they are known for inside the group.]">
           <div class="ow-ph" id="owPh5" role="img" aria-label="Portrait"></div>
           <div class="ow-text">
@@ -2258,7 +2262,7 @@
             <p class="ow-role">[Board role &ndash; area of responsibility]</p>
           </div>
         </article>
-        <article class="ow-card" tabindex="0"
+        <article class="ow-card" tabindex="0" aria-haspopup="dialog"
                  data-bio="[A few sentences about them &mdash; the years behind them, what they lead, and what they are known for inside the group.]">
           <div class="ow-ph" id="owPh6" role="img" aria-label="Portrait"></div>
           <div class="ow-text">
@@ -2948,12 +2952,7 @@
           scrim= document.getElementById('owdScrim'),
           root = document.documentElement;
 
-    /* How long the pointer has to rest on a card before it opens. The strip is
-       always moving and cards pass under a still pointer, so opening on the
-       first :hover would flash the panel as the row drifts by. */
-    const OPEN_MS = 300;
-
-    let timer = null, openedBy = null, lastFocus = null;
+    let openedBy = null, lastFocus = null;
 
     const text = el => (el ? el.textContent.trim() : '');
 
@@ -2984,7 +2983,6 @@
 
     function open(card){
       if(openedBy === card) return;
-      clearTimeout(timer);
       if(openedBy) openedBy.classList.remove('is-open');
       openedBy = card;
       card.classList.add('is-open');
@@ -2999,7 +2997,6 @@
     }
 
     function close(){
-      clearTimeout(timer);
       if(!openedBy && dlg.hidden) return;
       dlg.classList.remove('on');
       root.classList.remove('owd-open');
@@ -3011,27 +3008,17 @@
       lastFocus = null;
     }
 
-    /* Delegated, because build() replaces the cards whenever the strip is
-       re-measured and whenever the CMS answers. */
-    sec.addEventListener('pointerover', e => {
-      const card = e.target.closest('.ow-card');
-      if(!card || card === openedBy) return;
-      /* a touch "hover" fires once on tap and would race the click below */
-      if(e.pointerType === 'touch') return;
-      clearTimeout(timer);
-      timer = setTimeout(() => open(card), OPEN_MS);
-    });
-    sec.addEventListener('pointerout', e => {
-      /* only cancels a pending open — an open panel stays open, since reaching
-         it means crossing the scrim and a leave-to-close would make it
-         unreadable */
-      if(e.target.closest('.ow-card')) clearTimeout(timer);
-    });
-
-    /* tap, and the keyboard */
+    /* ONE pointer handler, delegated — delegated because build() replaces the
+       cards whenever the strip is re-measured and whenever the CMS answers,
+       and one handler because a click is the same event for a mouse and for a
+       tap. There is no hover path left to keep in step with it, and so no
+       touch-emulated hover to race. */
     sec.addEventListener('click', e => {
       const card = e.target.closest('.ow-card');
-      if(card) open(card);
+      if(!card) return;
+      /* a link inside a card is the thing that was clicked, not the card */
+      if(e.target.closest('a')) return;
+      open(card);
     });
     sec.addEventListener('keydown', e => {
       if(e.key !== 'Enter' && e.key !== ' ') return;
