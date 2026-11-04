@@ -307,10 +307,35 @@ export default {
       type: 'array',
       description:
         'The featured projects on the home page. Four is what the grid was drawn for — fewer will leave the row short, more will wrap to a second row. ' +
-        'The quickest way to fill a card is to pick a project and leave the rest of it blank.',
+        'Each card is one of your projects: pick it, and the name, category, location, description, photograph and the ' +
+        '"View Project" button all follow that project. To change what a card says, or to add a gallery, a price or ' +
+        'specifications behind it, open the project itself — the home page and the collection page then agree by themselves.',
       of: [
         {
           type: 'object',
+          /* The overrides are collapsed, and that is the point of this whole
+             object. A card is meant to BE a project: pick one and everything
+             follows it, so the gallery, the price, the overview and the specs
+             the client adds to that project reach the home page and the detail
+             page together, with nothing to retype. Left open, the override
+             fields read as the form -- which is how all four cards came to be
+             typed in by hand with no project behind them at all, and how one of
+             them ended up pointing at nothing.
+             An override that IS filled still shows through the collapsed
+             summary, which is what makes the two or three deliberate
+             disagreements easy to find and settle. */
+          fieldsets: [
+            {
+              name: 'overrides',
+              title: 'Say something different on this card (optional)',
+              description:
+                'Leave all of this empty. The card already shows what the project says, and ' +
+                'editing the project updates the home page and the collection page together. ' +
+                'Fill a field in here only when this one card should read differently from ' +
+                'the project — and clear it again to hand the wording back to the project.',
+              options: {collapsible: true, collapsed: true},
+            },
+          ],
           fields: [
             {
               name: 'project',
@@ -320,34 +345,34 @@ export default {
               description:
                 'Pick one of your projects and the card fills itself in — the name, category, ' +
                 'location, short description, photograph and the "View Project" button all follow ' +
-                'that project, so editing the project keeps this card current. Everything below is ' +
-                'then optional: fill a field in only to say something different here than on the ' +
-                'collection card.',
+                'that project, so editing the project keeps this card current. Open the project ' +
+                'to add its gallery, price, overview, specifications and amenities; those appear ' +
+                'on its own page, which is where "View Project" goes.',
+              validation: (R) => R.required(),
             },
             {
+              fieldset: 'overrides',
               name: 'name',
               title: 'Project name',
               type: 'string',
               description: 'Leave blank to use the chosen project\'s own name.',
-              validation: (R) =>
-                R.custom((value, context) =>
-                  value || (context && context.parent && context.parent.project)
-                    ? true
-                    : 'Pick a project above, or type a name here.'),
             },
             {
+              fieldset: 'overrides',
               name: 'category',
               title: 'Category',
               type: 'string',
               description: 'The small line above the name — e.g. "Residential". Blank uses the chosen project\'s own.',
             },
             {
+              fieldset: 'overrides',
               name: 'location',
               title: 'Location',
               type: 'string',
               description: 'Blank uses the chosen project\'s own.',
             },
             {
+              fieldset: 'overrides',
               name: 'description',
               title: 'Short description',
               type: 'text',
@@ -355,6 +380,7 @@ export default {
               description: 'Blank uses the chosen project\'s short description.',
             },
             {
+              fieldset: 'overrides',
               name: 'image',
               title: 'Card photograph',
               type: 'image',
@@ -362,6 +388,7 @@ export default {
               description: 'Blank uses the chosen project\'s card image.',
             },
             {
+              fieldset: 'overrides',
               name: 'link',
               title: 'Custom link',
               type: 'string',

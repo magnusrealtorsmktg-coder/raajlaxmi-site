@@ -700,7 +700,33 @@ expected to write `project.html?p=the-slug`, and in practice typed `project.html
 once and left the other three blank, so three of the four buttons were `href="#"`
 and the fourth opened Romal Kirti under another property's name.
 
-Three things in that resolution are load-bearing:
+**All four were linked for real on 4 Nov**, by
+`studio/scripts/link-signature-projects.mjs`. Until then every card was still a
+block of hand-typed text with no reference at all — the three that worked worked
+only through the name-match fallback below, and the fourth did not work at all.
+The script published the one project that existed only as a draft, copied each
+card's wording onto its project wherever the project was empty, set the
+reference, and cleared every card field that had become a duplicate of the
+project's. It is idempotent and `--dry`-runnable; the reasoning for each decision
+is in its header.
+
+**The overrides are collapsed in the Studio**, in a fieldset called *Say
+something different on this card*, with the project reference alone above it and
+now `required`. The flat form is how four cards came to be typed in by hand with
+no project behind any of them: the override fields read as *the* form, and
+picking a project looked optional. A filled override still shows through the
+collapsed summary, which is what makes a deliberate disagreement easy to find.
+
+**Three overrides were deliberately LEFT** rather than cleared, because the card
+and the project genuinely say different things and only the client can say which
+wins: Rajlaxxmi Park's card says `Residential` where the project says
+`Luxury Apartment`; Aarvi Apartment's says `Luxury Living` against `Residential`;
+and Nakshatra Auris's card carries the abbreviated `Virar-Nsp link Road` against
+the project's fuller `Virar-Nallasopara Link Road`. Deleting one in the Studio
+hands that wording back to the project, and both pages then agree — which is
+what *Project names differ between pages* has been asking for.
+
+Four things in that resolution are load-bearing:
 
 - **`project.html` with no `?p=` is treated as *unset*.** That file is the
   hand-written Romal Kirti fallback, which is never the card's own property, so
@@ -718,6 +744,16 @@ Three things in that resolution are load-bearing:
   button, and its absence is the visible signal that the property has no document
   yet. With Sanity unreachable `paint()` never runs, so the hand-written cards
   keep their own buttons.
+- **An UNPUBLISHED project is the same as no project**, and this is the trap that
+  actually bit. Shanti Niwas's missing button looked like a missing document; the
+  document existed, filled in and filed `completed`, as `drafts.c365c797…`, left
+  unpublished in the Studio since 28 Oct. The public API cannot see a draft, so
+  the name match found nothing and the button removed itself — correctly. **Check
+  for a draft before concluding a document does not exist**: a token-authenticated
+  `getCliClient()` query returns drafts and the public endpoint does not, so the
+  two disagree, and `*[_id in path("drafts.**")]` is what settles it. For the same
+  reason a reference must never point at a `drafts.` id: it resolves to nothing
+  for a visitor.
 
 **The `collectionPage` documents.** Four of them, fixed ids, one per listing view:
 `collection-all` → `projects.html`, `collection-completed` → `projects.html?status=completed`,
@@ -1031,8 +1067,9 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
 
 **`projects-ongoing.html` / `projects-redevelopment.html`** are copies of `projects.html` with four differences: the `<title>`, the `.col-head` label/title/intro, `STATUS` hard-coded instead of read from the URL, and the Western Line banner swapped: the ongoing page carries its own (`assets/projects/western-line-ongoing.jpg`, "Rising Along the Western Line" — Vasai / Virar / Saphale, five projects), and the redevelopment page carries the **associates plate** (`assets/projects/associates.jpg`) in that slot instead — it has no corridor banner of its own. Both banners are client artwork used whole, same rules as the completed one: the band takes the artwork's ground colour so it dissolves, and below 760px it scrolls sideways at a fixed 900px because the station names are painted in. The redevelopment page additionally carries **placeholder cards** and one extra rule in its Sanity handler — `if(!result.some(inStatus)) return;` — so the live list is ignored while it contains no redevelopment project, which would otherwise blank the page. Publish one with that status and the placeholders are never seen again.
 
-- **The dataset is the client's own (checked 30 Oct 2026).** The seeded placeholders
-  are gone; there are **14 real projects with real photography**, and **every one is
+- **The dataset is the client's own (checked 4 Nov 2026).** The seeded placeholders
+  are gone; there are **15 real projects with real photography** (14 until Shanti
+  Niwas's draft was published on 4 Nov), and **every one is
   filed as `completed`**. So the **Ongoing page is empty** (it shows its "nothing listed
   yet" line) and Redevelopment still shows placeholders. Midas Glory and Nakshatra Auris
   carry the badge "Ongoing" while filed as Completed — the status/stage split working as
@@ -1047,15 +1084,19 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
 - **`Midas Heights` is painted on the Western line banner but has no `project` document**,
   so its hotspot is inert. Publishing it is all that is needed.
 - **No project is filed as Redevelopment yet**, so that page shows three clearly-marked placeholder cards (`[Society name]`, `[Locality]`, `[n] BHK`) above the associates plate. Set one project's **Listing** to Redevelopment in the Studio and they disappear for good. Likewise the two `Ready Possession` documents are in no listing until their Listing is set to Completed.
-- **`Shanti Niwas` is the first signature card but has no `project` document**, so
-  that card's "View Project" button removes itself. Publishing the project, or
-  pointing the card at a different one, brings it back — the same situation as
-  `Midas Heights` on the Western line banner. The other three cards resolve by name
-  to `rajlaxxmi-park`, `nakshatra-auris` and `aarvi-apartment`.
-- **The four signature descriptions are still the invented placeholder copy.** The
-  client replaced the names, locations and photographs but not the paragraphs, and
-  only two of the four matching projects carry a `blurb` for the card to fall back
-  to, so filling those in is content the client still owes.
+- **`Shanti Niwas` is fixed** (4 Nov). Its "View Project" button was missing
+  because its project document existed only as an unpublished **draft** — see
+  *An unpublished project is the same as no project*. It is published now, at
+  `project.html?p=shanti-niwas`, filed `completed`, and is the 15th card on the
+  collection page as a result. All four signature cards now carry a real
+  reference.
+- **The four signature descriptions are still the invented placeholder copy**, and
+  they are now the `blurb` on the four projects rather than text on the cards —
+  `link-signature-projects.mjs` moved them there so the card could stop carrying
+  its own copy. So they print on the collection cards too, and replacing them is
+  one edit each in the Studio instead of two. Nakshatra Auris's was overwritten in
+  the same move: that document is the seeded `project-raajlaxmi-villa` renamed, and
+  its blurb still advertised "Exclusive villas" on a tower.
 - **Project names differ between pages.** `index.html` Signature Projects lists Heights / Villa / Crest / Essence; `projects.html` lists those plus Business Square, Enclave, Skyline, Vista. Keep the two consistent when adding projects.
 - **The testimonials are now real.** The invented five have been replaced by **six
   genuine Google reviews**, each with its Google review link, so this section is no
