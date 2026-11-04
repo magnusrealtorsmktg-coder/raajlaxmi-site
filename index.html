@@ -8,6 +8,94 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+
+<!-- The CMS lives on another origin and every page needs it on first paint, so
+     the handshake is opened before the browser has read a single byte of the
+     stylesheet. cdn.sanity.io serves the photographs the queries point at. -->
+<link rel="preconnect" href="https://lc9w15ba.apicdn.sanity.io" crossorigin>
+<link rel="preconnect" href="https://cdn.sanity.io" crossorigin>
+<script>
+/* ===== THE CMS QUERIES START HERE, IN THE DOCUMENT HEAD =====
+
+   They used to start in the trailing <script>, which on this page sits behind
+   ~660KB of inline base64 and the whole of the body. On a cold connection that
+   meant the browser had to receive 850KB of HTML -- and queue the 2.5MB of
+   photography the markup asks for -- before it so much as asked the CMS a
+   question. The answer then landed after the loader had already lifted, so the
+   visitor watched the fallback copy and the placeholder photographs written
+   into the file get replaced in front of them. Measured at 400KB/s: the first
+   query left at 2.3s and the content changed on screen at 3.5s.
+
+   Starting them here puts all three in flight within a few milliseconds of
+   navigation, in parallel with the HTML still streaming, so the answers are
+   usually in hand before the markup they fill has even been parsed.
+
+   THE QUERY TEXT LIVES HERE AND NOWHERE ELSE. Each block at the foot of the
+   page asks for its answer by name -- RL.get(RL.q.home) -- rather than writing
+   the query out again, because a second copy that drifts would silently miss
+   the memo and fetch twice. Adding a query is one entry in `q` here plus one
+   RL.get() where it is painted.
+
+   `get` memoises by query text, so two blocks wanting the same answer share one
+   request, and a block that runs late gets the already-resolved promise rather
+   than a second round trip. A failed query rejects, every caller keeps its own
+   fallback, and the no-op catch below is only there so a rejection that nobody
+   has subscribed to yet is not reported as unhandled. */
+(function(){
+  var S = {
+    projectId : 'lc9w15ba',    // manage.sanity.io -> Raajlaxmi Site -> Settings
+    dataset   : 'production',
+    apiVersion: '2024-01-01',
+  };
+
+  var base = 'https://' + S.projectId + '.apicdn.sanity.io/v' + S.apiVersion +
+             '/data/query/' + S.dataset + '?query=';
+  var memo = {};
+
+  function get(query, params){
+    var k = encodeURIComponent(query) + (params || '');
+    return memo[k] || (memo[k] = fetch(base + k).then(function(r){
+      return r.ok ? r.json() : Promise.reject(r.status);
+    }));
+  }
+
+  /* what this page asks the CMS for */
+  var q = {
+    /* the hero search's Property and Location lists, built from real projects */
+    search: '*[_type=="project" && (stage=="completed" || status=="Completed")]' +
+            '{config,location,price}',
+
+    /* every word and picture on the page: hero, About, Why, Signature, Owners */
+    home: '*[_id=="homepage"][0]{\n' +
+      '  heroHeadline,heroSub,heroPropertyOptions,heroLocationOptions,heroBudgetOptions,heroButton,\n' +
+      '  "heroImageUrl":heroImage.asset->url,"heroVideoUrl":heroVideo.asset->url,\n' +
+      '  "aboutVideoUrl":aboutVideo.asset->url,\n' +
+      '  whyLabel,whyHeading,whyIntro,whyRows,whyTimeline,whyQuote,whyQuoteBy,\n' +
+      '  "whyImageUrl":whyImage.asset->url,"whyVideoUrl":whyVideo.asset->url,\n' +
+      '  aboutLabel,aboutHeading,aboutParagraphs,"aboutImageUrl":aboutImage.asset->url,\n' +
+      '  stats,\n' +
+      '  signatureLabel,signatureHeading,signatureIntro,\n' +
+      '  signatureCards[]{name,category,location,description,link,"imageUrl":image.asset->url,\n' +
+      '    "ref":project->{name,category,location,blurb,detailUrl,"slug":slug.current,\n' +
+      '                    "imageUrl":image.asset->url}},\n' +
+      '  "projects":*[_type=="project" && defined(slug.current)]{name,detailUrl,"slug":slug.current},\n' +
+      '  "ownersPage":*[_id=="owners-page"][0]{label,heading,intro,\n' +
+      '    owners[]{name,role,bio,"photoUrl":photo.asset->url}}\n' +
+      '}',
+
+    /* the footer: social handles, telephone, email, address, copyright */
+    settings: '*[_id=="site-settings"][0]{social[]{platform,url},phone,email,address,copyright}',
+  };
+
+  /* a query that takes a GROQ parameter (the detail page's $p) leaves its
+     already-encoded tail here, keyed the same as the query */
+  var qp = window.__rlParams || {};
+
+  window.RL = {sanity: S, q: q, p: qp, get: get};
+
+  if(S.projectId) for(var k in q) if(q[k]) get(q[k], qp[k]).catch(function(){});
+})();
+</script>
 <script>
 /* Loader, deliberately in the document head: on index.html the trailing script
    sits behind ~660KB of inline base64 and does not execute for a second or
@@ -2043,7 +2131,7 @@
     <div class="sp-wrap">
       <!-- floating gold seal -->
       <div class="sp-seal" aria-hidden="true">
-        <img id="spSeal" src="seal-top.png" alt="Crafting Legacies · Est. 2004">
+        <img id="spSeal" src="seal-top.png" loading="lazy" decoding="async" alt="Crafting Legacies · Est. 2004">
       </div>
 
       <!-- header -->
@@ -2140,7 +2228,7 @@
 
         <div class="seal why-seal">
           <div class="seal-spin">
-            <img class="seal-img" src="seal-top.png" alt="Crafting Legacies · R · Est. 2004">
+            <img class="seal-img" src="seal-top.png" loading="lazy" decoding="async" alt="Crafting Legacies · R · Est. 2004">
           </div>
         </div>
 
@@ -2197,7 +2285,7 @@
         </div>
         <div class="seal why-seal2">
           <div class="seal-spin">
-            <img class="seal-img" src="seal-bottom.png"
+            <img class="seal-img" src="seal-bottom.png" loading="lazy" decoding="async"
                  alt="Built with trust · Crafted for life · Est. 2004">
           </div>
         </div>
@@ -2553,12 +2641,6 @@
     const form = document.getElementById('heroSearch');
     if(!form) return;
 
-    const SANITY = {
-      projectId : 'lc9w15ba',
-      dataset   : 'production',
-      apiVersion: '2024-01-01',
-    };
-
     const typeSel   = document.getElementById('hsType');
     const locSel    = document.getElementById('hsLoc');
     const budgetSel = document.getElementById('hsBudget');
@@ -2573,7 +2655,7 @@
       location.href = 'projects.html?' + q.toString();
     });
 
-    if(!SANITY.projectId) return;
+    if(!window.RL) return;
 
     const txt = v => (typeof v === 'string' ? v.trim() : '');
 
@@ -2630,13 +2712,8 @@
       return a.localeCompare(b);
     };
 
-    const Q = encodeURIComponent(
-      '*[_type=="project" && (stage=="completed" || status=="Completed")]' +
-      '{config,location,price}');
-
-    fetch('https://' + SANITY.projectId + '.apicdn.sanity.io/v' + SANITY.apiVersion +
-          '/data/query/' + SANITY.dataset + '?query=' + Q)
-      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    /* already in flight since the document head — see RL in <head> */
+    RL.get(RL.q.search)
       .then(({result}) => {
         const rows = Array.isArray(result) ? result : [];
         if(!rows.length) return;                 // keep whatever the CMS set
@@ -3324,12 +3401,7 @@
      the page" — which is what lets the client fill this in a piece at a time
      without the home page going blank in between. */
   (function(){
-    const SANITY = {
-      projectId : 'lc9w15ba',    // manage.sanity.io → Raajlaxmi Site → Settings
-      dataset   : 'production',
-      apiVersion: '2024-01-01',
-    };
-    if(!SANITY.projectId) return;
+    if(!window.RL) return;
 
     const txt = v => (typeof v === 'string' ? v.trim() : '');
     const list = v => Array.isArray(v) ? v.map(txt).filter(Boolean) : [];
@@ -3372,26 +3444,8 @@
       });
     }
 
-    const Q = encodeURIComponent(`*[_id=="homepage"][0]{
-      heroHeadline,heroSub,heroPropertyOptions,heroLocationOptions,heroBudgetOptions,heroButton,
-      "heroImageUrl":heroImage.asset->url,"heroVideoUrl":heroVideo.asset->url,
-      "aboutVideoUrl":aboutVideo.asset->url,
-      whyLabel,whyHeading,whyIntro,whyRows,whyTimeline,whyQuote,whyQuoteBy,
-      "whyImageUrl":whyImage.asset->url,"whyVideoUrl":whyVideo.asset->url,
-      aboutLabel,aboutHeading,aboutParagraphs,"aboutImageUrl":aboutImage.asset->url,
-      stats,
-      signatureLabel,signatureHeading,signatureIntro,
-      signatureCards[]{name,category,location,description,link,"imageUrl":image.asset->url,
-        "ref":project->{name,category,location,blurb,detailUrl,"slug":slug.current,
-                        "imageUrl":image.asset->url}},
-      "projects":*[_type=="project" && defined(slug.current)]{name,detailUrl,"slug":slug.current},
-      "ownersPage":*[_id=="owners-page"][0]{label,heading,intro,
-        owners[]{name,role,bio,"photoUrl":photo.asset->url}}
-    }`);
-
-    fetch(`https://${SANITY.projectId}.apicdn.sanity.io/v${SANITY.apiVersion}` +
-          `/data/query/${SANITY.dataset}?query=${Q}`)
-      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    /* already in flight since the document head — see RL in <head> */
+    RL.get(RL.q.home)
       .then(({result:d}) => { if(d) paint(d); })
       .catch(err => console.warn('home page content: keeping the built-in copy —', err));
 
@@ -3811,12 +3865,7 @@
      from the CMS, and the row removes itself when no handles are set: four
      buttons that go nowhere are worse than no buttons. */
   (function(){
-    const SANITY = {
-      projectId : 'lc9w15ba',
-      dataset   : 'production',
-      apiVersion: '2024-01-01',
-    };
-    if(!SANITY.projectId) return;
+    if(!window.RL) return;
 
     const foot = document.querySelector('.ft');
     if(!foot) return;
@@ -3840,12 +3889,8 @@
       youtube:'YouTube', x:'X', whatsapp:'WhatsApp',
     };
 
-    const Q = encodeURIComponent(
-      `*[_id=="site-settings"][0]{social[]{platform,url},phone,email,address,copyright}`);
-
-    fetch(`https://${SANITY.projectId}.apicdn.sanity.io/v${SANITY.apiVersion}` +
-          `/data/query/${SANITY.dataset}?query=${Q}`)
-      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    /* already in flight since the document head — see RL in <head> */
+    RL.get(RL.q.settings)
       .then(({result:d}) => { if(d) paint(d); })
       .catch(err => console.warn('site settings: keeping the built-in footer —', err));
 

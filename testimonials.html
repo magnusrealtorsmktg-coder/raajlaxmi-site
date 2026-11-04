@@ -8,6 +8,80 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+
+<!-- The CMS lives on another origin and every page needs it on first paint, so
+     the handshake is opened before the browser has read a byte of the stylesheet.
+     cdn.sanity.io serves the photographs the queries point at. -->
+<link rel="preconnect" href="https://lc9w15ba.apicdn.sanity.io" crossorigin>
+<link rel="preconnect" href="https://cdn.sanity.io" crossorigin>
+<script>
+/* ===== THE CMS QUERIES START HERE, IN THE DOCUMENT HEAD =====
+
+   They used to start in the trailing <script>, behind the whole of the body.
+   On a cold connection the browser had to receive the entire document -- and
+   queue the photography the markup asks for -- before it so much as asked the
+   CMS a question, so the answer landed after the page was already on screen and
+   the visitor watched the fallback copy written into the file get replaced in
+   front of them. Starting them here puts every query in flight within a few
+   milliseconds of navigation, in parallel with the HTML still streaming, so the
+   answers are normally in hand before the markup they fill has been parsed.
+
+   THE QUERY TEXT LIVES HERE AND NOWHERE ELSE. Each block at the foot of the
+   page asks for its answer by name -- RL.get(RL.q.settings) -- rather than
+   writing the query out again: a second copy that drifted would quietly miss
+   the memo and fetch twice. Adding a query is one entry in `q` here plus one
+   RL.get() where it is painted.
+
+   `get` memoises by query text, so two blocks wanting the same answer share one
+   request and a block that runs late gets an already-resolved promise instead of
+   a second round trip. A failed query rejects and every caller keeps its own
+   fallback; the no-op catch below is only so a rejection nobody has subscribed
+   to yet is not reported as unhandled. */
+(function(){
+  var S = {
+    projectId : 'lc9w15ba',    // manage.sanity.io -> Raajlaxmi Site -> Settings
+    dataset   : 'production',
+    apiVersion: '2024-01-01',
+  };
+
+  var base = 'https://' + S.projectId + '.apicdn.sanity.io/v' + S.apiVersion +
+             '/data/query/' + S.dataset + '?query=';
+  var memo = {};
+
+  function get(query, params){
+    var k = encodeURIComponent(query) + (params || '');
+    return memo[k] || (memo[k] = fetch(base + k).then(function(r){
+      return r.ok ? r.json() : Promise.reject(r.status);
+    }));
+  }
+
+  /* what this page asks the CMS for */
+  var q = {
+    /* the reviews on the marquee */
+    reviews: '*[_type=="testimonial"]|order(order asc,_createdAt asc)' +
+             '{quote,name,at,stars,googleUrl}',
+
+    /* the page's own wording and the client photo slider */
+    page: '*[_id=="testimonials-page"][0]{\n' +
+      '  label,heading,headingHighlight,introText,\n' +
+      '  galleryLabel,galleryTitle,galleryIntro,\n' +
+      '  gallery[]{caption,alt,"url":asset->url},\n' +
+      '  stripTitle,stripHighlight,stripText,stripButton\n' +
+      '}',
+
+    /* the footer: social handles, telephone, email, address, copyright */
+    settings: '*[_id=="site-settings"][0]{social[]{platform,url},phone,email,address,copyright}',
+  };
+
+  /* a query that takes a GROQ parameter (the detail page's $p) leaves its
+     already-encoded tail here, keyed the same as the query */
+  var qp = window.__rlParams || {};
+
+  window.RL = {sanity: S, q: q, p: qp, get: get};
+
+  if(S.projectId) for(var k in q) if(q[k]) get(q[k], qp[k]).catch(function(){});
+})();
+</script>
 <script>
 /* Loader, deliberately in the document head: on index.html the trailing script
    sits behind ~660KB of inline base64 and does not execute for a second or
@@ -1997,11 +2071,6 @@
     const sec = document.getElementById('testimonials');
     if(!sec) return;
 
-    const SANITY = {
-      projectId : 'lc9w15ba',    // manage.sanity.io → Raajlaxmi Site → Settings
-      dataset   : 'production',
-      apiVersion: '2024-01-01',
-    };
 
     /* PLACEHOLDER: every quote and name below is written copy, not a
        real client. Replace with signed testimonials before launch — this is the
@@ -2150,12 +2219,8 @@
        them outright — unlike the page wording, a half-filled review list is
        not something to merge with invented copy. */
     (function(){
-      const Q = encodeURIComponent(
-        `*[_type=="testimonial"]|order(order asc,_createdAt asc)` +
-        `{quote,name,at,stars,googleUrl}`);
-      fetch(`https://${SANITY.projectId}.apicdn.sanity.io/v${SANITY.apiVersion}` +
-            `/data/query/${SANITY.dataset}?query=${Q}`)
-        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      /* already in flight since the document head — see RL in <head> */
+      RL.get(RL.q.reviews)
         .then(({result}) => {
           const live = (result || []).filter(r => r && r.quote && r.name);
           if(!live.length) return;                 // keep the built-in five
@@ -2378,11 +2443,6 @@
     const sec = document.getElementById('testimonials');
     if(!sec) return;
 
-    const SANITY = {
-      projectId : 'lc9w15ba',
-      dataset   : 'production',
-      apiVersion: '2024-01-01',
-    };
 
     const txt  = v => (typeof v === 'string' ? v.trim() : '');
     const list = v => Array.isArray(v) ? v.map(txt).filter(Boolean) : [];
@@ -2402,16 +2462,8 @@
       return out;
     }
 
-    const Q = encodeURIComponent(`*[_id=="testimonials-page"][0]{
-      label,heading,headingHighlight,introText,
-      galleryLabel,galleryTitle,galleryIntro,
-      gallery[]{caption,alt,"url":asset->url},
-      stripTitle,stripHighlight,stripText,stripButton
-    }`);
-
-    fetch(`https://${SANITY.projectId}.apicdn.sanity.io/v${SANITY.apiVersion}` +
-          `/data/query/${SANITY.dataset}?query=${Q}`)
-      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    /* already in flight since the document head — see RL in <head> */
+    RL.get(RL.q.page)
       .then(({result:d}) => { if(d) paint(d); })
       .catch(err => console.warn('testimonials page: keeping the built-in copy —', err));
 
@@ -2576,12 +2628,7 @@
      from the CMS, and the row removes itself when no handles are set: four
      buttons that go nowhere are worse than no buttons. */
   (function(){
-    const SANITY = {
-      projectId : 'lc9w15ba',
-      dataset   : 'production',
-      apiVersion: '2024-01-01',
-    };
-    if(!SANITY.projectId) return;
+    if(!window.RL) return;
 
     const foot = document.querySelector('.ft');
     if(!foot) return;
@@ -2605,12 +2652,8 @@
       youtube:'YouTube', x:'X', whatsapp:'WhatsApp',
     };
 
-    const Q = encodeURIComponent(
-      `*[_id=="site-settings"][0]{social[]{platform,url},phone,email,address,copyright}`);
-
-    fetch(`https://${SANITY.projectId}.apicdn.sanity.io/v${SANITY.apiVersion}` +
-          `/data/query/${SANITY.dataset}?query=${Q}`)
-      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    /* already in flight since the document head — see RL in <head> */
+    RL.get(RL.q.settings)
       .then(({result:d}) => { if(d) paint(d); })
       .catch(err => console.warn('site settings: keeping the built-in footer —', err));
 

@@ -1015,7 +1015,54 @@ documents written before the field existed — so the migration is not a flag da
 is required on the schema, every published project gets a working detail link
 with nothing to configure.
 
-`projects.html` reads it with a single GROQ query over plain HTTP in its Section V
+**Every query starts in the document `<head>`, not in the trailing script.** This
+is the one thing to know before touching any Sanity block.
+
+The queries used to be issued from the trailing `<script>`, behind the whole of
+the body. On a cold connection the browser had to receive the entire document —
+854KB on `index.html`, most of it the inline base64 hero — and queue the ~2.5MB
+of photography the markup asks for, before it so much as asked the CMS a
+question. Measured at 400KB/s: **the first query left at 2.3s and the content
+changed on screen at 3.5s**, by which time the loader had lifted, so a visitor
+on a cold cache watched the fallback copy and placeholder photographs written
+into the file get replaced in front of them. That is the bug this arrangement
+exists to prevent; with the same throttle the queries now leave at **14ms** and
+are all answered by **1.2s**, before the HTML has finished arriving at 2.3s.
+
+The `<head>` block, immediately after the favicons and marked
+`===== THE CMS QUERIES START HERE =====`, is the page's **data layer**: the one
+`SANITY` config, the GROQ text for every query that page makes, and a `get()`
+that fires them at once. It publishes `window.RL`:
+
+| | |
+|---|---|
+| `RL.sanity` | `{projectId, dataset, apiVersion}` — one per file now, not one per block |
+| `RL.q` | the queries, by name: `RL.q.settings`, `RL.q.home`, `RL.q.projects`, … |
+| `RL.p` | the already-encoded tail for a query that takes a GROQ parameter — only `project.html`'s `$p` uses it |
+| `RL.get(query, params)` | the memoised fetch; returns the parsed JSON |
+
+Four rules follow from it:
+
+- **The query text lives in the head block and nowhere else.** A block at the
+  foot of the page asks by name — `RL.get(RL.q.settings)` — and must never write
+  the query out again: `get` memoises on the query string, so a second copy that
+  drifted by one character would quietly miss the memo and fetch twice. Adding a
+  query is one entry in `q` plus one `RL.get()` where it is painted.
+- **A query whose text depends on the URL is computed in the head too** — the
+  legal pages' `DOC`, the collection pages' `DOC_ID`, the detail page's `?p=`.
+  Each derivation is duplicated from the block that also needs it for its own
+  guard; the two have to agree, and both handle Netlify's `.html`-less URLs.
+- **`get` memoises, so two blocks wanting the same answer share one request**,
+  and a block that runs late gets an already-resolved promise rather than a
+  second round trip. A query that resolves to a falsy string (an unknown legal
+  file, a detail page with no `?p=`) is never sent.
+- **The `if(!SANITY.projectId) return;` guards are now `if(!window.RL) return;`.**
+  Every block still keeps its own fallback on failure, unchanged.
+
+Each page also `preconnect`s to `lc9w15ba.apicdn.sanity.io` and `cdn.sanity.io`,
+so the TLS handshake for both is open before the stylesheet has been read.
+
+`projects.html` reads the collection with a single GROQ query over plain HTTP in its Section V
 IIFE — no SDK, no build step, no token, so the no-dependency rule still holds.
 The eight cards written into the file are the fallback: they render when
 `SANITY.projectId` is blank, when the query fails, and when the dataset is empty,
@@ -1027,10 +1074,13 @@ The Studio is hosted at <https://raajlaxmi.sanity.studio> (project `lc9w15ba`);
 `npm run deploy` in `studio/` republishes it after a schema change.
 
 Setup — project id, CORS origins, dataset visibility — is in `studio/README.md`.
-**The id must be set in six places**: `studio/.env` and the `SANITY` block in
-`projects.html`, `projects-ongoing.html`, `projects-redevelopment.html`,
-`project.html` and `index.html`. Renaming a schema field means renaming it in each of those GROQ
-queries too.
+**The id must be set in twelve places**: `studio/.env` and the `SANITY` block in
+the `<head>` of each of the eleven HTML files. That is more files than before but
+one block per file instead of two or three — the per-block `const SANITY = {…}`
+objects are gone, so there is exactly one place per page that names the project.
+The id also appears a second time in each file, in the `preconnect` href, which
+cannot be built from a variable. Renaming a schema field means renaming it in the
+GROQ text in those same head blocks.
 
 Note the Studio's source sits inside the Netlify publish directory, so its config
 files ship with the site. They hold nothing secret (a Sanity project id is public
@@ -1133,8 +1183,23 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
   rather than shipped as a dead font name.
 - The About counters take `data-to` / `data-suffix` plus two additions: `data-dec` (decimal places, so 0.9 does not round to 1) and `data-unit` (a word set in ink between the figure and the gold suffix, e.g. "Million"). They are the only counters left on the page.
 
-## Performance follow-ups (not yet done)
+## Performance
 
-1. `index.html` carries ~665KB of base64 (the hero JPEG) of a 773KB file. Extract to external AVIF/WebP with `srcset`. (The logo is already external — see Photography and assets.)
-2. Subset or self-host the Google Fonts (Archivo Black, Cinzel, Cormorant Garamond, Inter, Playfair Display — five families on every page).
-3. Give the hero plate `fetchpriority="high"` to improve LCP.
+**Done.** The CMS queries start in the `<head>` — see *Every query starts in the
+document `<head>`*, which is where the reasoning and the measurements are. Each
+page preconnects to `apicdn.sanity.io` and `cdn.sanity.io`. The three rotating
+seals on `index.html` carry `loading="lazy" decoding="async"`: they are
+`seal-top.png` (259KB) and `seal-bottom.png` (**716KB**), they sit in Sections
+III and IV, well below the fold, and together they were ~975KB of decoration
+competing with the first screen on a cold load. Nothing about how they look
+changed.
+
+### Still to do
+
+1. **`seal-bottom.png` is 716KB for a 620×620 mark** and `seal-top.png` 258KB for
+   640×640 — between them the heaviest thing on the home page after the hero.
+   They are flat gold line-work on transparency, so a re-export should be a
+   fraction of that. This is an asset swap, not a code change.
+2. `index.html` carries ~665KB of base64 (the hero JPEG) of a 773KB file. Extract to external AVIF/WebP with `srcset`. (The logo is already external — see Photography and assets.)
+3. Subset or self-host the Google Fonts (Archivo Black, Cinzel, Cormorant Garamond, Inter, Playfair Display — five families on every page).
+4. Give the hero plate `fetchpriority="high"` to improve LCP.

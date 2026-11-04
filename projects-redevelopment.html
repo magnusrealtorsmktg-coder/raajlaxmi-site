@@ -8,6 +8,92 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+
+<!-- The CMS lives on another origin and every page needs it on first paint, so
+     the handshake is opened before the browser has read a byte of the stylesheet.
+     cdn.sanity.io serves the photographs the queries point at. -->
+<link rel="preconnect" href="https://lc9w15ba.apicdn.sanity.io" crossorigin>
+<link rel="preconnect" href="https://cdn.sanity.io" crossorigin>
+<script>
+/* ===== THE CMS QUERIES START HERE, IN THE DOCUMENT HEAD =====
+
+   They used to start in the trailing <script>, behind the whole of the body.
+   On a cold connection the browser had to receive the entire document -- and
+   queue the photography the markup asks for -- before it so much as asked the
+   CMS a question, so the answer landed after the page was already on screen and
+   the visitor watched the fallback copy written into the file get replaced in
+   front of them. Starting them here puts every query in flight within a few
+   milliseconds of navigation, in parallel with the HTML still streaming, so the
+   answers are normally in hand before the markup they fill has been parsed.
+
+   THE QUERY TEXT LIVES HERE AND NOWHERE ELSE. Each block at the foot of the
+   page asks for its answer by name -- RL.get(RL.q.settings) -- rather than
+   writing the query out again: a second copy that drifted would quietly miss
+   the memo and fetch twice. Adding a query is one entry in `q` here plus one
+   RL.get() where it is painted.
+
+   `get` memoises by query text, so two blocks wanting the same answer share one
+   request and a block that runs late gets an already-resolved promise instead of
+   a second round trip. A failed query rejects and every caller keeps its own
+   fallback; the no-op catch below is only so a rejection nobody has subscribed
+   to yet is not reported as unhandled. */
+(function(){
+  var S = {
+    projectId : 'lc9w15ba',    // manage.sanity.io -> Raajlaxmi Site -> Settings
+    dataset   : 'production',
+    apiVersion: '2024-01-01',
+  };
+
+  var base = 'https://' + S.projectId + '.apicdn.sanity.io/v' + S.apiVersion +
+             '/data/query/' + S.dataset + '?query=';
+  var memo = {};
+
+  function get(query, params){
+    var k = encodeURIComponent(query) + (params || '');
+    return memo[k] || (memo[k] = fetch(base + k).then(function(r){
+      return r.ok ? r.json() : Promise.reject(r.status);
+    }));
+  }
+
+  /* Which of the four listing documents this view wants. The same derivation
+     the block at the foot of the page makes -- the file name, then ?status= --
+     and the reason three files share one script. Netlify serves these without
+     the .html, so both spellings land on the same answer. */
+  var DOC_ID = (function(){
+    var page = (location.pathname.split('/').pop() || 'projects.html').toLowerCase();
+    if(page.indexOf('ongoing') > -1) return 'collection-ongoing';
+    if(page.indexOf('redevelopment') > -1) return 'collection-redevelopment';
+    var st = (new URLSearchParams(location.search).get('status') || '').toLowerCase();
+    return st === 'completed' ? 'collection-completed' : 'collection-all';
+  })();
+
+  /* what this page asks the CMS for */
+  var q = {
+    /* every published property -- the cards, the city chips and the banner
+       hotspots are all built from this one answer */
+    projects: '*[_type=="project"]|order(order asc,_createdAt asc){\n' +
+      '  name,stage,status,category,location,blurb,config,area,price,detailUrl,\n' +
+      '  "slug":slug.current,"imageUrl":image.asset->url\n' +
+      '}',
+
+    /* this listing's own wording and banner */
+    page: '*[_id=="' + DOC_ID + '"][0]{label,heading,intro,emptyMessage,' +
+          'bannerLabel,bannerTitle,"bannerUrl":banner.asset->url,"bannerAlt":banner.alt,' +
+          'ctaTitle,ctaText,ctaButton}',
+
+    /* the footer: social handles, telephone, email, address, copyright */
+    settings: '*[_id=="site-settings"][0]{social[]{platform,url},phone,email,address,copyright}',
+  };
+
+  /* a query that takes a GROQ parameter (the detail page's $p) leaves its
+     already-encoded tail here, keyed the same as the query */
+  var qp = window.__rlParams || {};
+
+  window.RL = {sanity: S, q: q, p: qp, get: get};
+
+  if(S.projectId) for(var k in q) if(q[k]) get(q[k], qp[k]).catch(function(){});
+})();
+</script>
 <script>
 /* Loader, deliberately in the document head: on index.html the trailing script
    sits behind ~660KB of inline base64 and does not execute for a second or
@@ -1673,11 +1759,6 @@
        list below is the fallback that ships in the file, so the page still
        renders with the network off, before the CMS is configured, or if the
        query fails. Both shapes are identical. */
-    const SANITY = {
-      projectId : 'lc9w15ba',    // manage.sanity.io → Raajlaxmi Site → Settings
-      dataset   : 'production',
-      apiVersion: '2024-01-01',
-    };
 
     const GRAD = '#26364e,#5a6b82';   // tonal ground under a photo that fails
 
@@ -1867,16 +1948,9 @@
        fallback cards exactly as they are.
        NOTE: the dataset must be public, and this site's origin has to be
        listed under Settings → API → CORS origins in manage.sanity.io. */
-    if(SANITY.projectId){
-      const query = `*[_type=="project"]|order(order asc,_createdAt asc){
-        name,stage,status,category,location,blurb,config,area,price,detailUrl,
-        "slug":slug.current,"imageUrl":image.asset->url
-      }`;
-      const url = `https://${SANITY.projectId}.apicdn.sanity.io/v${SANITY.apiVersion}` +
-                  `/data/query/${SANITY.dataset}?query=${encodeURIComponent(query)}`;
-
-      fetch(url)
-        .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
+    if(window.RL){
+      /* already in flight since the document head — see RL in <head> */
+      RL.get(RL.q.projects)
         .then(({result}) => {
           if(!Array.isArray(result) || !result.length) return;   // empty dataset: keep the fallback
           /* Sanity carries no project in this status yet, so taking its list
@@ -2106,12 +2180,7 @@
      document it wants from the filename, so there is nothing per-page to keep
      in step. */
   (function(){
-    const SANITY = {
-      projectId : 'lc9w15ba',
-      dataset   : 'production',
-      apiVersion: '2024-01-01',
-    };
-    if(!SANITY.projectId) return;
+    if(!window.RL) return;
 
     /* projects.html does double duty — browse-everything, and the Completed
        view via ?status=completed — so it reads whichever of the two documents
@@ -2151,14 +2220,8 @@
       if(dot) host.appendChild(dot);
     }
 
-    const Q = encodeURIComponent(
-      `*[_id=="${DOC_ID}"][0]{label,heading,intro,emptyMessage,` +
-      `bannerLabel,bannerTitle,"bannerUrl":banner.asset->url,"bannerAlt":banner.alt,` +
-      `ctaTitle,ctaText,ctaButton}`);
-
-    fetch(`https://${SANITY.projectId}.apicdn.sanity.io/v${SANITY.apiVersion}` +
-          `/data/query/${SANITY.dataset}?query=${Q}`)
-      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    /* already in flight since the document head — see RL in <head> */
+    RL.get(RL.q.page)
       .then(({result:d}) => { if(d) paint(d); })
       .catch(err => console.warn('listing page content: keeping the built-in copy —', err));
 
@@ -2215,12 +2278,7 @@
      from the CMS, and the row removes itself when no handles are set: four
      buttons that go nowhere are worse than no buttons. */
   (function(){
-    const SANITY = {
-      projectId : 'lc9w15ba',
-      dataset   : 'production',
-      apiVersion: '2024-01-01',
-    };
-    if(!SANITY.projectId) return;
+    if(!window.RL) return;
 
     const foot = document.querySelector('.ft');
     if(!foot) return;
@@ -2244,12 +2302,8 @@
       youtube:'YouTube', x:'X', whatsapp:'WhatsApp',
     };
 
-    const Q = encodeURIComponent(
-      `*[_id=="site-settings"][0]{social[]{platform,url},phone,email,address,copyright}`);
-
-    fetch(`https://${SANITY.projectId}.apicdn.sanity.io/v${SANITY.apiVersion}` +
-          `/data/query/${SANITY.dataset}?query=${Q}`)
-      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    /* already in flight since the document head — see RL in <head> */
+    RL.get(RL.q.settings)
       .then(({result:d}) => { if(d) paint(d); })
       .catch(err => console.warn('site settings: keeping the built-in footer —', err));
 
