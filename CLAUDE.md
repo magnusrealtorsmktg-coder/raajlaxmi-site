@@ -162,7 +162,7 @@ Check at 1440×900, 1024×800 and 420×860; scroll the full page; confirm no con
 
 | # | Section | id | What it does |
 |---|---------|-----|--------------|
-| I | Hero | `hero` | Night skyline (inline base64 JPEG), "Live Above The City", line-mask entrance, mouse parallax, property-selector form. **All of its copy, and the three dropdown lists, come from the `homepage` singleton** — the four localities hard-coded in the markup (Gomti Nagar, Hazratganj, Sushant Golf City, Vibhuti Khand) are in **Lucknow**, not this developer's corridor; the seeded CMS values replace them with Vasai / Nallasopara / Virar / Saphale. |
+| I | Hero | `hero` | Night skyline (inline base64 JPEG) under the CMS film, mouse parallax, property-selector form. **The headline and its sub-paragraph are gone** — markup, CSS, the line-mask entrance and `fitHeadline()` with them, so the page carries no `<h1>`; see *The hero headline and its sub-paragraph are GONE*. **Its remaining copy, and the three dropdown lists, come from the `homepage` singleton** — the four localities hard-coded in the markup (Gomti Nagar, Hazratganj, Sushant Golf City, Vibhuti Khand) are in **Lucknow**, not this developer's corridor; the seeded CMS values replace them with Vasai / Nallasopara / Virar / Saphale. |
 | II | About | `about` | Ivory. Plate showing **the CMS's About video** (`assets/about-plate.jpg` is only the fallback underneath it), four counting stats, then a full-width RERA / CREDAI-MCHI trust strip (`.ab-creds`, a sibling of `.ab-inner`, not inside the content column). **It holds exactly one screen** — see *The About section holds one screen*. The ghost word "Legacy" that used to sit behind the copy is gone, markup, CSS, parallax and schema field alike. |
 | III | Signature Projects | `signature` | Four project cards, corner blueprint decor with slow parallax, rotating seal. The section now ends on the card grid, so its **bottom** padding alone sets the run into Why — it was written to mirror `.about`'s old `clamp(5rem,14vh,140px)`, which **no longer exists**: About was rebuilt to one screen and its padding is now much tighter, so this value is a standalone constant that only looks like it is paired with something. |
 | IV | Why Raajlaxmi | `why` | Team photograph as the feature plate, **sized so the heading and the photograph share one screen** (see *The Why heading and photograph share one screen*), four numbered rows, a year timeline (2004→2026), closing quote + spinning seal. The auto-scrolling brand marquee (`.why-carousel`) that used to sit before the quote is gone — Section X replaced it. |
@@ -895,18 +895,58 @@ paragraph depending on whether the CMS gives it a `link`, so "Business Hours"
 stays plain text while "Call Us" becomes a `tel:`. The **map pin is a geopoint**
 that drives both the directions button and the embedded Google frame.
 
-**The hero headline sizes itself.** Its length is CMS-written now, so the design
-cannot assume it. `.line-reveal` is `width:max-content` with `max-width:100%`,
-which means a line too wide for the column does not overflow — it *wraps*, and a
-long headline turned into six lines that ran under the navbar and pushed the
-search form off the bottom. `fitHeadline()` shrinks the type until the longest
-line sits on one line, then until the block clears the navbar and the foot of the
-hero (it is centred on 57%, so it may not exceed twice the smaller of the two
-gaps). It runs on load, on resize, on `fonts.ready` — Archivo Black lands after
-first paint and changes every measurement — and again once the CMS answers. Below
-760px the width step is skipped: forcing a long line onto one phone-width line
-costs more legibility than wrapping does. `base` honours the CSS clamp's 40px
-minimum, or a phone would get smaller type than it had before.
+**The hero headline and its sub-paragraph are GONE** — markup, CSS, entrance
+animation, `fitHeadline()`, the `paint()` branch and the GROQ fields alike. The
+hero is now the film and the search form, and nothing else. The client's own
+film carries a title card ("EVERY GREAT JOURNEY BEGINS WITH A VISION.",
+~10.3s–15.3s of every loop, centred) which was landing across the sub-heading;
+two sets of copy over one photograph read as a mistake.
+
+What went, so nobody hunts for half of it:
+
+- the `<h1 class="headline">` and its `.line-reveal` / `.line-inner` spans, and
+  the `<p class="sub">`;
+- the `.headline`, `.line-reveal`, `.line-inner`, `.line-rule` and `.sub` rules
+  **and their phone-tier overrides** — `index.html` only. **The other ten files
+  still carry all of them** in their copy of the shared stylesheet, where they
+  are equally dead because no other page has a hero. Do not "sync" them back;
+- the line-mask entrance loop and the `.line-inner` line in the reduced-motion
+  branch;
+- `fitHeadline()`, its `resize` listener, its `fonts.ready` hook and both call
+  sites. Nothing in the hero now has a size that depends on how much text the
+  CMS sends, which is what that function existed for;
+- `heroHeadline` and `heroSub` from the home query in the `<head>` block.
+
+Three things are deliberately NOT done:
+
+- **`heroHeadline` and `heroSub` are still on the `homepage` document and still
+  in the schema.** Clearing them would destroy the client's copy to tidy a form.
+  The consequence is that editing either in the Studio now does nothing, and
+  that is the one confusing thing about this change.
+- **`reveal()` keeps its null guard** even though the only call left
+  (`#heroSearch`) can never be null. These calls sit one after another in a
+  single `onIntro` callback, so a throw on a missing element does not skip that
+  element — it aborts every reveal after it. That is exactly what leaving the
+  sub-paragraph's call in place would have done to the search form's entrance.
+- **The page now has no `<h1>` at all.** That is a real SEO cost on a marketing
+  home page and it was the client's explicit call, made after being told. If it
+  is ever wanted back without the visible text, the idiom is `.sv-sr` on
+  `services.html`: an `<h1>` clipped to a 1px box.
+
+Measured after, at 390x844, 360x640, 844x390 (landscape), 280x653, 1024x800 and
+1440x900: **no horizontal overflow at any size** (`scrollWidth` equals the
+viewport at all six), the form clears the navbar and sits inside the fold
+everywhere, and no console errors. The trimmed query was run against live Sanity
+and still returns all 27 keys.
+
+**Measure this sort of thing with CDP `Emulation.setDeviceMetricsOverride`, not
+with `--window-size --screenshot`.** The latter produced a picture showing the
+form running off the right edge at 390px that the DOM flatly contradicted, and
+`innerWidth` falls back to **756** whenever the override does not take. Two
+traps that cost time here: reading the form mid-entrance reports `opacity:0` and
+looks like a broken reveal (it is up by ~5s — `delay 1820ms` + `1200ms`, timed
+from when the loader lifts); and **`set -- $s` does not word-split in zsh**, so
+a viewport loop silently passes `W=NaN` and every row comes back 756.
 
 **Hero, About and Why can each take a video.** `mountVideo()` in the home-page
 block is shared by all three: it drops a silent looping `<video>` into an element

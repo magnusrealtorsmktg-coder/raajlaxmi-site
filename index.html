@@ -67,7 +67,10 @@
 
     /* every word and picture on the page: hero, About, Why, Signature, Owners */
     home: '*[_id=="homepage"][0]{\n' +
-      '  heroHeadline,heroSub,heroPropertyOptions,heroLocationOptions,heroBudgetOptions,heroButton,\n' +
+      /* heroHeadline and heroSub are deliberately NOT asked for: the hero's
+         headline and sub-paragraph were removed on 4 Nov and nothing paints
+         them. Both fields still exist on the document and in the schema. */
+      '  heroPropertyOptions,heroLocationOptions,heroBudgetOptions,heroButton,\n' +
       '  "heroImageUrl":heroImage.asset->url,"heroVideoUrl":heroVideo.asset->url,\n' +
       '  "aboutVideoUrl":aboutVideo.asset->url,\n' +
       '  whyLabel,whyHeading,whyIntro,whyRows,whyTimeline,whyQuote,whyQuoteBy,\n' +
@@ -434,21 +437,15 @@
     font-size:.66rem;letter-spacing:.34em;text-transform:uppercase;color:var(--champagne-soft);
     margin-bottom:1.8rem;}
   .eyebrow .rule{width:2.4rem;height:1px;background:var(--champagne);opacity:.75;}
-  .headline{font-family:"Archivo Black","Arial Black",sans-serif;font-weight:400;
-    font-size:clamp(2.5rem,6.4vw,6rem);line-height:.98;letter-spacing:-.01em;
-    color:var(--white);text-transform:uppercase;margin-bottom:2rem;}
-  /* each line: clip-mask the words rise out of, with a rule they emerge from */
-  .line-reveal{display:block;width:max-content;max-width:100%;
-    position:relative;overflow:hidden;padding-bottom:.14em;}
-  .line-inner{display:block;transform:translateY(130%);will-change:transform;}
-  .line-rule{position:absolute;left:0;bottom:0;height:2px;width:100%;
-    background:var(--champagne);          /* ← change to red or any accent here */
-    transform:scaleX(0);transform-origin:left;}
-  .sub{font-size:clamp(1.02rem,1.28vw,1.2rem);line-height:1.72;font-weight:400;
-    color:rgba(247,245,240,.94);max-width:33rem;margin-bottom:2.6rem;
-    /* the sky behind this line is bright; a soft shade holds contrast
-       without putting a visible box around the text */
-    text-shadow:0 1px 22px rgba(6,11,18,.55), 0 1px 3px rgba(6,11,18,.35);}
+  /* The hero headline (`.headline` + `.line-reveal` / `.line-inner` /
+     `.line-rule`) and its sub-paragraph (`.sub`) were REMOVED on 4 Nov —
+     markup, CSS, entrance animation, `fitHeadline()` and CMS wiring alike.
+     The client's film carries its own title card and two sets of copy over one
+     photograph read as a mistake, so the hero is the film and the search form.
+     Nothing in this file matches those selectors any more, which is why they
+     are gone rather than left as dead rules. **The other ten files still carry
+     them** in their copy of the shared stylesheet; that copy is dead there too
+     (no other page has a hero), so do not "sync" this block back in. */
   .cta-row{display:flex;gap:1.4rem;align-items:center;flex-wrap:wrap;}
 
   .btn-glass{position:relative;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--paper);
@@ -530,8 +527,6 @@
        huge gaps once flex-direction flips to column */
     .hs-field{flex:0 0 auto;}
     .hs-submit{width:100%;}
-    .headline{margin-bottom:1.2rem;}
-    .sub{margin-bottom:1.4rem;font-size:.98rem;line-height:1.55;}
   }
 
   @media (prefers-reduced-motion:reduce){
@@ -2010,12 +2005,9 @@
     <div class="veil" id="veil"></div>
 
     <div class="hero-content" id="content">
-      <h1 class="headline">
-        <span class="line-reveal"><span class="line-inner">Live</span></span>
-        <span class="line-reveal"><span class="line-inner">Above</span></span>
-        <span class="line-reveal"><span class="line-inner">The City</span></span>
-      </h1>
-      <p class="sub anim" data-anim>A limited collection of forty-eight private residences, oriented to the horizon — where evening arrives in gold and the skyline is yours alone.</p>
+      <!-- The headline and sub-paragraph were here. Removed 4 Nov: the film
+           carries its own title card. `.hero-content` now holds the search
+           form alone. -->
       <form class="hero-search anim" data-anim id="heroSearch">
         <div class="hs-field">
           <label for="hsType">Property</label>
@@ -2539,6 +2531,12 @@
   /* ---------- entrance ---------- */
   const LUX = 'cubic-bezier(.16,1,.3,1)';
   function reveal(el, delay){
+    /* Null-safe on purpose. These calls sit one after another inside a single
+       onIntro callback, so a throw on a missing element would not merely skip
+       that element — it would abort every reveal after it. That is exactly
+       what removing the hero's sub-paragraph would have done to the search
+       form's entrance if its call had been left standing. */
+    if(!el) return;
     el.animate(
       [{opacity:0, transform:'translateY(40px)', filter:'blur(10px)'},
        {opacity:1, transform:'translateY(0)',    filter:'blur(0px)'}],
@@ -2550,7 +2548,6 @@
   onIntro(()=>{
     if(reduce){
       document.querySelectorAll('[data-anim]').forEach(e=>e.style.opacity=1);
-      document.querySelectorAll('.line-inner').forEach(e=>e.style.transform='translateY(0)');
       document.getElementById('navWrap').style.opacity=1;
       return;
     }
@@ -2563,16 +2560,10 @@
     document.getElementById('navWrap').animate(
       [{opacity:0, transform:'translateY(-14px)'},{opacity:1, transform:'translateY(0)'}],
       {duration:1100, delay:200, easing:LUX, fill:'both'});
-    // headline: the words rise out of each line's clip mask
-    document.querySelectorAll('.line-reveal').forEach((lr,i)=>{
-      const inner = lr.querySelector('.line-inner');
-      const d = 520 + i*190;
-      inner.animate([{transform:'translateY(130%)'},{transform:'translateY(0%)'}],
-                    {duration:1150, delay:d+160, easing:LUX, fill:'both'});
-    });
-
-    // paragraph and property selector follow the headline
-    reveal(document.querySelector('#content .sub'),  1650);
+    /* The headline's line-mask entrance and the sub-paragraph's reveal were
+       here. Both are gone with the elements they animated; the search form is
+       the only thing left in `.hero-content`, and it keeps its own timing so
+       it still arrives after the nav rather than with it. */
     reveal(document.querySelector('#heroSearch'),    1820);
   });
 
@@ -3457,78 +3448,12 @@
       .then(({result:d}) => { if(d) paint(d); })
       .catch(err => console.warn('home page content: keeping the built-in copy —', err));
 
-    /* The headline is written in the CMS now, so its length is not something
-       the design can assume. `.line-reveal` is `width:max-content` with
-       `max-width:100%`, which means a line too wide for the column does not
-       overflow — it *wraps*, turning four lines into six and pushing the
-       sub-head and the search form off the bottom of the screen while the top
-       line runs under the navbar.
-
-       So the type sizes itself: shrink until the longest line fits on one
-       line, then keep shrinking until the whole block clears the navbar and
-       the foot of the hero. A short headline still gets the full 96px. */
-    function fitHeadline(){
-      const h1   = document.querySelector('.headline');
-      const box  = document.getElementById('content');
-      const hero = document.getElementById('hero');
-      if(!h1 || !box || !hero) return;
-      const lines = [...h1.querySelectorAll('.line-inner')];
-      if(!lines.length) return;
-
-      /* the design's own size: the CSS clamp(2.5rem, 6.4vw, 6rem), floors and
-         all — without the 40px minimum a phone would get smaller type than it
-         had before any of this */
-      const base = Math.min(96, Math.max(40, innerWidth * 0.064));
-      h1.style.fontSize = base + 'px';
-
-      /* 1. width — on a wide screen, shrink until the longest line sits on one
-         line. On a phone that is the wrong trade: forcing "YOUR TRUSTED
-         PARTNER" onto one 420px line costs more in legibility than wrapping
-         does, so there the type keeps its size and is allowed to wrap. */
-      const narrow = innerWidth < 760;
-      const floor = narrow ? 28 : 22;
-      let size = base;
-      if(!narrow){
-        h1.style.whiteSpace = 'nowrap';
-        let widest = 0;
-        lines.forEach(l => { widest = Math.max(widest, l.scrollWidth); });
-        h1.style.whiteSpace = '';
-
-        /* The column is `position:absolute` and shrink-to-fit, so its
-           clientWidth is whatever its content happens to be mid-load — it
-           measured 387px during the entrance and 735px once settled, which
-           sized the headline at 27px instead of 52px. The computed max-width
-           is the stable number: it is what the column may grow to, and it does
-           not move while the page is assembling. */
-        const mw = parseFloat(getComputedStyle(box).maxWidth);
-        const room = (isFinite(mw) && mw > 0) ? mw : box.clientWidth;
-
-        /* Shrinking to keep one line is only worth it down to a point —
-           past this the headline stops reading as a headline, and wrapping is
-           the better trade. The height pass below picks it up from there. */
-        const WIDTH_FLOOR = 40;
-        if(widest > room && room > 0)
-          size = Math.max(WIDTH_FLOOR, Math.floor(base * room / widest));
-      }
-      h1.style.fontSize = size + 'px';
-
-      /* 2. height — the block is centred on 57% of the hero, so it may not
-         grow past twice the smaller of the two gaps around that line */
-      const H = hero.clientHeight, NAV = 104, FOOT = 44;
-      const allowed = 2 * Math.min(H * 0.57 - NAV, H * 0.43 - FOOT);
-      let guard = 0;
-      while(box.offsetHeight > allowed && size > floor && guard++ < 90){
-        size -= 1;
-        h1.style.fontSize = size + 'px';
-      }
-    }
-
-    /* fit what is in the file now; paint() fits again once the CMS answers */
-    fitHeadline();
-    addEventListener('resize', fitHeadline, {passive:true});
-    /* Archivo Black lands after first paint and changes every measurement */
-    if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitHeadline);
-
+    /* `fitHeadline()` lived here: it shrank the CMS-written headline until
+       the longest line sat on one line and the block cleared the navbar and
+       the foot of the hero. It went with the headline on 4 Nov. Nothing
+       else called it, and `.hero-content` holds only the search form now,
+       so there is no longer anything in the hero whose size depends on how
+       much text the CMS sends. */
     /* A heading line whose last word carries the gold full stop as its own
        `.dot` node: keep that node and trim a trailing stop off the CMS text,
        or the line renders with two. */
@@ -3702,15 +3627,13 @@
 
       mountVideo(media, txt(d.heroVideoUrl), shot, 'hero-vid');
 
-      /* ---------- hero ---------- */
-      const headline = list(d.heroHeadline);
-      if(headline.length){
-        const h1 = document.querySelector('.headline');
-        fit(h1 ? h1.querySelectorAll('.line-reveal') : [], headline.length, h1)
-          .forEach((ln, i) => setText(ln.querySelector('.line-inner'), headline[i]));
-      }
-      if(headline.length) fitHeadline();
-      setText(document.querySelector('.hero-content .sub'), d.heroSub);
+      /* ---------- hero ----------
+         `heroHeadline` and `heroSub` were painted here. The elements they
+         filled are gone, so the fields are no longer queried either — see the
+         head block. They are still ON the `homepage` document: they were left
+         rather than cleared, because clearing them would destroy the client's
+         copy to tidy a form. Editing either in the Studio now does nothing,
+         which is the one confusing consequence of this. */
       paintSelect(document.getElementById('hsType'),   list(d.heroPropertyOptions));
       paintSelect(document.getElementById('hsLoc'),    list(d.heroLocationOptions));
       paintSelect(document.getElementById('hsBudget'), list(d.heroBudgetOptions));
