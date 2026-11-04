@@ -989,6 +989,67 @@ on this footage. **1440p was measured too and is not worth it** — 15.7 MB for 
 background behind a dark scrim. The schema's own advice ("under about 10 seconds
 and 8MB") is the right target and was simply not followed.
 
+**The hero was swapped a second time on 4 Nov, and this one was NOT re-encoded.**
+The client supplied `Homepage video.mp4` — **1280x720, 24fps, 4.64 Mbps, 27.2s,
+15.8 MB**, already faststart (`moov` ahead of `mdat`), with a 2.7 kbps AAC track
+on a video the site plays muted. It went up as a **stream copy**
+(`-c:v copy -an -movflags +faststart`), so the video bitstream is **byte-identical
+to the file they handed over** — verified by comparing the MD5 of the video track
+either side (`fd14bb593f8ef1a991cc5397306568aa` both times). Only the dead audio
+track was dropped.
+
+That is the opposite of the first swap, and the measurements are why:
+
+| | size | bitrate | SSIM vs their file |
+|---|---|---|---|
+| stream copy (what shipped) | 15.06 MB | 4.64 Mbps | identical |
+| 720p CRF 18 | 13.60 MB | 4.19 Mbps | 0.990 |
+| 720p CRF 20 | 10.63 MB | 3.28 Mbps | 0.988 |
+| 720p CRF 22 | 8.26 MB | 2.55 Mbps | 0.985 |
+
+The 4K master compressed 35x for SSIM 0.972 because it was a wildly inefficient
+camera encode. **This file is not** — it is dense, finely-detailed rendered
+footage that is already near the knee of its own rate curve, so CRF 18 buys 1.5 MB
+for measurable loss. Re-encoding it is bad value; do not "optimise" it again
+without re-running these numbers.
+
+**The price of shipping it whole is that slow connections get no video at all,
+and that is deliberate.** Measured on the real page: at **12 Mbps** it mounted at
+2.5s, hit `canplaythrough` at 2.6s, dissolved in by 2.75s, buffered the whole
+27s and played real-time with **zero stalls**. At **3.2 Mbps** — below the clip's
+own 4.64 Mbps, so it can never keep up — it **never reached the reveal gate,
+stayed at opacity 0 for the entire visit and was removed at 22.5s** by the 20s
+give-up, leaving the photograph. Nothing stuttered; the visitor simply never saw
+a video. That is the four rules above working, not a fault. Dropping to CRF 22
+(2.55 Mbps) is the lever if reaching those visitors ever matters more than the
+last 1.5% of SSIM.
+
+**It is 720p where the previous file was 1080p.** That is the source, not a
+choice — upscaling adds bytes and no detail.
+
+**The footage has copy burnt into it, and it collides with the hero's own.**
+"EVERY GREAT JOURNEY BEGINS WITH A VISION." fades up at **~10.3s and clears by
+~15.3s** — five seconds of every 27-second loop — centred in frame, which puts it
+straight across `.hero-content`'s sub-heading. Screenshotted at 1440x900: the
+video's line runs through "Discover thoughtfully crafted spaces where innovation
+meets elegance…" and the two tangle. **No CSS fixes this**: the hero is
+`object-fit:cover` and at 16:9 there is almost nothing to crop, and the headline
+is where the design wants it. It needs either a re-edit with the title card
+removed, or the 10–15s segment cut out of the clip. The clip also **cuts hard at
+the loop point** — it ends on a daylight exterior and restarts on an interior.
+Both are the client's to decide.
+
+**`.gitignore` now ignores root-level `*.mp4` / `*.mov`.** The repo *is* the
+deploy, so a master left in the working directory and committed by reflex would
+ship to the CDN for nothing. Videos belong in Sanity.
+
+**`replace-hero-video.mjs` rotates its undo file rather than overwriting it.**
+The script can be run more than once and each run records only one step back;
+clobbering `.video-revert.json` would strand every earlier version with nothing
+pointing at it, though the assets are all still in the dataset. The live file is
+always the most recent step (what `revert-videos.mjs` reads) and the
+`.video-revert.<timestamp>.json` copies are the trail behind it.
+
 **A note on the still underneath.** `heroImage` is **empty** on the `homepage`
 document, so the hero's fallback is the inline base64 night skyline built into
 `index.html` — while the video is a sunlit interior cutting to a golden-hour

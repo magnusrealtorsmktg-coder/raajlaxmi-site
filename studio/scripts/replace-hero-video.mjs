@@ -67,6 +67,20 @@ for (const [field, file] of jobs) {
 
 if (DRY) { console.log('\n--dry: nothing written, no revert file saved'); process.exit(0) }
 
+/* Keep the PREVIOUS undo rather than overwriting it. This script can be run
+   more than once — the hero has already been swapped once — and each run only
+   records one step back. Clobbering the file would strand every earlier
+   version with nothing pointing at it, even though the assets are all still
+   in the dataset. `.video-revert.json` is always the most recent step, which
+   is what revert-videos.mjs reads; the rotated copies are the trail behind it. */
+if (fs.existsSync(REVERT)) {
+  let stamp = 'prev'
+  try { stamp = JSON.parse(fs.readFileSync(REVERT, 'utf8')).savedAt.replace(/[:.]/g, '-') } catch {}
+  const kept = path.join(HERE, `.video-revert.${stamp}.json`)
+  fs.copyFileSync(REVERT, kept)
+  console.log(`\nprevious undo kept: ${path.basename(kept)}`)
+}
+
 /* write the undo BEFORE the change, so a failure mid-commit still leaves one */
 const revertDoc = {}
 for (const [field] of jobs) revertDoc[field] = before ? (before[field] ?? null) : null

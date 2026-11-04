@@ -13,3 +13,10 @@ studio/node_modules/
 studio/dist/
 studio/.sanity/
 studio/.env
+
+# Video masters dropped in the repo root to be uploaded to Sanity. The repo IS
+# the deploy (Netlify clones the tracked files), so a committed 15MB master
+# would ship to every visitor's CDN origin for nothing — the videos belong in
+# Sanity, not here. See studio/scripts/replace-hero-video.mjs.
+/*.mp4
+/*.mov
