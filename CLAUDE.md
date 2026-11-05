@@ -1200,46 +1200,46 @@ rendering fault rather than as a title. The About plate has the opposite
 property — it is `object-fit:contain` and its file is the plate's own ratio, so
 it shows whole on a phone with nothing cropped.
 
-**The video buffers PAUSED, and only starts playing when it is revealed.**
-This is the fix for the client's "sometimes the video doesn't play on mobile,
-stale blue background" report, and it is the half that actually mattered.
+**The video PLAYS from mount, invisibly, and the proof is the playback.**
+Read this whole entry before touching `mountVideo()`'s gate — it records a bug
+and its correction on the same day, and knowing only half of it will break
+this again.
 
-`mountVideo()` used to call `play()` at mount, so the video ran **invisibly at
-`opacity:0` while it buffered** — racing its own download. `runway()` is
-`buffered.end - currentTime`, so on any link slower than real time the playhead
-outruns the buffer and the runway goes **negative**. The five-second gate then
-becomes unreachable *no matter how small the file is*, which is why shrinking
-the hero from 15 MB to 3.94 MB on its own changed nothing. Measured on the live
-page at 4 Mbps with the small file already in place:
+For a few hours on 5 Nov the video buffered **paused** instead, to stop the
+playhead eating the runway (`buffered.end - currentTime` goes negative on a
+link slower than real time, making a five-second gate unreachable at any file
+size). That reasoning is sound on a desktop and **wrong on a phone**: mobile
+browsers do not meaningfully preload a paused `<video>` — `preload="auto"` is
+widely treated as `metadata` to save cellular data. So nothing buffered,
+nothing reached the gate, every handset was dropped at 20s onto the still, and
+the client reported "the hero video is not getting played, just shows a static
+photo". **Playing is what makes a phone download the file.**
 
-| wall | paused | currentTime | buffered | runway |
-|---|---|---|---|---|
-| 7.8s | false | 0.5 | 0.6 | +0.1 |
-| 13.0s | false | 5.7 | 5.0 | −0.7 |
-| 20.8s | false | 13.5 | 10.3 | **−3.3** → killed at 20s |
+So the gate can be neither a runway (playback erodes it) nor `readyState >= 3`
+(that is HAVE_FUTURE_DATA, "the next frame exists" — true of the old 265MB
+master three seconds in, and it faded up straight into the stutter). What it
+is now:
 
-Paused, `currentTime` stays at 0, so the runway simply **is** the buffered
-length and grows with every byte. Same link, after the change:
+- **`canplaythrough`**, which on a fast link arrives first; or
+- **`PROOF` (1.5) seconds of UNBROKEN playback.** `waiting` resets the run, so
+  a link that cannot sustain the file can never accumulate it.
+- **A last chance at the 20s give-up:** if the video is actually playing and
+  has made real progress it is shown rather than killed. Discarding a working
+  video to leave a static photograph is the exact failure that was reported.
+- **`SETTLED` (8) unbroken seconds forgive earlier stalls**, so the three-stall
+  retirement means "it *keeps* stalling", not "it stalled three times ever"
+  while the buffer filled.
+- `maybe()` resets the run when `currentTime` goes backwards, because the clip
+  loops.
 
-| wall | paused | currentTime | buffered | runway | shown |
-|---|---|---|---|---|---|
-| 7.8s | true | 0 | 1.7 | +1.7 | no |
-| 13.0s | true | 0 | 4.5 | +4.5 | no |
-| 15.6s | false | 1.5 | 6.3 | +4.7 | **YES** |
-
-Three consequences worth keeping straight:
-
-- **`autoplay` is off and there is no `play()` at mount.** `preload='auto'` is
-  what keeps a paused element buffering.
-- **Autoplay refusal is detected in `show()`**, not at mount — the first moment
-  anything actually wants to play. The `NotAllowedError`-only rule still
-  stands, for the reason it always did.
-- **`resume()` carries a `shown()` guard**, or scrolling back into view would
-  restart invisible playback and re-create the bug.
-
-2 Mbps and 1.2 Mbps still never reach the gate, and that is correct: the clip's
-own bitrate is 1.50 Mbps, so those links cannot carry it at all. **That is also
-why the `heavy` flag stayed on the hero** after the file was made lighter.
+**Nothing computed from `buffered` is used, because none of it is verifiable
+locally.** Headless Chrome has no real output clock, so `currentTime` advances
+on wall time while decoding lags: measured at 4 Mbps it reported
+`currentTime 17.5` against ranges `[[0, 12.7]]` **with zero stalls** — a state
+no real browser can be in, since it would stall instead. An earlier draft of
+this gate required a buffered-ahead margin, and that artifact made it reject a
+video that was playing perfectly. Identical runs also flip between pass and
+fail. **Validate this on a real handset, not in headless.**
 
 **The video never appears until it can actually play, and that rule is the
 whole design.** On 4 Nov the client uploaded the edit master into the hero slot:

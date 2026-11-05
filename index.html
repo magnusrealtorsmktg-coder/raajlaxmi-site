@@ -3705,8 +3705,9 @@
         v.muted = true;              // set before play(), or the browser blocks it
         v.defaultMuted = true;
         v.loop = true;
-        /* NOT autoplay, and NOT played at mount — see show(). It buffers
-           paused, so the download is racing nothing. */
+        /* autoplay, and played at mount — on a phone that is the only thing
+           that makes the file download at all. See the long note at show(). */
+        v.autoplay = true;
         v.playsInline = true;
         v.setAttribute('playsinline', '');        // older iOS reads the attribute
         v.preload = 'auto';
@@ -3729,11 +3730,10 @@
           unwire(); v.classList.remove('on'); v.pause();
           setTimeout(() => v.remove(), 900);      // after the fade, not during
         };
-        /* Nothing plays before it is revealed. The `shown()` guard here is the
-           whole of the fix described at show(): without it this would restart
-           invisible playback on every scroll back into view. */
+        /* No `shown()` guard here: it plays whether or not it is visible yet,
+           because on a phone playing is what downloads it. */
         function resume(){
-          if(!v.isConnected || document.hidden || !onScreen || !shown()) return;
+          if(!v.isConnected || document.hidden || !onScreen) return;
           const p = v.play(); if(p && p.catch) p.catch(() => {});
         }
 
@@ -3752,51 +3752,94 @@
            file three seconds in, so it faded the video up and straight into
            the stutter this is all meant to prevent. Having a next frame is not
            the same as being able to keep having one. */
-        /* IT BUFFERS PAUSED, AND ONLY STARTS PLAYING WHEN IT IS REVEALED.
-           This is the fix for the "sometimes the video never appears" report,
-           and it is NOT the same bug as the file being too heavy.
+        /* IT PLAYS FROM MOUNT, INVISIBLY, AND THE PROOF IS THE PLAYBACK.
+           Read the two paragraphs below together — they are a bug and its
+           correction, and knowing only one of them will get this broken again.
 
-           The old code called play() at mount, so the video ran invisibly at
-           opacity 0 while it buffered — racing its own download. `runway()` is
-           `buffered.end - currentTime`, so on any link slower than real time
-           the playhead outruns the buffer and the runway goes NEGATIVE: the
-           five-second gate can then never be reached no matter how small the
-           file is. Measured on the live page at 4 Mbps, with the 3.94MB file
-           already in place:
+           For a few hours on 5 Nov this buffered PAUSED instead, to stop the
+           playhead eating the runway (`buffered.end - currentTime`, which goes
+           negative on a link slower than real time, making a five-second gate
+           unreachable at any file size). That reasoning is sound on a desktop
+           and WRONG ON A PHONE: mobile browsers do not meaningfully preload a
+           paused <video> — `preload="auto"` is widely treated as `metadata` to
+           save cellular data. So nothing buffered, nothing reached the gate,
+           and every handset was dropped at 20s onto the still. That is the
+           "not getting played, just shows a static photo" report, and it was a
+           regression. **Playing is what makes a phone download the file.**
 
-             7.8s  currentTime 0.5  buffered 0.6  runway  +0.1
-            13.0s  currentTime 5.7  buffered 5.0  runway  -0.7
-            20.8s  currentTime 13.5 buffered 10.3 runway  -3.3   → killed at 20s
+           So the gate cannot be a runway, because playback erodes it, and it
+           cannot be `readyState >= 3` either — that is HAVE_FUTURE_DATA, "the
+           next frame exists", which was true of the old 265MB master three
+           seconds in and faded it up straight into the stutter.
 
-           Paused, `currentTime` stays at 0, so the runway simply IS the
-           buffered length and grows with every byte. The gate becomes
-           reachable on exactly the connections it was meant to protect.
-           Autoplay refusal is detected here instead of at mount, which is also
-           the first moment anyone actually wants it to play. */
-        const show = () => {
-          if(!v.isConnected || v.classList.contains('on')) return;
-          v.classList.add('on');
-          if(document.hidden || !onScreen) return;
-          const go = v.play();
-          if(go && go.catch) go.catch(err => { if(err && err.name === 'NotAllowedError') kill(); });
+           The signal used instead is the only one that is both honest and
+           reachable on a phone: HAS IT ACTUALLY PLAYED, UNINTERRUPTED, FOR
+           LONG ENOUGH TO BELIEVE IT CAN KEEP DOING SO. `waiting` resets the
+           proof, so a connection that cannot sustain the file can never
+           accumulate it — which is precisely the video that must not be shown.
+
+           There is deliberately NO buffered-ahead requirement alongside it.
+           One was tried and it wrongly blocked a video that was playing
+           perfectly: **headless Chrome has no real output clock**, so
+           `currentTime` advances on wall time while decoding lags, and
+           `buffered.end` reads BEHIND the playhead with zero stalls reported —
+           measured at 4 Mbps as `currentTime 17.5` against `[[0, 12.7]]`. A
+           real browser cannot do that; it stalls instead, and a stall is
+           exactly what this gate already listens for. Anything computed from
+           `buffered` is therefore unverifiable locally, and a gate that cannot
+           be tested is a gate that will be wrong.
+
+           After the dissolve the three-stall rule below takes over, which is
+           the real protection: a file the link cannot sustain is retired to
+           the photograph rather than stuttering for ever. */
+        const PROOF   = 1.5;           // unbroken seconds that earn the reveal
+        const SETTLED = 8;             // unbroken seconds that forgive stalls
+        let proofFrom = null;
+
+        const show = () => { if(v.isConnected) v.classList.add('on'); };
+        const maybe = () => {
+          /* the clip loops, so currentTime wraps to 0 and the run restarts */
+          if(proofFrom === null || v.currentTime < proofFrom){
+            proofFrom = v.currentTime; return;
+          }
+          const run = v.currentTime - proofFrom;
+          if(!shown()){
+            if(run >= PROOF) show();
+            return;
+          }
+          /* Shown already: a long unbroken run FORGIVES earlier stalls, so
+             `retire` comes to mean "it keeps stalling" rather than "it stalled
+             three times ever". Without this, three hiccups while the buffer
+             fills would retire a video that then played perfectly for the rest
+             of the visit. */
+          if(run >= SETTLED){ stalls = 0; proofFrom = v.currentTime; }
         };
-        const runway = () => {
-          if(v.readyState < 3 || !v.buffered.length) return 0;
-          return v.buffered.end(v.buffered.length - 1) - v.currentTime;
-        };
-        const enough = () => {
-          const r = runway();
-          return r >= 5 || (v.duration && r >= v.duration - 0.25);
-        };
-        const maybe = () => { if(!shown() && enough()) show(); };
+        /* the browser's own promise that it can reach the end without
+           stopping still counts, and on a fast link it arrives first */
         v.addEventListener('canplaythrough', show);
-        v.addEventListener('progress', maybe);
         v.addEventListener('timeupdate', maybe);
-        /* never earned it: stop spending a visitor's data on something they
-           are never going to see */
-        setTimeout(() => { if(v.isConnected && !shown()) kill(); }, 20000);
+        /* Never earned it: stop spending a visitor's data on something they
+           are never going to see.
 
-        v.addEventListener('waiting', () => { if(shown() && ++stalls >= 3) retire(); });
+           With one last chance first. If at this point the video is actually
+           PLAYING and has made real progress, then it works, whatever the
+           gate above did or did not manage to observe — and throwing away a
+           working video to leave a static photograph is the exact failure the
+           client reported. Discard it only when it is genuinely not running. */
+        setTimeout(() => {
+          if(!v.isConnected || shown()) return;
+          if(!v.paused && v.readyState >= 3 && v.currentTime > PROOF){ show(); return; }
+          kill();
+        }, 20000);
+
+        /* A stall RESETS THE PROOF as well as counting. Before the dissolve
+           that is the whole point of it: a link that cannot sustain the file
+           stalls repeatedly and so can never accumulate 1.5 unbroken seconds,
+           which is exactly the video that should never be shown. */
+        v.addEventListener('waiting', () => {
+          proofFrom = null;
+          if(shown() && ++stalls >= 3) retire();
+        });
 
         document.addEventListener('visibilitychange', onVis);
         if(window.IntersectionObserver){
@@ -3810,11 +3853,16 @@
         host.prepend(v);
         v.src = url;                 // set last, so no event can be missed
 
-        /* There is deliberately NO play() here. It used to be called at this
-           point, which is what made the video race its own download — see
-           show(), where playback now starts, and where a refused autoplay is
-           detected instead. `preload = 'auto'` is what keeps it buffering
-           while it is paused. */
+        /* Only a REFUSAL kills the video. A rejected play() is not necessarily
+           one: a video mounted below the fold is paused by the observer above
+           a frame or two after this call, and that pause rejects this promise
+           with AbortError. Treating every rejection as "autoplay refused"
+           removed the About plate's video the instant it mounted — the hero
+           survived only because it happens to be on screen, so nothing ever
+           interrupted its play(). (iOS Low Power Mode is the real case this
+           catches: autoplay is refused outright there, and the still wins.) */
+        const go = v.play();
+        if(go && go.catch) go.catch(err => { if(err && err.name === 'NotAllowedError') kill(); });
       });
     }
 

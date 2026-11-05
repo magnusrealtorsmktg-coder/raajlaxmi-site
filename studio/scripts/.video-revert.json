@@ -1,11 +1,11 @@
 {
-  "savedAt": "2026-11-04T11:50:55.141Z",
+  "savedAt": "2026-11-05T07:55:11.105Z",
   "note": "field values as they were before replace-hero-video.mjs ran; null means the field was empty",
   "fields": {
     "heroVideo": {
       "_type": "file",
       "asset": {
-        "_ref": "file-002405e9732fbc1a3ddbe1241c66a7b67887538a-mp4",
+        "_ref": "file-fd986bfb529265b9a30eb19227f35a8b272639d3-mp4",
         "_type": "reference"
       }
     }
@@ -17,9 +17,9 @@
       "size": 614915
     },
     "hero": {
-      "_id": "file-002405e9732fbc1a3ddbe1241c66a7b67887538a-mp4",
-      "originalFilename": "Homepage Web1 (1080p web).mp4",
-      "size": 7867386
+      "_id": "file-fd986bfb529265b9a30eb19227f35a8b272639d3-mp4",
+      "originalFilename": "Homepage video.mp4",
+      "size": 15786671
     }
   }
 }
