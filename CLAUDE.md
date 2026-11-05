@@ -576,19 +576,25 @@ handler read the visitor's name as `form.name.value` — the named getter for th
 `form.name` became the string `"contact"`. Both handlers go through
 `form.elements.namedItem('name')` now, which cannot be shadowed.
 
-**WHAT IS AND IS NOT VERIFIED.** Everything above was exercised by stubbing the
-endpoint in headless Chrome: both forms, success, a Web3Forms 400, and Netlify
-failing while Web3Forms succeeded. **The live round trip to Web3Forms was NOT
-verified**, and could not be: `curl` gets 403 by design, and from headless
-Chrome on `http://127.0.0.1` the preflight came back without an
-`Access-Control-Allow-Origin` header. Whether that is their bot protection
-reacting to a headless browser or a refusal of a plaintext localhost origin
-could not be established without spoofing the User-Agent, which is not something
-to do. **It has to be tested by a human, in a real browser, on the deployed
-https site.** If it fails there, the fix to try first is sending the body as
-`application/x-www-form-urlencoded` (also supported) with `Accept:
-application/json`, which is a CORS-simple request and skips the preflight
-entirely.
+**VERIFIED END TO END on 5 Nov**, by hand in a real browser on the deployed
+site: the form submits, Web3Forms accepts it and the email arrives. Worth
+recording how that had to be done, because nothing else works — **`curl` gets
+403 by design** (free plan is client-side only), and from headless Chrome on
+`http://127.0.0.1` the preflight came back with no `Access-Control-Allow-Origin`
+at all. Whether that was their bot protection reacting to a headless browser or
+a refusal of a plaintext localhost origin was never established, and is not
+worth establishing. **The only way to test this integration is a human, in an
+ordinary browser, on the deployed https site.** If it ever regresses, the first
+thing to try is sending the body as `application/x-www-form-urlencoded` (also
+supported) with `Accept: application/json`, which is a CORS-simple request and
+skips the preflight entirely.
+
+**The key delivers to `rajjlaxmi20@gmail.com`** — deliberately a Gmail rather
+than one of the 21 Hostinger mailboxes, so enquiries do not depend on a hosting
+plan that has to keep being renewed. Since Web3Forms' free plan has one
+recipient, **Gmail forwarding is what fans it out** to whoever on the client's
+side should read it; that can be changed any time with no code edit, which the
+access key itself cannot.
 
 Netlify still needs **Form detection enabled** (it is, as of 5 Nov) for the
 backup copy to be stored; its own email notifications are not used and should
