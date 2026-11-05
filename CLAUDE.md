@@ -1333,12 +1333,24 @@ pointing at it, though the assets are all still in the dataset. The live file is
 always the most recent step (what `revert-videos.mjs` reads) and the
 `.video-revert.<timestamp>.json` copies are the trail behind it.
 
-**A note on the still underneath.** `heroImage` is **empty** on the `homepage`
-document, so the hero's fallback is the inline base64 night skyline built into
-`index.html` — while the video is a sunlit interior cutting to a golden-hour
-aerial. The dissolve is therefore a change of scene, not a cross-fade. Setting
-`heroImage` to a frame from the video would make the hand-off invisible; it is
-a content decision and has not been made.
+**The still underneath is a FRAME OF THE FILM, and that is a fix not a
+flourish.** `heroImage` is still empty on the `homepage` document, so the
+fallback comes from the markup — but that used to be a **487KB base64 night
+skyline assigned from a script at the foot of the body**, under a film that is
+a sunlit interior. The dissolve was a change of scene, and a visitor whose
+video never arrived was left on an unrelated blue cityscape. That is the
+"stale blue background" the client reported on 5 Nov.
+
+It is now **`assets/hero-still.jpg`** (1280x720, 64KB, a frame of the film),
+set in the stylesheet on `.hero-media`. A video that cannot load now costs the
+motion and nothing else. `paint()` still overrides it the moment the CMS
+carries a `heroImage`.
+
+**Removing the blob took `index.html` from 884KB to 220KB** — a 75% cut, and
+not cosmetic: `mountVideo()` does not start fetching until `load`, so on a
+phone at 4 Mbps the document now arrives in ~0.4s instead of ~1.7s and the
+film gets that time back to buffer in. This closes item 2 of *Performance →
+Still to do*.
 
 **Do not give `.why-feature .img` a `position` other than `absolute`.** It is
 `position:absolute; inset:0`, and making it `relative` drops the inset and
@@ -1625,6 +1637,39 @@ changed.
    640×640 — between them the heaviest thing on the home page after the hero.
    They are flat gold line-work on transparency, so a re-export should be a
    fraction of that. This is an asset swap, not a code change.
-2. `index.html` carries ~665KB of base64 (the hero JPEG) of a 773KB file. Extract to external AVIF/WebP with `srcset`. (The logo is already external — see Photography and assets.)
+2. ~~`index.html` carries ~665KB of base64 (the hero JPEG)~~ — **done, 5 Nov.**
+   The blob is gone and the file is **220KB**, down from 884KB; the still is
+   `assets/hero-still.jpg`, a frame of the film, set from CSS. See *The still
+   underneath is a FRAME OF THE FILM*. A further step to AVIF/WebP with
+   `srcset` is still available but the 64KB JPEG is no longer the problem.
+2b. **THE HERO VIDEO IS STILL 15MB AND THAT IS THE REMAINING BUG.** Measured on
+   5 Nov with CDP throttling, at 390x844 against the live site: at 12 Mbps the
+   film is revealed at 12.5s; at **4 Mbps (ordinary 4G) and at 2 Mbps it is
+   never revealed at all** — it cannot reach the gate, the 20s give-up drops
+   it, and the visitor sees only the still. That is the intermittent failure
+   the client reported, and no code change fixes it. A trimmed, re-encoded
+   replacement is **prepared and measured** but **not uploaded** — writing to
+   the client's dataset was refused by the auto-mode classifier as
+   *[Modify Shared Resources]*:
+
+   | | size | bitrate | duration | SSIM |
+   |---|---|---|---|---|
+   | live now | 15.06 MB | 4.64 Mbps | 27.2s | — |
+   | **prepared (CRF 26)** | **3.94 MB** | **1.50 Mbps** | **22.1s** | **0.983** |
+
+   It also **cuts the burnt-in title card** (original 10.3s–15.4s, "EVERY GREAT
+   JOURNEY BEGINS WITH A VISION.") which on a phone arrives as fragments of
+   letters down both edges, because the portrait crop keeps only ~a quarter of
+   the frame width. Rebuild with:
+
+   ```
+   ffmpeg -ignore_editlist 1 -i <source> \
+     -vf "select='not(between(t,10.3,15.4))',setpts=N/FRAME_RATE/TB" \
+     -an -c:v libx264 -crf 26 -preset slow -movflags +faststart -g 48 \
+     -pix_fmt yuv420p homepage-web.mp4
+   ```
+   then `npx sanity exec scripts/replace-hero-video.mjs --with-user-token --
+   --hero homepage-web.mp4`. At 1.50 Mbps the `heavy` flag at its call site in
+   `mountVideo()` should come off too.
 3. Subset or self-host the Google Fonts (Archivo Black, Cinzel, Cormorant Garamond, Inter, Playfair Display — five families on every page).
 4. Give the hero plate `fetchpriority="high"` to improve LCP.
