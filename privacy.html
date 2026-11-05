@@ -1471,6 +1471,10 @@
   .lead-send:hover{background:var(--champagne-soft);}
   .lead-fine{margin-top:.9rem;text-align:center;color:var(--paper-faint);
     font:300 .76rem/1.5 'Inter',sans-serif;}
+  /* shown only when the POST actually failed — see the submit handler */
+  .lead-err{margin:.8rem 0 0;text-align:center;color:#E8A08E;
+    font:400 .78rem/1.55 'Inter',sans-serif;}
+  .lead-err a{color:inherit;text-decoration:underline;text-underline-offset:2px;}
   /* the thank-you swaps in place of the body, so the card never collapses */
   .lead-done{display:none;text-align:center;padding:.6rem 0 .3rem;}
   .lead-card.sent .lead-body{display:none;}
@@ -1751,7 +1755,21 @@
       <h2 class="lead-title" id="leadTitle">Let us find your address.</h2>
       <p class="lead-sub">Leave your details and a member of the team will call you within one business day.</p>
 
-      <form id="leadForm" novalidate>
+      <!-- Netlify Forms. Three attributes are what make this real, and the
+           markup is what does it: Netlify registers a form by PARSING THE
+           DEPLOYED HTML, so a form built by script would never be seen.
+           `name` is how it appears in the dashboard; the hidden `form-name`
+           is what identifies the POST, needed because this is submitted by
+           fetch rather than by the browser; `bot-field` is a honeypot no
+           human sees and a bot fills in.
+           This same popup is in all eleven files and they share one name, so
+           Netlify treats them as ONE form rather than eleven. -->
+      <form id="leadForm" name="lead" method="POST"
+            data-netlify="true" data-netlify-honeypot="bot-field" novalidate>
+        <input type="hidden" name="form-name" value="lead">
+        <p hidden style="display:none" aria-hidden="true">
+          <label>Leave this empty<input name="bot-field" tabindex="-1" autocomplete="off"></label>
+        </p>
         <div class="lead-row">
           <div class="lead-f"><input type="text" name="name" placeholder="Your Name" autocomplete="name" required></div>
           <div class="lead-f"><input type="tel" name="phone" placeholder="Phone Number" autocomplete="tel" inputmode="tel" required></div>
@@ -1766,6 +1784,8 @@
         </div>
         <button type="submit" class="lead-send" data-hover data-magnetic>Request a Callback</button>
         <p class="lead-fine">By submitting, you agree to be contacted by Raajlaxmi Group about your enquiry.</p>
+        <p class="lead-err" id="leadErr" hidden>We could not send that just now.
+          Please try again, or call us on <a href="tel:+917774000939">+91 77740 00939</a>.</p>
       </form>
     </div>
 
@@ -1997,10 +2017,32 @@
       const raw = (form.elements.namedItem('name').value || '').trim();
       const first = (raw.split(/\s+/)[0] || '').replace(/[<>]/g,'');
       const msg = document.getElementById('leadDoneMsg');
-      if(msg && first) msg.textContent = `Thank you, ${first}. We’ll be in touch shortly.`;
-      card.classList.add('sent');
-      set(localStorage,'rl-lead-done','1');   // never ask this visitor again
-      setTimeout(close, 2800);
+      const btn = form.querySelector('.lead-send');
+      const err = document.getElementById('leadErr');
+
+      /* Send it to Netlify Forms, and say "thank you" only once it has
+         actually arrived. This popup asks a stranger for their phone number
+         thirty seconds into a visit; telling them it was received when it was
+         not is the one outcome worth engineering against. A failure puts the
+         button back and offers the phone line instead of swallowing the lead.
+         `rl-lead-done` is likewise only written on success, so a visitor whose
+         send failed is asked again rather than being retired for good. */
+      if(err) err.hidden = true;
+      if(btn){ btn.disabled = true; btn.textContent = 'Sending…'; }
+      fetch('/', {method:'POST',
+                  headers:{'Content-Type':'application/x-www-form-urlencoded'},
+                  body: new URLSearchParams(new FormData(form)).toString()})
+        .then(r => { if(!r.ok) throw new Error(r.status); })
+        .then(() => {
+          if(msg && first) msg.textContent = `Thank you, ${first}. We’ll be in touch shortly.`;
+          card.classList.add('sent');
+          set(localStorage,'rl-lead-done','1');   // never ask this visitor again
+          setTimeout(close, 2800);
+        })
+        .catch(() => {
+          if(btn){ btn.disabled = false; btn.textContent = 'Request a Callback'; }
+          if(err) err.hidden = false;
+        });
     });
 
     setTimeout(open, wait);

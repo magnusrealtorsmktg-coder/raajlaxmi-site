@@ -80,13 +80,15 @@ compositions. `--window-size` is honored for `--screenshot` but **not** for
 `--dump-dom`, where `innerWidth` reports 756 regardless — size an iframe
 instead of trusting that number.
 
-### The two launch blockers
+### The launch blockers
 
-- **Neither form has a backend.** The contact form and the 30-second lead popup
-  both validate, swap to a thank-you and **send nothing**. The popup is the
-  sharper problem: it asks every visitor for a phone number 30 seconds in and
-  discards it. Wire both to Netlify Forms (`name="contact"` +
-  `data-netlify="true"`) before launch.
+- ~~**Neither form has a backend.**~~ **Both are wired to Netlify Forms (5 Nov)**
+  — see *The forms post to Netlify Forms*. **One setting still has to be turned
+  on by hand**: Netlify disables form detection on new sites, so until
+  *Site configuration → Forms → Form detection* is **enabled** and the site is
+  redeployed, every submission 404s and the visitor sees the error line. Enable
+  it, redeploy, then set a notification address under *Form notifications* or
+  the entries sit in the dashboard with nobody looking.
 - **The project detail pages are nearly empty.** Of 14 projects: **0 have a
   gallery, 1 has an overview, 1 has specs, 1 has a price, and 7 of 14 have a
   configuration**. Cards look right; `project.html?p=<slug>` is sparse, and the
@@ -345,7 +347,7 @@ optional** — a short window squeezes the band (`60vh`) without squeezing the
 copy, and `.sv-band` is `overflow:hidden`, so the headline is what gets clipped.
 Measured at 1440x560 before it existed: 343px of copy in a 336px band.
 
-`contact.html` — one section, `#contact` ("Section VIII — Contact"): the invitation and a 2×2 contact grid on the left, a floating consultation card on the right, then the location card + drawn map and a closing CTA. **The form has no backend** — the submit handler validates, then swaps the card to a thank-you state and nothing is sent. Wire it to Netlify Forms (`name="contact"` + `data-netlify="true"` on the `<form>`) or an endpoint before launch, or enquiries are lost. Deliberately carries no corner artwork, per the brief.
+`contact.html` — one section, `#contact` ("Section VIII — Contact"): the invitation and a 2×2 contact grid on the left, a floating consultation card on the right, then the location card + drawn map and a closing CTA. **The form posts to Netlify Forms** as `contact`, and the thank-you state is shown only once that POST has succeeded — see *The forms post to Netlify Forms*. Deliberately carries no corner artwork, per the brief.
 
 **Every consultation CTA on the site points here**: the nav/sheet `Book Consultation` on every page, `Schedule a Consultation` (collection), `Book a Private Consultation` (testimonials) and `Schedule a Site Visit` (detail page) — the last three deep-link to `contact.html#ctForm`, which scrolls the card into view.
 
@@ -488,6 +490,73 @@ the CIN, the registered office, RERA numbers, the Grievance Officer's name and
 email, and the jurisdiction city. Those are the client's to supply and a
 lawyer's to check before launch.
 
+### The forms post to Netlify Forms
+
+Both of them, since 5 Nov: the contact card as **`contact`** and the 30-second
+lead popup as **`lead`**. No backend, no build step, no dependency — Netlify
+reads the form out of the deployed HTML and collects the POSTs itself.
+
+**Netlify registers a form by PARSING THE DEPLOYED HTML**, not by watching
+traffic, so the markup is what does the work:
+
+```html
+<form id="leadForm" name="lead" method="POST"
+      data-netlify="true" data-netlify-honeypot="bot-field" novalidate>
+  <input type="hidden" name="form-name" value="lead">
+  <p hidden style="display:none" aria-hidden="true">
+    <label>Leave this empty<input name="bot-field" tabindex="-1" autocomplete="off"></label>
+  </p>
+```
+
+Six things are load-bearing:
+
+- **The hidden `form-name` field is not redundant.** Both forms are submitted by
+  `fetch` rather than by the browser, and a POST body is all Netlify gets — the
+  `name` attribute never travels with it. Without that field the submission is
+  rejected and nothing is stored.
+- **The POST goes to `/`**, urlencoded, built with
+  `new URLSearchParams(new FormData(form))`. That is Netlify's documented target
+  for an AJAX submission; it does not need a page of its own.
+- **The thank-you is shown only once the POST has succeeded.** It used to be
+  shown unconditionally, which was the whole bug — the popup asks a stranger for
+  a phone number thirty seconds into a visit, and telling them it arrived when it
+  did not is the one outcome worth engineering against. A failure puts the button
+  back, un-disables it and reveals `.lead-err` / `.ct-err`, which offers the phone
+  line instead.
+- **`rl-lead-done` is written only on success too.** It is the flag that retires
+  the popup for ever; writing it on a failed send would spend the visitor's one
+  chance and store nothing. Verified: a failed send leaves it `null` and a retry
+  in the same session goes through.
+- **`form.name` stopped meaning what it did**, and this bit. `contact.html`'s
+  handler read the visitor's name as `form.name.value` — the named getter for the
+  `name` input. Adding a `name` attribute to the `<form>` **shadows that getter**,
+  so `form.name` became the string `"contact"` and `.value` was `undefined`. Both
+  handlers now go through `form.elements.namedItem('name')`, which cannot be
+  shadowed. The lead popup already did this for the same reason.
+- **The popup is in all eleven files and they share one form name**, so Netlify
+  treats them as one form rather than eleven. The honeypot `<p>` carries both
+  `hidden` and an inline `display:none`, because the pages have no `[hidden]`
+  rule of their own and a stray selector must not be able to reveal it.
+
+**Two things still have to be done in the Netlify UI, by hand:**
+
+1. **Enable form detection.** Netlify ships it **disabled** on new sites —
+   *Site configuration → Forms → Form detection → Enable*, then **redeploy**,
+   because detection happens at deploy time and an already-deployed page is not
+   re-scanned.
+2. **Set a notification address** under *Form notifications*, or submissions
+   accumulate in the dashboard and nobody is told. `info@raajlaxmi.com` is the
+   live, actively-used mailbox.
+
+The free tier is **100 submissions a month**; past that Netlify charges or drops
+them, which is worth knowing before a campaign.
+
+Verified by stubbing `fetch` through CDP, both forms, both outcomes: on success
+the card flips to the thank-you and the POST body carries every field
+(`form-name=contact&bot-field=&name=…&phone=…&email=…&interest=…&message=…&consent=on`);
+on failure nothing flips, the error line shows, the button comes back enabled
+with its label intact, and the lead popup is not retired. No console exceptions.
+
 ## Architecture
 
 **The `<head>` CSS is duplicated across all eleven files.** Lines ~1–978 of `index.html`, `projects.html`, `projects-ongoing.html`, `projects-redevelopment.html`, `project.html`, `testimonials.html`, `services.html`, `contact.html`, `privacy.html`, `terms.html` and `disclaimer.html` are the same stylesheet — base tokens, cursor, nav, mobile sheet, and the CSS for sections I–V — differing in only ~100 lines (title, nav/logo sizing on the inner pages). Each page then renders only its own sections. **Any edit to shared chrome (nav, `.nav-wrap.on-light`, cursor, burger/sheet, `:root` tokens, the hidden page scrollbar) must be applied to all eleven files or the pages drift.** The page scrollbar is hidden by request (`html{scrollbar-width:none}` + `html::-webkit-scrollbar{display:none}`); it is scoped to `html`, **not** `*`, on purpose — the scrollbar on `.cor-figure` is the only cue that the line-map banner pans sideways on a phone, so a blanket rule would break that.
@@ -585,7 +654,7 @@ do not "sync" it without checking which copy is current.
 - **It is suppressed on `contact.html`**, which already *is* this form; covering it with a duplicate is the one place the popup would actively get in the way.
 - The blur is `backdrop-filter` on `.lead-scrim`, with an `@supports not` fallback that takes the scrim to near-opaque where the property is unavailable, so the card is never read against live page content. It sits at `z-index:900` — above the nav (100), below the loader (9999), so the cover is never what the backdrop is blurring.
 
-Its location list is the `LOCATIONS` array in the IIFE (one line to edit) and the `<select>` is populated from it. **Like the contact form, it has no backend** — it validates, swaps to a thank-you and sends nothing.
+Its location list is the `LOCATIONS` array in the IIFE (one line to edit) and the `<select>` is populated from it. **Like the contact form, it posts to Netlify Forms**, as `lead` — see *The forms post to Netlify Forms*.
 
 **It also stands down while the owner detail panel is open.** That panel sits at
 `z-index:880`, just under this one, so a popup arriving on top of it would bury
