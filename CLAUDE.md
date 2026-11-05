@@ -1200,46 +1200,55 @@ rendering fault rather than as a title. The About plate has the opposite
 property — it is `object-fit:contain` and its file is the plate's own ratio, so
 it shows whole on a phone with nothing cropped.
 
-**The video PLAYS from mount, invisibly, and the proof is the playback.**
-Read this whole entry before touching `mountVideo()`'s gate — it records a bug
-and its correction on the same day, and knowing only half of it will break
-this again.
+**The connection and file-size refusals are GONE (5 Nov), at the client's
+explicit instruction.** The video is fetched on every connection, revealed on
+the first decoded frame, and never taken away again.
 
-For a few hours on 5 Nov the video buffered **paused** instead, to stop the
-playhead eating the runway (`buffered.end - currentTime` goes negative on a
-link slower than real time, making a five-second gate unreachable at any file
-size). That reasoning is sound on a desktop and **wrong on a phone**: mobile
-browsers do not meaningfully preload a paused `<video>` — `preload="auto"` is
-widely treated as `metadata` to save cellular data. So nothing buffered,
-nothing reached the gate, every handset was dropped at 20s onto the still, and
-the client reported "the hero video is not getting played, just shows a static
-photo". **Playing is what makes a phone download the file.**
+What was removed, all of it from `mountVideo()`:
 
-So the gate can be neither a runway (playback erodes it) nor `readyState >= 3`
-(that is HAVE_FUTURE_DATA, "the next frame exists" — true of the old 265MB
-master three seconds in, and it faded up straight into the stutter). What it
-is now:
+| removed | what it did |
+|---|---|
+| `max-width:620px` | no handset ever saw any video |
+| `saveData` | skipped on data-saver |
+| `/2g/` on `effectiveType` | skipped on a 2G-class link |
+| `heavy` + `3g` | skipped the hero on 3G |
+| 20s give-up | deleted a video that had not "earned" the reveal |
+| three-stall `retire()` | took a *playing* video away again |
+| the reveal gate | `canplaythrough`, buffered runway, or N seconds of unbroken playback |
 
-- **`canplaythrough`**, which on a fast link arrives first; or
-- **`PROOF` (1.5) seconds of UNBROKEN playback.** `waiting` resets the run, so
-  a link that cannot sustain the file can never accumulate it.
-- **A last chance at the 20s give-up:** if the video is actually playing and
-  has made real progress it is shown rather than killed. Discarding a working
-  video to leave a static photograph is the exact failure that was reported.
-- **`SETTLED` (8) unbroken seconds forgive earlier stalls**, so the three-stall
-  retirement means "it *keeps* stalling", not "it stalled three times ever"
-  while the buffer filled.
-- `maybe()` resets the run when `currentTime` goes backwards, because the clip
-  loops.
+They all made the same trade, and it was right once: they were written for a
+**265MB 4K master**, where fetching the file genuinely could cost a visitor
+more than it gave them. The files are web encodes now — the hero is 3.94 MB at
+1.50 Mbps, the About plate 0.59 MB — and at that size the honest answer is to
+try, show it the moment there is a frame, and leave it alone. The gate was
+also what made the client see a static photograph on their phone.
 
-**Nothing computed from `buffered` is used, because none of it is verifiable
-locally.** Headless Chrome has no real output clock, so `currentTime` advances
-on wall time while decoding lags: measured at 4 Mbps it reported
-`currentTime 17.5` against ranges `[[0, 12.7]]` **with zero stalls** — a state
-no real browser can be in, since it would stall instead. An earlier draft of
-this gate required a buffered-ahead margin, and that artifact made it reject a
-video that was playing perfectly. Identical runs also flip between pass and
-fail. **Validate this on a real handset, not in headless.**
+Measured locally against live Sanity data at 390x844, after:
+
+| link | revealed | then |
+|---|---|---|
+| 12 Mbps | 5.2s | stays |
+| 4 Mbps | 15.6s | stays |
+| 2 Mbps | 13.0s | stays |
+| 1.2 Mbps | 23.4s | stays |
+
+Before the change, 4 / 2 / 1.2 Mbps all ended on the still.
+
+**`prefers-reduced-motion` is the one refusal kept**, and deliberately: it is
+not a guess about someone's bandwidth but an explicit instruction from their
+operating system not to show looping motion. Verified still skipping — 0 videos
+mounted under `--force-prefers-reduced-motion`.
+
+**What remains does not withhold the video.** It still pauses off-screen and on
+a hidden tab (battery, and it resumes); a genuine `error`, or a
+`NotAllowedError` from `play()`, still removes the element, because in both
+cases there is nothing to show and nothing to wait for — iOS Low Power Mode is
+the real case. The photograph underneath is never touched, so a failed file
+leaves a still rather than a black box.
+
+**The accepted cost:** a visitor on a poor connection now gets the video late,
+and possibly stuttering, instead of a clean still. That is the trade that was
+asked for. If it ever needs reversing, the whole of it is in `mountVideo()`.
 
 **The video never appears until it can actually play, and that rule is the
 whole design.** On 4 Nov the client uploaded the edit master into the hero slot:

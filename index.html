@@ -3637,65 +3637,44 @@
     /* Drop a silent looping video into an element that is already showing a
        picture. Used by the hero, the About plate and the Why banner.
 
-       It is skipped where it would cost a visitor real money or go against a
-       stated preference: on a data-saver connection, on a link too slow to
-       carry THIS file, and under prefers-reduced-motion. All of those leave
-       the still in place — which is why the photograph is always painted
-       first, even when a video is set.
+       IT TRIES ON EVERY CONNECTION. The connection and file-size refusals
+       are GONE as of 5 Nov, at the client's explicit instruction after the
+       hero kept falling back to a still on their phone. What used to be here:
+       a `max-width:620px` phone skip, a `saveData` skip, a 2G skip, a `heavy`
+       flag that skipped the hero on 3G, a 20-second give-up that deleted a
+       video which had not "earned" the reveal, and a three-stall rule that
+       took a playing video away again. Between them they meant a handset
+       routinely saw the photograph and nothing else, which is precisely what
+       was being complained about.
 
-       IT NO LONGER SKIPS PHONES. It did until 5 Nov — a flat
-       `max-width:620px` — which meant no handset ever saw any of the three,
-       and that was the client's complaint. The blanket rule was always too
-       coarse: it was written when the hero slot held a 265MB 4K master, and
-       it judged the device rather than the file. A phone on wifi can play a
-       0.59MB clip perfectly well.
+       They all made the same wrong trade. They were written for a 265MB 4K
+       master, where fetching the file really could cost a visitor more than it
+       gave them. The files are web encodes now — the hero is 3.94 MB at
+       1.50 Mbps, the About plate 0.59 MB — and for a file of that size the
+       honest answer is to try, show it the moment there is a frame, and leave
+       it alone.
 
-       What replaced it is `heavy`, because the two live files are not
-       remotely comparable and one threshold cannot serve both:
+       ONE REFUSAL IS KEPT: `prefers-reduced-motion`. That is not a guess about
+       someone's bandwidth, it is an explicit instruction from their operating
+       system not to show looping motion, and a background video is exactly
+       what it is asking about. Removing it would override a stated
+       accessibility preference rather than a heuristic.
 
-         - the About plate is **0.59 MB**, re-encoded, and plays on anything
-           above a 2G-class link;
-         - the hero is **3.94 MB at 1.50 Mbps** (it was 15 MB at 4.64 Mbps
-           until 5 Nov) and still cannot play in real time on a 3G-class link.
-           Measured on the live page after the lighter file went up: it is
-           revealed at 15.6s on a 4 Mbps link, and at **2 Mbps and 1.2 Mbps it
-           never reaches the gate at all** — which is correct, since the clip's
-           own bitrate is 1.5 Mbps. Fetched there it would be dropped at 20s
-           having spent megabytes of someone's mobile data to show them
-           nothing. Skipping it outright is the same outcome without the bill.
+       What remains, and none of it withholds the video:
 
-       Note `navigator.connection` does not exist on iOS, so `conn` is
-       undefined there and neither connection test fires. That is the right
-       default: iOS gets the video and the gates below decide its fate.
+       - It is revealed on the FIRST DECODED FRAME, so the dissolve starts the
+         moment there is something to dissolve to, and never reverts.
+       - It stops when off-screen or the tab is hidden, and resumes on return.
+         That is battery, not bandwidth, and it never removes anything.
+       - A genuine `error` on the file, or a `NotAllowedError` from `play()`,
+         still removes the element — in both cases there is nothing to show and
+         nothing to wait for. iOS Low Power Mode is the real-world case.
 
-       Everything else here exists to stop the video being WORSE than the
-       photograph it covers. Four rules, and each one is a failure that was
-       actually observed with a 4K master in this slot:
-
-       - It is revealed on `canplaythrough`, not on the first decoded frame.
-         Revealing early IS the black-rectangle-then-stutter bug.
-       - It gets THREE visible stalls and then the photograph wins. A file the
-         connection cannot sustain is dissolved away rather than stuttering for
-         ever: a still photograph beats a video that keeps pausing. Stalls
-         before it is shown are not counted — the visitor cannot see those, and
-         counting them would retire a video that was merely buffering.
-       - If it is never ready at all, it is dropped at 20s. Downloading
-         something the visitor will never see is the one case worse than not
-         having it.
-       - It stops when off-screen or the tab is hidden. A background texture
-         decoded behind content already scrolled past is pure cost, in battery
-         as much as bandwidth.
-
-       Every exit leaves the still showing rather than a black box: only the
-       video element goes, and the background-image underneath is never
-       touched. */
-    function mountVideo(host, url, posterUrl, cls, heavy){
+       The photograph is still painted first and is never touched, so a file
+       that fails leaves a still rather than a black box. */
+    function mountVideo(host, url, posterUrl, cls){
       if(!host || !url) return;
-      const conn = navigator.connection;
-      if(conn && conn.saveData) return;
-      const et = (conn && conn.effectiveType) || '';
-      if(/2g/.test(et)) return;              // catches '2g' and 'slow-2g'
-      if(heavy && et === '3g') return;       // see `heavy` above
+      /* the one preference still honoured — see above */
       if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
       whenQuiet(() => {
@@ -3716,20 +3695,19 @@
         v.disablePictureInPicture = true;         // no PiP button over the hero
         v.setAttribute('disableremoteplayback', '');
 
-        let io = null, onScreen = true, stalls = 0;
-        const shown = () => v.classList.contains('on');
+        /* no `stalls` counter any more: stalling no longer costs the video
+           anything, it just plays on */
+        let io = null, onScreen = true;
 
         function onVis(){ document.hidden ? v.pause() : resume(); }
         const unwire = () => {
           if(io){ io.disconnect(); io = null; }
           document.removeEventListener('visibilitychange', onVis);
         };
-        /* never shown, or shown and then found wanting — the two exits */
+        /* the ONE exit left: the file genuinely cannot be played. There is no
+           longer a `retire()` beside it — a video that has started playing is
+           never taken away again. */
         const kill = () => { unwire(); v.remove(); };
-        const retire = () => {
-          unwire(); v.classList.remove('on'); v.pause();
-          setTimeout(() => v.remove(), 900);      // after the fade, not during
-        };
         /* No `shown()` guard here: it plays whether or not it is visible yet,
            because on a phone playing is what downloads it. */
         function resume(){
@@ -3739,107 +3717,27 @@
 
         v.addEventListener('error', kill, {once:true});
 
-        /* TWO independent ways to earn the dissolve, and both of them are a
-           promise about the FUTURE rather than about the current frame:
+        /* REVEALED ON THE FIRST DECODED FRAME, AND NEVER UN-REVEALED.
+           `loadeddata` means there is a frame to show; that is now the whole
+           condition. It replaces a gate that asked the video to prove it could
+           play THROUGH before being shown — `canplaythrough`, or a buffered
+           runway, or seconds of unbroken playback — plus a 20s give-up that
+           deleted it if the proof never came and a three-stall rule that took
+           it away afterwards.
 
-           - `canplaythrough`, the browser's own estimate that it can play the
-             file to the end without stopping; and
-           - a real runway: decodable, with five seconds buffered ahead (or the
-             whole clip, for one shorter than that).
+           That gate was right for a 265MB 4K master, where showing early
+           really did mean showing a stutter. For a 1.50 Mbps file it mostly
+           just withheld a video that was working, and on a phone it withheld
+           it permanently. The client asked for the limits to come off.
 
-           An earlier draft fell back to `readyState >= 3` on a timer, which is
-           HAVE_FUTURE_DATA — "the next frame exists". That is true of a 265MB
-           file three seconds in, so it faded the video up and straight into
-           the stutter this is all meant to prevent. Having a next frame is not
-           the same as being able to keep having one. */
-        /* IT PLAYS FROM MOUNT, INVISIBLY, AND THE PROOF IS THE PLAYBACK.
-           Read the two paragraphs below together — they are a bug and its
-           correction, and knowing only one of them will get this broken again.
-
-           For a few hours on 5 Nov this buffered PAUSED instead, to stop the
-           playhead eating the runway (`buffered.end - currentTime`, which goes
-           negative on a link slower than real time, making a five-second gate
-           unreachable at any file size). That reasoning is sound on a desktop
-           and WRONG ON A PHONE: mobile browsers do not meaningfully preload a
-           paused <video> — `preload="auto"` is widely treated as `metadata` to
-           save cellular data. So nothing buffered, nothing reached the gate,
-           and every handset was dropped at 20s onto the still. That is the
-           "not getting played, just shows a static photo" report, and it was a
-           regression. **Playing is what makes a phone download the file.**
-
-           So the gate cannot be a runway, because playback erodes it, and it
-           cannot be `readyState >= 3` either — that is HAVE_FUTURE_DATA, "the
-           next frame exists", which was true of the old 265MB master three
-           seconds in and faded it up straight into the stutter.
-
-           The signal used instead is the only one that is both honest and
-           reachable on a phone: HAS IT ACTUALLY PLAYED, UNINTERRUPTED, FOR
-           LONG ENOUGH TO BELIEVE IT CAN KEEP DOING SO. `waiting` resets the
-           proof, so a connection that cannot sustain the file can never
-           accumulate it — which is precisely the video that must not be shown.
-
-           There is deliberately NO buffered-ahead requirement alongside it.
-           One was tried and it wrongly blocked a video that was playing
-           perfectly: **headless Chrome has no real output clock**, so
-           `currentTime` advances on wall time while decoding lags, and
-           `buffered.end` reads BEHIND the playhead with zero stalls reported —
-           measured at 4 Mbps as `currentTime 17.5` against `[[0, 12.7]]`. A
-           real browser cannot do that; it stalls instead, and a stall is
-           exactly what this gate already listens for. Anything computed from
-           `buffered` is therefore unverifiable locally, and a gate that cannot
-           be tested is a gate that will be wrong.
-
-           After the dissolve the three-stall rule below takes over, which is
-           the real protection: a file the link cannot sustain is retired to
-           the photograph rather than stuttering for ever. */
-        const PROOF   = 1.5;           // unbroken seconds that earn the reveal
-        const SETTLED = 8;             // unbroken seconds that forgive stalls
-        let proofFrom = null;
-
+           What a visitor on a genuinely poor connection now gets is the
+           video, arriving late and possibly stuttering, instead of the
+           photograph. That is the trade that was asked for, and it is the
+           whole of the change — the still underneath is untouched, so nothing
+           is ever a black box. */
         const show = () => { if(v.isConnected) v.classList.add('on'); };
-        const maybe = () => {
-          /* the clip loops, so currentTime wraps to 0 and the run restarts */
-          if(proofFrom === null || v.currentTime < proofFrom){
-            proofFrom = v.currentTime; return;
-          }
-          const run = v.currentTime - proofFrom;
-          if(!shown()){
-            if(run >= PROOF) show();
-            return;
-          }
-          /* Shown already: a long unbroken run FORGIVES earlier stalls, so
-             `retire` comes to mean "it keeps stalling" rather than "it stalled
-             three times ever". Without this, three hiccups while the buffer
-             fills would retire a video that then played perfectly for the rest
-             of the visit. */
-          if(run >= SETTLED){ stalls = 0; proofFrom = v.currentTime; }
-        };
-        /* the browser's own promise that it can reach the end without
-           stopping still counts, and on a fast link it arrives first */
-        v.addEventListener('canplaythrough', show);
-        v.addEventListener('timeupdate', maybe);
-        /* Never earned it: stop spending a visitor's data on something they
-           are never going to see.
-
-           With one last chance first. If at this point the video is actually
-           PLAYING and has made real progress, then it works, whatever the
-           gate above did or did not manage to observe — and throwing away a
-           working video to leave a static photograph is the exact failure the
-           client reported. Discard it only when it is genuinely not running. */
-        setTimeout(() => {
-          if(!v.isConnected || shown()) return;
-          if(!v.paused && v.readyState >= 3 && v.currentTime > PROOF){ show(); return; }
-          kill();
-        }, 20000);
-
-        /* A stall RESETS THE PROOF as well as counting. Before the dissolve
-           that is the whole point of it: a link that cannot sustain the file
-           stalls repeatedly and so can never accumulate 1.5 unbroken seconds,
-           which is exactly the video that should never be shown. */
-        v.addEventListener('waiting', () => {
-          proofFrom = null;
-          if(shown() && ++stalls >= 3) retire();
-        });
+        v.addEventListener('loadeddata', show);
+        v.addEventListener('playing', show);
 
         document.addEventListener('visibilitychange', onVis);
         if(window.IntersectionObserver){
@@ -3879,11 +3777,9 @@
           `url('${shot}?w=2400&q=80&auto=format&fit=max')`;
       }
 
-      /* heavy: the live file is 3.94MB at 1.50 Mbps, and a 3G-class link is
-         still told not to bother — measured, it cannot reach the reveal gate
-         at 2 Mbps or below, which is what the clip's own bitrate implies. The
-         flag stayed when the file was made lighter for exactly that reason. */
-      mountVideo(media, txt(d.heroVideoUrl), shot, 'hero-vid', true);
+      /* no `heavy` flag any more — the hero is fetched on every connection
+         like the other two. See the note on mountVideo. */
+      mountVideo(media, txt(d.heroVideoUrl), shot, 'hero-vid');
 
       /* ---------- hero ----------
          `heroHeadline` and `heroSub` were painted here. The elements they
