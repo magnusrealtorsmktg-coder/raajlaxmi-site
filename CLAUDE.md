@@ -82,13 +82,11 @@ instead of trusting that number.
 
 ### The launch blockers
 
-- ~~**Neither form has a backend.**~~ **Both are wired to Netlify Forms (5 Nov)**
-  — see *The forms post to Netlify Forms*. **One setting still has to be turned
-  on by hand**: Netlify disables form detection on new sites, so until
-  *Site configuration → Forms → Form detection* is **enabled** and the site is
-  redeployed, every submission 404s and the visitor sees the error line. Enable
-  it, redeploy, then set a notification address under *Form notifications* or
-  the entries sit in the dashboard with nobody looking.
+- ~~**Neither form has a backend.**~~ **Both post to Web3Forms (5 Nov)** and
+  the round trip is verified end to end — see *The forms post to Web3Forms*.
+  **The one open risk is that there is now no second copy**: an enquiry exists
+  only as mail in `rajjlaxmi20@gmail.com`, and Gmail forwarding to whoever on
+  the client's side should read it **has not been set up yet**.
 - **The project detail pages are nearly empty.** Of 14 projects: **0 have a
   gallery, 1 has an overview, 1 has specs, 1 has a price, and 7 of 14 have a
   configuration**. Cards look right; `project.html?p=<slug>` is sparse, and the
@@ -510,31 +508,31 @@ the CIN, the registered office, RERA numbers, the Grievance Officer's name and
 email, and the jurisdiction city. Those are the client's to supply and a
 lawyer's to check before launch.
 
-### The forms post to Web3Forms, with Netlify keeping the record
+### The forms post to Web3Forms
 
-Both of them, since 5 Nov: the contact card and the 30-second lead popup.
-**Web3Forms delivers the email; Netlify Forms stores a copy.** Two posts per
-submission, and only the first decides what the visitor is told.
+Both of them, since 5 Nov: the contact card and the 30-second lead popup. One
+POST each, to `https://api.web3forms.com/submit`, which emails the enquiry.
 
-**Why not Netlify alone**, which is where this started: Netlify will only send
-a submission notification **to an email address belonging to a team member**.
-The Netlify team here holds other clients' projects, so inviting
-`info@raajlaxmi.com` into it to make it a valid recipient would hand this client
-visibility of unrelated work. That is the whole reason for the switch — not
-price, not features.
+**Why not Netlify Forms**, which is where this started and which the site is
+already hosted on: Netlify will only send a submission notification **to an
+email address belonging to a team member**. The Netlify team here holds other
+clients' projects, so making `info@raajlaxmi.com` a valid recipient would have
+meant inviting the client into a team where they could see unrelated work. That
+is the whole reason for the switch — not price, not features.
 
-**Why Netlify is still in the loop**: Web3Forms on the free plan emails and
-essentially nothing else. The recipient is a **Hostinger mailbox on a plan that
-has to be renewed** (see *Where this stands*), and an enquiry that exists only
-as an email in that mailbox is gone the day the mailbox is. The Netlify copy is
-a durable record that depends on neither. It is fire-and-forget, sends no email,
-needs no team seat, and **cannot fail the submission** — verified by making it
-reject while Web3Forms succeeded.
+**Netlify Forms was briefly kept as a second, silent copy** — a fire-and-forget
+POST to `/` that stored the submission without emailing anyone — and was
+**removed at the client's request on 5 Nov**. What that cost is the only durable
+record: Web3Forms' free plan emails and stores essentially nothing, so **an
+enquiry now exists only as a message in one Gmail account**. Lose access to that
+inbox and the leads are gone. Restoring it is small: a `fetch('/')` beside the
+Web3Forms call, plus `name` / `data-netlify` / a hidden `form-name` field on
+both forms, and Form detection re-enabled in the Netlify UI.
 
-**If the Netlify team turns out to be on a LEGACY metered plan** (100
-submissions/site/month), delete the `fetch('/', …)` call in both handlers.
-Hitting that cap on the legacy free tier *pauses the site*, which is far worse
-than losing a backup. Current credit-based plans have no such limit.
+Netlify's **Form detection is currently ON and two forms are registered** there
+(`contact`, `lead`) from the brief period when this was wired that way. They
+collect nothing now and can be deleted in the Netlify UI; nothing in the code
+refers to them.
 
 The key facts about the Web3Forms side:
 
@@ -547,16 +545,14 @@ The key facts about the Web3Forms side:
 - **The key is public by design.** Their FAQ: "You do not need to hide the
   access key. Access key is public."
 - **One recipient only on the free plan.** Several addresses need `ccemail`,
-  which is a PRO feature.
+  which is a PRO feature — so fanning the mail out to the client's team is
+  **Gmail forwarding's job**, not the form's.
 - **Server-side posting is blocked with HTTP 403** — "Use our API in client side
   or contact support with server IP address (Pro plan is required)". So `curl`
-  cannot be used to test the key, and neither can any build-time check. The only
-  way to exercise it is a real browser on a real page.
-- **`form-name` and `bot-field` are stripped** from the Web3Forms payload. They
-  are Netlify's, and would otherwise print as empty rows in the client's email.
-- **Two honeypots, because the services read different names**: Netlify's
-  `bot-field` and Web3Forms' `botcheck`. Both are hidden. (Web3Forms marks
-  `botcheck` deprecated in favour of a captcha; it costs nothing to keep.)
+  cannot be used to test the key, and neither can any build-time check.
+- **`botcheck` is the honeypot**, a hidden checkbox; the submission is rejected
+  if anything fills it. (Web3Forms marks it deprecated in favour of a captcha;
+  it costs nothing to keep.) Netlify's `bot-field` went with the Netlify path.
 - **`replyto` is set to the enquirer's address**, so the client can reply
   straight from the notification.
 - JSON body with a matching `Accept: application/json`. **Do not send JSON under
@@ -568,13 +564,15 @@ the button back and reveals `.lead-err` / `.ct-err`, which offers the phone
 number. `rl-lead-done` — the flag that retires the popup for ever — is likewise
 written only on success, so a visitor whose send failed is asked again rather
 than spending their one chance on nothing. Verified: a failed send leaves it
-`null` and a retry in the same session goes through.
+`null` and a retry in the same session goes through. **With no second copy
+anywhere, that discipline is now the only thing standing between a failed POST
+and a silently lost enquiry.**
 
-**`form.name` stopped meaning what it did**, and this bit. `contact.html`'s
-handler read the visitor's name as `form.name.value` — the named getter for the
-`name` input. Giving the `<form>` a `name` attribute **shadows that getter**, so
-`form.name` became the string `"contact"`. Both handlers go through
-`form.elements.namedItem('name')` now, which cannot be shadowed.
+**`form.name` does not mean what it looks like**, and this bit once. The
+contact handler read the visitor's name as `form.name.value` — the named getter
+for the `name` input. The `<form>` carries a `name` attribute, which **shadows
+that getter**, so `form.name` is the string `"contact"`. Both handlers go
+through `form.elements.namedItem('name')`, which cannot be shadowed.
 
 **VERIFIED END TO END on 5 Nov**, by hand in a real browser on the deployed
 site: the form submits, Web3Forms accepts it and the email arrives. Worth
@@ -596,9 +594,6 @@ recipient, **Gmail forwarding is what fans it out** to whoever on the client's
 side should read it; that can be changed any time with no code edit, which the
 access key itself cannot.
 
-Netlify still needs **Form detection enabled** (it is, as of 5 Nov) for the
-backup copy to be stored; its own email notifications are not used and should
-be left unset.
 
 ## Architecture
 

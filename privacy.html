@@ -1764,25 +1764,12 @@
       <h2 class="lead-title" id="leadTitle">Let us find your address.</h2>
       <p class="lead-sub">Leave your details and a member of the team will call you within one business day.</p>
 
-      <!-- Netlify Forms. Three attributes are what make this real, and the
-           markup is what does it: Netlify registers a form by PARSING THE
-           DEPLOYED HTML, so a form built by script would never be seen.
-           `name` is how it appears in the dashboard; the hidden `form-name`
-           is what identifies the POST, needed because this is submitted by
-           fetch rather than by the browser; `bot-field` is a honeypot no
-           human sees and a bot fills in.
-           This same popup is in all eleven files and they share one name, so
-           Netlify treats them as ONE form rather than eleven. -->
-      <form id="leadForm" name="lead" method="POST"
-            data-netlify="true" data-netlify-honeypot="bot-field" novalidate>
-        <input type="hidden" name="form-name" value="lead">
-        <!-- two honeypots, because the two services read different names:
-             Netlify looks at `bot-field` (named by data-netlify-honeypot) and
-             Web3Forms at `botcheck`. Both are hidden from everyone but a bot. -->
-        <p hidden style="display:none" aria-hidden="true">
-          <label>Leave this empty<input name="bot-field" tabindex="-1" autocomplete="off"></label>
-          <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off">
-        </p>
+      <!-- Submitted by fetch to Web3Forms; see the handler in the trailing
+           script. `botcheck` is Web3Forms' honeypot — hidden from everyone but
+           a bot, and the submission is rejected if anything fills it. -->
+      <form id="leadForm" name="lead" method="POST" novalidate>
+        <input type="checkbox" name="botcheck" tabindex="-1"
+               autocomplete="off" hidden style="display:none" aria-hidden="true">
         <div class="lead-row">
           <div class="lead-f"><input type="text" name="name" placeholder="Your Name" autocomplete="name" required></div>
           <div class="lead-f"><input type="tel" name="phone" placeholder="Phone Number" autocomplete="tel" inputmode="tel" required></div>
@@ -2044,25 +2031,10 @@
       if(btn){ btn.disabled = true; btn.textContent = 'Sending…'; }
 
       const data = Object.fromEntries(new FormData(form));
-      delete data['form-name'];          // Netlify's, meaningless to Web3Forms
-      delete data['bot-field'];          // ditto — Web3Forms uses `botcheck`
 
-      /* A SECOND, BEST-EFFORT COPY INTO NETLIFY FORMS. The markup still carries
-         name/data-netlify/form-name, so the form stays registered and this POST
-         is stored in the dashboard. Web3Forms delivers the email; Netlify keeps
-         the record. That matters because the recipient is a Hostinger mailbox on
-         a plan that has to be renewed, and an enquiry that exists only as an
-         email is lost the day that mailbox is. Deliberately NOT awaited and
-         deliberately unable to fail the submission: it is the backup, not the
-         delivery. */
-      fetch('/', {method:'POST',
-                  headers:{'Content-Type':'application/x-www-form-urlencoded'},
-                  body: new URLSearchParams(new FormData(form)).toString()})
-        .catch(() => {});
-
-      /* THE ONE THAT DECIDES. JSON with a matching Accept header is the
-         documented AJAX path; sending JSON under an urlencoded header makes
-         their endpoint 301 and the browser then blocks it as CORS. */
+      /* JSON with a matching Accept header is Web3Forms' documented AJAX path;
+         sending JSON under an urlencoded header makes their endpoint 301 and
+         the browser then blocks it as CORS. */
       fetch('https://api.web3forms.com/submit', {method:'POST',
           headers:{'Content-Type':'application/json','Accept':'application/json'},
           body: JSON.stringify(Object.assign({
