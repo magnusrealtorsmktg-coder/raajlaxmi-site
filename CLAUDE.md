@@ -510,72 +510,89 @@ the CIN, the registered office, RERA numbers, the Grievance Officer's name and
 email, and the jurisdiction city. Those are the client's to supply and a
 lawyer's to check before launch.
 
-### The forms post to Netlify Forms
+### The forms post to Web3Forms, with Netlify keeping the record
 
-Both of them, since 5 Nov: the contact card as **`contact`** and the 30-second
-lead popup as **`lead`**. No backend, no build step, no dependency — Netlify
-reads the form out of the deployed HTML and collects the POSTs itself.
+Both of them, since 5 Nov: the contact card and the 30-second lead popup.
+**Web3Forms delivers the email; Netlify Forms stores a copy.** Two posts per
+submission, and only the first decides what the visitor is told.
 
-**Netlify registers a form by PARSING THE DEPLOYED HTML**, not by watching
-traffic, so the markup is what does the work:
+**Why not Netlify alone**, which is where this started: Netlify will only send
+a submission notification **to an email address belonging to a team member**.
+The Netlify team here holds other clients' projects, so inviting
+`info@raajlaxmi.com` into it to make it a valid recipient would hand this client
+visibility of unrelated work. That is the whole reason for the switch — not
+price, not features.
 
-```html
-<form id="leadForm" name="lead" method="POST"
-      data-netlify="true" data-netlify-honeypot="bot-field" novalidate>
-  <input type="hidden" name="form-name" value="lead">
-  <p hidden style="display:none" aria-hidden="true">
-    <label>Leave this empty<input name="bot-field" tabindex="-1" autocomplete="off"></label>
-  </p>
-```
+**Why Netlify is still in the loop**: Web3Forms on the free plan emails and
+essentially nothing else. The recipient is a **Hostinger mailbox on a plan that
+has to be renewed** (see *Where this stands*), and an enquiry that exists only
+as an email in that mailbox is gone the day the mailbox is. The Netlify copy is
+a durable record that depends on neither. It is fire-and-forget, sends no email,
+needs no team seat, and **cannot fail the submission** — verified by making it
+reject while Web3Forms succeeded.
 
-Six things are load-bearing:
+**If the Netlify team turns out to be on a LEGACY metered plan** (100
+submissions/site/month), delete the `fetch('/', …)` call in both handlers.
+Hitting that cap on the legacy free tier *pauses the site*, which is far worse
+than losing a backup. Current credit-based plans have no such limit.
 
-- **The hidden `form-name` field is not redundant.** Both forms are submitted by
-  `fetch` rather than by the browser, and a POST body is all Netlify gets — the
-  `name` attribute never travels with it. Without that field the submission is
-  rejected and nothing is stored.
-- **The POST goes to `/`**, urlencoded, built with
-  `new URLSearchParams(new FormData(form))`. That is Netlify's documented target
-  for an AJAX submission; it does not need a page of its own.
-- **The thank-you is shown only once the POST has succeeded.** It used to be
-  shown unconditionally, which was the whole bug — the popup asks a stranger for
-  a phone number thirty seconds into a visit, and telling them it arrived when it
-  did not is the one outcome worth engineering against. A failure puts the button
-  back, un-disables it and reveals `.lead-err` / `.ct-err`, which offers the phone
-  line instead.
-- **`rl-lead-done` is written only on success too.** It is the flag that retires
-  the popup for ever; writing it on a failed send would spend the visitor's one
-  chance and store nothing. Verified: a failed send leaves it `null` and a retry
-  in the same session goes through.
-- **`form.name` stopped meaning what it did**, and this bit. `contact.html`'s
-  handler read the visitor's name as `form.name.value` — the named getter for the
-  `name` input. Adding a `name` attribute to the `<form>` **shadows that getter**,
-  so `form.name` became the string `"contact"` and `.value` was `undefined`. Both
-  handlers now go through `form.elements.namedItem('name')`, which cannot be
-  shadowed. The lead popup already did this for the same reason.
-- **The popup is in all eleven files and they share one form name**, so Netlify
-  treats them as one form rather than eleven. The honeypot `<p>` carries both
-  `hidden` and an inline `display:none`, because the pages have no `[hidden]`
-  rule of their own and a stray selector must not be able to reveal it.
+The key facts about the Web3Forms side:
 
-**Two things still have to be done in the Netlify UI, by hand:**
+- **The access key IS the recipient.** It is an alias for the one email address
+  it was created with; there is no dashboard setting for where mail goes, so
+  changing the recipient means **a new key and eleven file edits**. It lives in
+  the `<head>` data-layer block beside the Sanity config, published as
+  `RL.w3f`, one copy per file — the same arrangement, and the same elevenfold
+  edit, as `projectId`.
+- **The key is public by design.** Their FAQ: "You do not need to hide the
+  access key. Access key is public."
+- **One recipient only on the free plan.** Several addresses need `ccemail`,
+  which is a PRO feature.
+- **Server-side posting is blocked with HTTP 403** — "Use our API in client side
+  or contact support with server IP address (Pro plan is required)". So `curl`
+  cannot be used to test the key, and neither can any build-time check. The only
+  way to exercise it is a real browser on a real page.
+- **`form-name` and `bot-field` are stripped** from the Web3Forms payload. They
+  are Netlify's, and would otherwise print as empty rows in the client's email.
+- **Two honeypots, because the services read different names**: Netlify's
+  `bot-field` and Web3Forms' `botcheck`. Both are hidden. (Web3Forms marks
+  `botcheck` deprecated in favour of a captcha; it costs nothing to keep.)
+- **`replyto` is set to the enquirer's address**, so the client can reply
+  straight from the notification.
+- JSON body with a matching `Accept: application/json`. **Do not send JSON under
+  an urlencoded header** — their endpoint answers 301 and the browser then
+  blocks it as CORS. Their docs call this out specifically.
 
-1. **Enable form detection.** Netlify ships it **disabled** on new sites —
-   *Site configuration → Forms → Form detection → Enable*, then **redeploy**,
-   because detection happens at deploy time and an already-deployed page is not
-   re-scanned.
-2. **Set a notification address** under *Form notifications*, or submissions
-   accumulate in the dashboard and nobody is told. `info@raajlaxmi.com` is the
-   live, actively-used mailbox.
+**The thank-you is shown only once Web3Forms has accepted**, and a failure puts
+the button back and reveals `.lead-err` / `.ct-err`, which offers the phone
+number. `rl-lead-done` — the flag that retires the popup for ever — is likewise
+written only on success, so a visitor whose send failed is asked again rather
+than spending their one chance on nothing. Verified: a failed send leaves it
+`null` and a retry in the same session goes through.
 
-The free tier is **100 submissions a month**; past that Netlify charges or drops
-them, which is worth knowing before a campaign.
+**`form.name` stopped meaning what it did**, and this bit. `contact.html`'s
+handler read the visitor's name as `form.name.value` — the named getter for the
+`name` input. Giving the `<form>` a `name` attribute **shadows that getter**, so
+`form.name` became the string `"contact"`. Both handlers go through
+`form.elements.namedItem('name')` now, which cannot be shadowed.
 
-Verified by stubbing `fetch` through CDP, both forms, both outcomes: on success
-the card flips to the thank-you and the POST body carries every field
-(`form-name=contact&bot-field=&name=…&phone=…&email=…&interest=…&message=…&consent=on`);
-on failure nothing flips, the error line shows, the button comes back enabled
-with its label intact, and the lead popup is not retired. No console exceptions.
+**WHAT IS AND IS NOT VERIFIED.** Everything above was exercised by stubbing the
+endpoint in headless Chrome: both forms, success, a Web3Forms 400, and Netlify
+failing while Web3Forms succeeded. **The live round trip to Web3Forms was NOT
+verified**, and could not be: `curl` gets 403 by design, and from headless
+Chrome on `http://127.0.0.1` the preflight came back without an
+`Access-Control-Allow-Origin` header. Whether that is their bot protection
+reacting to a headless browser or a refusal of a plaintext localhost origin
+could not be established without spoofing the User-Agent, which is not something
+to do. **It has to be tested by a human, in a real browser, on the deployed
+https site.** If it fails there, the fix to try first is sending the body as
+`application/x-www-form-urlencoded` (also supported) with `Accept:
+application/json`, which is a CORS-simple request and skips the preflight
+entirely.
+
+Netlify still needs **Form detection enabled** (it is, as of 5 Nov) for the
+backup copy to be stored; its own email notifications are not used and should
+be left unset.
 
 ## Architecture
 

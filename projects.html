@@ -44,6 +44,15 @@
     apiVersion: '2024-01-01',
   };
 
+  /* WEB3FORMS — where the enquiry forms post. The key is an ALIAS FOR ONE
+     EMAIL ADDRESS: whichever address it was created with is where submissions
+     arrive, and changing the recipient means generating a new key, not editing
+     a setting. It is PUBLIC BY DESIGN ("the access key can be public and safe
+     to add in client side code" — their docs) and carries nothing sensitive.
+     Like the Sanity project id it lives here, one place per file, so there are
+     eleven copies and a swap is eleven edits. */
+  var W3F = 'a9733cbb-57c5-4410-aaf3-73f87a6b0948';
+
   var base = 'https://' + S.projectId + '.apicdn.sanity.io/v' + S.apiVersion +
              '/data/query/' + S.dataset + '?query=';
   var memo = {};
@@ -89,7 +98,7 @@
      already-encoded tail here, keyed the same as the query */
   var qp = window.__rlParams || {};
 
-  window.RL = {sanity: S, q: q, p: qp, get: get};
+  window.RL = {sanity: S, q: q, p: qp, get: get, w3f: W3F};
 
   if(S.projectId) for(var k in q) if(q[k]) get(q[k], qp[k]).catch(function(){});
 })();
@@ -1768,8 +1777,12 @@
       <form id="leadForm" name="lead" method="POST"
             data-netlify="true" data-netlify-honeypot="bot-field" novalidate>
         <input type="hidden" name="form-name" value="lead">
+        <!-- two honeypots, because the two services read different names:
+             Netlify looks at `bot-field` (named by data-netlify-honeypot) and
+             Web3Forms at `botcheck`. Both are hidden from everyone but a bot. -->
         <p hidden style="display:none" aria-hidden="true">
           <label>Leave this empty<input name="bot-field" tabindex="-1" autocomplete="off"></label>
+          <input type="checkbox" name="botcheck" tabindex="-1" autocomplete="off">
         </p>
         <div class="lead-row">
           <div class="lead-f"><input type="text" name="name" placeholder="Your Name" autocomplete="name" required></div>
@@ -2355,10 +2368,38 @@
          send failed is asked again rather than being retired for good. */
       if(err) err.hidden = true;
       if(btn){ btn.disabled = true; btn.textContent = 'Sending…'; }
+
+      const data = Object.fromEntries(new FormData(form));
+      delete data['form-name'];          // Netlify's, meaningless to Web3Forms
+      delete data['bot-field'];          // ditto — Web3Forms uses `botcheck`
+
+      /* A SECOND, BEST-EFFORT COPY INTO NETLIFY FORMS. The markup still carries
+         name/data-netlify/form-name, so the form stays registered and this POST
+         is stored in the dashboard. Web3Forms delivers the email; Netlify keeps
+         the record. That matters because the recipient is a Hostinger mailbox on
+         a plan that has to be renewed, and an enquiry that exists only as an
+         email is lost the day that mailbox is. Deliberately NOT awaited and
+         deliberately unable to fail the submission: it is the backup, not the
+         delivery. */
       fetch('/', {method:'POST',
                   headers:{'Content-Type':'application/x-www-form-urlencoded'},
                   body: new URLSearchParams(new FormData(form)).toString()})
-        .then(r => { if(!r.ok) throw new Error(r.status); })
+        .catch(() => {});
+
+      /* THE ONE THAT DECIDES. JSON with a matching Accept header is the
+         documented AJAX path; sending JSON under an urlencoded header makes
+         their endpoint 301 and the browser then blocks it as CORS. */
+      fetch('https://api.web3forms.com/submit', {method:'POST',
+          headers:{'Content-Type':'application/json','Accept':'application/json'},
+          body: JSON.stringify(Object.assign({
+            access_key: (window.RL && window.RL.w3f) || '',
+            subject   : 'New enquiry from the Raajlaxmi website (popup)',
+            from_name : 'Raajlaxmi Group website',
+            replyto   : data.email || ''
+          }, data))})
+        .then(r => r.json().catch(() => ({})).then(j => {
+          if(!r.ok || j.success === false) throw new Error(r.status);
+        }))
         .then(() => {
           if(msg && first) msg.textContent = `Thank you, ${first}. We’ll be in touch shortly.`;
           card.classList.add('sent');
