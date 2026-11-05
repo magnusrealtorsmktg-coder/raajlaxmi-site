@@ -491,6 +491,26 @@ fold. Four things are load-bearing:
   it stacks and is no longer one screen** — the plate sits above the copy and it
   cannot be — but its top padding still clears the bar.
 
+**The plate's parallax is two-column-only, and that is a fix rather than an
+optimisation.** `frame()` in the Section II block drifts `.ab-visual` by up to
+46px, subtracted from its top edge on the way in. Side by side with the copy
+the plate has its own column and all the room it needs. **Stacked below 1000px
+it has none** — the only thing above it is the `ABOUT RAAJLAXMI` label,
+separated by an ~18px margin — so the drift pulled the plate up through the
+heading. Measured on a phone before the guard:
+
+| | drift | gap |
+|---|---|---|
+| 412x915 | −17.7px | +2px (just clears) |
+| 390x844 | −19.5px | −1px (touching) |
+| 360x640 | **−32.3px** | **−18px (overlapping)** |
+
+`.ab-visual` carries **`transform:none !important`** in the 1000px tier and
+that is the authority — an `!important` declaration beats the inline style
+`frame()` writes — while `frame()` itself now returns early when stacked, which
+also clears a value left behind by a resize across the breakpoint. After:
+gap +20 / +18 / +14, no overlap at any of the three.
+
 A long CMS heading is the thing that could still break it: there is no
 `fitHeadline()` here as there is on the hero, so a heading that wraps to four
 lines will push the strip past the fold again. Measured fits at 1440×900,
@@ -1076,6 +1096,38 @@ traps that cost time here: reading the form mid-entrance reports `opacity:0` and
 looks like a broken reveal (it is up by ~5s — `delay 1820ms` + `1200ms`, timed
 from when the loader lifts); and **`set -- $s` does not word-split in zsh**, so
 a viewport loop silently passes `W=NaN` and every row comes back 756.
+
+**On a phone the hero search is a CAPSULE that opens on tap.** Once the videos
+started playing on handsets (above), the form was the thing covering them:
+measured open, it is 296px tall — **35% of the hero at 390x844 and 46% at
+360x640**. So on the one screen that exists to show a film, half of it was a
+control panel. It is now a 55px pill at the foot of the hero — **7% / 9%** —
+carrying a search mark, a label and a chevron; tapping it opens the real form
+upwards from there.
+
+- **The phone tier also changed `margin:auto` to `margin-top:auto`** on
+  `.hero-content`, pinning it to the foot instead of centring it. Centring is
+  what put the panel across the middle of the picture.
+- **The fields are `display:none` when closed**, not visually hidden, so they
+  leave the flex column entirely and the pill collapses to its own height.
+- **`display` cannot transition**, so the fields carry a staggered
+  `@keyframes hsIn` that runs on appearing. That is also what tells the eye the
+  panel grew out of the pill.
+- **The label reports the current choice** (`2 BHK · Virar`) rather than always
+  reading "Find your home" — collapsed, it is the only thing saying what the
+  form is set to, and a control that hides its own state is a trap. A field the
+  script has hidden is skipped, since that is not a choice anyone made.
+- **The breakpoint lives only in CSS.** The JS toggles a class; `.hs-peek` is
+  `display:none` on a desktop, so none of it can be reached there. Nothing
+  duplicates the media query.
+- Closes on a tap outside, on Esc, and on tapping the pill again. `pointerdown`
+  fires before the click that opens it and the pill is inside the form, so the
+  two cannot race; a native select's dropdown is not in the document, so
+  choosing an option does not close the panel under it.
+
+Measured at 390x844, 360x640 and 412x915: closed 55px, open 343px and clear of
+the navbar at all three, no overflow, no console errors. Desktop unchanged —
+capsule hidden, form 85px at 1440 with all three fields.
 
 **The search form is anchored to the foot of the hero, not centred on a
 percentage.** `.hero-content` was `top:57%` with `translate:0 -50%`, which was

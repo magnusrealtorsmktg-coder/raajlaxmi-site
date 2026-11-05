@@ -503,6 +503,10 @@
     padding:.85rem 1.6rem;border-radius:999px;cursor:pointer;white-space:nowrap;
     transition:background .45s var(--lux),color .45s var(--lux);}
   .hs-submit:hover{background:transparent;color:var(--champagne-soft);}
+  /* The capsule is a PHONE control and nothing else — the tier below turns it
+     on. On a desktop the three fields sit in one row and cost ~86px, so there
+     is nothing to collapse. */
+  .hs-peek{display:none;}
   /* ===== PHONE: THE HERO FLOWS, IT NO LONGER CENTRES =====
      `.hero-content` is absolutely positioned and anchored near the foot of a
      100vh hero (it was centred on 57% when it still held a headline and a
@@ -531,11 +535,46 @@
        form to the foot with a `bottom`, and on a `position:relative` element
        a leftover `bottom` does not anchor anything — it SHIFTS the box
        upwards by that much, lifting the form back under the navbar. */
+    /* `margin-top:auto` rather than `margin:auto`: the block is pinned to the
+       FOOT of the hero now instead of centred in it, so the film above it is
+       uncovered. It used to centre, which put a 296px form across the middle
+       of the picture. The horizontal autos stay. */
     .hero-content{position:relative;z-index:10;left:auto;top:auto;bottom:auto;translate:none;
-      width:100%;max-width:none;margin:auto;
-      /* 90px is the measured navbar height at phone widths */
+      width:100%;max-width:none;margin:auto auto 0;
+      /* 90px is the measured navbar height at phone widths. It still has to be
+         here even though the block sits at the foot: with the form open the
+         block is ~490px tall, and on a short phone that is what stops its top
+         sliding under the bar. */
       padding:calc(90px + 1.3rem) clamp(1.6rem,7vw,7rem) clamp(1.6rem,4vh,2.6rem);}
+
+    /* ---- the search is a CAPSULE here, and opens on tap ----
+       Measured before this change: the open form is 296px tall — 35% of the
+       hero at 390x844 and 46% at 360x640 — so on the one screen that exists to
+       show a film, half of it was a control panel. It is a pill at the foot of
+       the hero now; tapping it opens the real form upwards from there.
+       The fields are display:none rather than visually hidden, so they leave
+       the flex column entirely and the pill collapses to its own height. */
+    .hs-peek{display:flex;align-items:center;gap:.75rem;width:100%;
+      font-family:inherit;font-size:.76rem;font-weight:500;letter-spacing:.14em;
+      text-transform:uppercase;color:var(--paper);background:transparent;border:0;
+      padding:.45rem .1rem;cursor:pointer;text-align:left;}
+    .hs-peek-txt{flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .hs-peek-ic,.hs-peek-cue{flex:0 0 auto;display:block;}
+    .hs-peek-cue{transition:transform .45s var(--lux);}
+    .hero-search.open .hs-peek-cue{transform:rotate(180deg);}
+    .hs-peek:focus-visible{outline:2px solid var(--champagne);outline-offset:3px;border-radius:6px;}
+    .hero-search:not(.open) .hs-field,
+    .hero-search:not(.open) .hs-submit{display:none;}
+    .hero-search:not(.open){padding:.75rem 1rem;gap:0;}
+    /* display cannot transition, so the fields ANIMATE IN on appearing —
+       staggered, which also tells the eye the panel grew from the pill */
+    .hero-search.open .hs-field,
+    .hero-search.open .hs-submit{animation:hsIn .45s var(--lux) both;}
+    .hero-search.open .hs-field:nth-of-type(2){animation-delay:.06s;}
+    .hero-search.open .hs-field:nth-of-type(3){animation-delay:.12s;}
+    .hero-search.open .hs-submit{animation-delay:.18s;}
   }
+  @keyframes hsIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
   @media(max-width:520px){
     .hero-search{flex-direction:column;align-items:stretch;gap:1.1rem;padding:1.1rem;}
     /* stop the fields growing to fill the column — they stretch into
@@ -803,7 +842,10 @@
        edge and the plate is width-driven again */
     .ab-top{display:block;}
     .ab-inner{grid-template-columns:1fr;gap:2.4rem;}
-    .ab-visual{order:1;max-width:32rem;}
+    /* Stacked, the plate's parallax has nowhere to drift but up through the
+       heading above it — see the frame() comment in the Section II block.
+       !important because it has to beat the inline transform that sets. */
+    .ab-visual{order:1;max-width:32rem;transform:none !important;}
     .ab-photo{height:auto;width:100%;max-width:100%;margin-inline:0;}
     .ab-content{order:2;}
   }
@@ -2024,6 +2066,19 @@
            carries its own title card. `.hero-content` now holds the search
            form alone. -->
       <form class="hero-search anim" data-anim id="heroSearch">
+        <!-- the capsule: the only thing shown on a phone until it is tapped.
+             type="button" so it cannot submit the form it lives in. -->
+        <button type="button" class="hs-peek" id="hsPeek"
+                aria-expanded="false" aria-controls="heroSearch">
+          <svg class="hs-peek-ic" width="15" height="15" viewBox="0 0 16 16" fill="none"
+               aria-hidden="true"><circle cx="7" cy="7" r="5.2" stroke="currentColor"
+               stroke-width="1.3"/><path d="M10.9 10.9L14.5 14.5" stroke="currentColor"
+               stroke-width="1.3" stroke-linecap="round"/></svg>
+          <span class="hs-peek-txt">Find your home</span>
+          <svg class="hs-peek-cue" width="11" height="7" viewBox="0 0 10 6" fill="none"
+               aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor"
+               stroke-width="1.3" stroke-linecap="round"/></svg>
+        </button>
         <div class="hs-field">
           <label for="hsType">Property</label>
           <select id="hsType" name="type">
@@ -2659,6 +2714,45 @@
     const locSel    = document.getElementById('hsLoc');
     const budgetSel = document.getElementById('hsBudget');
 
+    /* ---- the phone capsule ----
+       CSS decides whether this is a capsule or the whole form; this only
+       toggles the class, so there is no breakpoint duplicated in JS. On a
+       desktop .hs-peek is display:none and none of it can be reached.
+
+       The label reports the current choice rather than always reading "Find
+       your home" — collapsed, it is the only thing saying what the form is
+       set to, and a control that hides its own state is a trap. */
+    const peek = document.getElementById('hsPeek');
+    if(peek){
+      const txt  = peek.querySelector('.hs-peek-txt');
+      const sels = [typeSel, locSel, budgetSel].filter(Boolean);
+      const open = on => {
+        form.classList.toggle('open', on);
+        peek.setAttribute('aria-expanded', on ? 'true' : 'false');
+      };
+      const sync = () => {
+        /* a field the script has hidden is not a choice the visitor made */
+        const picked = sels.filter(s => s.value && !s.closest('.hs-field').hidden)
+                           .map(s => s.value);
+        txt.textContent = picked.length ? picked.join(' · ') : 'Find your home';
+      };
+      peek.addEventListener('click', () => open(!form.classList.contains('open')));
+      sels.forEach(s => s.addEventListener('change', sync));
+      sync();
+
+      /* Tapping away closes it, so the film is never left covered by a panel
+         the visitor has finished with. `pointerdown` fires before the click
+         that opens it, and the capsule is inside the form, so opening cannot
+         race with this. A native select's own dropdown is not in the document,
+         so choosing an option does not close the panel underneath it. */
+      document.addEventListener('pointerdown', e => {
+        if(form.classList.contains('open') && !form.contains(e.target)) open(false);
+      });
+      addEventListener('keydown', e => {
+        if(e.key === 'Escape' && form.classList.contains('open')){ open(false); peek.focus(); }
+      });
+    }
+
     /* the collection page is the thing that actually lists properties */
     form.addEventListener('submit', e => {
       e.preventDefault();
@@ -2824,18 +2918,37 @@
       });
     }, {threshold:.2}).observe(about);
 
-    /* --- slow parallax on the plate --- */
+    /* --- slow parallax on the plate: TWO-COLUMN LAYOUT ONLY ---
+       This drifts the plate by up to 46px, and it is SUBTRACTED from the
+       plate's top edge on the way in. Side by side with the copy the plate has
+       its own column and all the room it needs for that. Stacked below 1000px
+       it has none: the only thing above it is the "ABOUT RAAJLAXMI" label,
+       separated by an ~18px margin, so the drift pulls the plate straight up
+       through the heading. Measured on a phone before this guard:
+
+         412x915  translateY(-17.7px)  gap  +2px   (just clears)
+         390x844  translateY(-19.5px)  gap  -1px   (touching)
+         360x640  translateY(-32.3px)  gap -18px   (overlapping)
+
+       The CSS carries `transform:none !important` at the same breakpoint and
+       is the authority — an !important declaration beats the inline style set
+       here. This stops computing a value nobody will use, and clears any
+       value left behind by a resize across the breakpoint. */
     const visual = document.getElementById('abVisual');
+    const flat = matchMedia('(max-width:1000px)');
     let live = false, ticking = false;
 
     function frame(){
       ticking = false;
+      if(!visual) return;
+      if(flat.matches){ visual.style.transform = ''; return; }
       const r = about.getBoundingClientRect();
       // -1 (section below) → +1 (section above), 0 when centred
       const prog = (r.top + r.height/2 - innerHeight/2) / innerHeight;
-      if(visual) visual.style.transform = `translateY(${prog * -46}px)`;
+      visual.style.transform = `translateY(${prog * -46}px)`;
     }
     function onScroll(){ if(live && !ticking){ ticking = true; requestAnimationFrame(frame); } }
+    flat.addEventListener('change', frame);
 
     new IntersectionObserver(([e])=>{ live = e.isIntersecting; if(live) frame(); },
       {threshold:0}).observe(about);
