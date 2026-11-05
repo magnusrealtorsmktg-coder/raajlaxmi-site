@@ -271,7 +271,7 @@ drifting; only the three collection pages have `#colChips` and the logic.
 
 `testimonials.html` — one section, `#testimonials` ("Section VII — Testimonials"): a **continuously scrolling marquee** of review cards, a hidden client-photo slider under it, and a closing consultation strip. The reviews come from Sanity (the five written into the `T` array are only the fallback); each card carries the reviewer's initials rather than a photograph, and a Google button when that review has a link. The arrows and dots are `display:none` — a strip with no discrete slides has nothing for them to point at. All the detail is under *Content management → Testimonials*. The nav's Testimonials item points here from every page.
 
-`services.html` — one section, `#services` ("Section IX — Services"), seven blocks: hero, philosophy, the five-step journey rail, six service cards, the six-step buying flow, a FAQ accordion and a closing CTA. Both rails fill their gold line from scroll position (`--fill` on `.sv-rail` / `.sv-flow`). Each block carries `data-rev` and gets its own observer, so the page reveals in movements rather than all at once. Its first two blocks **were finished artwork with the copy painted in** (`Services_start.png` at 2164:380 and `assets/service-philosophy.jpg` at 1376:513) and are now **both the client's film with that copy as live HTML over it** — see *The services page runs a film* below. **Everything else is an unfilled `.sv-slot` placeholder** reading `[INSERT … IMAGE HERE]` — to fill one, drop the inner `<span>` and set `background-image` on the slot; ratio, radius and shadow are already right.
+`services.html` — one section, `#services` ("Section IX — Services"), **six** blocks: the film band, the five-step journey rail, six service cards, the six-step buying flow, a FAQ accordion and a closing CTA. Both rails fill their gold line from scroll position (`--fill` on `.sv-rail` / `.sv-flow`). Each block carries `data-rev` and gets its own observer, so the page reveals in movements rather than all at once. Its first two blocks **were finished artwork with the copy painted in** (`Services_start.png` at 2164:380 and `assets/service-philosophy.jpg` at 1376:513); the first is **the client's film with no copy at all over it** and the second **is gone** — see *The services page runs a film* below. **Everything else is an unfilled `.sv-slot` placeholder** reading `[INSERT … IMAGE HERE]` — to fill one, drop the inner `<span>` and set `background-image` on the slot; ratio, radius and shadow are already right.
 
 ### The services page runs a film
 
@@ -296,37 +296,58 @@ CRF 28 because it is a *cropped background behind a cream scrim* in both slots,
 and because it retires 1.56 MB of artwork. Encoded `-an -movflags +faststart
 -g 48 -preset slow`; `moov` ahead of `mdat` verified.
 
+**ONE SLOT, NOT TWO, AND NO COPY OVER IT (5 Nov).** It shipped that morning in
+both banner slots with the painted-in copy re-set as live HTML on top. The
+client then asked for the whole "Our Philosophy" block to go, and for the band
+to carry the footage and nothing else. So:
+
+- the **philosophy plate is deleted outright** — markup, `.sv-side*` CSS, the
+  1080px and 820px tiers that shaped it, its entry in the reduced-motion list,
+  and the second `mountFilm()` call;
+- **`.sv-mid` is a one-column grid** and the journey rail runs full width. It is
+  still a grid rather than unwrapped because it is the `[data-rev]` node the
+  observer watches and the rail's reveal hangs off it;
+- the band's **`.sv-band-copy`, `.sv-band-link` and `.sv-scrim` are gone**. The
+  scrim existed only to make type legible over the footage; with no type it
+  would be a veil over the one thing the band is for;
+- **`mountFilm()` lost its `phase` argument** and the `bandVid` / `rephase()`
+  machinery with it. That existed so two copies of one 7.8s clip were never
+  showing the same shot; with one video there is nothing to stay out of step
+  with;
+- **the `(max-height:680px) and (min-width:821px)` tier is gone too.** It existed
+  solely to stop a short window clipping the headline inside an
+  `overflow:hidden` band. No headline, no clipping, nothing to protect.
+
+**THE PAGE'S `<h1>` IS `.sv-sr` AGAIN.** The band draws no words, and a page
+still needs a heading, so there is a real `<h1>` clipped to a 1px box reading
+"Services — Beyond Buildings. We Deliver Experiences." That is the same utility
+`index.html` is pointed at for the same problem. Do not delete `.sv-sr`
+believing nothing uses it — this page's only heading is it.
+
 **It lives in `assets/`, not Sanity.** `.gitignore` only blocks root-level
 `*.mp4`, and this is the one page with no CMS behind it — a Sanity asset would
 add a hard-coded CDN URL and a dependency to the one page that has none.
 
 Five things about the swap are load-bearing:
 
-- **BOTH RATIOS HAD TO CHANGE, in opposite directions.** The band's 2164:380
-  (5.69:1) existed only because the artwork was that shape; cropping 16:9
-  footage to it keeps the middle 28% of the frame, which turns this clip's
-  middle shot into a band of torsos and a sofa cushion with no face in it.
-  Measured, not guessed — the band is **2.55:1** now, capped at
-  `min(60vh,540px)`. The plate's 2.68:1 had the opposite problem: at a 686px
-  column it is 256px tall, which fits painted 13px type and no size a browser
-  would set, so it is **1.6:1** (2.4:1 below 1080px, where it goes full width).
-- **THE COPY IS LIVE TEXT NOW.** It was `.sv-sr` on both blocks, clipped to a
-  1px box while the artwork carried the visible words. That means the `<h1>` is
-  a real heading rather than a hidden one, the band's CTA is a real link rather
-  than a transparent hit area over painted pixels, and **the philosophy plate's
-  painted typo is gone** — the markup always had the correct sentence.
-- **THE PLATE RUNS THE SAME FILE HALF A LOOP BEHIND**, and re-phases on every
-  resume rather than once at mount. Two copies of one 7.8s clip, one above the
-  other, playing the same three shots in step reads as a bug rather than as
-  footage — and a fixed offset drifts the moment one is paused off-screen and
-  the other is not, which on this page happens on the first scroll, since both
-  are on screen together at ordinary scroll positions.
+- **THE BAND'S RATIO HAD TO CHANGE.** Its 2164:380 (5.69:1) existed only because
+  the artwork was that shape; cropping 16:9 footage to it keeps the middle 28%
+  of the frame, which turns this clip's middle shot into a band of torsos and a
+  sofa cushion with no face in it. Measured, not guessed — the band is
+  **2.55:1** now, capped at `min(60vh,540px)` and floored at 240px (300px below
+  820px, where 2.55:1 of a phone is a 153px strip too thin to read as footage).
+- **THE PAINTED TYPO DIED WITH THE PLATE.** `assets/service-philosophy.jpg` read
+  "feel as carefully designed the homes we create", missing the second "as".
+  The block no longer exists, so neither does the typo.
 - **THE POSTER IS A FRAME OF THE FILM, NOT THE OLD ARTWORK.** The artwork has
-  the copy painted into it, so falling back to it would print every word twice.
-- **`mountFilm()` is `index.html`'s `mountVideo()`** — same reveal gate
-  (`canplaythrough`, or five buffered seconds ahead), same three-visible-stalls
-  retirement, same 20s give-up, same `NotAllowedError`-only kill. **The two
-  have diverged on one point, deliberately**: this one still refuses phones,
+  the copy painted into it, so falling back to it would print words over a band
+  that is meant to carry none.
+- **`mountFilm()` is what `index.html`'s `mountVideo()` USED TO BE** — same reveal
+  gate (`canplaythrough`, or five buffered seconds ahead), same
+  three-visible-stalls retirement, same 20s give-up, same `NotAllowedError`-only
+  kill. `index.html` had all of that stripped out on 5 Nov at the client's
+  request (see *The connection and file-size refusals are GONE*); **this page was
+  not part of that request and still has every guard.** It also still refuses phones,
   with `(max-width:620px),(max-height:560px)` — the second clause catching a
   landscape handset at 844x390, which a width-only query sails straight past.
   `index.html` stopped refusing phones on 5 Nov at the client's request and
@@ -339,13 +360,12 @@ The two superseded artworks are **still on disk and still shipping**
 referenced only from comments. Deleting them saves 1.56 MB from every deploy
 and is recoverable from git; it is the client's art, so it was left.
 
-Measured at 1920x1080, 1440x900, 1366x768, 1280x800, 1280x620, 1024x800,
-1024x640, 1440x560, 900x900, 844x390, 768x1024, 390x844, 360x640 and 280x653:
-no horizontal overflow anywhere, the band's copy inside the band at every size,
-no console errors. **The `(max-height:680px) and (min-width:821px)` tier is not
-optional** — a short window squeezes the band (`60vh`) without squeezing the
-copy, and `.sv-band` is `overflow:hidden`, so the headline is what gets clipped.
-Measured at 1440x560 before it existed: 343px of copy in a 336px band.
+Measured after the removal at 1920x1080, 1440x900, 1024x800, 1440x560, 844x390
+and 390x844: no horizontal overflow anywhere, `.sv-mid` a single `1fr` column
+with the rail full width at every size, the `<h1>` present and not drawn, one
+video at `playbackRate` 0.9 revealed on the three desktop sizes and correctly
+refused on the short and phone ones, the poster painted in all six, and **zero
+surviving `.sv-side` / `.sv-band-copy` / `.sv-scrim` nodes**. No console errors.
 
 `contact.html` — one section, `#contact` ("Section VIII — Contact"): the invitation and a 2×2 contact grid on the left, a floating consultation card on the right, then the location card + drawn map and a closing CTA. **The form posts to Netlify Forms** as `contact`, and the thank-you state is shown only once that POST has succeeded — see *The forms post to Netlify Forms*. Deliberately carries no corner artwork, per the brief.
 
@@ -863,9 +883,9 @@ was still winning at .56rem.
 used to report its first heading 7px under the navbar at every size. That
 heading was `h1.sv-sr` — the screen-reader-only alt text for the painted hero
 band, clipped to a 1px box — so nothing visible was ever colliding. The band is
-film with live copy over it now and that `<h1>` is a real, visible heading, so
-the measurement means what it says again. (`.sv-sr` itself is still defined on
-the page; nothing uses it.)
+film now and carries no copy at all, and **that `<h1>` is still `.sv-sr`**, so
+the audit would report the same false positive today. The band has no visible
+heading to collide with anything.
 
 **Adaptive navbar** (last IIFE, every file). It samples the actual painted background behind `#navWrap` at three x-positions per scroll tick, averages relative luminance, and toggles `.on-light` (charcoal text) above a threshold of 150. Reading the live background rather than tagging sections means it keeps working when light sections are added. Full-bleed overlays that darken a light section from above carry `pointer-events:none`, so `elementsFromPoint` can't see them — they're listed in the `DARK_OVERLAYS` array (currently `['veil']`) and tested by geometry/opacity instead. **If you add another full-bleed dark overlay, add its id to `DARK_OVERLAYS` in all eleven files.**
 
@@ -1193,9 +1213,8 @@ Three things are deliberately NOT done:
 - **The page now has no `<h1>` at all.** That is a real SEO cost on a marketing
   home page and it was the client's explicit call, made after being told. If it
   is ever wanted back without the visible text, the idiom is the `.sv-sr` rule
-  still defined on `services.html`: an `<h1>` clipped to a 1px box. (That page
-  no longer uses it on anything — its `<h1>` is visible copy over the film —
-  but the rule is kept there precisely as this utility.)
+  on `services.html`: an `<h1>` clipped to a 1px box. That page's own `<h1>` is
+  exactly this, since its film band carries no words either.
 
 Measured after, at 390x844, 360x640, 844x390 (landscape), 280x653, 1024x800 and
 1440x900: **no horizontal overflow at any size** (`scrollWidth` equals the
