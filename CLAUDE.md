@@ -111,10 +111,13 @@ and retires the placeholders for good.
 - **13+ years** (Section II) contradicts the 2004 timeline and the "Est. 2004"
   seal artwork, which imply ~22 years. One founding date has to win; the seals
   are images, so that side needs a re-export, not a code change.
-- **The services philosophy plate has a typo painted into it** — "feel as
-  carefully designed the homes we create", missing the second "as". The live
-  copy below 820px is correct, so the page says two different things depending
-  on width. Only a redraw fixes it.
+- ~~**The services philosophy plate has a typo painted into it**~~ — **fixed on
+  5 Nov, and not by a redraw.** The plate was "feel as carefully designed the
+  homes we create", missing the second "as", while the live copy below 820px
+  was correct, so the page said two different things depending on width. Both
+  plates on that page are now film with the copy set as live HTML over them
+  (see *The services page runs a film*), so the only surviving version is the
+  correct one in the markup. The artwork is no longer served.
 - **The associates plate carries three copy errors** (see *Photography*), and
   the **contact page and footer print different phone numbers**
   (`+91 9890823288` vs `+91 77740 00939`). Both are CMS-editable now; someone
@@ -220,8 +223,79 @@ drifting; only the three collection pages have `#colChips` and the logic.
 
 `testimonials.html` — one section, `#testimonials` ("Section VII — Testimonials"): a **continuously scrolling marquee** of review cards, a hidden client-photo slider under it, and a closing consultation strip. The reviews come from Sanity (the five written into the `T` array are only the fallback); each card carries the reviewer's initials rather than a photograph, and a Google button when that review has a link. The arrows and dots are `display:none` — a strip with no discrete slides has nothing for them to point at. All the detail is under *Content management → Testimonials*. The nav's Testimonials item points here from every page.
 
-`services.html` — one section, `#services` ("Section IX — Services"), seven blocks: hero, philosophy, the five-step journey rail, six service cards, the six-step buying flow, a FAQ accordion and a closing CTA. Both rails fill their gold line from scroll position (`--fill` on `.sv-rail` / `.sv-flow`). Each block carries `data-rev` and gets its own observer, so the page reveals in movements rather than all at once. Its first two blocks are **finished artwork with the copy painted in**: `Services_start.png` is the hero band (`.sv-band`, full-bleed at its native 2164:380 — any max-height crops the label off the top; `.sv-mid` carries top padding so the plate below clears it rather than butting against it, which read as one accidental block of two photographs) and `assets/service-philosophy.jpg` is the philosophy plate (`.sv-side`, flush left at `--sv-side-w`, default 52%). The source artwork is 1376x768, **cropped on disk to 1376x513 (2.68:1)** — the extra height was empty cream above and below the copy and made the plate half again as tall as the banner. Any recrop must keep y150–635 of the original or it starts eating the paragraph, which is why it cannot reach the old 2.94:1 exactly. `--sv-side-w` is set by readability: much below ~40% the painted type stops being legible. The superseded `service_side.png` has been deleted (recoverable from git).
-  - **The new plate's painted headline has a typo**: it reads "feel as carefully designed the homes we create", dropping the second "as". The live copy in the markup (which takes over below 820px) is correct, so the page says two different things depending on width. Only a redraw fixes the artwork. Both keep their copy in the markup for screen readers, and the plate swaps to live text below 820px where its painted type would render ~6px. **Everything else is an unfilled `.sv-slot` placeholder** reading `[INSERT … IMAGE HERE]` — to fill one, drop the inner `<span>` and set `background-image` on the slot; ratio, radius and shadow are already right.
+`services.html` — one section, `#services` ("Section IX — Services"), seven blocks: hero, philosophy, the five-step journey rail, six service cards, the six-step buying flow, a FAQ accordion and a closing CTA. Both rails fill their gold line from scroll position (`--fill` on `.sv-rail` / `.sv-flow`). Each block carries `data-rev` and gets its own observer, so the page reveals in movements rather than all at once. Its first two blocks **were finished artwork with the copy painted in** (`Services_start.png` at 2164:380 and `assets/service-philosophy.jpg` at 1376:513) and are now **both the client's film with that copy as live HTML over it** — see *The services page runs a film* below. **Everything else is an unfilled `.sv-slot` placeholder** reading `[INSERT … IMAGE HERE]` — to fill one, drop the inner `<span>` and set `background-image` on the slot; ratio, radius and shadow are already right.
+
+### The services page runs a film
+
+`assets/services-film.mp4` (1920x1080, 24fps, 7.83s, **2.29 MB**) plays in both
+of that page's banner slots at **0.9x**, with `assets/services-film.jpg` — a
+frame of it — as the poster and permanent fallback. Added 5 Nov from the
+client's `Real_estate_consultant_meeting_…_1080p.mp4` (5.72 MB, 5.97 Mbps, with
+an audio track on a video the site plays muted).
+
+**Re-encoded, unlike the hero film, and the numbers are why.** The hero's
+second swap shipped as a stream copy because that file was already near the
+knee of its own rate curve. This one is not:
+
+| | size | bitrate | SSIM |
+|---|---|---|---|
+| as supplied | 5.72 MB | 5.97 Mbps | — |
+| CRF 22 | 4.41 MB | 4.72 Mbps | 0.991 |
+| CRF 25 | 3.07 MB | 3.29 Mbps | 0.987 |
+| **CRF 28 (shipped)** | **2.29 MB** | **2.34 Mbps** | **0.983** |
+
+CRF 28 because it is a *cropped background behind a cream scrim* in both slots,
+and because it retires 1.56 MB of artwork. Encoded `-an -movflags +faststart
+-g 48 -preset slow`; `moov` ahead of `mdat` verified.
+
+**It lives in `assets/`, not Sanity.** `.gitignore` only blocks root-level
+`*.mp4`, and this is the one page with no CMS behind it — a Sanity asset would
+add a hard-coded CDN URL and a dependency to the one page that has none.
+
+Five things about the swap are load-bearing:
+
+- **BOTH RATIOS HAD TO CHANGE, in opposite directions.** The band's 2164:380
+  (5.69:1) existed only because the artwork was that shape; cropping 16:9
+  footage to it keeps the middle 28% of the frame, which turns this clip's
+  middle shot into a band of torsos and a sofa cushion with no face in it.
+  Measured, not guessed — the band is **2.55:1** now, capped at
+  `min(60vh,540px)`. The plate's 2.68:1 had the opposite problem: at a 686px
+  column it is 256px tall, which fits painted 13px type and no size a browser
+  would set, so it is **1.6:1** (2.4:1 below 1080px, where it goes full width).
+- **THE COPY IS LIVE TEXT NOW.** It was `.sv-sr` on both blocks, clipped to a
+  1px box while the artwork carried the visible words. That means the `<h1>` is
+  a real heading rather than a hidden one, the band's CTA is a real link rather
+  than a transparent hit area over painted pixels, and **the philosophy plate's
+  painted typo is gone** — the markup always had the correct sentence.
+- **THE PLATE RUNS THE SAME FILE HALF A LOOP BEHIND**, and re-phases on every
+  resume rather than once at mount. Two copies of one 7.8s clip, one above the
+  other, playing the same three shots in step reads as a bug rather than as
+  footage — and a fixed offset drifts the moment one is paused off-screen and
+  the other is not, which on this page happens on the first scroll, since both
+  are on screen together at ordinary scroll positions.
+- **THE POSTER IS A FRAME OF THE FILM, NOT THE OLD ARTWORK.** The artwork has
+  the copy painted into it, so falling back to it would print every word twice.
+- **`mountFilm()` is `index.html`'s `mountVideo()`** — same reveal gate
+  (`canplaythrough`, or five buffered seconds ahead), same three-visible-stalls
+  retirement, same 20s give-up, same `NotAllowedError`-only kill — **with one
+  fix that has not been carried back**: its skip test is
+  `(max-width:620px),(max-height:560px)`. `index.html` checks the width alone,
+  and a phone in landscape is **844px wide and 390px tall**, so a width-only
+  query sails straight past it and mounts video on a handset on mobile data.
+  Measured here at 844x390 before that second clause existed.
+
+The two superseded artworks are **still on disk and still shipping**
+(`Services_start.png` 1.39 MB, `assets/service-philosophy.jpg` 169 KB), now
+referenced only from comments. Deleting them saves 1.56 MB from every deploy
+and is recoverable from git; it is the client's art, so it was left.
+
+Measured at 1920x1080, 1440x900, 1366x768, 1280x800, 1280x620, 1024x800,
+1024x640, 1440x560, 900x900, 844x390, 768x1024, 390x844, 360x640 and 280x653:
+no horizontal overflow anywhere, the band's copy inside the band at every size,
+no console errors. **The `(max-height:680px) and (min-width:821px)` tier is not
+optional** — a short window squeezes the band (`60vh`) without squeezing the
+copy, and `.sv-band` is `overflow:hidden`, so the headline is what gets clipped.
+Measured at 1440x560 before it existed: 343px of copy in a 336px band.
 
 `contact.html` — one section, `#contact` ("Section VIII — Contact"): the invitation and a 2×2 contact grid on the left, a floating consultation card on the right, then the location card + drawn map and a closing CTA. **The form has no backend** — the submit handler validates, then swaps the card to a thank-you state and nothing is sent. Wire it to Netlify Forms (`name="contact"` + `data-netlify="true"` on the `<form>`) or an endpoint before launch, or enquiries are lost. Deliberately carries no corner artwork, per the brief.
 
@@ -648,10 +722,13 @@ reason, with `hover:none` catching tablets; and **`.sv-card .sv-slot span` had
 to be named explicitly**, because it is more specific than `.sv-slot span` and
 was still winning at .56rem.
 
-**One audit result is a false positive, and will be again.** `services.html`
-reports its first heading 7px under the navbar at every size. That heading is
-`h1.sv-sr` — the screen-reader-only alt text for the painted hero band, clipped
-to a 1px box. Nothing visible is colliding.
+**One audit result WAS a false positive, and is now simply gone.** `services.html`
+used to report its first heading 7px under the navbar at every size. That
+heading was `h1.sv-sr` — the screen-reader-only alt text for the painted hero
+band, clipped to a 1px box — so nothing visible was ever colliding. The band is
+film with live copy over it now and that `<h1>` is a real, visible heading, so
+the measurement means what it says again. (`.sv-sr` itself is still defined on
+the page; nothing uses it.)
 
 **Adaptive navbar** (last IIFE, every file). It samples the actual painted background behind `#navWrap` at three x-positions per scroll tick, averages relative luminance, and toggles `.on-light` (charcoal text) above a threshold of 150. Reading the live background rather than tagging sections means it keeps working when light sections are added. Full-bleed overlays that darken a light section from above carry `pointer-events:none`, so `elementsFromPoint` can't see them — they're listed in the `DARK_OVERLAYS` array (currently `['veil']`) and tested by geometry/opacity instead. **If you add another full-bleed dark overlay, add its id to `DARK_OVERLAYS` in all eleven files.**
 
@@ -978,8 +1055,10 @@ Three things are deliberately NOT done:
   sub-paragraph's call in place would have done to the search form's entrance.
 - **The page now has no `<h1>` at all.** That is a real SEO cost on a marketing
   home page and it was the client's explicit call, made after being told. If it
-  is ever wanted back without the visible text, the idiom is `.sv-sr` on
-  `services.html`: an `<h1>` clipped to a 1px box.
+  is ever wanted back without the visible text, the idiom is the `.sv-sr` rule
+  still defined on `services.html`: an `<h1>` clipped to a 1px box. (That page
+  no longer uses it on anything — its `<h1>` is visible copy over the film —
+  but the rule is kept there precisely as this utility.)
 
 Measured after, at 390x844, 360x640, 844x390 (landscape), 280x653, 1024x800 and
 1440x900: **no horizontal overflow at any size** (`scrollWidth` equals the
