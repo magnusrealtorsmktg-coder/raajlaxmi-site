@@ -1869,11 +1869,42 @@
   .br-empty{grid-column:1/-1;text-align:center;padding:3rem 0;
     font-weight:300;color:var(--body);}
 
+  /* ---- Show more — phones only ----
+     Thirty marks at two columns is fifteen rows of scroll before the rest of
+     the page. On a phone the All view is clipped to the first six and this
+     button opens the rest.
+     THE BREAKPOINT LIVES ONLY IN CSS: the script toggles .br-clip and unhides
+     the button, and both rules that act on them sit inside the phone tier, so
+     neither can be reached on a desktop. Nothing duplicates the query in JS. */
+  .br-more{display:none;}
+
   @media(max-width:1180px){ .br-grid{grid-template-columns:repeat(4,minmax(0,1fr));} }
   @media(max-width:900px){  .br-grid{grid-template-columns:repeat(3,minmax(0,1fr));} }
   @media(max-width:620px){
     .br-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
     .br-tab{padding:.6rem 1rem;font-size:.62rem;letter-spacing:.12em;}
+  }
+  /* the second clause catches a handset in landscape (844x390), which a
+     width-only query sails straight past — same reason as the hero tier */
+  @media(max-width:620px),(max-height:560px){
+    /* the clipped cards are display:none rather than hidden, so their
+       loading="lazy" logos are never requested either */
+    .br-grid.br-clip .br-item:nth-child(n+7){display:none;}
+    .br-more:not([hidden]){display:flex;align-items:center;justify-content:center;
+      gap:.6rem;width:100%;margin:clamp(1.4rem,4.5vw,2.1rem) auto 0;
+      font-family:"Inter",sans-serif;font-size:.72rem;font-weight:600;
+      letter-spacing:.14em;text-transform:uppercase;line-height:1;
+      padding:1rem 1.2rem;border:1px solid rgba(28,28,28,.18);border-radius:999px;
+      background:#fff;color:var(--charcoal);cursor:pointer;
+      box-shadow:0 16px 36px -28px rgba(40,32,18,.3);
+      transition:border-color .45s var(--lux),box-shadow .45s var(--lux);}
+    .br-more:active{border-color:rgba(201,161,90,.55);}
+    .br-more svg{flex:none;width:.95em;height:.95em;
+      transition:transform .45s var(--lux);}
+    .br-more[aria-expanded="true"] svg{transform:rotate(180deg);}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .br-more svg{transition:none;}
   }
 
   @media (prefers-reduced-motion:reduce){
@@ -2467,6 +2498,9 @@
 
       <div class="br-tabs" id="brTabs"></div>
       <div class="br-grid" id="brGrid"></div>
+      <!-- phone-only; label, chevron and `hidden` are all set by the script -->
+      <button type="button" class="br-more" id="brMore"
+              aria-controls="brGrid" aria-expanded="false" hidden></button>
     </div>
   </section>
 
@@ -3321,8 +3355,39 @@
     ];
 
     const tabsWrap = document.getElementById('brTabs'),
-          grid     = document.getElementById('brGrid');
+          grid     = document.getElementById('brGrid'),
+          more     = document.getElementById('brMore');
     let active = 'all';
+
+    /* On a phone the All view is clipped to the first SHOWN cards and the
+       button opens the rest. SHOWN has to agree with the `nth-child(n+7)` in
+       the stylesheet — that rule is what actually does the clipping; this
+       number only decides which cards to re-stagger on opening. */
+    const SHOWN = 6;
+    let open = false;
+
+    const CHEV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"' +
+      ' stroke-width="2" stroke-linecap="round" aria-hidden="true">' +
+      '<path d="M6 9l6 6 6-6"/></svg>';
+
+    /* Only the All view is ever clipped — the longest trade is eight cards,
+       which is four rows and needs no button.
+       The figure in the label is the number of SUPPLIERS, not of cards: Johnson
+       and Hindware each have a card under two trades on purpose, so there are
+       32 cards and 30 brands, and "Show all 32 brands" would be a false claim
+       about the one thing the sentence is counting. */
+    function syncMore(n){
+      if(!more) return;
+      const clip = active === 'all' && n > SHOWN;
+      more.hidden = !clip;
+      grid.classList.toggle('br-clip', clip && !open);
+      if(!clip) return;
+      const makers = new Set(BRANDS.map(b => b[0])).size;
+      more.setAttribute('aria-expanded', open ? 'true' : 'false');
+      more.innerHTML = (open ? 'Show fewer' : `Show all ${makers} brands`) + CHEV;
+    }
+
+    const count = () => BRANDS.filter(b => active === 'all' || b[3] === active).length;
 
     tabsWrap.innerHTML = TABS.map(([id,label]) =>
       `<button class="br-tab${id === active ? ' on' : ''}" data-tab="${id}">${label}</button>`).join('');
@@ -3336,6 +3401,7 @@
             <div class="br-cat">${trade}</div>
           </article>`).join('')
         : `<p class="br-empty">Nothing listed under this trade yet.</p>`;
+      syncMore(list.length);
       /* stagger the cards in, but only once the section has actually arrived */
       if(sec.classList.contains('in')){
         grid.querySelectorAll('.br-item').forEach((el,i)=>{
@@ -3351,7 +3417,29 @@
       tabsWrap.querySelectorAll('.br-tab').forEach(t => t.classList.remove('on'));
       tab.classList.add('on');
       active = tab.dataset.tab;
+      open = false;
       render();
+    });
+
+    if(more) more.addEventListener('click', () => {
+      /* Collapsing deletes a dozen rows from ABOVE the button, so the page
+         would jump and leave the finger pointing at something else. Hold the
+         button where it was instead. */
+      const was = more.getBoundingClientRect().top;
+      open = !open;
+      syncMore(count());
+      if(open){
+        /* the rows that just appeared already carry .show from the section's
+           own reveal, so re-stagger them rather than letting them snap in */
+        [...grid.children].slice(SHOWN).forEach((el,i) => {
+          if(reduce){ el.classList.add('show'); return; }
+          el.classList.remove('show');
+          el.style.transitionDelay = `${i * .035}s`;
+          requestAnimationFrame(() => el.classList.add('show'));
+        });
+      }else{
+        scrollBy(0, more.getBoundingClientRect().top - was);
+      }
     });
 
     render();
