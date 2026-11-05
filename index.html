@@ -3500,10 +3500,32 @@
        picture. Used by the hero, the About plate and the Why banner.
 
        It is skipped where it would cost a visitor real money or go against a
-       stated preference: on phones, on a data-saver connection, on a 2G-class
-       link, and under prefers-reduced-motion. All of those leave the still in
-       place — which is why the photograph is always painted first, even when a
-       video is set.
+       stated preference: on a data-saver connection, on a link too slow to
+       carry THIS file, and under prefers-reduced-motion. All of those leave
+       the still in place — which is why the photograph is always painted
+       first, even when a video is set.
+
+       IT NO LONGER SKIPS PHONES. It did until 5 Nov — a flat
+       `max-width:620px` — which meant no handset ever saw any of the three,
+       and that was the client's complaint. The blanket rule was always too
+       coarse: it was written when the hero slot held a 265MB 4K master, and
+       it judged the device rather than the file. A phone on wifi can play a
+       0.59MB clip perfectly well.
+
+       What replaced it is `heavy`, because the two live files are not
+       remotely comparable and one threshold cannot serve both:
+
+         - the About plate is **0.59 MB**, re-encoded, and plays on anything
+           above a 2G-class link;
+         - the hero is **15 MB at 4.64 Mbps** and cannot play in real time on
+           a 3G-class link AT ALL. Fetched there it would never reach the
+           reveal gate, would be dropped at 20s by the rule below, and would
+           have spent several MB of someone's mobile data to show them
+           nothing. Skipping it outright is the same outcome without the bill.
+
+       Note `navigator.connection` does not exist on iOS, so `conn` is
+       undefined there and neither connection test fires. That is the right
+       default: iOS gets the video and the gates below decide its fate.
 
        Everything else here exists to stop the video being WORSE than the
        photograph it covers. Four rules, and each one is a failure that was
@@ -3526,12 +3548,13 @@
        Every exit leaves the still showing rather than a black box: only the
        video element goes, and the background-image underneath is never
        touched. */
-    function mountVideo(host, url, posterUrl, cls){
+    function mountVideo(host, url, posterUrl, cls, heavy){
       if(!host || !url) return;
       const conn = navigator.connection;
       if(conn && conn.saveData) return;
-      if(conn && /2g/.test(conn.effectiveType || '')) return;
-      if(matchMedia('(max-width:620px)').matches) return;
+      const et = (conn && conn.effectiveType) || '';
+      if(/2g/.test(et)) return;              // catches '2g' and 'slow-2g'
+      if(heavy && et === '3g') return;       // see `heavy` above
       if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
       whenQuiet(() => {
@@ -3640,7 +3663,9 @@
           `url('${shot}?w=2400&q=80&auto=format&fit=max')`;
       }
 
-      mountVideo(media, txt(d.heroVideoUrl), shot, 'hero-vid');
+      /* heavy: the live file is 15MB at 4.64 Mbps, so a 3G-class link is told
+         not to bother. Re-encode it lighter and this flag should come off. */
+      mountVideo(media, txt(d.heroVideoUrl), shot, 'hero-vid', true);
 
       /* ---------- hero ----------
          `heroHeadline` and `heroSub` were painted here. The elements they

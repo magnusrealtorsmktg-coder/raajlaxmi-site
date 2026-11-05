@@ -277,12 +277,14 @@ Five things about the swap are load-bearing:
   the copy painted into it, so falling back to it would print every word twice.
 - **`mountFilm()` is `index.html`'s `mountVideo()`** — same reveal gate
   (`canplaythrough`, or five buffered seconds ahead), same three-visible-stalls
-  retirement, same 20s give-up, same `NotAllowedError`-only kill — **with one
-  fix that has not been carried back**: its skip test is
-  `(max-width:620px),(max-height:560px)`. `index.html` checks the width alone,
-  and a phone in landscape is **844px wide and 390px tall**, so a width-only
-  query sails straight past it and mounts video on a handset on mobile data.
-  Measured here at 844x390 before that second clause existed.
+  retirement, same 20s give-up, same `NotAllowedError`-only kill. **The two
+  have diverged on one point, deliberately**: this one still refuses phones,
+  with `(max-width:620px),(max-height:560px)` — the second clause catching a
+  landscape handset at 844x390, which a width-only query sails straight past.
+  `index.html` stopped refusing phones on 5 Nov at the client's request and
+  grades by file size instead (see *Hero, About and Why can each take a
+  video*). **Nobody has asked for the services film on phones**, so it is left
+  as it is; at 2.29 MB it would be a reasonable candidate if that changes.
 
 The two superseded artworks are **still on disk and still shipping**
 (`Services_start.png` 1.39 MB, `assets/service-philosophy.jpg` 169 KB), now
@@ -1106,12 +1108,45 @@ higher (82–85%) — that is the form wrapping, not the anchor failing.
 
 **Hero, About and Why can each take a video.** `mountVideo()` in the home-page
 block is shared by all three: it drops a silent looping `<video>` into an element
-that is already showing a picture, and is **skipped on phones, on data-saver
-connections, on a 2G-class link and under `prefers-reduced-motion`**, removing
-itself if the file errors or autoplay is refused. The photograph is always
-painted first, which is what every one of those cases falls back to. The CSS is
-**`index.html`-only** — `.hero-vid` / `.cms-vid` appear in no other file — so
-unlike the rest of the shared stylesheet there is nothing here to sync.
+that is already showing a picture, and is **skipped on data-saver connections,
+on a link too slow to carry that particular file, and under
+`prefers-reduced-motion`**, removing itself if the file errors or autoplay is
+refused. The photograph is always painted first, which is what every one of
+those cases falls back to. The CSS is **`index.html`-only** — `.hero-vid` /
+`.cms-vid` appear in no other file — so unlike the rest of the shared
+stylesheet there is nothing here to sync.
+
+**It no longer skips phones, and the threshold is now per-file.** Until 5 Nov
+it carried a flat `matchMedia('(max-width:620px)')` skip, so **no handset ever
+saw any of the three videos** — which was the client's complaint. That rule was
+written when the hero slot held a 265MB 4K master and it judged the *device*
+rather than the *file*; a phone on wifi plays a 0.59MB clip perfectly well.
+The fifth argument `heavy` replaced it, because the two live files are not
+comparable:
+
+| | file | size | skips on |
+|---|---|---|---|
+| About plate | `About (web).mp4` | **0.59 MB** | 2G, data-saver |
+| Hero | `Homepage video.mp4` | **15.06 MB** @ 4.64 Mbps | 2G, **3G**, data-saver |
+
+The hero cannot play in real time on a 3G-class link at all. Fetched there it
+would never reach the reveal gate, would be dropped at 20s by the rule below,
+and would have spent several MB of someone's mobile data to show them nothing;
+skipping it outright is the same outcome without the bill. **Re-encode the hero
+lighter and the `true` at its call site should come off.**
+
+`navigator.connection` does not exist on iOS, so neither connection test fires
+there and iOS always gets the video — correct, since the reveal gate then
+decides. Measured on a 390x844 iPhone viewport against live Sanity data:
+4G → both mount; 3G → About only; 2G, data-saver and reduced-motion → neither.
+
+**On a phone the hero's footage is cropped hard and that is worth knowing**:
+the file is 1280x720 landscape and the portrait hero box is ~489x961, so about
+a quarter of the frame width survives. The burnt-in title card (see below)
+therefore arrives as *fragments of letters* down both edges, which reads as a
+rendering fault rather than as a title. The About plate has the opposite
+property — it is `object-fit:contain` and its file is the plate's own ratio, so
+it shows whole on a phone with nothing cropped.
 
 **The video never appears until it can actually play, and that rule is the
 whole design.** On 4 Nov the client uploaded the edit master into the hero slot:
