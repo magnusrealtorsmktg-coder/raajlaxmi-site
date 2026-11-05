@@ -3655,10 +3655,13 @@
 
          - the About plate is **0.59 MB**, re-encoded, and plays on anything
            above a 2G-class link;
-         - the hero is **15 MB at 4.64 Mbps** and cannot play in real time on
-           a 3G-class link AT ALL. Fetched there it would never reach the
-           reveal gate, would be dropped at 20s by the rule below, and would
-           have spent several MB of someone's mobile data to show them
+         - the hero is **3.94 MB at 1.50 Mbps** (it was 15 MB at 4.64 Mbps
+           until 5 Nov) and still cannot play in real time on a 3G-class link.
+           Measured on the live page after the lighter file went up: it is
+           revealed at 15.6s on a 4 Mbps link, and at **2 Mbps and 1.2 Mbps it
+           never reaches the gate at all** — which is correct, since the clip's
+           own bitrate is 1.5 Mbps. Fetched there it would be dropped at 20s
+           having spent megabytes of someone's mobile data to show them
            nothing. Skipping it outright is the same outcome without the bill.
 
        Note `navigator.connection` does not exist on iOS, so `conn` is
@@ -3702,7 +3705,8 @@
         v.muted = true;              // set before play(), or the browser blocks it
         v.defaultMuted = true;
         v.loop = true;
-        v.autoplay = true;
+        /* NOT autoplay, and NOT played at mount — see show(). It buffers
+           paused, so the download is racing nothing. */
         v.playsInline = true;
         v.setAttribute('playsinline', '');        // older iOS reads the attribute
         v.preload = 'auto';
@@ -3725,8 +3729,11 @@
           unwire(); v.classList.remove('on'); v.pause();
           setTimeout(() => v.remove(), 900);      // after the fade, not during
         };
+        /* Nothing plays before it is revealed. The `shown()` guard here is the
+           whole of the fix described at show(): without it this would restart
+           invisible playback on every scroll back into view. */
         function resume(){
-          if(!v.isConnected || document.hidden || !onScreen) return;
+          if(!v.isConnected || document.hidden || !onScreen || !shown()) return;
           const p = v.play(); if(p && p.catch) p.catch(() => {});
         }
 
@@ -3745,7 +3752,34 @@
            file three seconds in, so it faded the video up and straight into
            the stutter this is all meant to prevent. Having a next frame is not
            the same as being able to keep having one. */
-        const show = () => { if(v.isConnected) v.classList.add('on'); };
+        /* IT BUFFERS PAUSED, AND ONLY STARTS PLAYING WHEN IT IS REVEALED.
+           This is the fix for the "sometimes the video never appears" report,
+           and it is NOT the same bug as the file being too heavy.
+
+           The old code called play() at mount, so the video ran invisibly at
+           opacity 0 while it buffered — racing its own download. `runway()` is
+           `buffered.end - currentTime`, so on any link slower than real time
+           the playhead outruns the buffer and the runway goes NEGATIVE: the
+           five-second gate can then never be reached no matter how small the
+           file is. Measured on the live page at 4 Mbps, with the 3.94MB file
+           already in place:
+
+             7.8s  currentTime 0.5  buffered 0.6  runway  +0.1
+            13.0s  currentTime 5.7  buffered 5.0  runway  -0.7
+            20.8s  currentTime 13.5 buffered 10.3 runway  -3.3   → killed at 20s
+
+           Paused, `currentTime` stays at 0, so the runway simply IS the
+           buffered length and grows with every byte. The gate becomes
+           reachable on exactly the connections it was meant to protect.
+           Autoplay refusal is detected here instead of at mount, which is also
+           the first moment anyone actually wants it to play. */
+        const show = () => {
+          if(!v.isConnected || v.classList.contains('on')) return;
+          v.classList.add('on');
+          if(document.hidden || !onScreen) return;
+          const go = v.play();
+          if(go && go.catch) go.catch(err => { if(err && err.name === 'NotAllowedError') kill(); });
+        };
         const runway = () => {
           if(v.readyState < 3 || !v.buffered.length) return 0;
           return v.buffered.end(v.buffered.length - 1) - v.currentTime;
@@ -3776,15 +3810,11 @@
         host.prepend(v);
         v.src = url;                 // set last, so no event can be missed
 
-        /* Only a REFUSAL kills the video. A rejected play() is not necessarily
-           one: a video mounted below the fold is paused by the observer above
-           a frame or two after this call, and that pause rejects this promise
-           with AbortError. Treating every rejection as "autoplay refused"
-           removed the About plate's video the instant it mounted — the hero
-           survived only because it happens to be on screen, so nothing ever
-           interrupted its play(). */
-        const go = v.play();
-        if(go && go.catch) go.catch(err => { if(err && err.name === 'NotAllowedError') kill(); });
+        /* There is deliberately NO play() here. It used to be called at this
+           point, which is what made the video race its own download — see
+           show(), where playback now starts, and where a refused autoplay is
+           detected instead. `preload = 'auto'` is what keeps it buffering
+           while it is paused. */
       });
     }
 
@@ -3801,8 +3831,10 @@
           `url('${shot}?w=2400&q=80&auto=format&fit=max')`;
       }
 
-      /* heavy: the live file is 15MB at 4.64 Mbps, so a 3G-class link is told
-         not to bother. Re-encode it lighter and this flag should come off. */
+      /* heavy: the live file is 3.94MB at 1.50 Mbps, and a 3G-class link is
+         still told not to bother — measured, it cannot reach the reveal gate
+         at 2 Mbps or below, which is what the clip's own bitrate implies. The
+         flag stayed when the file was made lighter for exactly that reason. */
       mountVideo(media, txt(d.heroVideoUrl), shot, 'hero-vid', true);
 
       /* ---------- hero ----------

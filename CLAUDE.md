@@ -1200,6 +1200,47 @@ rendering fault rather than as a title. The About plate has the opposite
 property — it is `object-fit:contain` and its file is the plate's own ratio, so
 it shows whole on a phone with nothing cropped.
 
+**The video buffers PAUSED, and only starts playing when it is revealed.**
+This is the fix for the client's "sometimes the video doesn't play on mobile,
+stale blue background" report, and it is the half that actually mattered.
+
+`mountVideo()` used to call `play()` at mount, so the video ran **invisibly at
+`opacity:0` while it buffered** — racing its own download. `runway()` is
+`buffered.end - currentTime`, so on any link slower than real time the playhead
+outruns the buffer and the runway goes **negative**. The five-second gate then
+becomes unreachable *no matter how small the file is*, which is why shrinking
+the hero from 15 MB to 3.94 MB on its own changed nothing. Measured on the live
+page at 4 Mbps with the small file already in place:
+
+| wall | paused | currentTime | buffered | runway |
+|---|---|---|---|---|
+| 7.8s | false | 0.5 | 0.6 | +0.1 |
+| 13.0s | false | 5.7 | 5.0 | −0.7 |
+| 20.8s | false | 13.5 | 10.3 | **−3.3** → killed at 20s |
+
+Paused, `currentTime` stays at 0, so the runway simply **is** the buffered
+length and grows with every byte. Same link, after the change:
+
+| wall | paused | currentTime | buffered | runway | shown |
+|---|---|---|---|---|---|
+| 7.8s | true | 0 | 1.7 | +1.7 | no |
+| 13.0s | true | 0 | 4.5 | +4.5 | no |
+| 15.6s | false | 1.5 | 6.3 | +4.7 | **YES** |
+
+Three consequences worth keeping straight:
+
+- **`autoplay` is off and there is no `play()` at mount.** `preload='auto'` is
+  what keeps a paused element buffering.
+- **Autoplay refusal is detected in `show()`**, not at mount — the first moment
+  anything actually wants to play. The `NotAllowedError`-only rule still
+  stands, for the reason it always did.
+- **`resume()` carries a `shown()` guard**, or scrolling back into view would
+  restart invisible playback and re-create the bug.
+
+2 Mbps and 1.2 Mbps still never reach the gate, and that is correct: the clip's
+own bitrate is 1.50 Mbps, so those links cannot carry it at all. **That is also
+why the `heavy` flag stayed on the hero** after the file was made lighter.
+
 **The video never appears until it can actually play, and that rule is the
 whole design.** On 4 Nov the client uploaded the edit master into the hero slot:
 **3840x2160, 24fps, 81.5 Mbps, 265.6 MB**, with a 317 kbps AAC track on a video
@@ -1642,25 +1683,10 @@ changed.
    `assets/hero-still.jpg`, a frame of the film, set from CSS. See *The still
    underneath is a FRAME OF THE FILM*. A further step to AVIF/WebP with
    `srcset` is still available but the 64KB JPEG is no longer the problem.
-2b. **THE HERO VIDEO IS STILL 15MB AND THAT IS THE REMAINING BUG.** Measured on
-   5 Nov with CDP throttling, at 390x844 against the live site: at 12 Mbps the
-   film is revealed at 12.5s; at **4 Mbps (ordinary 4G) and at 2 Mbps it is
-   never revealed at all** — it cannot reach the gate, the 20s give-up drops
-   it, and the visitor sees only the still. That is the intermittent failure
-   the client reported, and no code change fixes it. A trimmed, re-encoded
-   replacement is **prepared and measured** but **not uploaded** — writing to
-   the client's dataset was refused by the auto-mode classifier as
-   *[Modify Shared Resources]*:
-
-   | | size | bitrate | duration | SSIM |
-   |---|---|---|---|---|
-   | live now | 15.06 MB | 4.64 Mbps | 27.2s | — |
-   | **prepared (CRF 26)** | **3.94 MB** | **1.50 Mbps** | **22.1s** | **0.983** |
-
-   It also **cuts the burnt-in title card** (original 10.3s–15.4s, "EVERY GREAT
-   JOURNEY BEGINS WITH A VISION.") which on a phone arrives as fragments of
-   letters down both edges, because the portrait crop keeps only ~a quarter of
-   the frame width. Rebuild with:
+2b. ~~**THE HERO VIDEO IS STILL 15MB**~~ — **both halves fixed, 5 Nov.**
+   The file is now **3.94 MB at 1.50 Mbps, 22.1s** (`homepage-web.mp4`,
+   `file-602ab4bb…`), re-encoded at CRF 26 for SSIM 0.983 **with the burnt-in
+   title card cut out** (original 10.3s–15.4s). Rebuild it with:
 
    ```
    ffmpeg -ignore_editlist 1 -i <source> \
@@ -1668,8 +1694,9 @@ changed.
      -an -c:v libx264 -crf 26 -preset slow -movflags +faststart -g 48 \
      -pix_fmt yuv420p homepage-web.mp4
    ```
-   then `npx sanity exec scripts/replace-hero-video.mjs --with-user-token --
-   --hero homepage-web.mp4`. At 1.50 Mbps the `heavy` flag at its call site in
-   `mountVideo()` should come off too.
+
+   **The smaller file was only half of it, and not the important half.** See
+   *The video buffers paused* below — the reason it failed had almost nothing
+   to do with size.
 3. Subset or self-host the Google Fonts (Archivo Black, Cinzel, Cormorant Garamond, Inter, Playfair Display — five families on every page).
 4. Give the hero plate `fetchpriority="high"` to improve LCP.
