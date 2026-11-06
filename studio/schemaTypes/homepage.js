@@ -55,11 +55,20 @@ export default {
     },
     {
       name: 'heroVideo',
-      title: 'Background video',
+      title: 'Background video (wide screens)',
       type: 'file',
       options: {accept: 'video/mp4,video/webm,video/quicktime'},
       description:
-        'Plays silently on a loop behind the headline, and is used instead of the photograph above when both are set. Keep it short and small — under about 10 seconds and 8MB — because every visitor downloads it. It is skipped on phones and when a visitor has data-saving on, so set a photograph above as well: that is what they will see.',
+        'Plays silently on a loop behind the search box on laptops, desktops and tablets held sideways, and is used instead of the photograph above when both are set. Give it a LANDSCAPE shape — a tall video here is cropped to the sides. Keep it small, around 4MB, because every visitor downloads it. Set a photograph above as well: that is what shows while this loads, and if it fails.',
+      group: 'hero',
+    },
+    {
+      name: 'heroVideoMobile',
+      title: 'Background video (phones, held upright)',
+      type: 'file',
+      options: {accept: 'video/mp4,video/webm,video/quicktime'},
+      description:
+        'A PORTRAIT cut of the same film, for phones and tablets held upright. A wide video on an upright phone loses about three quarters of its width, which is why this exists. Leave it empty and the site uses the portrait film built into it. A phone turned sideways gets the wide video above, not this one.',
       group: 'hero',
     },
     {

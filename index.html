@@ -81,6 +81,7 @@
          them. Both fields still exist on the document and in the schema. */
       '  heroPropertyOptions,heroLocationOptions,heroBudgetOptions,heroButton,\n' +
       '  "heroImageUrl":heroImage.asset->url,"heroVideoUrl":heroVideo.asset->url,\n' +
+      '  "heroVideoMobileUrl":heroVideoMobile.asset->url,\n' +
       '  "aboutVideoUrl":aboutVideo.asset->url,\n' +
       '  whyLabel,whyHeading,whyIntro,whyRows,whyTimeline,whyQuote,whyQuoteBy,\n' +
       '  "whyImageUrl":whyImage.asset->url,"whyVideoUrl":whyVideo.asset->url,\n' +
@@ -445,6 +446,17 @@
     background-image:url("assets/hero-still.jpg");background-repeat:no-repeat;
     background-color:#0A1018;
     transform:scale(1.04);will-change:transform;}
+  /* THE STILL HAS TO MATCH WHICHEVER FILM IS PLAYING. `hero-still.jpg` is a
+     frame of the 16:9 desktop film; in a portrait box `cover` keeps about a
+     quarter of its width, so on a phone it was a hard crop of a wide frame
+     under a portrait video of a different shot. This is the first frame of
+     `hero-mobile.mp4`, so the dissolve is the same scene continuing rather
+     than a cut. The media query matches the one the script uses to choose the
+     film — change one and change the other. */
+  @media (orientation:portrait) and (max-width:900px){
+    .hero-media{background-image:url("assets/hero-still-mobile.jpg");
+      background-position:center;}
+  }
   .overlay{position:absolute;inset:0;z-index:2;pointer-events:none;
     background:
       linear-gradient(105deg, rgba(8,13,20,.66) 0%, rgba(8,13,20,.34) 32%, rgba(8,13,20,0) 60%),
@@ -3920,9 +3932,37 @@
           `url('${shot}?w=2400&q=80&auto=format&fit=max')`;
       }
 
+      /* ---------- which film ----------
+         THE DESKTOP FILM IS 16:9 AND A PHONE IS 9:16, so `object-fit:cover`
+         kept roughly a quarter of its width — the client's complaint, and the
+         reason the burnt-in title card arrived on a phone as fragments of
+         letters down both edges. There is a portrait cut now.
+
+         The test is ORIENTATION, not width. A handset in landscape is 844px
+         wide and 390px tall and wants the LANDSCAPE film; a width-only query
+         would hand it the portrait one and crop it just as badly the other
+         way. Tablets in portrait are included on purpose: at 768x1024 the
+         portrait film keeps 75% of its height against the landscape film's
+         58% of its width, so it is the better of the two there as well.
+
+         `assets/hero-mobile.mp4` is the FALLBACK and `heroVideoMobile` on the
+         homepage document overrides it — the same rule as every other asset
+         here, where the file in the repo is the design fallback and the CMS
+         is the real content. So this works with nothing uploaded, and the
+         client can still replace it from the Studio later.
+
+         Chosen ONCE, at paint time. Rotating a phone after load keeps the
+         film it already started buffering rather than throwing it away and
+         fetching 3.9MB again, which is the behaviour anyone would want on a
+         metered connection. The media query above must agree with this one. */
+      const portrait = matchMedia('(orientation:portrait) and (max-width:900px)').matches;
+      const heroFilm = portrait
+        ? (txt(d.heroVideoMobileUrl) || 'assets/hero-mobile.mp4')
+        : txt(d.heroVideoUrl);
+
       /* no `heavy` flag any more — the hero is fetched on every connection
          like the other two. See the note on mountVideo. */
-      mountVideo(media, txt(d.heroVideoUrl), shot, 'hero-vid');
+      mountVideo(media, heroFilm, shot, 'hero-vid');
 
       /* ---------- hero ----------
          `heroHeadline` and `heroSub` were painted here. The elements they

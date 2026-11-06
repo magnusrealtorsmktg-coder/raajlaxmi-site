@@ -1344,13 +1344,100 @@ there and iOS always gets the video — correct, since the reveal gate then
 decides. Measured on a 390x844 iPhone viewport against live Sanity data:
 4G → both mount; 3G → About only; 2G, data-saver and reduced-motion → neither.
 
-**On a phone the hero's footage is cropped hard and that is worth knowing**:
-the file is 1280x720 landscape and the portrait hero box is ~489x961, so about
-a quarter of the frame width survives. The burnt-in title card (see below)
-therefore arrives as *fragments of letters* down both edges, which reads as a
-rendering fault rather than as a title. The About plate has the opposite
-property — it is `object-fit:contain` and its file is the plate's own ratio, so
-it shows whole on a phone with nothing cropped.
+### The hero has a PORTRAIT film for phones
+
+~~On a phone the hero's footage is cropped hard~~ — **fixed on 6 Nov.** The
+desktop file is 1280x720 and an upright phone's hero box is ~489x961, so about
+a quarter of the frame width survived and the burnt-in title card arrived as
+*fragments of letters* down both edges. The client supplied a portrait cut and
+it is now used on phones.
+
+`assets/hero-mobile.mp4` — **720x1280, 24fps, 21.7s, 3.86 MB at 1.49 Mbps**,
+with `assets/hero-still-mobile.jpg` (44 KB) as its first frame.
+
+**THE TEST IS ORIENTATION, NOT WIDTH**, and that is the one thing to get right
+here. `matchMedia('(orientation:portrait) and (max-width:900px)')`:
+
+- a **handset in landscape is 844px wide and 390px tall** and wants the WIDE
+  film; a width-only query would hand it the portrait one and crop it just as
+  badly the other way. Verified at 844x390: it mounts the Sanity desktop file.
+- **tablets in portrait are included on purpose.** At 768x1024 the portrait film
+  keeps 75% of its height where the landscape film keeps 58% of its width, so it
+  is the better of the two there as well.
+- **The CSS and the JS carry the same query and must agree.** `.hero-media`
+  swaps its background to the portrait still inside that media query; the script
+  picks the film with the identical `matchMedia`. Change one, change the other.
+
+**The still had to change with it.** `hero-still.jpg` is a frame of the 16:9
+film, so under a portrait video it was a hard crop of a *different shot* — the
+dissolve would have been a scene change. The mobile still is the portrait film's
+own first frame, which is the same rule the desktop still already follows.
+
+**The file in `assets/` is the FALLBACK; `heroVideoMobile` on the `homepage`
+document overrides it.** That is the site's usual rule — the committed file is
+the design fallback and the CMS is the real content — and it means this works
+with nothing uploaded while the client can still replace it from the Studio.
+The schema field exists (`Background video (phones, held upright)`); **the
+Studio needs a redeploy (`cd studio && npm run deploy`) before it appears in the
+form**, though the site reads it either way.
+
+**The film is chosen ONCE, at paint time.** Rotating a phone after load keeps
+the film it has already started buffering rather than discarding it and fetching
+another 3.9 MB, which is what anyone on a metered connection would want.
+
+**Re-encoded from a 109 MB master**, 1080x1920 at 32.3 Mbps with an audio track
+on a video the site plays muted. Downscaling beat a higher CRF on this footage —
+it is dense rendered skyline, so the bits go into detail that a phone cannot
+show anyway:
+
+| | size | bitrate | SSIM |
+|---|---|---|---|
+| 1080x1920 CRF 26 | 6.20 MB | 2.40 Mbps | 0.981 |
+| 1080x1920 CRF 28 | 4.89 MB | 1.89 Mbps | 0.978 |
+| 810x1440 CRF 24 | 4.69 MB | 1.81 Mbps | 0.979 |
+| **720x1280 CRF 24 (shipped)** | **3.86 MB** | **1.49 Mbps** | **0.978** |
+| 720x1280 CRF 26 | 3.06 MB | 1.18 Mbps | 0.974 |
+
+720p CRF 24 is the knee — the same SSIM as 1080p CRF 28 for a megabyte less —
+and it lands within 2% of the desktop film's own size and bitrate, so whatever
+connection carries one carries the other. **CRF 26 is the lever** if 0.8 MB ever
+matters more than the last 0.004 of SSIM.
+
+**The burnt-in title card was cut, matching the desktop film.** "EVERY GREAT
+JOURNEY BEGINS WITH A VISION." runs **9.85s–15.15s** in this render — measured
+by sampling the frame band at 0.1s steps, not guessed, and ~0.3s earlier than
+the desktop file's 10.3–15.4, so **do not reuse those numbers on a new render**.
+The cut is 9.8–15.2, taking 27.1s to 21.7s. Rebuild with:
+
+```
+ffmpeg -ignore_editlist 1 -i <source> \
+  -vf "select='not(between(t,9.8,15.2))',setpts=N/FRAME_RATE/TB,scale=720:1280:flags=lanczos" \
+  -an -c:v libx264 -crf 24 -preset slow -movflags +faststart -g 48 \
+  -pix_fmt yuv420p assets/hero-mobile.mp4
+```
+
+Keeping the card would have been defensible — on a portrait phone it renders
+properly rather than as fragments — but the desktop film has it cut, and one
+brand showing two different things by viewport is worse than either. Putting it
+back is one edit: drop the `select`/`setpts` pair.
+
+**`.gitignore` only blocks root-level `*.mp4`**, so this commits and ships with
+the repo, as `assets/services-film.mp4` already does. It adds 3.9 MB to what
+Netlify clones per deploy.
+
+**One property worth knowing: with Sanity unreachable there is no hero video at
+all**, on either orientation. The asset fallback lives inside `paint()`, which
+only runs once the home query resolves. The still underneath is what shows, and
+that is now correct in both orientations — which is the part that matters.
+
+Measured at 390x844, 360x640, 412x915, 280x653 and 768x1024: the portrait film
+mounts, reveals and plays (`readyState` 4, `paused:false`), with the portrait
+still behind it. At 844x390 and 1440x900: the desktop film, unchanged. Under
+`--force-prefers-reduced-motion`: no video at either orientation. No horizontal
+overflow and no console errors anywhere.
+
+The About plate has the opposite property — it is `object-fit:contain` and its
+file is the plate's own ratio, so it shows whole on a phone with nothing cropped.
 
 **The connection and file-size refusals are GONE (5 Nov), at the client's
 explicit instruction.** The video is fetched on every connection, revealed on
