@@ -317,8 +317,10 @@ export default {
       description:
         'The featured projects on the home page. Four is what the grid was drawn for — fewer will leave the row short, more will wrap to a second row. ' +
         'Each card is one of your projects: pick it, and the name, category, location, description, photograph and the ' +
-        '"View Project" button all follow that project. To change what a card says, or to add a gallery, a price or ' +
-        'specifications behind it, open the project itself — the home page and the collection page then agree by themselves.',
+        '"View Project" button all follow that project. THERE IS NO SEPARATE FORM FOR A SIGNATURE PROJECT — a card is ' +
+        'a pointer to a project, not a copy of one. To change what a card says, or to add a gallery, a price, ' +
+        'specifications or a brochure PDF behind it, open the project itself (click its name below, then the arrow) — ' +
+        'the home page, the collection page and the project page then agree by themselves.',
       of: [
         {
           type: 'object',
@@ -354,9 +356,10 @@ export default {
               description:
                 'Pick one of your projects and the card fills itself in — the name, category, ' +
                 'location, short description, photograph and the "View Project" button all follow ' +
-                'that project, so editing the project keeps this card current. Open the project ' +
-                'to add its gallery, price, overview, specifications and amenities; those appear ' +
-                'on its own page, which is where "View Project" goes.',
+                'that project, so editing the project keeps this card current. Everything else ' +
+                'lives on the project, not here: open it to add the gallery, price, overview, ' +
+                'specifications, amenities and the brochure PDF. Those appear on its own page, ' +
+                'which is where "View Project" goes.',
               validation: (R) => R.required(),
             },
             {

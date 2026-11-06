@@ -43,6 +43,14 @@ netlify deploy --prod --dir=/tmp/rl-deploy        # ~87 files, 8.6MB
 
 **The Studio deploys separately** (`cd studio && npm run deploy`) — it
 republishes the editing interface and does nothing to the website.
+**Claude Code cannot run it either**: the auto-mode classifier blocks
+`sanity deploy` the same way it blocks a Netlify production deploy, so a schema
+change always needs the client-facing command run by hand. `npm run build` is
+*not* blocked and is the way to prove a schema change compiles before handing
+the deploy over; `npx sanity deploy --dry-run --no-build -y` is not blocked
+either and prints which studio URL it would publish to, which is worth checking
+because `sanity.cli.js` pins no `studioHost` — the CLI resolves
+`https://raajlaxmi.sanity.studio` from the project rather than from the repo.
 
 **Every origin the site is served from must be listed in Sanity's CORS
 allowlist** (manage.sanity.io → project `lc9w15ba` → API → CORS origins,
@@ -1107,9 +1115,21 @@ written into `index.html` and uploads the About plate, so the client opens a
 filled form rather than a blank one; it is `createOrReplace`, so re-running it
 **discards their edits** — only run it on a fresh dataset.
 
-**The signature cards point at projects.** Each of the four cards on the home
-page carries a **reference to a `project` document**, and the project fills the
-card: name, category, location, short description (`blurb`), card photograph and
+**The signature cards point at projects, so THERE IS NO SEPARATE SIGNATURE
+SCHEMA.** This is the one thing about the home page that reliably confuses
+people, and it came up again on 6 Nov as "signature projects do not have
+brochure upload". They do: all four cards reference ordinary `project`
+documents — today Shanti Niwas, Rajlaxxmi Park, Nakshatra Auris and Aarvi
+Apartment, the same documents the collection page lists — so every field a
+completed project has, a signature project has, the `brochure` PDF included.
+What the card object itself holds is a reference plus a few collapsed
+*overrides*; it deliberately carries no gallery, price, specs or brochure of
+its own, because those belong to the property and are read from it on both
+pages. The route is: open the card, click through the reference, fill the
+project. The reference field's description says so in as many words.
+
+Each of the four cards carries a **reference to a `project` document**, and the
+project fills the card: name, category, location, short description (`blurb`), card photograph and
 the "View Project" link all come from it, so editing the property updates the home
 page too. Every other field on the card is an **override** — fill one in only to
 say something different there than on the collection card. The reference exists
