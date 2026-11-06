@@ -2178,6 +2178,42 @@
       youtube:'YouTube', x:'X', whatsapp:'WhatsApp',
     };
 
+    /* WHATSAPP IS THE ONE HANDLE THAT IS NOT SIMPLY A LINK, and it was broken.
+       The client typed the number into the field the way it is printed —
+       "https://wa.me/9177740 00939" — and wa.me takes bare digits, so the space
+       made the href unresolvable. Rather than rely on it being typed perfectly,
+       this rebuilds the link from whatever is in there: a wa.me link, an
+       api.whatsapp.com one, or the phone number on its own.
+
+       A ten-digit number is given a 91. That is an assumption, and it is the
+       right one here — every number on this site is Indian — but it is the line
+       to change if that ever stops being true.
+
+       A chat.whatsapp.com link is a GROUP INVITE whose code is not a phone
+       number, so it is passed through untouched; stripping it to digits would
+       produce a link to a nonexistent number. Anything with fewer than ten
+       digits is likewise left alone rather than guessed at.
+
+       The visitor arrives with a message already typed, because an empty chat
+       box is a worse prompt than a sentence they can edit or delete. A `?text=`
+       written into the CMS wins over this default. */
+    const WA_TEXT = encodeURIComponent(
+      'Hi Raajlaxmi Group, I would like to know more about your projects.');
+
+    function waHref(raw){
+      const u = txt(raw);
+      if(/chat\.whatsapp\.com/i.test(u)) return u;         // a group invite
+      /* api.whatsapp.com carries the number in ?phone=, so read that before
+         the query string is thrown away — otherwise the path has no digits
+         left and a perfectly good link falls through untouched. */
+      const q = u.match(/[?&]phone=(\d+)/);
+      const digits = q ? q[1] : u.replace(/[?#].*$/, '').replace(/\D/g, '');
+      if(digits.length < 10) return u;                      // not a number
+      const num  = digits.length === 10 ? '91' + digits : digits;
+      const said = u.match(/[?&]text=([^&]*)/);
+      return 'https://wa.me/' + num + '?text=' + (said ? said[1] : WA_TEXT);
+    }
+
     /* already in flight since the document head — see RL in <head> */
     RL.get(RL.q.settings)
       .then(({result:d}) => { if(d) paint(d); })
@@ -2192,7 +2228,8 @@
         if(links.length){
           row.innerHTML = links.map(x => {
             const k = txt(x.platform);
-            return `<a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer"
+            const href = k === 'whatsapp' ? waHref(x.url) : txt(x.url);
+            return `<a href="${esc(href)}" target="_blank" rel="noopener noreferrer"
                        data-hover aria-label="${esc(LABEL[k] || k)}">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
                            stroke="currentColor" stroke-width="1.4" aria-hidden="true">${ICON[k]}</svg>

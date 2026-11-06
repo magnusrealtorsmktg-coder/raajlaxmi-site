@@ -100,7 +100,7 @@ instead of trusting that number.
 | Reviews | **6 real Google reviews**, all with Google links — the invented five are gone from the CMS |
 | Owners | **5 real people, each with a portrait and a role; no bios.** The `.ow-bio` line is removed per card when the field is empty, so the cards run name + role |
 | Client photo slider | empty, so the whole block stays hidden |
-| Social handles | none set, so the footer row removes itself |
+| Social handles | **YouTube and WhatsApp are set** (6 Nov); Instagram, Facebook, LinkedIn and X are not, so only those two show |
 | Hero background | a photograph is set; no video |
 
 Setting any project's **Listing** to Ongoing or Redevelopment fills those pages
@@ -1178,6 +1178,38 @@ become the norm, which letterboxes instead.
 The field is **`gallery`**, not `photos`, and the intro is **`introText`**, not
 `intro` — worth knowing before concluding from a hand-written GROQ query that
 the client has not published anything.
+
+**The WhatsApp handle is rebuilt, not trusted.** It is the one social entry that
+is a phone number rather than a link, and it shipped broken: the client typed
+**`https://wa.me/9177740 00939`** — the number spaced as it is printed — and
+`wa.me` takes bare digits, so the href could never resolve. `waHref()` in the
+footer block of all eleven files now reconstructs it from whatever is in the
+field: a `wa.me` link, an `api.whatsapp.com/send?phone=` one, or the bare number
+in any spacing. Five things about it:
+
+- **A ten-digit number is given a `91`.** That is an assumption and it is the
+  right one here — every number on this site is Indian — but it is the line to
+  change if that stops being true.
+- **`chat.whatsapp.com` links are passed through untouched.** Those are group
+  invites whose code is not a phone number; stripping one to digits would
+  produce a link to a number that does not exist.
+- **`?phone=` is read before the query string is discarded**, or an
+  `api.whatsapp.com` link would have no digits left in its path and would fall
+  through unchanged.
+- **Anything with fewer than ten digits is left alone** rather than guessed at.
+- **The visitor arrives with a message already typed** (`WA_TEXT`), because an
+  empty chat box is a worse prompt than a sentence they can edit. A `?text=`
+  written into the CMS wins over that default.
+
+Verified against the live document and nine inputs: the live handle resolves to
+`https://wa.me/917774000939?text=…`, and the spaced, bare, international,
+`api.whatsapp.com` and pre-texted forms all normalise correctly while the group
+invite and non-numeric strings pass through.
+
+**It delivers to `+91 77740 00939`** — the footer's number, not the contact
+page's `+91 9890823288`. Those two have contradicted each other since before
+launch; now that one of them receives WhatsApp messages, the question of which
+is right has teeth.
 
 **Site settings.** A singleton (`site-settings`) holding the **social handles**
 and the footer's telephone, email, address and copyright line. Its block is
