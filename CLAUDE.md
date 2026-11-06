@@ -169,7 +169,7 @@ Check at 1440×900, 1024×800 and 420×860; scroll the full page; confirm no con
 | II | About | `about` | Ivory. Plate showing **the CMS's About video** (`assets/about-plate.jpg` is only the fallback underneath it), four counting stats, then a full-width RERA / CREDAI-MCHI trust strip (`.ab-creds`, a sibling of `.ab-inner`, not inside the content column). **It holds exactly one screen** — see *The About section holds one screen*. The ghost word "Legacy" that used to sit behind the copy is gone, markup, CSS, parallax and schema field alike. |
 | III | Signature Projects | `signature` | Four project cards, corner blueprint decor with slow parallax, rotating seal. The section now ends on the card grid, so its **bottom** padding alone sets the run into Why — it was written to mirror `.about`'s old `clamp(5rem,14vh,140px)`, which **no longer exists**: About was rebuilt to one screen and its padding is now much tighter, so this value is a standalone constant that only looks like it is paired with something. |
 | IV | Why Raajlaxmi | `why` | Team photograph as the feature plate, **sized so the heading and the photograph share one screen** (see *The Why heading and photograph share one screen*), four numbered rows, a year timeline (2004→2026), closing quote + spinning seal. The auto-scrolling brand marquee (`.why-carousel`) that used to sit before the quote is gone — Section X replaced it. |
-| XI | Meet Our Owners | `owners` | **Sits between Why and Brands in scroll order**, despite the number. Portrait cards running as a **continuous right-to-left marquee**, the same mechanism as the reviews on `testimonials.html` — a CSS animation on `.ow-grid` (`@keyframes ow-marquee`, `--ow-loop` / `--ow-dur`, `SPEED` 30 px/s, the slowest of the three strips because a tall portrait going past at speed is harder to read than a line of text). `.ow-stage` carries `overflow:hidden` and the edge-fade mask. The copy sits over the foot of the photograph behind a gradient scrim, so the card *is* the picture rather than a picture with a caption under it. **Hovering one card pauses the strip and blurs and dims the others** — pure CSS (`.ow-stage:hover .ow-grid` for the pause, `.ow-grid:hover .ow-card:not(:hover)` for the blur), with `:focus-within` carrying both for a keyboard, and the blur dropped below 620px where `:hover` sticks after a tap. **Clicking a card opens the detail panel** — hover is the invitation, the click is the choice; see *The owner detail panel*. **Copies are computed, not fixed**, exactly as the client photo strip does it: `build()` measures a card, renders `max(2, ceil(stageWidth / setWidth) + 1)` sets and re-measures, so two published owners loop as cleanly as six. **The CMS fills the cards from a later block**, so that block fires **`rl:owners`** and this one rebuilds the strip from whatever it left — the same handshake the About counters use with `rl:home-stats`. Reduced motion renders a single set, puts the scroller and scroll-snap back and drops the mask, so no card is stranded off a stage that no longer moves. **Driven by the `ownersPage` singleton, not the home-page document** — see *The owners live on their own document*. **Its six cards are bracketed placeholders and it is the one section on the home page that removes itself**: an empty `owners` list deletes the section rather than printing "[Owner name]" six times to the public, and it returns the moment anyone is published. With Sanity unreachable the placeholders stay, so a failed fetch never costs the design. **The card prints the name and the role only** — "About them" is the detail panel's content and never appears here; it rides on the card as `data-bio` so the panel can read it off whichever card was opened. The card carries the person, the panel carries what there is to say about them. |
+| XI | Meet Our Owners | `owners` | **Sits between Why and Brands in scroll order**, despite the number. Portrait cards running as a **continuous right-to-left marquee that the visitor can take hold of** — see *The owners strip gives way and comes back*. `SPEED` is 30 px/s, the slowest of the three strips because a tall portrait going past at speed is harder to read than a line of text. `.ow-stage` is the scroll container and carries the edge-fade mask. The copy sits over the foot of the photograph behind a gradient scrim, so the card *is* the picture rather than a picture with a caption under it. **Hovering one card pauses the strip and blurs and dims the others** — the blur is pure CSS (`.ow-grid:hover .ow-card:not(:hover)`), the pause is now JS, with `:focus-within` / `focusin` carrying both for a keyboard, and the blur dropped below 620px where `:hover` sticks after a tap. **Clicking a card opens the detail panel** — hover is the invitation, the click is the choice; see *The owner detail panel*. **Copies are computed, not fixed**, exactly as the client photo strip does it: `build()` measures a card, renders `max(3, ceil(stageWidth / setWidth) + 2)` sets and re-measures, so two published owners loop as cleanly as six. (The photo strip uses `+ 1`; this one needs `+ 2` because it can be pushed backwards.) **The CMS fills the cards from a later block**, so that block fires **`rl:owners`** and this one rebuilds the strip from whatever it left — the same handshake the About counters use with `rl:home-stats`. Reduced motion renders a single set, puts scroll-snap back and drops the mask, so no card is stranded off a stage that no longer moves. **Driven by the `ownersPage` singleton, not the home-page document** — see *The owners live on their own document*. **Its six cards are bracketed placeholders and it is the one section on the home page that removes itself**: an empty `owners` list deletes the section rather than printing "[Owner name]" six times to the public, and it returns the moment anyone is published. With Sanity unreachable the placeholders stay, so a failed fetch never costs the design. **The card prints the name and the role only** — "About them" is the detail panel's content and never appears here; it rides on the card as `data-bio` so the panel can read it off whichever card was opened. The card carries the person, the panel carries what there is to say about them. |
 | X | Brands We Use | `brands` | Follows Why in scroll order. `OUR PARTNERS` header, six category tabs (All / Structure / Interiors / Electrical / Fittings / Utilities) and a card grid, all rendered from the `BRANDS` array in the Section X IIFE — adding a supplier is one line of data, no markup. Each row is `[name, logo file, trade, tab]`: `trade` is the line from the client's sheet and prints on the card, `tab` is the coarser bucket the tabs filter by. Johnson and Hindware appear twice on purpose, under two different trades. Its header (`.br-head` / `.br-label` / `.br-title` / `.br-intro`) is a **copy of Section IV's** rather than a shared rule — change one and the other will not follow. **On a phone the All view is clipped to the first six cards behind a "Show all 30 brands" pill** — see *Brands are clipped on a phone*. |
 
 ### Brands are clipped on a phone
@@ -217,6 +217,86 @@ Measured at 390x844, 360x640, 844x390, 280x653 and 1440x900, in every state
 `--force-prefers-reduced-motion`: no horizontal overflow, no console errors, the
 pill one line at 46px even at 280px wide. **Section X is `index.html`-only**, so
 unlike the shared chrome there is nothing to sync to the other ten files.
+
+### The owners strip gives way and comes back
+
+The client asked for a carousel that **runs by itself, follows the finger or
+the mouse the moment anyone pushes it, and resumes on its own a few seconds
+after they stop** — on a phone and on a desktop both. Section XI does that
+since 6 Nov; the other two strips on the site (the reviews and the photo
+gallery on `testimonials.html`) still do not, and were not part of the request.
+
+**IT DRIVES `scrollLeft`, NOT A TRANSFORM, AND THAT IS THE WHOLE CHANGE.** The
+other two marquees animate a `translateX` in CSS, which the compositor runs for
+free. A transform is not a scroll position, so there is nothing for a finger to
+take hold of: native panning would have had to be re-implemented, including
+momentum, and handing control back mid-animation means reading a matrix out of
+the computed style. A scroll container is the thing a browser already lets
+people push. So `.ow-stage` is now `overflow-x:auto` with the scrollbar hidden,
+`.ow-grid` is a plain flex row, and a rAF loop adds `SPEED * dt` to
+`stage.scrollLeft` each frame. `@keyframes ow-marquee`, `--ow-loop` and
+`--ow-dur` are gone.
+
+What leaving the compositor costs, and why each cost is survivable: the work is
+on the main thread (one scroll write a frame); rAF stops in a background tab,
+which is the same free pause the CSS animation got; `dt` is clamped to 100ms so
+returning from a stall advances the strip a frame rather than teleporting it;
+and the whole loop is **gated on an `IntersectionObserver`**, which the CSS
+animation never was — nothing runs while the section is off screen.
+
+Seven things are load-bearing:
+
+- **Three sets minimum, `ceil(stage/set) + 2`, where the photo strip uses
+  `+ 1`.** That marquee only ever travelled one way. A visitor can push this one
+  **backwards**, and `scrollLeft` cannot go below zero, so the position is kept
+  in `[loop, 2*loop)` with a whole set either side of it to give back. `norm()`
+  folds it by exactly one set width at either edge; one set is identical to the
+  next, so the fold is invisible. Verified: seated at `2*loop - 20` it folds
+  back and keeps going; forced to `scrollLeft = 4` it folds up to `loop`.
+- **`norm()` returns the shift it applied**, and a drag in progress adds that to
+  its own origin. Without it, folding mid-drag snaps the strip back a whole set
+  on the next `pointermove`.
+- **`held` is a DEADLINE, not a flag plus a timer.** A scroll event fires dozens
+  of times a second and overwriting a number is cheaper than clearing and
+  re-arming a `setTimeout`. `IDLE` is 2600ms.
+- **THE `scroll` LISTENER MUST NOT BE WHAT DETECTS THE VISITOR.** The strip's
+  own writes fire `scroll` too, so a handler that called `take()` would suspend
+  the auto-advance permanently on its own first frame. It only **extends** a
+  hold that a real input event (`pointerdown`, a sideways `wheel`) already
+  placed — which is also what keeps a momentum fling from being cut off at 2.6s
+  and then fought by the auto-advance, since every scroll a fling emits pushes
+  the deadline out. `frame()` zeroes `held` when it expires, so once it is back
+  to zero the strip's own writes land there harmlessly.
+- **`setPointerCapture` happens only once the drag passes `SLOP` (6px), NEVER on
+  `pointerdown`.** Pointer capture also retargets the compatibility mouse
+  events, so capturing on every press made `mouseup`'s target the stage rather
+  than the card — and a click's target is the common ancestor of press and
+  release, so **every click on a card arrived at the stage** and the detail
+  panel's `closest('.ow-card')` found nothing. This is the one bug in the change
+  that was invisible until clicked.
+- **A drag is not a click.** A `click` listener on the stage in the **capture**
+  phase stops propagation after a real drag, which is what keeps a push of the
+  strip from opening a panel for whichever card the mouse was over. A touch
+  swipe needs no equivalent: the browser already withholds the click after a
+  scroll gesture, which is also why a tap still opens a card.
+- **Touch and pen pan natively; only a mouse is dragged by hand.** Nothing could
+  match the platform's own momentum, and `overflow-y` stays `hidden` so a
+  vertical swipe over the strip scrolls the page. Measured: a 260px vertical
+  touch gesture over the stage moves the page 253px and the strip 1px.
+
+The strip also holds still while the **owner detail panel** is open (it checks
+`html.owd-open`), which the CSS version got for free from `:hover`.
+
+Measured at 1440x900, 844x390, 412x915, 390x844, 360x640 and 280x653, by mouse
+drag and by synthesized touch gesture: the strip advances at exactly 30 px/s,
+follows a 200px drag by 200px, holds at 0px movement through the idle window,
+resumes at 30 px/s, does not open a panel on a drag or a swipe, **does** open
+one on a click or a tap, holds still while that panel is open and resumes when
+it closes. Under `--force-prefers-reduced-motion`: a single set, 0px of drift,
+snap back on, mask off, still scrollable by hand. No console exceptions and no
+horizontal page overflow anywhere. The `rl:owners` rebuild was exercised by
+replacing the grid with one card and firing the event — it re-copies to six and
+keeps running.
 
 `projects.html` — one section, `#projects` ("Section V — Our Collection"): cards rendered from the `P` array in JS, a **town filter capsule** (see *The town filter is a capsule of four towns*), a **Western line corridor band** (`.cor`, between the pagination and the consultation strip) showing the delivered portfolio under four stations — Vasai / Nallasopara / Virar / Saphale. It is the client's finished banner used whole (`assets/projects/western-line.jpg`), **by explicit instruction — do not substitute a markup rebuild for it**. **Its twelve painted logos are clickable**: `.cor-hot` boxes inside `.cor-map` lie over the artwork as percentages of it, so they ride the image at every width — including the 900px plate inside the phone scroller, which is why the img is wrapped in `.cor-plate` (`.cor-figure` becomes the narrower scroll container and cannot be the positioning context). The boxes are measured from the ink, so **a recrop or a replacement banner invalidates all twelve**; `paint()` removes the whole layer if the CMS supplies a banner that is a *different* picture. It tells them apart by **SHA-1**: Sanity names an uploaded asset after the hash of its bytes, so the check is exact rather than a guess — and the usual answer is that they are the same file, because `seed-collections.mjs` uploaded this very banner and the live page therefore serves it from the CDN under a different URL. **Replacing `western-line.jpg` means updating `ART` in that guard**, or the boxes vanish the moment the CMS copy is re-uploaded. Each box carries `data-project` — the name *as the artwork paints it* — and `wireBanner()` matches it against the published projects to set the href, so a slug fixed in the Studio is picked up with no code change. `nameKey()` does the matching and is deliberately forgiving: it folds case and punctuation, collapses doubled letters (`Raajlaxmi`/`Rajlaxxmi` → `rajlaxmi`, `Pearrl` → `pearl`) and drops a trailing plural (`Towers` → `tower`), because the banner and the CMS do not spell the names the same way. **A box with no published project stays inert** — no href, no pointer, no hover tint; `Midas Heights` is painted on the banner but has no document, so today it is the one logo that does not respond. The layer is also inert with Sanity unreachable, which is correct: `project.html?p=` needs Sanity to render anything anyway; a `?status=` filter (exact case-insensitive match on `p.status`, ANDed with the active city chip, read once on load so the chips never clear it, with a `.col-empty` message when nothing matches) — the nav's **Projects** item *and* its **Completed** sub-item both deep-link to `?status=completed`, so the bar reaches the Completed view whether or not the dropdown is used and the browse-everything view is now reached only from the footer and the in-page "See the whole collection" / "Clear filters" links, a "showing N of M" line and a consultation CTA. **The pagination is gone** — the 1/2/3 buttons were decorative markup that never paged anything (every matching card always rendered), so they promised a second page that did not exist. Cross-links back to `index.html#about` / `index.html#signature`.
 
