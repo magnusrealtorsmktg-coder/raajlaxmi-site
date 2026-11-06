@@ -80,7 +80,8 @@
     /* the whole of one property: copy, fact bar, gallery, amenities */
     project: wanted && ('*[_type=="project" && slug.current==$p][0]{\n' +
       '  name,status,category,location,config,price,overview,address,\n' +
-      '  heroEyebrow,heroHeading,heroText,highlightsTitle,brochureUrl,phone,\n' +
+      '  heroEyebrow,heroHeading,heroText,highlightsTitle,phone,\n' +
+      '  "brochure":brochure.asset->{url,size,originalFilename},\n' +
       '  "slug":slug.current,\n' +
       '  specs[]{label,value},\n' +
       '  amenities[]{icon,label},\n' +
@@ -1823,7 +1824,9 @@
         <div class="pd-am-grid" id="pdAmen"></div>
 
         <div class="pd-ctas">
-          <!-- PLACEHOLDER: no brochure file yet — points at the enquiry form -->
+          <!-- No PDF on the document: this stays "Request Brochure" and goes to the
+               enquiry form. Attach one in the Studio and paint() turns it into a link
+               that opens the file. -->
           <a class="pd-btn gold" href="contact.html#ctForm" data-hover data-magnetic>
             <span>Request Brochure</span>
             <svg class="arw" width="13" height="9" viewBox="0 0 13 9" fill="none" aria-hidden="true">
@@ -2078,9 +2081,30 @@
 
       txt(sec.querySelector('.pd-h'), DOC.highlightsTitle);
 
-      /* "Request Brochure" points at the enquiry form until a real file exists */
-      const broch = sec.querySelector('.pd-btn.gold');
-      if(broch && DOC.brochureUrl) broch.setAttribute('href', DOC.brochureUrl);
+      /* The brochure button. With no PDF on the document it is left exactly as
+         the markup has it — "Request Brochure", pointing at the enquiry form,
+         which is the honest thing to offer when there is no file. With one it
+         becomes a link to that file in a new tab.
+
+         It OPENS rather than downloads because Sanity serves its assets
+         `content-disposition: inline`, so the browser's own PDF viewer takes
+         it. (`?dl=name.pdf` on the URL would force a download instead.) The
+         CDN also answers range requests, which is what lets a viewer show
+         page one of a large PDF without fetching the whole thing first —
+         provided the PDF was saved linearised. */
+      const broch = sec.querySelector('.pd-btn.gold'),
+            pdf   = DOC.brochure;
+      if(broch && pdf && pdf.url){
+        broch.setAttribute('href', pdf.url);
+        broch.setAttribute('target', '_blank');
+        broch.setAttribute('rel', 'noopener');
+        const lbl = broch.querySelector('span'),
+              mb  = pdf.size ? pdf.size / 1048576 : 0;
+        /* The weight is printed only when it is worth warning about. Someone
+           on mobile data should know before tapping a 60MB file; below about
+           5MB the number is noise on a button. */
+        if(lbl) lbl.textContent = 'View Brochure' + (mb >= 5 ? ' (' + Math.round(mb) + ' MB)' : '');
+      }
 
       /* the direct line — removed outright when the document carries none,
          rather than leaving the invented mock number on the page */

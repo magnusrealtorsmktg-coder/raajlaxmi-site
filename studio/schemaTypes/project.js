@@ -188,12 +188,45 @@ export default {
       fieldset: 'detail',
     },
     {
-      name: 'brochureUrl',
-      title: 'Brochure link',
-      type: 'string',
+      /* A FILE, NOT A LINK (6 Nov). This was `brochureUrl`, a string the client
+         would have had to host a PDF somewhere else to fill — which meant
+         there was nowhere to put the brochure they actually have. No project
+         ever had the old field set, so nothing was lost in the swap.
+
+         Sanity serves its assets `content-disposition: inline`, so the button
+         opens the PDF in the browser's own viewer rather than downloading a
+         file nobody asked for. Add `?dl=name.pdf` to the URL if a forced
+         download is ever wanted instead. */
+      name: 'brochure',
+      title: 'Brochure (PDF)',
+      type: 'file',
+      options: {accept: 'application/pdf'},
       description:
-        'Where the "Request Brochure" button goes. A full https:// link to a PDF, or leave blank to send people to the enquiry form.',
+        'The PDF the brochure button opens, in a new tab. Leave it empty and the button reads ' +
+        '"Request Brochure" and sends people to the enquiry form instead. Aim for under 10MB: a ' +
+        'bigger file still works, but it is a long wait on a phone before the first page appears.',
       fieldset: 'detail',
+      /* A WARNING, NEVER A BLOCK. The size is not in the asset reference, so
+         this has to go and ask for it — which is also why it is a warning: a
+         slow or failed lookup must never stop someone publishing. */
+      validation: (Rule) =>
+        Rule.custom(async (value, context) => {
+          const ref = value && value.asset && value.asset._ref;
+          if (!ref) return true;
+          let size = 0;
+          try {
+            size = await context
+              .getClient({apiVersion: '2024-01-01'})
+              .fetch('*[_id==$id][0].size', {id: ref});
+          } catch (e) {
+            return true;
+          }
+          const mb = size / 1048576;
+          return mb > 25
+            ? `This brochure is ${mb.toFixed(0)}MB. It will still open, but a visitor on a phone ` +
+              `waits a long time for the first page — try to get it under 10MB.`
+            : true;
+        }).warning(),
     },
     {
       name: 'phone',

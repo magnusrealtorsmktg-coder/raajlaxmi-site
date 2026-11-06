@@ -507,8 +507,46 @@ their slug, so a new property needs **no new file**.
 The detail page's remaining hard-coded text is now editable too, under the
 **Detail page** fieldset: `heroEyebrow` / `heroHeading` / `heroText` (the copy
 painted over the gallery — blank falls back to the category, the name and the
-configuration-plus-location line), `highlightsTitle`, `brochureUrl` (blank sends
-"Request Brochure" to the enquiry form) and `phone`. The direct line is **removed
+configuration-plus-location line), `highlightsTitle`, `brochure` and `phone`.
+
+**The brochure is an UPLOADED PDF, not a link (6 Nov).** `brochureUrl` was a
+string, so filling it meant hosting the file somewhere else first — there was
+nowhere to put the brochure the client actually has. It is now a `file` field
+with `accept: 'application/pdf'`. No project ever had the old string set, so
+the swap lost nothing and the field was removed rather than left dead. With a
+PDF attached the button becomes **"View Brochure"**, `target="_blank"`, opening
+the asset URL; with none it is left exactly as the markup has it — "Request
+Brochure", pointing at the enquiry form. **Above 5MB the button prints the
+weight** ("View Brochure (58 MB)"), because someone on mobile data should know
+before tapping. The Studio warns — never blocks — above 25MB; the size is not in
+the asset reference, so that rule goes and asks for it, which is also why a
+failed lookup lets the publish through.
+
+Three measured facts about serving a large PDF from Sanity, since the client's
+brochures may run to 60MB:
+
+- **Size is not the obstacle.** This dataset already holds a **278MB** file
+  asset (an old hero master) and a 129MB one, so a 60MB upload is unremarkable.
+  Sanity's docs state no per-file limit for non-image assets; the 100MB in
+  *technical limits* is a request-body figure, and these uploads plainly exceed
+  it.
+- **It opens rather than downloads**, because the asset CDN sends
+  `content-disposition: inline` — verified against a live file on this project.
+  `?dl=name.pdf` on the URL flips it to `attachment` if a forced download is
+  ever wanted.
+- **The CDN answers range requests** (`accept-ranges: bytes`), which is what
+  lets a browser's PDF viewer paint page one without fetching all 60MB first —
+  **but only if the PDF was saved linearised** ("Fast Web View"). Saved
+  otherwise, the whole file has to arrive before anything is drawn: about 95
+  seconds on a 5 Mbps phone connection, on a blank screen.
+
+**Bandwidth is the real cost, not storage.** The free plan carries 100GB of
+assets (this dataset uses ~756MB) and **100GB of bandwidth a month, with no
+pay-as-you-go on that plan** — the next tier up is Growth at $15/seat/month,
+where overage is $0.30/GB. Every Sanity-served byte counts against it, the hero
+film included. At 60MB a brochure, **1,700 opens would spend the entire monthly
+allowance**; at 6MB it is 17,000. Compressing the brochure is worth more than
+any code change here. The direct line is **removed
 outright when no number is set** rather than printing the invented mock one, and
 the Project Highlights heading is removed along with its paragraph when a project
 has no `overview` — a heading left standing alone reads as content that failed to
@@ -1992,8 +2030,9 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
   offline fallback and are still invented — they show only if the query fails, so do not
   treat anything in that array as true. The client photo slider under the reviews is
   empty and stays hidden until real photographs are added.
-- `project.html` carries its own placeholders, each marked with a `PLACEHOLDER` comment: **every figure in the fact bar** (~1,15,000 sq.ft, 8 towers, ~640+ units, Completed) is from the client's mock and unverified, as are the landmark distances and the direct line. Its five gallery shots are seeded `picsum.photos/seed/rl-rk-*` placeholders. "Request Brochure" has no brochure behind it and points at the enquiry form.
-- Romal Kirti **is** now published in Sanity and appears in the collection, so `project.html?p=romal-kirti` is reachable from a card. The hand-written fallback in `project.html` (used when the page is opened with no `?p=`) is still the unverified mock content.
+- `project.html` carries its own placeholders, each marked with a `PLACEHOLDER` comment: **every figure in the fact bar** (~1,15,000 sq.ft, 8 towers, ~640+ units, Completed) is from the client's mock and unverified, as are the landmark distances and the direct line. Its five gallery shots are seeded `picsum.photos/seed/rl-rk-*` placeholders. "Request Brochure" has no brochure behind it and points at the enquiry form — no project carries a `brochure` PDF yet.
+- **Romal Kirti has been DELETED from the dataset** (gone as of 6 Nov; it was published on 29 Oct). `project.html?p=romal-kirti` now resolves to nothing, and the hand-written fallback in `project.html` — which is still that property, and still the unverified mock content — describes a project the client no longer lists. The fallback only shows when the page is opened with **no** `?p=` at all, which nothing on the site links to, so this is a latent oddity rather than a live bug.
+- **Counts as of 6 Nov: 16 projects — 15 `completed`, 1 `ongoing`, 0 `redevelopment`.** So the **Ongoing page is no longer empty**; Redevelopment still shows its three placeholder cards. Re-check these rather than trusting them: the client adds and deletes.
 - Most nav links and CTAs are `href="#"`; only Projects and the cross-links resolve. Section II's "Discover our story" button and the "Raajlaxmi Group / Building trust. Creating legacy." signature are both gone — the accreditation strip replaced them, so About no longer offers a CTA or a sign-off of its own.
 - Section IV's statistics panel (`.why-stats`, the old 20+ / 1500+ / 45+ / 98% placeholders) has been **deleted** — markup, CSS, counter JS and all. Section II's row is now the only set of figures on the page. Its `.why-float` interior card went with it: it overlapped the team photo and hid a dozen faces.
 - 13+ years in Section II contradicts the timeline (2004→2026) and "Est. 2004" on the seals (`seal-top.png`, and the Section VII strip art) — those imply ~22 years. Pick one founding date and make the artwork, timeline and counters agree.
