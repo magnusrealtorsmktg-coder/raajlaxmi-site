@@ -702,10 +702,35 @@ figure that looks like a quote, so it says in as many words that it excludes
 fees, insurance, stamp duty, registration and GST, assumes a rate that never
 moves, and is not an offer of credit.
 
-Reachable from the **footer's Explore column on all eleven pages that have a
-footer** (`project.html` has none by design). **It is not in the navigation
-bar** — that was left as the client's call, since a sixth item crowds the bar
-at 1024px.
+**Three routes reach it, and NOT the navigation bar.** A sixth top-level item
+does not fit, measured rather than assumed: the bar's contents are already
+889px wide inside an 880px bar, and adding "EMI Calculator" takes them to
+1023px at 880 and 1043px at 1024. It only fits above about 1300px, and at 1280
+the gaps either side collapse to zero. The label length is not the problem —
+"EMI" alone still overflows at 880. So:
+
+- the **footer's Explore column**, on all eleven pages that have a footer;
+- the **mobile sheet** on all twelve, which is the phone's navigation and
+  where the footer alone was leaving it effectively unfindable;
+- **`project.html`, under the price** (`.pd-emi`). That page has no footer by
+  design, so without this one link a property page is the single place on the
+  site with no route to the calculator at all — and it is where someone is
+  most likely to want it, standing in front of a price.
+
+**The property page hands its price over** as `emi.html?price=<rupees>`, so
+the calculator opens on that flat rather than on its own default. The client
+types prices freehand (`₹1.8 Cr`, `₹48 Lacs`, `45 – 65 Lacs`), so the unit is
+matched anywhere in the string and the FIRST figure is taken, which is the
+asking price on a range. A price with no number in it ("Price on request")
+leaves the link generic rather than guessing. The calculator clamps whatever
+arrives to the slider's range and ignores anything non-numeric, so a mangled
+query string cannot break the page. The link is shown whether or not the
+project has a price — the calculator is useful either way, and the price line
+above it is the thing that hides itself.
+
+Verified end to end: `₹1.8 Cr` → `emi.html?price=18000000` → the field reads
+`1,80,00,000` and the instalment `₹1,24,967`; a project with no price gives a
+plain `emi.html`; `?price=abc` falls back to the default.
 
 `privacy.html` / `terms.html` / `disclaimer.html` — one section each,
 `#legal` ("Section XII — Legal pages"). **One stylesheet, one behaviour block

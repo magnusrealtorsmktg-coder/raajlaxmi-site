@@ -1432,6 +1432,19 @@
     color:var(--gold-deep);}
   .pd-price[hidden]{display:none;}
 
+  /* The route to the EMI calculator. This page has no footer by design, so
+     without it a property page is the one place on the site with no way of
+     reaching the calculator at all — and it is the place someone is most
+     likely to want it, standing in front of a price. */
+  .pd-emi{display:inline-flex;align-items:center;gap:.55rem;margin-top:.7rem;
+    font-family:"Inter",sans-serif;font-size:.68rem;font-weight:600;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--gold-deep);
+    transition:gap .4s var(--lux);}
+  .pd-emi:hover{gap:.85rem;}
+  .pd-emi .arw{position:relative;width:1rem;height:1px;background:currentColor;}
+  .pd-emi .arw::after{content:"";position:absolute;right:-1px;top:-2.5px;width:6px;height:6px;
+    border-top:1px solid currentColor;border-right:1px solid currentColor;transform:rotate(45deg);}
+
   .pd-facts{margin-top:clamp(1.6rem,2.6vw,2.2rem);background:#FBF9F5;
     border:1px solid rgba(28,28,28,.07);border-radius:14px;
     display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
@@ -1746,6 +1759,7 @@
 <div class="sheet" id="sheet">
   <a href="index.html#about">About</a><a href="projects.html?status=completed">Projects</a>
   <div class="sheet-sub"><a href="projects.html?status=completed">Completed</a><a href="projects-ongoing.html">Ongoing</a><a href="projects-redevelopment.html">Redevelopment</a></div>
+  <a href="emi.html">EMI Calculator</a>
   <a href="services.html">Services</a>
   <a href="testimonials.html">Testimonials</a><a href="contact.html">Contact</a>
   <a href="contact.html" class="sheet-cta">Book Consultation</a>
@@ -1812,6 +1826,11 @@
 
         <!-- the price, when the project carries one; hidden until it does -->
         <div class="pd-price" id="pdPrice" hidden></div>
+
+        <!-- Always shown, unlike the price above it: the calculator is useful
+             whether or not this project has a figure, and this page has no
+             footer to reach it from. -->
+        <a class="pd-emi" id="pdEmi" href="emi.html" data-hover>Calculate the monthly EMI<i class="arw"></i></a>
 
         <!-- PLACEHOLDER: figures are the client's mock, unverified -->
         <div class="pd-facts" id="pdFacts"></div>
@@ -2077,6 +2096,21 @@
       if(price){
         if(DOC.price){ price.textContent = DOC.price; price.hidden = false; }
         else price.hidden = true;
+      }
+
+      /* Carry the price across so the calculator opens on THIS flat rather
+         than on its own default. The client types prices freehand — "\u20B91.8 Cr",
+         "\u20B948 Lacs", "45 \u2013 65 Lacs" — so the unit is looked up anywhere in the
+         string and the FIRST figure is used, which is the asking price on a
+         range. Anything with no number in it ("Price on request") is left
+         alone and the link stays generic rather than guessing. */
+      const emiLink = document.getElementById('pdEmi');
+      if(emiLink){
+        const t = String(DOC.price || '').toLowerCase();
+        const n = parseFloat((t.replace(/,/g, '').match(/\d+(\.\d+)?/) || [])[0]);
+        const unit = /\bcr|crore/.test(t) ? 1e7 : /lac|lakh/.test(t) ? 1e5 : /\bk\b/.test(t) ? 1e3 : 1;
+        const rupees = isFinite(n) ? Math.round(n * unit) : 0;
+        emiLink.setAttribute('href', rupees > 0 ? 'emi.html?price=' + rupees : 'emi.html');
       }
 
       txt(sec.querySelector('.pd-h'), DOC.highlightsTitle);

@@ -1697,6 +1697,7 @@
 <div class="sheet" id="sheet">
   <a href="index.html#about">About</a><a href="projects.html?status=completed">Projects</a>
   <div class="sheet-sub"><a href="projects.html?status=completed">Completed</a><a href="projects-ongoing.html">Ongoing</a><a href="projects-redevelopment.html">Redevelopment</a></div>
+  <a href="emi.html">EMI Calculator</a>
   <a href="services.html">Services</a>
   <a href="testimonials.html">Testimonials</a><a href="contact.html">Contact</a>
   <a href="contact.html#ctForm" class="sheet-cta">Book Consultation</a>
@@ -2037,6 +2038,14 @@
 
     const clamp = (v, [lo, hi]) => Math.min(hi, Math.max(lo, v));
     const digits = s => String(s).replace(/[^\d.]/g, '');
+
+    /* A property page hands its own price over as ?price=<rupees>, so the
+       calculator opens on the flat the visitor was just looking at rather
+       than on a number that has nothing to do with it. Clamped to the
+       slider's range like any typed value, and ignored when it is not a
+       number — a mangled query string must not leave the page broken. */
+    const fromUrl = parseInt(new URLSearchParams(location.search).get('price'), 10);
+    if(isFinite(fromUrl) && fromUrl > 0) S.price = clamp(fromUrl, LIM.price);
 
     /* en-IN gives the lakh/crore grouping (12,34,56,789) rather than the
        thousands one — the only correct way to print money on this site. */
