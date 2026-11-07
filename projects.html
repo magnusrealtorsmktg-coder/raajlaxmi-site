@@ -81,7 +81,7 @@
     /* every published property -- the cards, the city chips and the banner
        hotspots are all built from this one answer */
     projects: '*[_type=="project"]|order(order asc,_createdAt asc){\n' +
-      '  name,stage,status,category,location,blurb,config,area,price,detailUrl,\n' +
+      '  name,stage,status,soldOut,category,location,blurb,config,area,price,detailUrl,\n' +
       '  "slug":slug.current,"imageUrl":image.asset->url\n' +
       '}',
 
@@ -1185,6 +1185,54 @@
   .col-cimg{position:absolute;inset:0;background-size:cover;background-position:center;
     background-color:var(--navy);transition:transform 1.8s var(--lux);}
   .col-card:hover .col-cimg{transform:scale(1.07);}
+
+  /* ---- sold out ----
+     The stamp STRADDLES THE SEAM between the photograph and the white body,
+     which is where the client asked for it and also the only place it fits:
+     centred on the card it would sit across the name and the View Details
+     link, and card heights are not equal anyway because the descriptions run
+     to different lengths.
+
+     That uneven height is why the offset is a PERCENTAGE MARGIN. A percentage
+     `top` resolves against the containing block's height, which differs card
+     to card; a percentage MARGIN resolves against its WIDTH, which is
+     identical for every card in the grid. The stamp is 72% of the card wide,
+     so at the artwork's 1.7211 ratio it is 41.834% of the card tall, and the
+     media box ends at 75% — hence `75% - 41.834%` to stand it ON the seam.
+
+     THE `+ 14px` IS THE WHOLE TRICK AND IT IS NOT PROPORTIONAL. It pushes the
+     stamp's lower edge a FIXED 14px past the photograph, because the thing it
+     has to stay clear of is fixed too: the gold RESIDENTIAL line, which sits
+     one `clamp(1.3rem,1.5vw,1.6rem)` of body padding below the seam — never
+     less than 20.8px, whatever the card is doing. A proportional overlap
+     cannot hold that. Fifteen percent of the stamp looked right at 1440,
+     where a card is 311px, and crossed straight through the category at
+     768x1024, where a four-column grid becomes two and the card grows to
+     338px. Measured at six widths from 235px to 356px: the lower edge is
+     always 14px onto the white and always above the text.
+
+     Re-crop the artwork, change the 72%, or change the body's top padding,
+     and this wants recomputing.
+
+     It is an <img> rather than a background on a pseudo-element so the words
+     reach a screen reader as alt text — the card otherwise says nothing at
+     all about being sold, since it is a picture that carries the message. */
+  .col-stamp{display:none;}
+  .col-card.is-sold .col-stamp{display:block;position:absolute;z-index:3;
+    pointer-events:none;top:0;left:14%;width:72%;height:auto;
+    /* the artwork's own ratio, so the box is the right shape BEFORE the file
+       arrives — these cards are below the fold and the image is lazy */
+    aspect-ratio:506/294;
+    margin-top:calc(75% - 41.834% + 14px);
+    /* a white halo, because the stamp is red line-work on transparency and
+       the photograph behind it can be anything — over a dark facade the ink
+       would otherwise disappear */
+    filter:drop-shadow(0 0 7px rgba(255,255,255,.95))
+           drop-shadow(0 1px 2px rgba(255,255,255,.9));}
+  /* the picture steps back so the stamp is what the eye lands on. Mild on
+     purpose: this is the client's photography and the card still has to sell
+     the building. */
+  .col-card.is-sold .col-cimg{filter:saturate(.72) brightness(.88);}
   .col-badge{position:absolute;top:1rem;left:1rem;z-index:2;font-family:"Inter",sans-serif;
     font-size:.56rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#fff;
     background:rgba(140,104,44,.9);padding:.45rem .75rem;border-radius:6px;
@@ -2068,14 +2116,20 @@
 
     /* render cards */
     function renderCards(city){
-      const filtered = P.filter(p => (city === 'all' || townOf(p) === city) && wanted(p));
+      const filtered = P.filter(p => (city === 'all' || townOf(p) === city) && wanted(p))
+        /* Sold-out properties go to the FOOT of the list. `sort` is stable in
+           every engine that matters (required by the spec since ES2019), so
+           this only moves the sold ones down — the CMS `order` field still
+           decides the sequence within each of the two groups. */
+        .sort((a, b) => (a.soldOut ? 1 : 0) - (b.soldOut ? 1 : 0));
       if(grid){
         grid.innerHTML = !filtered.length
           ? `<p class="col-empty">${window.RL_EMPTY_MESSAGE ||
                `No ${STATUS || ''} properties are listed here yet.`}
                <a href="projects.html">See the whole collection</a>.</p>`
           : filtered.map(p=>`
-          <article class="col-card">
+          <article class="col-card${p.soldOut ? ' is-sold' : ''}">
+            ${p.soldOut ? '<img class="col-stamp" src="assets/sold-out.png" alt="Sold out" loading="lazy">' : ''}
             <div class="col-media">
               <span class="col-badge">${p.status || STAGE_LABEL[p.stage] || ''}</span>
               <span class="col-heart" role="button" aria-label="Save">${HEART}</span>

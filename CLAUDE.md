@@ -308,6 +308,62 @@ keeps running.
 
 `projects.html` — one section, `#projects` ("Section V — Our Collection"): cards rendered from the `P` array in JS, a **town filter capsule** (see *The town filter is a capsule of four towns*), a **Western line corridor band** (`.cor`, between the pagination and the consultation strip) showing the delivered portfolio under four stations — Vasai / Nallasopara / Virar / Saphale. It is the client's finished banner used whole (`assets/projects/western-line.jpg`), **by explicit instruction — do not substitute a markup rebuild for it**. **Its twelve painted logos are clickable**: `.cor-hot` boxes inside `.cor-map` lie over the artwork as percentages of it, so they ride the image at every width — including the 900px plate inside the phone scroller, which is why the img is wrapped in `.cor-plate` (`.cor-figure` becomes the narrower scroll container and cannot be the positioning context). The boxes are measured from the ink, so **a recrop or a replacement banner invalidates all twelve**; `paint()` removes the whole layer if the CMS supplies a banner that is a *different* picture. It tells them apart by **SHA-1**: Sanity names an uploaded asset after the hash of its bytes, so the check is exact rather than a guess — and the usual answer is that they are the same file, because `seed-collections.mjs` uploaded this very banner and the live page therefore serves it from the CDN under a different URL. **Replacing `western-line.jpg` means updating `ART` in that guard**, or the boxes vanish the moment the CMS copy is re-uploaded. Each box carries `data-project` — the name *as the artwork paints it* — and `wireBanner()` matches it against the published projects to set the href, so a slug fixed in the Studio is picked up with no code change. `nameKey()` does the matching and is deliberately forgiving: it folds case and punctuation, collapses doubled letters (`Raajlaxmi`/`Rajlaxxmi` → `rajlaxmi`, `Pearrl` → `pearl`) and drops a trailing plural (`Towers` → `tower`), because the banner and the CMS do not spell the names the same way. **A box with no published project stays inert** — no href, no pointer, no hover tint; `Midas Heights` is painted on the banner but has no document, so today it is the one logo that does not respond. The layer is also inert with Sanity unreachable, which is correct: `project.html?p=` needs Sanity to render anything anyway; a `?status=` filter (exact case-insensitive match on `p.status`, ANDed with the active city chip, read once on load so the chips never clear it, with a `.col-empty` message when nothing matches) — the nav's **Projects** item *and* its **Completed** sub-item both deep-link to `?status=completed`, so the bar reaches the Completed view whether or not the dropdown is used and the browse-everything view is now reached only from the footer and the in-page "See the whole collection" / "Clear filters" links, a "showing N of M" line and a consultation CTA. **The pagination is gone** — the 1/2/3 buttons were decorative markup that never paged anything (every matching card always rendered), so they promised a second page that did not exist. Cross-links back to `index.html#about` / `index.html#signature`.
 
+**Sold-out properties sink to the foot of the collection and carry a stamp.**
+Eight of them on 7 Nov, the first eight cards of the Completed view as it then
+stood — Raajlaxmi Apartment through Priti Darpan.
+
+- **`soldOut` is a BOOLEAN on `project`, not a `status` string.** "Sold Out"
+  could have been typed into the badge, but the listing has to *sort* on this,
+  and sorting on free text means one typo ("Sold out", "SOLD OUT", "Sold-out")
+  silently returns a card to the top. It is also independent of the listing:
+  two of the eight carry an **Ongoing** badge and one **Ready Possession**,
+  because a property can be sold off-plan.
+- **The sort is stable and that is the point.** `.sort((a,b) => (a.soldOut?1:0)
+  - (b.soldOut?1:0))` only moves the sold ones down; the CMS `order` field
+  still decides the sequence *within* each of the two groups. `Array.prototype
+  .sort` has been required to be stable since ES2019.
+- **The stamp is `assets/sold-out.png`** (506x294, 24KB, real alpha channel —
+  so unlike `project-floral-right.png` it needs no `mix-blend-mode` trick). It
+  is the client's artwork, trimmed to its ink so the box has no dead margin.
+- **It straddles the seam between the photograph and the white body**, which
+  is where the client asked for it and also the only place it fits: centred on
+  the card it would sit across the name and the View Details link.
+- **THE OFFSET IS A PERCENTAGE MARGIN PLUS A FIXED PIXEL VALUE, AND BOTH HALVES
+  ARE LOAD-BEARING.** A percentage `top` resolves against the containing
+  block's *height*, which differs card to card as the descriptions run to
+  different lengths; a percentage *margin* resolves against its **width**,
+  which is identical for every card in the grid. Hence
+  `margin-top:calc(75% - 41.834% + 14px)` — the 4:3 media box, less the stamp's
+  own height at 72% of the card, plus a **fixed** 14px. That last term is not
+  proportional because the thing it has to clear is not: the gold RESIDENTIAL
+  line sits one `clamp(1.3rem,1.5vw,1.6rem)` of body padding below the seam,
+  never less than 20.8px whatever the card is doing. A proportional overlap
+  that looked right at 1440 (card 311px) crossed straight through the category
+  at **768x1024**, where the four-column grid becomes two and the card grows to
+  338px. Measured at seven viewports, cards 235px to 356px: the lower edge is
+  always exactly 14px onto the white and always above the text.
+- **The stamp carries `aspect-ratio:506/294`** so its box is the right shape
+  before the file arrives. These cards are below the fold and the image is
+  `loading="lazy"`; without it the element is zero-height until load.
+- **It is an `<img>`, not a background on a pseudo-element**, so the words
+  reach a screen reader as `alt="Sold out"`. The card otherwise says nothing
+  at all about being sold — the message is carried entirely by a picture.
+- **A white double `drop-shadow` haloes it**, because the artwork is red
+  line-work on transparency and the photograph behind it can be anything; over
+  a dark facade the ink would vanish. The picture itself also steps back
+  (`saturate(.72) brightness(.88)`) — mild on purpose, since the card still has
+  to sell the building.
+- **Nothing is hidden.** A sold-out project keeps its card, its price and its
+  own page; it is marked as gone, not removed.
+
+`studio/scripts/mark-sold-out.mjs` set the eight. It matches names the same
+forgiving way the banner hotspots and signature cards do (case and punctuation
+folded, doubled letters collapsed, so `Rajlaxxmi` and `Raajlaxmi` agree),
+patches only `soldOut`, never clears it, and prints any name that matched
+nothing — a name that quietly matched nothing being the one failure that looks
+like success. A ninth property sold next month is a tick in the Studio, not an
+edit to that script.
+
 **The town filter is a capsule of four towns, not a chip per sub-locality.**
 It used to key off the part of `location` BEFORE the first comma, which is a
 landmark, not a place: the live dataset produced ten chips reading "Oswal
@@ -1987,6 +2043,7 @@ by design, and `.env` is gitignored), but don't put a write token there.
 Photography is a mix of committed local files and `picsum.photos` placeholders layered over a tonal gradient fallback (so the composition holds offline).
 
 - Committed and referenced: `seal-top.png`, `seal-bottom.png`, `sketch-tower.jpg`, `house-sketch.jpg`, `floor-plan.jpg`, `floor-plan-l.jpg`, `assets/project-blueprint-left.png`, `assets/project-floral-right.png` (760x424, **no alpha** — every use of it is `mix-blend-mode:multiply` over a cream ground, on the three collection pages, `testimonials.html` and now the owner detail panel on `index.html`).
+- `assets/sold-out.png` is the SOLD OUT stamp on the collection cards (506x294, 24KB, **with a real alpha channel**, trimmed to its ink). Client artwork, already drawn on the diagonal — do not add a `transform:rotate`. Its 1.7211 ratio is hard-coded into the card's `margin-top` calculation, so a re-crop means recomputing that; see *Sold-out properties sink to the foot of the collection*.
 - `assets/cert-maharera.png` and `assets/cert-credai-mchi.png` are the accreditation marks in Section II's `.ab-creds` row, cut out of one flat client sheet and keyed transparent. Their captions are live HTML, not baked into the artwork, so they reflow and stay readable — keep it that way if the marks are ever re-exported.
 - `assets/projects/western-line.jpg` is the corridor banner (1923x514, JPEG q94 — PNG was 498KB for no visible gain). Its copy is painted into the artwork, so the same content is written out in the `img`'s `alt` for screen readers and search. The band's background is set to the artwork's own ground (`#F4F0EF`) so the banner dissolves into it rather than showing as a rectangle, and one stray white pixel column was cropped off the left edge to make that work.
 - The banner is 3.7:1 with baked-in type, so below 760px it would render the station names at ~6px. It is put in a horizontal scroller at a fixed 900px instead.
@@ -2052,7 +2109,7 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
   empty and stays hidden until real photographs are added.
 - `project.html` carries its own placeholders, each marked with a `PLACEHOLDER` comment: **every figure in the fact bar** (~1,15,000 sq.ft, 8 towers, ~640+ units, Completed) is from the client's mock and unverified, as are the landmark distances and the direct line. Its five gallery shots are seeded `picsum.photos/seed/rl-rk-*` placeholders. "Request Brochure" has no brochure behind it and points at the enquiry form — no project carries a `brochure` PDF yet.
 - **Romal Kirti has been DELETED from the dataset** (gone as of 6 Nov; it was published on 29 Oct). `project.html?p=romal-kirti` now resolves to nothing, and the hand-written fallback in `project.html` — which is still that property, and still the unverified mock content — describes a project the client no longer lists. The fallback only shows when the page is opened with **no** `?p=` at all, which nothing on the site links to, so this is a latent oddity rather than a live bug.
-- **Counts as of 6 Nov: 16 projects — 15 `completed`, 1 `ongoing`, 0 `redevelopment`.** So the **Ongoing page is no longer empty**; Redevelopment still shows its three placeholder cards. Re-check these rather than trusting them: the client adds and deletes.
+- **Counts as of 7 Nov: 16 projects — 14 `completed`, 2 `ongoing` (Shanti Niwas, Raajlaxmi Solitaire), 0 `redevelopment`; 8 of the completed ones are `soldOut`.** The **Ongoing page is no longer empty**; Redevelopment still shows its three placeholder cards. Shanti Niwas moved from `completed` to `ongoing` between 6 and 7 Nov while still carrying a **Completed** badge — the status/stage split working as designed, but worth a question. Re-check all of this rather than trusting it: the client adds, deletes and refiles.
 - Most nav links and CTAs are `href="#"`; only Projects and the cross-links resolve. Section II's "Discover our story" button and the "Raajlaxmi Group / Building trust. Creating legacy." signature are both gone — the accreditation strip replaced them, so About no longer offers a CTA or a sign-off of its own.
 - Section IV's statistics panel (`.why-stats`, the old 20+ / 1500+ / 45+ / 98% placeholders) has been **deleted** — markup, CSS, counter JS and all. Section II's row is now the only set of figures on the page. Its `.why-float` interior card went with it: it overlapped the team photo and hid a dozen faces.
 - 13+ years in Section II contradicts the timeline (2004→2026) and "Est. 2004" on the seals (`seal-top.png`, and the Section VII strip art) — those imply ~22 years. Pick one founding date and make the artwork, timeline and counters agree.
