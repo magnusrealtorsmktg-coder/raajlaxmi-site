@@ -43,22 +43,46 @@ export default {
       options: {hotspot: true},
     },
     {
-      name: 'stage',
-      title: 'Listing',
-      type: 'string',
+      /* TICK BOXES, NOT A RADIO, SINCE 7 NOV — a project can be listed in more
+         than one place. "Ongoing" says how far built it is and
+         "Redevelopment" says what kind of project it is; those are two
+         different questions, and a redevelopment under construction is
+         honestly both. The old single `stage` could not say that: asked for
+         Krishna Niwas and Shanti Niwas on both pages, it had to lose one. */
+      name: 'stages',
+      title: 'Listings',
+      type: 'array',
+      of: [{type: 'string'}],
       description:
-        'Which page this project is listed on. Completed → projects.html?status=completed, ' +
-        'Ongoing → projects-ongoing.html, Redevelopment → projects-redevelopment.html. ' +
-        'It always appears on the full collection as well.',
+        'Which pages this project is listed on — tick as many as apply. ' +
+        'Completed → projects.html?status=completed, Ongoing → projects-ongoing.html, ' +
+        'Redevelopment → projects-redevelopment.html. It always appears on the full ' +
+        'collection as well. A project under construction on a redevelopment plot is ' +
+        'both Ongoing and Redevelopment.',
       options: {
         list: [
           {title: 'Completed', value: 'completed'},
           {title: 'Ongoing', value: 'ongoing'},
           {title: 'Redevelopment', value: 'redevelopment'},
         ],
-        layout: 'radio',
+        layout: 'grid',
       },
-      validation: (R) => R.required(),
+      validation: (R) => R.required().min(1).unique(),
+    },
+    {
+      /* SUPERSEDED BY `stages`, KEPT AND HIDDEN — not deleted. Every document
+         was migrated by `studio/scripts/stages-migrate.mjs`, but the pages
+         still read this as a fallback (`stagesOf`), so a document created by
+         some older path, or restored from history, still lands on the right
+         listing instead of vanishing. Hidden rather than removed because an
+         unknown field left in a document shows as a schema warning on every
+         edit, and because deleting it would throw away the only record of what
+         each project was filed as before the change. */
+      name: 'stage',
+      title: 'Listing (superseded)',
+      type: 'string',
+      hidden: true,
+      readOnly: true,
     },
     {
       name: 'status',

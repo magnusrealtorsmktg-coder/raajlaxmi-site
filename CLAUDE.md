@@ -1945,22 +1945,61 @@ with two; and the figures may arrive *after* the counters have already counted,
 so the block fires `rl:home-stats` and the Section II IIFE re-reads the cells
 and counts again.
 
-**`stage` is the field that decides which listing a project appears on** —
-`completed` / `ongoing` / `redevelopment`, required, radio. `status` is now only
-the badge text on the photograph and is optional: blank falls back to the stage's
-label. That split is what lets a Completed project carry a "Ready Possession"
-badge, which the old single field could not express.
+**`stages` is the field that decides which listing a project appears on, and
+it is an ARRAY (7 Nov).** `completed` / `ongoing` / `redevelopment`, tick as
+many as apply, at least one required. `status` is only the badge text on the
+photograph and is optional: blank falls back to the first listing's label. That
+split is what lets a Completed project carry a "Ready Possession" badge.
 
-The Studio's sidebar has one folder per stage (`sanity.config.js` → `structure`),
-and creating a project inside a folder pre-fills its stage via the
-`project-by-stage` initial-value template — so the stage cannot be forgotten. A
-**Not yet filed** folder lists anything with no stage set, so a stray document
-can't go invisible. Renaming any of the three stage values means changing it in
-`STAGES` in the config *and* in `STATUS` / `STAGE_LABEL` in all three pages.
+**It was a single-value radio until 7 Nov, and the reason it changed is worth
+keeping.** The client asked for Krishna Niwas and Shanti Niwas on *both*
+Ongoing and Redevelopment. That is not a slip: **"Ongoing" says how far built a
+project is and "Redevelopment" says what kind of project it is** — two
+different questions that the one radio had been conflating, so a redevelopment
+under construction had to give up one of its two true answers. Those two
+properties are the only ones in both lists today.
 
-The pages read `stage` through `stageOf(p)`, which falls back to `p.status` for
-documents written before the field existed — so the migration is not a flag day.
-`Ready Possession` documents match no listing until someone sets their stage.
+- **The old `stage` string is kept, hidden and read-only.** Deleting it would
+  throw away the only record of how each project was filed before the change,
+  and an unknown field left in a document shows as a schema warning on every
+  edit. `stagesOf(p)` still falls back to it, then to `status`, so a document
+  created by an older path or restored from history lands on the right listing
+  instead of vanishing.
+- **The Studio folder filter is `$stage in stages`, not `==`** — a project in
+  two listings has to appear in both folders. The folder is a view of the site,
+  not a filing cabinet with one slot per item.
+- **The `project-by-stage` template seeds the ARRAY** (`{stages: [stage]}`), so
+  creating a project inside a folder still files it automatically; tick a
+  second box if it belongs on two pages.
+- A **Not yet filed** folder lists anything with neither field set, so a stray
+  document can't go invisible.
+- Renaming any of the three values means changing it in `STAGES` in the config
+  *and* in `STATUS` / `STAGE_LABEL` / `stagesOf` in all three pages.
+
+`studio/scripts/stages-migrate.mjs` did the move. **It patches drafts as well
+as published documents, and that is not optional** — see *Drafts shadow the
+live site*.
+
+**Drafts shadow the live site, and this bit twice now.** A token-authenticated
+`getCliClient()` query returns drafts; the public API does not. When the
+listings were migrated there were **six unpublished drafts**, five of them
+minutes old — the client was refiling by hand in the Studio at the same moment.
+Two consequences, both of which any future script has to handle:
+
+- **Patching only the published document is not enough.** The draft would still
+  carry the old field, so the next press of Publish would quietly undo the
+  change. `stages-migrate.mjs` patches a project's draft to match whenever it
+  patches the project.
+- **An ORPHAN draft — one with no published twin — must be left alone.** It is
+  a document that has never been on the site, so it is somebody's work in
+  progress. There is one today: `drafts.26839014-0fed-4e80-9bb1-5ffe9f513cac`,
+  a **duplicate Rajlaxxmi Park** created at 10:40:39 on 7 Nov and untouched two
+  seconds later. It looks like an accidental create. Publish or delete it in
+  the Studio; nothing automated should adopt it.
+
+This is the same trap recorded under *An unpublished project is the same as no
+project* — a draft is invisible to visitors, so the two views of the dataset
+disagree, and `*[_id in path("drafts.**")]` is what settles it.
 
 **"View Details" resolves per card** through `detailHref(p)`: an explicit
 `detailUrl` wins, otherwise `project.html?p=<slug>`, otherwise `#`. Since `slug`
@@ -2086,7 +2125,7 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
   cards and the banner hotspots read the slug live.
 - **`Midas Heights` is painted on the Western line banner but has no `project` document**,
   so its hotspot is inert. Publishing it is all that is needed.
-- **No project is filed as Redevelopment yet**, so that page shows three clearly-marked placeholder cards (`[Society name]`, `[Locality]`, `[n] BHK`) above the associates plate. Set one project's **Listing** to Redevelopment in the Studio and they disappear for good. Likewise the two `Ready Possession` documents are in no listing until their Listing is set to Completed.
+- ~~**No project is filed as Redevelopment yet**~~ — **four are, since 7 Nov**, so that page's three placeholder cards (`[Society name]`, `[Locality]`, `[n] BHK`) are never shown to a visitor again. The markup and the `if(!result.some(inStatus)) return;` guard are both still in the file and still correct: with Sanity unreachable the placeholders are what shows, which is the same fallback every other page makes.
 - **`Shanti Niwas` is fixed** (4 Nov). Its "View Project" button was missing
   because its project document existed only as an unpublished **draft** — see
   *An unpublished project is the same as no project*. It is published now, at
@@ -2109,7 +2148,8 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
   empty and stays hidden until real photographs are added.
 - `project.html` carries its own placeholders, each marked with a `PLACEHOLDER` comment: **every figure in the fact bar** (~1,15,000 sq.ft, 8 towers, ~640+ units, Completed) is from the client's mock and unverified, as are the landmark distances and the direct line. Its five gallery shots are seeded `picsum.photos/seed/rl-rk-*` placeholders. "Request Brochure" has no brochure behind it and points at the enquiry form — no project carries a `brochure` PDF yet.
 - **Romal Kirti has been DELETED from the dataset** (gone as of 6 Nov; it was published on 29 Oct). `project.html?p=romal-kirti` now resolves to nothing, and the hand-written fallback in `project.html` — which is still that property, and still the unverified mock content — describes a project the client no longer lists. The fallback only shows when the page is opened with **no** `?p=` at all, which nothing on the site links to, so this is a latent oddity rather than a live bug.
-- **Counts as of 7 Nov: 16 projects — 14 `completed`, 2 `ongoing` (Shanti Niwas, Raajlaxmi Solitaire), 0 `redevelopment`; 8 of the completed ones are `soldOut`.** The **Ongoing page is no longer empty**; Redevelopment still shows its three placeholder cards. Shanti Niwas moved from `completed` to `ongoing` between 6 and 7 Nov while still carrying a **Completed** badge — the status/stage split working as designed, but worth a question. Re-check all of this rather than trusting it: the client adds, deletes and refiles.
+- **Counts after the 7 Nov refiling: 16 published projects — Completed 9 (7 of them `soldOut`), Ongoing 5, Redevelopment 4.** Krishna Niwas and Shanti Niwas are in two listings each, so those add to 18. Nothing is unfiled. Re-check rather than trusting it: the client adds, deletes and refiles, sometimes while you are working.
+- **Two badges disagree with their listing.** Shanti Niwas is Ongoing+Redevelopment but its badge still says **Completed**; Raajlaxmi Avenue is Redevelopment, `soldOut`, and its badge says **Completed**. Both are the status/stage split working as designed — `status` is free text and overrides the listing label — but neither is likely to be what was meant. Clearing `status` makes the badge follow the listing.
 - Most nav links and CTAs are `href="#"`; only Projects and the cross-links resolve. Section II's "Discover our story" button and the "Raajlaxmi Group / Building trust. Creating legacy." signature are both gone — the accreditation strip replaced them, so About no longer offers a CTA or a sign-off of its own.
 - Section IV's statistics panel (`.why-stats`, the old 20+ / 1500+ / 45+ / 98% placeholders) has been **deleted** — markup, CSS, counter JS and all. Section II's row is now the only set of figures on the page. Its `.why-float` interior card went with it: it overlapped the team photo and hid a dozen faces.
 - 13+ years in Section II contradicts the timeline (2004→2026) and "Est. 2004" on the seals (`seal-top.png`, and the Section VII strip art) — those imply ~22 years. Pick one founding date and make the artwork, timeline and counters agree.

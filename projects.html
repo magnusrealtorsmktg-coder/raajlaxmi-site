@@ -81,7 +81,7 @@
     /* every published property -- the cards, the city chips and the banner
        hotspots are all built from this one answer */
     projects: '*[_type=="project"]|order(order asc,_createdAt asc){\n' +
-      '  name,stage,status,soldOut,category,location,blurb,config,area,price,detailUrl,\n' +
+      '  name,stage,stages,status,soldOut,category,location,blurb,config,area,price,detailUrl,\n' +
       '  "slug":slug.current,"imageUrl":image.asset->url\n' +
       '}',
 
@@ -2020,12 +2020,23 @@
        read once on load — the chips never clear it. */
     const STATUS = (new URLSearchParams(location.search).get('status') || '')
       .trim().toLowerCase();
-    /* `stage` is the field the Studio files a project under; it is what decides
-       which listing a project appears on. Documents written before that field
-       existed fall back to their badge text, so nothing vanishes mid-migration. */
+    /* `stages` is the field the Studio files a project under and it is an
+       ARRAY — a project can be listed in more than one place, because
+       "Ongoing" says how far built it is while "Redevelopment" says what kind
+       of project it is. Two of the properties here are honestly both.
+
+       It falls back twice, and both steps earn their keep: to the superseded
+       single `stage` for anything created by an older path or restored from
+       document history, and then to the badge text for documents written
+       before even that field existed. Nothing vanishes from a listing because
+       a migration missed it. */
     const STAGE_LABEL = {completed:'Completed', ongoing:'Ongoing', redevelopment:'Redevelopment'};
-    const stageOf   = p => (p.stage || p.status || '').trim().toLowerCase();
-    const inStatus  = p => !STATUS || stageOf(p) === STATUS;
+    const stagesOf  = p => (Array.isArray(p.stages) && p.stages.length
+                              ? p.stages
+                              : [p.stage || p.status || ''])
+                            .map(v => String(v || '').trim().toLowerCase())
+                            .filter(Boolean);
+    const inStatus  = p => !STATUS || stagesOf(p).includes(STATUS);
 
     /* The home page's hero search sends people here with ?type= and ?loc=.
        Both are read once on load and AND with the status and the city chip, so
@@ -2131,7 +2142,7 @@
           <article class="col-card${p.soldOut ? ' is-sold' : ''}">
             ${p.soldOut ? '<img class="col-stamp" src="assets/sold-out.png" alt="Sold out" loading="lazy">' : ''}
             <div class="col-media">
-              <span class="col-badge">${p.status || STAGE_LABEL[p.stage] || ''}</span>
+              <span class="col-badge">${p.status || STAGE_LABEL[stagesOf(p)[0]] || ''}</span>
               <span class="col-heart" role="button" aria-label="Save">${HEART}</span>
               <div class="col-cimg" style="background-image:${imgCss(p)}"></div>
             </div>

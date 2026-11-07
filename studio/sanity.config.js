@@ -7,8 +7,9 @@ import {schemaTypes} from './schemaTypes/index.js'
    projects-redevelopment.html — see the SANITY block in each one's <script>. */
 
 /* The three listings the site is organised around. The value is what goes in a
-   document's `stage` field and what the pages filter on, so changing one of
-   these strings means changing it in all three pages too. */
+   document's `stages` ARRAY — a project may be in more than one — and what the
+   pages filter on, so changing one of these strings means changing it in all
+   three pages too, in `STAGE_LABEL` and in `stagesOf`. */
 const STAGES = [
   ['completed', 'Completed'],
   ['ongoing', 'Ongoing'],
@@ -16,8 +17,10 @@ const STAGES = [
 ]
 
 /* One folder per listing, so the Studio sidebar mirrors the site. Creating a
-   project inside a folder pre-fills its stage (see `templates` below), which
-   is the whole point — you should not have to remember to set it. */
+   project inside a folder pre-fills that listing (see `templates` below),
+   which is the whole point — you should not have to remember to set it. A
+   project in two listings appears in both folders, which is correct: the
+   folder is a view of the site, not a filing cabinet with one slot per item. */
 /* One page-content document per listing, with a fixed id. There are four
    rather than three because projects.html does double duty — it is both the
    browse-all page and the Completed view, and the two want different
@@ -57,7 +60,11 @@ const stageFolder = (S, value, title) =>
               S.documentList()
                 .id(value + '-list')
                 .title(title + ' projects')
-                .filter('_type == "project" && stage == $stage')
+                /* `in` rather than `==`: `stages` is an array now, and a
+                   project listed twice has to show in both folders. The
+                   `|| stage == $stage` tail catches a document that predates
+                   the array, the same fallback the pages make. */
+                .filter('_type == "project" && ($stage in stages || stage == $stage)')
                 .params({stage: value})
                 .defaultOrdering([
                   {field: 'order', direction: 'asc'},
@@ -103,8 +110,8 @@ const structure = (S) =>
               S.divider(),
               ...STAGES.map(([value, title]) => stageFolder(S, value, title)),
               S.divider(),
-              /* the safety net: anything with no stage set would otherwise be
-                 invisible in the three folders above */
+              /* the safety net: anything with no listing set would otherwise
+                 be invisible in the three folders above */
               S.listItem()
                 .id('unfiled')
                 .title('Not yet filed')
@@ -112,7 +119,7 @@ const structure = (S) =>
                   S.documentList()
                     .id('unfiled-list')
                     .title('Projects with no listing set')
-                    .filter('_type == "project" && !defined(stage)'),
+                    .filter('_type == "project" && !defined(stages) && !defined(stage)'),
                 ),
               S.listItem()
                 .id('every-project')
@@ -238,7 +245,9 @@ export default defineConfig({
         title: 'Project',
         schemaType: 'project',
         parameters: [{name: 'stage', type: 'string'}],
-        value: ({stage}) => ({stage}),
+        /* seeds the ARRAY with the folder's own listing; tick a second one in
+           the form if the project belongs on two pages */
+        value: ({stage}) => ({stages: [stage]}),
       },
     ],
   },
