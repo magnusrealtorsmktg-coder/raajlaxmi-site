@@ -413,27 +413,38 @@ drifting; only the three collection pages have `#colChips` and the logic.
 
 `testimonials.html` — one section, `#testimonials` ("Section VII — Testimonials"): a **continuously scrolling marquee** of review cards, a hidden client-photo slider under it, and a closing consultation strip. The reviews come from Sanity (the five written into the `T` array are only the fallback); each card carries the reviewer's initials rather than a photograph, and a Google button when that review has a link. The arrows and dots are `display:none` — a strip with no discrete slides has nothing for them to point at. All the detail is under *Content management → Testimonials*. The nav's Testimonials item points here from every page.
 
-`services.html` — one section, `#services` ("Section IX — Services"), **six** blocks: the film band, the five-step journey rail, **five** service cards, the six-step buying flow, a FAQ accordion and a closing CTA. Both rails fill their gold line from scroll position (`--fill` on `.sv-rail` / `.sv-flow`). Each block carries `data-rev` and gets its own observer, so the page reveals in movements rather than all at once. Its first two blocks **were finished artwork with the copy painted in** (`Services_start.png` at 2164:380 and `assets/service-philosophy.jpg` at 1376:513); the first is **the client's film with no copy at all over it** and the second **is gone** — see *The services page runs a film* below.
+`services.html` — one section, `#services` ("Section IX — Services"), **five** blocks: the film band, the journey rail **with a service card inside each of its five steps**, the six-step buying flow, a FAQ accordion and a closing CTA. Both rails fill their gold line from scroll position (`--fill` on `.sv-rail` / `.sv-flow`). Each block carries `data-rev` and gets its own observer, so the page reveals in movements rather than all at once. Its first two blocks **were finished artwork with the copy painted in** (`Services_start.png` at 2164:380 and `assets/service-philosophy.jpg` at 1376:513); the first is **the client's film with no copy at all over it** and the second **is gone** — see *The services page runs a film* below.
 
-**THE SERVICE CARDS PAIR WITH THE JOURNEY RAIL, one under each step (7 Nov).**
+**EACH SERVICE CARD LIVES INSIDE ITS JOURNEY STEP (7 Nov).**
 Property Consultation → Private Consultation, Private Site Visit → Site Visits,
 Home Selection → Investment Advisory, Documentation → Documentation Support,
 Welcome Home → After-Sales Support. **Home Personalization was deleted** to make
-it five and five.
+it five and five, and **the "Our Services" rule-head between the two is gone**.
 
-- **The alignment is structural, not eyeballed.** Three things have to agree or
-  it drifts: the column count, the gap and the container width. The gap is a
-  single token, `--sv-gap` on `.sv`, read by both `.sv-rail` and `.sv-grid`
-  rather than written twice; and **`.sv-svc` carries `max-width:none`**, because
-  `.sv-wrap` caps every other block at 1320px while the rail lives in
-  `.sv-mid`, which is full width with the same side padding. Measured at 1920,
-  1440 and 1200: every card's centre is within **0px** of its step's.
-- **The grid steps down at the RAIL's breakpoint, 1080px, not one of its own.**
-  It used to go to three columns at 1240, which would now break the pairing at
-  exactly the widths where the rail still shows five. Below 1080 the rail is a
-  two-column list with its connector hidden, nothing is aligned with anything,
-  and the cards are free to take whatever fits.
-- At 1081px a card is 187px wide, which still holds every heading on one line.
+- **The pairing is the DOM, not two grids that agree.** The cards spent half a
+  day as a separate `.sv-grid` aligned to the rail by making both grids share a
+  column count, a gap (`--sv-gap`) and a container width (`.sv-svc` with
+  `max-width:none`, because `.sv-wrap` caps everything else at 1320px while the
+  rail sits in a full-width `.sv-mid`). That measured 0px of drift at 1920,
+  1440 and 1200 — but it was three invariants held by hand. A card is now the
+  last child of its `.sv-step`, so there is nothing left to keep in step and
+  nothing that can come apart at an odd width. `.sv-grid`, `.sv-svc` and
+  `.sv-rulehead` are all gone.
+- **`.sv-step` is a flex column and the card is `flex:1`.** The grid stretches
+  the steps to equal height; without `flex:1` that height would sit under the
+  card as white space instead of making the cards match.
+- **`.sv-step > h3` needs the child combinator.** The card inside now has an
+  `h3` of its own at a different size, and the bare `.sv-step h3` reached
+  straight into it.
+- **The card has no reveal of its own any more.** The step fades and rises as
+  one thing, card included; a second opacity transition inside it only fought
+  the first. The hover lift stays.
+- **One breakpoint instead of two.** At 1080px the rail becomes a two-column
+  list and the cards go with it, still one per step. The cards used to break to
+  three columns at 1240 on their own, which would now split the pairing at
+  exactly the widths where the rail still shows five.
+- **`#ourServices` moved to `.sv-jrn`.** The footer on every page deep-links to
+  it and the block it used to name no longer exists.
 
 **The `[INSERT SERVICE IMAGE HERE]` placeholders are GONE**, and `.sv-slot`
 with them — base rules, card overrides, the gold-cursor hover and all. The
@@ -451,6 +462,29 @@ selector that matches nothing there costs nothing.
 `assets/services-film.mp4` (1920x1080, 24fps, 30s, **4.01 MB**) plays in that
 page's banner band at **1.4x**, with `assets/services-film.jpg` — a frame of
 it — as the poster and permanent fallback.
+
+**THE BAND'S RATIO IS SET BY THE CLIENT'S WATERMARK, AND THE max-height CAP IS
+GONE BECAUSE OF IT.** Their logo plate is burnt into the footage at
+**x 1555–1920, y 825–985 of 1920x1080** — flush with the right edge, bottom
+91.2% of the way down. `object-fit:cover` centres what it keeps, so the band
+has to stay inside **[1.78, 2.05]**: wider and the bottom of the plate is cut,
+narrower than 16:9 and the crop moves to the sides and takes its right edge
+instead. The band is **2:1**, the middle of that window, showing 5.6%–94.4% of
+the frame with the plate ending 3.2% clear of the edge.
+
+The old `max-height:min(60vh,540px)` had to go, and this is the cost of the
+change: **any fixed cap re-widens the effective ratio on a large screen**, which
+is precisely what cut the logo — at 1920 that cap made the band 3.56:1 and at
+1440 it was 2.67:1, where only 2.55:1 was intended. A 1920 screen now opens on
+a **960px** band, which is most of the first screen for what is still a page
+header. That was a deliberate trade, made because the client asked for the
+logo whole.
+
+Below 820px the band takes the footage's **own 16:9**, which crops nothing at
+all: 2:1 of a 390px screen is a 195px strip, and the old `min-height:300px`
+would have forced the ratio to 1.3 and cut the plate's right edge off.
+Verified at 2560, 1920, 1440, 1280, 1081, 1024, 844x390 and 390x844: the plate
+is whole at every one.
 
 **SWAPPED ON 7 NOV.** The clip here until then was a 7.83s consultant-meeting
 shot at 0.9x; the client supplied `Services.mp4` and asked for 1.4x in a loop.
