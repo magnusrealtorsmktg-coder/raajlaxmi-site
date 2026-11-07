@@ -1254,16 +1254,23 @@
   }
 
   /* ============ SECTION IX — SERVICES ============ */
-  /* Seven movements on one ivory ground: hero, philosophy, the journey rail,
-     six service cards, the buying process, FAQ, closing invitation. Everything
+  /* Six movements on one ivory ground: the film band, the journey rail, five
+     service cards, the buying process, FAQ, closing invitation. Everything
      premium here is spacing, type and shadow — no borders doing decoration.
-     IMAGE SLOTS: every .sv-slot is a placeholder. To drop a real photograph in,
-     replace the slot's inner text with nothing and give it
-        style="background-image:url('img/your-shot.jpg')"
-     — the box already carries the right ratio, radius and shadow. */
+     THE [INSERT SERVICE IMAGE HERE] PLACEHOLDERS ARE GONE (7 Nov) — the cards
+     are text only now, and `.sv-slot` with them. The client never supplied the
+     photographs, and six dashed boxes reading "[INSERT …]" were the first
+     thing a visitor saw on this page. `git show` has the rules if a card is
+     ever given a picture again. */
   body{background:#F8F6F2;}
   .sv{position:relative;background:#F8F6F2;overflow-x:clip;
-    --ink:#23211D;--say:#5F5B55;--au:#C6A15B;--au-deep:#A8823C;}
+    --ink:#23211D;--say:#5F5B55;--au:#C6A15B;--au-deep:#A8823C;
+    /* THE JOURNEY RAIL AND THE SERVICE CARDS SHARE THIS. Each card sits under
+       the step it belongs to, which only holds while the two grids agree on
+       their column count, their gap AND their container width. The gap is a
+       token rather than two copies of the same clamp for exactly that reason;
+       the width is handled by .sv-svc below. */
+    --sv-gap:clamp(.4rem,.9vw,1rem);}
   /* the closing band is full-bleed and ends the page — no tail below it */
   /* the only ornament: paper grain, ~2.5% */
   .sv::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.025;
@@ -1320,15 +1327,6 @@
   .sv-arw::after{content:"";position:absolute;right:-1px;top:-3px;width:7px;height:7px;
     border-top:1px solid currentColor;border-right:1px solid currentColor;transform:rotate(45deg);}
   .sv-btn:hover .sv-arw{transform:translateX(5px);}
-
-  /* image placeholders ---------------------------------------------------- */
-  .sv-slot{position:relative;display:grid;place-items:center;text-align:center;
-    background:#F1EDE4 center/cover no-repeat;border-radius:24px;overflow:hidden;
-    box-shadow:0 50px 100px -60px rgba(60,48,28,.45),0 12px 30px -22px rgba(60,48,28,.16);}
-  .sv-slot::after{content:"";position:absolute;inset:.7rem;border-radius:18px;
-    border:1px dashed rgba(198,161,91,.55);pointer-events:none;}
-  .sv-slot span{font-family:"Inter",sans-serif;font-size:.72rem;font-weight:600;
-    letter-spacing:.16em;color:#A79C86;padding:1rem;}
 
   /* ---- 1. hero banner ----
      This was Services_start.png: a 2164x380 plate with the label, headline,
@@ -1400,7 +1398,7 @@
   .sv-jr .sv-h{text-align:center;font-size:clamp(1.9rem,3.8vw,3.1rem);
     margin-top:clamp(1.2rem,2vw,1.7rem);}
   .sv-rail{position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
-    gap:clamp(.4rem,.9vw,1rem);margin-top:clamp(1.6rem,3vw,2.4rem);}
+    gap:var(--sv-gap);margin-top:clamp(1.6rem,3vw,2.4rem);}
   /* the hairline the nodes sit on, and the gold that fills it while scrolling */
   .sv-rail::before,.sv-rail::after{content:"";position:absolute;left:10%;right:10%;top:1.4rem;
     height:1px;}
@@ -1434,13 +1432,19 @@
      each, the line icon riding the bottom-left corner of the photograph. */
   /* keeps the wrap's own side gutters — a 2-value shorthand would zero them
      and the row would run to the viewport edge below 1320px */
-  .sv-svc{padding-top:clamp(1.2rem,2.6vh,2rem);padding-bottom:clamp(3rem,7vh,5rem);}
+  /* `.sv-wrap` caps every other block at 1320px, but the rail above this one
+     is inside `.sv-mid`, which is full width with the same side padding. The
+     cap is dropped here so the two containers are the same box and column N
+     of the cards lands under step N of the rail. Everything else on the page
+     keeps the 1320px measure. */
+  .sv-svc{max-width:none;padding-top:clamp(1.2rem,2.6vh,2rem);
+    padding-bottom:clamp(3rem,7vh,5rem);}
   /* the label sits in a hairline that runs the width of the row */
   .sv-rulehead{display:flex;align-items:center;gap:clamp(1rem,2.4vw,2.2rem);}
   .sv-rulehead i{flex:1;height:1px;background:rgba(198,161,91,.42);}
   .sv-rulehead .sv-label::after{display:none;}
-  .sv-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));
-    gap:clamp(.7rem,1.2vw,1.15rem);margin-top:clamp(1.6rem,3vw,2.4rem);}
+  .sv-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:var(--sv-gap);margin-top:clamp(1.6rem,3vw,2.4rem);align-items:start;}
   .sv-card{position:relative;display:flex;flex-direction:column;background:#fff;
     border:1px solid rgba(198,161,91,.22);border-radius:14px;overflow:hidden;
     box-shadow:0 26px 54px -46px rgba(60,48,28,.4),0 6px 16px -14px rgba(60,48,28,.12);
@@ -1449,26 +1453,21 @@
   .in .sv-card{opacity:1;transform:none;}
   .in .sv-card:nth-child(1){transition-delay:.06s;} .in .sv-card:nth-child(2){transition-delay:.14s;}
   .in .sv-card:nth-child(3){transition-delay:.22s;} .in .sv-card:nth-child(4){transition-delay:.3s;}
-  .in .sv-card:nth-child(5){transition-delay:.38s;} .in .sv-card:nth-child(6){transition-delay:.46s;}
+  .in .sv-card:nth-child(5){transition-delay:.38s;}
   .sv-card:hover{transform:translateY(-6px);
     box-shadow:0 44px 84px -46px rgba(60,48,28,.48),0 10px 24px -16px rgba(60,48,28,.18);}
-  .sv-cmedia{position:relative;overflow:hidden;}
-  .sv-card .sv-slot{border-radius:0;aspect-ratio:16/10;box-shadow:none;
-    transition:transform 1.4s var(--lux);}
-  .sv-card .sv-slot span{font-size:.56rem;letter-spacing:.1em;}
-  .sv-card .sv-slot::after{inset:.4rem;border-radius:8px;}
-  .sv-card:hover .sv-slot{transform:scale(1.06);}
-  /* the icon rides the seam between photograph and card body. It lives in the
-     body, not the media block — .sv-cmedia has to clip the hover zoom, and a
-     clipping ancestor would slice the badge in half. */
-  .sv-badge{position:absolute;left:clamp(.7rem,1vw,1rem);top:-1.35rem;z-index:2;
-    width:2.7rem;height:2.7rem;border-radius:50%;display:grid;place-items:center;
-    background:#fff;color:var(--au-deep);border:1px solid rgba(198,161,91,.3);
+  /* The icon used to ride the seam between the photograph and the body,
+     absolutely positioned and hanging above it. With the photograph gone it
+     is an ordinary first child of the body — absolute, it would have floated
+     off the top edge of the card into the gap above. */
+  .sv-badge{width:2.7rem;height:2.7rem;border-radius:50%;display:grid;place-items:center;
+    background:#FBF9F5;color:var(--au-deep);border:1px solid rgba(198,161,91,.3);
     box-shadow:0 10px 22px -14px rgba(60,48,28,.5);
+    margin-bottom:clamp(.8rem,1.2vw,1rem);
     transition:transform .5s var(--lux);}
   .sv-card:hover .sv-badge{transform:translateY(-3px);}
-  .sv-cbody{position:relative;padding:2rem clamp(.85rem,1.2vw,1.1rem) clamp(1rem,1.4vw,1.3rem);
-    display:flex;flex-direction:column;flex:1;}
+  .sv-cbody{position:relative;display:flex;flex-direction:column;flex:1;
+    padding:clamp(1.2rem,1.7vw,1.5rem) clamp(.95rem,1.3vw,1.2rem) clamp(1.2rem,1.6vw,1.45rem);}
   .sv-card h3{font-family:"Cormorant Garamond",serif;font-weight:600;
     font-size:clamp(1.02rem,1.25vw,1.18rem);line-height:1.2;color:var(--ink);}
   .sv-card p{margin-top:.5rem;font-family:"Inter",sans-serif;font-size:.74rem;font-weight:300;
@@ -1522,11 +1521,14 @@
   .sv-foot .sv-h{font-size:clamp(1.1rem,2.4vw,2rem);}
   .sv-foot .sv-btn{margin-top:clamp(.5rem,1.4vw,1.1rem);}
 
-  /* six across only where they can still be read; then 3, 2, 1 */
-  @media(max-width:1240px){ .sv-grid{grid-template-columns:repeat(3,minmax(0,1fr));} }
+  /* FIVE ACROSS HOLDS AS LONG AS THE RAIL DOES, and not a pixel longer: the
+     pairing is the whole point of the row, so the cards step down at the same
+     width the rail does rather than at one of their own. Below that the rail
+     is a two-column list with its connector hidden, nothing is aligned with
+     anything, and the cards are free to pick whatever fits. */
   @media(max-width:1080px){
     .sv-jrn{padding:0 clamp(1.4rem,5vw,4rem);}
-    .sv-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+    .sv-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(.9rem,1.6vw,1.3rem);}
     .sv-rail{grid-template-columns:repeat(2,minmax(0,1fr));gap:2rem 1.2rem;}
     .sv-rail::before,.sv-rail::after{display:none;}
   }
@@ -1537,7 +1539,7 @@
     .sv-band{min-height:300px;}
   }
   @media(max-width:620px){
-    .sv-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .sv-grid{grid-template-columns:minmax(0,1fr);}
     .sv-rail{grid-template-columns:minmax(0,1fr);}
   }
   /* under ~900px the band is shorter than the copy it holds, so the artwork
@@ -1853,11 +1855,17 @@
         <i aria-hidden="true"></i>
       </div>
 
+      <!-- FIVE CARDS, ONE PER STEP OF THE RAIL ABOVE, IN THE SAME ORDER.
+           01 Property Consultation -> Private Consultation
+           02 Private Site Visit    -> Site Visits
+           03 Home Selection        -> Investment Advisory
+           04 Documentation         -> Documentation Support
+           05 Welcome Home          -> After-Sales Support
+           The alignment is structural, not eyeballed: this grid and .sv-rail
+           share a column count, a gap and a container width. Reorder or add a
+           card here and the pairing silently breaks. -->
       <div class="sv-grid">
         <article class="sv-card">
-          <div class="sv-cmedia">
-            <div class="sv-slot"><span>[INSERT SERVICE IMAGE HERE]</span></div>
-          </div>
           <div class="sv-cbody">
             <span class="sv-badge" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M16 4h5v6h-5l-2 2V4z"/></g></svg></span>
             <h3>Private Consultation</h3>
@@ -1865,9 +1873,6 @@
           </div>
         </article>
         <article class="sv-card">
-          <div class="sv-cmedia">
-            <div class="sv-slot"><span>[INSERT SERVICE IMAGE HERE]</span></div>
-          </div>
           <div class="sv-cbody">
             <span class="sv-badge" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><path d="M12 2.5c-3.3 0-6 2.7-6 6 0 4.5 6 13 6 13s6-8.5 6-13c0-3.3-2.7-6-6-6z"/><circle cx="12" cy="8.5" r="2.2"/></g></svg></span>
             <h3>Site Visits</h3>
@@ -1875,9 +1880,6 @@
           </div>
         </article>
         <article class="sv-card">
-          <div class="sv-cmedia">
-            <div class="sv-slot"><span>[INSERT SERVICE IMAGE HERE]</span></div>
-          </div>
           <div class="sv-cbody">
             <span class="sv-badge" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><path d="M4 20V9l6-4 6 4v11"/><path d="M4 20h16M16 20v-7h4v7"/><path d="M8 12h2M8 16h2"/></g></svg></span>
             <h3>Investment Advisory</h3>
@@ -1886,9 +1888,6 @@
           </div>
         </article>
         <article class="sv-card">
-          <div class="sv-cmedia">
-            <div class="sv-slot"><span>[INSERT SERVICE IMAGE HERE]</span></div>
-          </div>
           <div class="sv-cbody">
             <span class="sv-badge" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><path d="M6 2.5h8l5 5v14H6z"/><path d="M14 2.5v5h5"/><path d="M9.5 12h6M9.5 15.5h6M9.5 19h4"/></g></svg></span>
             <h3>Documentation Support</h3>
@@ -1896,19 +1895,6 @@
           </div>
         </article>
         <article class="sv-card">
-          <div class="sv-cmedia">
-            <div class="sv-slot"><span>[INSERT SERVICE IMAGE HERE]</span></div>
-          </div>
-          <div class="sv-cbody">
-            <span class="sv-badge" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><path d="M3 20V10l9-6 9 6v10"/><path d="M3 20h18"/><path d="M8 20v-5h8v5"/><path d="M11 12h2"/></g></svg></span>
-            <h3>Home Personalization</h3>
-            <p>Finishes, layouts and material choices, guided by people who know the buildings.</p>
-          </div>
-        </article>
-        <article class="sv-card">
-          <div class="sv-cmedia">
-            <div class="sv-slot"><span>[INSERT SERVICE IMAGE HERE]</span></div>
-          </div>
           <div class="sv-cbody">
             <span class="sv-badge" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><circle cx="8" cy="13.5" r="4.4"/><path d="M12 11L21.5 3M19 5.5l2 2M16.4 8.1l1.8 1.8"/></g></svg></span>
             <h3>After-Sales Support</h3>
@@ -2165,20 +2151,21 @@
        on data-saver, on a 2G-class link and under prefers-reduced-motion —
        which is why .sv-still is painted first and always.
 
-       Two things here that are NOT in index.html's copy:
+       One thing here that is NOT in index.html's copy: RATE, which is 1.4 as
+       asked (it was 0.9 for the previous clip). It is applied again on
+       `loadedmetadata`, because a browser that reloads the media resource
+       resets playbackRate to 1 and the film would silently go back to normal
+       speed on a re-buffer.
 
-       - RATE 0.9, as asked. It is set again on loadedmetadata because a
-         browser that reloads the media resource resets it to 1.
-       - PHASE. The plate holds itself half a loop behind the band, and it
-         re-phases on every resume rather than once at mount. A fixed offset
-         set once drifts apart the moment one of the two is paused off-screen
-         and the other is not — which on this page happens on the very first
-         scroll, since the band and the plate are both on screen together at
-         ordinary scroll positions. Drifting them into step is precisely the
-         thing the offset exists to prevent: the same three shots playing in
-         unison, one above the other, reads as a bug rather than as footage. */
+       The paragraph that used to sit here about PHASE is gone with the thing
+       it described — the philosophy plate held a second copy of the film half
+       a loop behind this one, and was removed on 5 Nov. */
     const FILM = 'assets/services-film.mp4';
-    const RATE = 0.9;
+    /* 1.4x is applied at PLAYBACK, not baked into the file, so it stays one
+       number to turn. Re-timing the encode instead (`setpts=PTS/1.4`) would
+       take the 30s clip to 21.4s and save about 1.2MB, at the cost of needing
+       a re-encode to change the speed again. */
+    const RATE = 1.4;
 
     /* the film is the biggest thing this page fetches and nobody is waiting
        for it, so it goes after load — capped, so one hanging image cannot hold
@@ -2332,8 +2319,10 @@
     /* --- cursor softens to gold over the imagery --- */
     const ringEl = document.getElementById('ring');
     if(ringEl && matchMedia('(hover:hover)').matches){
-      sec.addEventListener('mouseover',e=>{ if(e.target.closest('.sv-slot')) ringEl.classList.add('gold'); });
-      sec.addEventListener('mouseout', e=>{ if(e.target.closest('.sv-slot')) ringEl.classList.remove('gold'); });
+      /* the gold ring used to soften over the image placeholders; with those
+         gone the band is the only imagery left on the page */
+      sec.addEventListener('mouseover',e=>{ if(e.target.closest('.sv-band')) ringEl.classList.add('gold'); });
+      sec.addEventListener('mouseout', e=>{ if(e.target.closest('.sv-band')) ringEl.classList.remove('gold'); });
     }
   })();
 

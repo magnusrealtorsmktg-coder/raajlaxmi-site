@@ -413,30 +413,76 @@ drifting; only the three collection pages have `#colChips` and the logic.
 
 `testimonials.html` — one section, `#testimonials` ("Section VII — Testimonials"): a **continuously scrolling marquee** of review cards, a hidden client-photo slider under it, and a closing consultation strip. The reviews come from Sanity (the five written into the `T` array are only the fallback); each card carries the reviewer's initials rather than a photograph, and a Google button when that review has a link. The arrows and dots are `display:none` — a strip with no discrete slides has nothing for them to point at. All the detail is under *Content management → Testimonials*. The nav's Testimonials item points here from every page.
 
-`services.html` — one section, `#services` ("Section IX — Services"), **six** blocks: the film band, the five-step journey rail, six service cards, the six-step buying flow, a FAQ accordion and a closing CTA. Both rails fill their gold line from scroll position (`--fill` on `.sv-rail` / `.sv-flow`). Each block carries `data-rev` and gets its own observer, so the page reveals in movements rather than all at once. Its first two blocks **were finished artwork with the copy painted in** (`Services_start.png` at 2164:380 and `assets/service-philosophy.jpg` at 1376:513); the first is **the client's film with no copy at all over it** and the second **is gone** — see *The services page runs a film* below. **Everything else is an unfilled `.sv-slot` placeholder** reading `[INSERT … IMAGE HERE]` — to fill one, drop the inner `<span>` and set `background-image` on the slot; ratio, radius and shadow are already right.
+`services.html` — one section, `#services` ("Section IX — Services"), **six** blocks: the film band, the five-step journey rail, **five** service cards, the six-step buying flow, a FAQ accordion and a closing CTA. Both rails fill their gold line from scroll position (`--fill` on `.sv-rail` / `.sv-flow`). Each block carries `data-rev` and gets its own observer, so the page reveals in movements rather than all at once. Its first two blocks **were finished artwork with the copy painted in** (`Services_start.png` at 2164:380 and `assets/service-philosophy.jpg` at 1376:513); the first is **the client's film with no copy at all over it** and the second **is gone** — see *The services page runs a film* below.
+
+**THE SERVICE CARDS PAIR WITH THE JOURNEY RAIL, one under each step (7 Nov).**
+Property Consultation → Private Consultation, Private Site Visit → Site Visits,
+Home Selection → Investment Advisory, Documentation → Documentation Support,
+Welcome Home → After-Sales Support. **Home Personalization was deleted** to make
+it five and five.
+
+- **The alignment is structural, not eyeballed.** Three things have to agree or
+  it drifts: the column count, the gap and the container width. The gap is a
+  single token, `--sv-gap` on `.sv`, read by both `.sv-rail` and `.sv-grid`
+  rather than written twice; and **`.sv-svc` carries `max-width:none`**, because
+  `.sv-wrap` caps every other block at 1320px while the rail lives in
+  `.sv-mid`, which is full width with the same side padding. Measured at 1920,
+  1440 and 1200: every card's centre is within **0px** of its step's.
+- **The grid steps down at the RAIL's breakpoint, 1080px, not one of its own.**
+  It used to go to three columns at 1240, which would now break the pairing at
+  exactly the widths where the rail still shows five. Below 1080 the rail is a
+  two-column list with its connector hidden, nothing is aligned with anything,
+  and the cards are free to take whatever fits.
+- At 1081px a card is 187px wide, which still holds every heading on one line.
+
+**The `[INSERT SERVICE IMAGE HERE]` placeholders are GONE**, and `.sv-slot`
+with them — base rules, card overrides, the gold-cursor hover and all. The
+client never supplied the photographs and six dashed boxes were the first thing
+a visitor met on the page. The cards are text only now: icon, heading,
+paragraph. `.sv-badge` used to be absolutely positioned so it could ride the
+seam between the photograph and the body; with no photograph it is an ordinary
+first child of `.sv-cbody`, because absolute it would float off the top of the
+card. The one surviving mention of `.sv-slot` is in the shared phone
+type-floor block, which is deliberately identical in all twelve files — a
+selector that matches nothing there costs nothing.
 
 ### The services page runs a film
 
-`assets/services-film.mp4` (1920x1080, 24fps, 7.83s, **2.29 MB**) plays in both
-of that page's banner slots at **0.9x**, with `assets/services-film.jpg` — a
-frame of it — as the poster and permanent fallback. Added 5 Nov from the
-client's `Real_estate_consultant_meeting_…_1080p.mp4` (5.72 MB, 5.97 Mbps, with
-an audio track on a video the site plays muted).
+`assets/services-film.mp4` (1920x1080, 24fps, 30s, **4.01 MB**) plays in that
+page's banner band at **1.4x**, with `assets/services-film.jpg` — a frame of
+it — as the poster and permanent fallback.
 
-**Re-encoded, unlike the hero film, and the numbers are why.** The hero's
-second swap shipped as a stream copy because that file was already near the
-knee of its own rate curve. This one is not:
+**SWAPPED ON 7 NOV.** The clip here until then was a 7.83s consultant-meeting
+shot at 0.9x; the client supplied `Services.mp4` and asked for 1.4x in a loop.
+As handed over it is **60.71 MB at 16.19 Mbps** with an audio track on a video
+the site plays muted — unusable as it stands, so re-encoded like everything
+else:
 
 | | size | bitrate | SSIM |
 |---|---|---|---|
-| as supplied | 5.72 MB | 5.97 Mbps | — |
-| CRF 22 | 4.41 MB | 4.72 Mbps | 0.991 |
-| CRF 25 | 3.07 MB | 3.29 Mbps | 0.987 |
-| **CRF 28 (shipped)** | **2.29 MB** | **2.34 Mbps** | **0.983** |
+| as supplied | 60.71 MB | 16.19 Mbps | — |
+| CRF 24 | 8.28 MB | 2.32 Mbps | 0.989 |
+| CRF 27 | 5.65 MB | 1.58 Mbps | 0.986 |
+| **CRF 30 (shipped)** | **4.01 MB** | **1.12 Mbps** | **0.983** |
 
-CRF 28 because it is a *cropped background behind a cream scrim* in both slots,
-and because it retires 1.56 MB of artwork. Encoded `-an -movflags +faststart
--g 48 -preset slow`; `moov` ahead of `mdat` verified.
+**CRF 30 because the curve is flat here**: CRF 24 costs more than double the
+bytes for 0.006 of SSIM, and 0.983 is the figure the previous clip shipped at
+for the same job. Encoded `-an -movflags +faststart -g 48 -preset slow`; `moov`
+ahead of `mdat` verified. SSIM against the source needs matched timebases
+(`settb=1/24000,setpts=N/24/TB` on both inputs) or ffmpeg warns and the numbers
+are wrong.
+
+**1.4x IS APPLIED AT PLAYBACK, NOT BAKED INTO THE FILE**, so it stays one
+number to turn — `RATE` in the Section IX block. It is re-applied on
+`loadedmetadata` because a browser that reloads the media resource resets
+`playbackRate` to 1, and the film would quietly drop to normal speed on a
+re-buffer. Re-timing the encode instead (`setpts=PTS/1.4`) would take 30s to
+21.4s and save about 1.2 MB, at the cost of a re-encode every time the speed
+changes.
+
+**The source stays out of the repo.** `Services.mp4` sits in the working
+directory and `.gitignore` blocks root-level `*.mp4`, so only the 4 MB encode
+in `assets/` ships.
 
 **ONE SLOT, NOT TWO, AND NO COPY OVER IT (5 Nov).** It shipped that morning in
 both banner slots with the painted-in copy re-set as live HTML on top. The
