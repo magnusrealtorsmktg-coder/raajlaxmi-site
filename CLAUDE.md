@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-An **eleven-page** static marketing site for Raajlaxmi Group: `index.html` (home), `projects.html` (browse-all collection, and the Completed view via `?status=completed`), `projects-ongoing.html` and `projects-redevelopment.html` (the same collection UI locked to one status), `project.html` (one property's detail page), `testimonials.html` (client voices), `services.html`, `contact.html` (enquiry page), and the three legal pages `privacy.html`, `terms.html` and `disclaimer.html`. No build step, no package manager, no dependencies, no test suite. Each page is one self-contained document — `<style>` in `<head>`, markup in `<body>`, one `<script>` at the end — plus a handful of loose image files in the repo root and `assets/`.
+A **twelve-page** static marketing site for Raajlaxmi Group: `index.html` (home), `projects.html` (browse-all collection, and the Completed view via `?status=completed`), `projects-ongoing.html` and `projects-redevelopment.html` (the same collection UI locked to one status), `project.html` (one property's detail page), `testimonials.html` (client voices), `services.html`, `contact.html` (enquiry page), `emi.html` (the EMI calculator), and the three legal pages `privacy.html`, `terms.html` and `disclaimer.html`. No build step, no package manager, no dependencies, no test suite. Each page is one self-contained document — `<style>` in `<head>`, markup in `<body>`, one `<script>` at the end — plus a handful of loose image files in the repo root and `assets/`.
 
 Deployed to Netlify from the CLI. There is no build step — but **do not publish the repo root**: `studio/node_modules` lives there now. Publish a `git archive` export instead; see *Where this stands*.
 
@@ -643,6 +643,70 @@ Signature Projects cards **no longer land there**: each one now resolves its own
 `project.html?p=<slug>` (see *The signature cards point at projects*), and a bare
 `project.html` typed into a card's link field is ignored for exactly that reason.
 
+`emi.html` — one section, `#emi` ("Section XIII — EMI Calculator"), added
+7 Nov. A visitor types any property price and gets the monthly instalment, the
+total interest over the life of the loan, the split between the two as a ring,
+and a year-by-year amortisation table behind a toggle. Four inputs — price,
+deposit, rate, tenure — each a typed field and a slider driving the same value.
+
+**It is the second page with no CMS behind it**, after `services.html`, and the
+only one that needs none: it is arithmetic, not content. Nothing is fetched but
+the footer's `site-settings`, nothing is posted, and the page keeps working
+with Sanity unreachable and with the network off once it has loaded. The
+defaults written into the markup (₹50 Lakh, 20% down, 8.5%, 20 years) are the
+only content in it and are meant to be edited there when the market moves.
+
+Seven things are load-bearing:
+
+- **THE PERCENTAGE IS AUTHORITATIVE FOR THE DEPOSIT, NOT THE RUPEE FIGURE.**
+  People think "twenty percent down", so when the price moves the deposit
+  should move with it. Typing a rupee amount sets the percentage from it;
+  everything else reads the percentage. Holding the amount instead would mean
+  a 20% deposit silently becoming 8% the moment someone looked at a dearer
+  flat.
+- **The ceiling is applied while typing, the FLOOR only on `blur`/`change`.**
+  Clamping the floor on every keystroke turns "8" into "5" before the ".5"
+  arrives and the field fights the person using it. `change` is bound as well
+  as `blur` because a phone keyboard's "Done" does not reliably produce the
+  latter.
+- **Which field is being edited is tracked in a `typing` variable**, not read
+  off `document.activeElement`. Not because of blur — Chrome has already moved
+  `activeElement` to `<body>` by then — but because a SLIDER drag has to be
+  able to correct a half-typed box, and `activeElement` still points at that
+  box while the pointer is on the slider.
+- **The grouped number fields preserve the caret.** Reformatting on every
+  keystroke otherwise throws it to the end and editing the middle of a price
+  is impossible. The handler counts digits to the left of the caret, reformats,
+  and puts it back after the same digit.
+- **`input.size` is re-set on every paint.** A text input with `width:auto` is
+  20 characters wide whatever is in it, which left the rupee sign stranded half
+  a field away from its number; `size` is the only thing that shrinks an input
+  to its content without measuring text.
+- **`-webkit-slider-thumb` and `-moz-range-thumb` cannot share a selector
+  list** — an engine that does not know one of them drops the whole rule — so
+  each has its own. WebKit's track cannot see the thumb, so the filled part is
+  a gradient stop fed from JS (`--fill`); Firefox has `::-moz-range-progress`
+  and ignores it.
+- **Below 940px THE ANSWER GOES FIRST** (`.emi-out{order:-1}`). On one column,
+  controls above the result would mean scrolling down after every slider drag
+  to see what it did.
+
+The amortisation table is walked month by month rather than solved per year,
+because that is what a lender does: each instalment pays the interest accrued
+on the balance and only the remainder comes off the principal. 360 iterations
+at the longest tenure. Verified against the closed form — the balance lands on
+exactly ₹0 in the final year.
+
+**The disclaimer under it is not boilerplate to trim.** The page prints a
+figure that looks like a quote, so it says in as many words that it excludes
+fees, insurance, stamp duty, registration and GST, assumes a rate that never
+moves, and is not an offer of credit.
+
+Reachable from the **footer's Explore column on all eleven pages that have a
+footer** (`project.html` has none by design). **It is not in the navigation
+bar** — that was left as the client's call, since a sixth item crowds the bar
+at 1024px.
+
 `privacy.html` / `terms.html` / `disclaimer.html` — one section each,
 `#legal` ("Section XII — Legal pages"). **One stylesheet, one behaviour block
 and one Sanity block serve all three**; they differ only in their copy and in
@@ -720,9 +784,9 @@ The key facts about the Web3Forms side:
 
 - **The access key IS the recipient.** It is an alias for the one email address
   it was created with; there is no dashboard setting for where mail goes, so
-  changing the recipient means **a new key and eleven file edits**. It lives in
+  changing the recipient means **a new key and twelve file edits**. It lives in
   the `<head>` data-layer block beside the Sanity config, published as
-  `RL.w3f`, one copy per file — the same arrangement, and the same elevenfold
+  `RL.w3f`, one copy per file — the same arrangement, and the same twelvefold
   edit, as `projectId`.
 - **The key is public by design.** Their FAQ: "You do not need to hide the
   access key. Access key is public."
@@ -779,7 +843,7 @@ access key itself cannot.
 
 ## Architecture
 
-**The `<head>` CSS is duplicated across all eleven files.** Lines ~1–978 of `index.html`, `projects.html`, `projects-ongoing.html`, `projects-redevelopment.html`, `project.html`, `testimonials.html`, `services.html`, `contact.html`, `privacy.html`, `terms.html` and `disclaimer.html` are the same stylesheet — base tokens, cursor, nav, mobile sheet, and the CSS for sections I–V — differing in only ~100 lines (title, nav/logo sizing on the inner pages). Each page then renders only its own sections. **Any edit to shared chrome (nav, `.nav-wrap.on-light`, cursor, burger/sheet, `:root` tokens, the hidden page scrollbar) must be applied to all eleven files or the pages drift.** The page scrollbar is hidden by request (`html{scrollbar-width:none}` + `html::-webkit-scrollbar{display:none}`); it is scoped to `html`, **not** `*`, on purpose — the scrollbar on `.cor-figure` is the only cue that the line-map banner pans sideways on a phone, so a blanket rule would break that.
+**The `<head>` CSS is duplicated across all twelve files.** Lines ~1–978 of `index.html`, `projects.html`, `projects-ongoing.html`, `projects-redevelopment.html`, `project.html`, `testimonials.html`, `services.html`, `contact.html`, `emi.html`, `privacy.html`, `terms.html` and `disclaimer.html` are the same stylesheet — base tokens, cursor, nav, mobile sheet, and the CSS for sections I–V — differing in only ~100 lines (title, nav/logo sizing on the inner pages). Each page then renders only its own sections. **Any edit to shared chrome (nav, `.nav-wrap.on-light`, cursor, burger/sheet, `:root` tokens, the hidden page scrollbar) must be applied to all twelve files or the pages drift.** The page scrollbar is hidden by request (`html{scrollbar-width:none}` + `html::-webkit-scrollbar{display:none}`); it is scoped to `html`, **not** `*`, on purpose — the scrollbar on `.cor-figure` is the only cue that the line-map banner pans sideways on a phone, so a blanket rule would break that.
 
 **The About section holds one screen.** The client's complaint was that the
 counting stats were cut off at the fold. `.about` is now
@@ -852,7 +916,7 @@ lines will push the strip past the fold again. Measured fits at 1440×900,
 1536×864, 1366×768, 1280×800, 1024×800, 1024×640, 1280×620 and 1680×1050.
 
 **Section II's CSS has drifted from the other seven files.** The `.ab-*` rules
-live in the shared head stylesheet, so all eleven files carry a copy — but only
+live in the shared head stylesheet, so all twelve files carry a copy — but only
 `index.html` has the markup, so only its copy renders. The other ten were
 already carrying an **older** version (the ghost word at `top:-.44em`, `.ab-text`
 at 560px) before this change, and the one-screen rewrite was applied to
@@ -946,7 +1010,7 @@ below 760px, where there are too few words per line to justify). Checked at
 1440x900, 1366x768, 820x900 and 420x860, by tap as well as hover, and under
 `prefers-reduced-motion`, which drops every transform.
 
-Anything that should animate in after the cover lifts registers with **`window.onIntro(fn)`**, not `window.load` — on load the cover is still up and the sequence would play out of sight. `index.html`'s hero choreography is the only current caller. When the cover is removed the block fires a synthetic `resize`, because the adaptive nav sampled the cover rather than the page and would otherwise be stuck in the wrong state. The two status pages are clones of `projects.html`, so they duplicate its whole Section V as well — a fix to a collection card, chip or the Sanity query has to be made in three files, not one. That now includes the Projects dropdown: `.nav-drop` / `.nav-menu` in the bar and `.sheet-sub` in the mobile sheet, both present in all eleven files. The menu is pure CSS — `:hover` plus `:focus-within` for keyboards — with an invisible `::after` bridge spanning the gap so the pointer can travel down without it closing. It sits inside `#navWrap`, which the adaptive-nav sampler skips wholesale, so it cannot confuse the light/dark detection. Section-specific CSS still lives only where it is used, under its `/* ===== SECTION N — NAME ===== */` banner; `project.html`, `testimonials.html`, `contact.html` and `services.html` each append their own section block (VI–IX) after that shared run.
+Anything that should animate in after the cover lifts registers with **`window.onIntro(fn)`**, not `window.load` — on load the cover is still up and the sequence would play out of sight. `index.html`'s hero choreography is the only current caller. When the cover is removed the block fires a synthetic `resize`, because the adaptive nav sampled the cover rather than the page and would otherwise be stuck in the wrong state. The two status pages are clones of `projects.html`, so they duplicate its whole Section V as well — a fix to a collection card, chip or the Sanity query has to be made in three files, not one. That now includes the Projects dropdown: `.nav-drop` / `.nav-menu` in the bar and `.sheet-sub` in the mobile sheet, both present in all twelve files. The menu is pure CSS — `:hover` plus `:focus-within` for keyboards — with an invisible `::after` bridge spanning the gap so the pointer can travel down without it closing. It sits inside `#navWrap`, which the adaptive-nav sampler skips wholesale, so it cannot confuse the light/dark detection. Section-specific CSS still lives only where it is used, under its `/* ===== SECTION N — NAME ===== */` banner; `project.html`, `testimonials.html`, `contact.html` and `services.html` each append their own section block (VI–IX) after that shared run.
 
 **One IIFE per section, in markup order.** The trailing `<script>` opens with shared behavior (entrance choreography, navbar scrolled state, mouse parallax, custom cursor + magnetic buttons, mobile menu), then one self-contained IIFE per section, then the adaptive-nav block. Each IIFE owns its own `IntersectionObserver`s and scroll-progress math — no shared state between sections, so a section can be rewritten or ported (GSAP `ScrollTrigger`, Framer `useScroll`) in isolation.
 
@@ -1032,7 +1096,7 @@ was already pointing at `contact.html`, so it needed no change.)
 
 **Phones were audited across twelve viewports** — 280x653 (Fold closed),
 320x568, 360x640, 360x780, 375x667, 390x844, 393x852, 412x915, 414x896,
-430x932, and both landscapes (667x375, 844x390) — on all eleven pages. The good
+430x932, and both landscapes (667x375, 844x390) — on all twelve pages. The good
 news first: **there was no horizontal overflow anywhere**, at any size, on any
 page. The layout already held. Two things did not.
 
@@ -1067,11 +1131,11 @@ labels, and 9.0px for the brand-card trades. That is under the ~11px both
 platforms treat as the floor for secondary text, and worse than the number looks
 because wide tracking costs legibility fastest at small sizes.
 
-One block, **identical in all eleven files**, floors seventeen selectors at
+One block, **identical in all twelve files**, floors seventeen selectors at
 .72–.74rem (11.5–11.8px) and eases the tracking wherever it was .22em or more.
 It is identical rather than tailored on purpose: a selector that does not exist
-on a given page costs nothing, and one string copied eleven times cannot drift
-the way eleven tailored ones would. It changes no layout.
+on a given page costs nothing, and one string copied twelve times cannot drift
+the way twelve tailored ones would. It changes no layout.
 
 Two details worth keeping: the tier is scoped
 `(hover:none),(max-width:620px),(max-height:560px)` for the same landscape
@@ -1087,7 +1151,7 @@ film now and carries no copy at all, and **that `<h1>` is still `.sv-sr`**, so
 the audit would report the same false positive today. The band has no visible
 heading to collide with anything.
 
-**Adaptive navbar** (last IIFE, every file). It samples the actual painted background behind `#navWrap` at three x-positions per scroll tick, averages relative luminance, and toggles `.on-light` (charcoal text) above a threshold of 150. Reading the live background rather than tagging sections means it keeps working when light sections are added. Full-bleed overlays that darken a light section from above carry `pointer-events:none`, so `elementsFromPoint` can't see them — they're listed in the `DARK_OVERLAYS` array (currently `['veil']`) and tested by geometry/opacity instead. **If you add another full-bleed dark overlay, add its id to `DARK_OVERLAYS` in all eleven files.**
+**Adaptive navbar** (last IIFE, every file). It samples the actual painted background behind `#navWrap` at three x-positions per scroll tick, averages relative luminance, and toggles `.on-light` (charcoal text) above a threshold of 150. Reading the live background rather than tagging sections means it keeps working when light sections are added. Full-bleed overlays that darken a light section from above carry `pointer-events:none`, so `elementsFromPoint` can't see them — they're listed in the `DARK_OVERLAYS` array (currently `['veil']`) and tested by geometry/opacity instead. **If you add another full-bleed dark overlay, add its id to `DARK_OVERLAYS` in all twelve files.**
 
 **Single-column grid tracks need `minmax(0,1fr)`, not `1fr`.** A `1fr` track floors at its content's min-width, so one nowrap child (the detail page's tab row) inflates the whole column past a narrow viewport instead of scrolling inside its own `overflow-x:auto` container. Every stacking rule in the Section VI media queries uses `minmax(0,…)` for this reason.
 
@@ -1145,7 +1209,7 @@ The portrait is requested at `w=900&h=1200&fit=crop&crop=focalpoint`, so the
 **hotspot steers the crop** — worth setting on the face, because the card is 3:4
 and the copy covers its bottom third.
 
-**`services.html` is the only page still entirely hand-edited**, and
+**`services.html` and `emi.html` are the only pages still entirely hand-edited**, and
 `project.html` keeps a hand-written Romal Kirti fallback for when it is opened
 with no `?p=`.
 
@@ -1377,7 +1441,7 @@ the client has not published anything.
 is a phone number rather than a link, and it shipped broken: the client typed
 **`https://wa.me/9177740 00939`** — the number spaced as it is printed — and
 `wa.me` takes bare digits, so the href could never resolve. `waHref()` in the
-footer block of all eleven files now reconstructs it from whatever is in the
+footer block of all twelve files now reconstructs it from whatever is in the
 field: a `wa.me` link, an `api.whatsapp.com/send?phone=` one, or the bare number
 in any spacing. Five things about it:
 
@@ -1407,7 +1471,7 @@ is right has teeth.
 
 **Site settings.** A singleton (`site-settings`) holding the **social handles**
 and the footer's telephone, email, address and copyright line. Its block is
-identical in all ten files that have a footer and reads one document, so the number that used to
+identical in all eleven files that have a footer and reads one document, so the number that used to
 be typed into every footer is now edited once. The four social icons were
 hard-coded with `href="#"`; they are now drawn from the CMS — the SVG paths live
 in an `ICON` map in that block, so adding a network is one entry there plus one
@@ -2065,8 +2129,8 @@ The Studio is hosted at <https://raajlaxmi.sanity.studio> (project `lc9w15ba`);
 `npm run deploy` in `studio/` republishes it after a schema change.
 
 Setup — project id, CORS origins, dataset visibility — is in `studio/README.md`.
-**The id must be set in twelve places**: `studio/.env` and the `SANITY` block in
-the `<head>` of each of the eleven HTML files. That is more files than before but
+**The id must be set in thirteen places**: `studio/.env` and the `SANITY` block in
+the `<head>` of each of the twelve HTML files. That is more files than before but
 one block per file instead of two or three — the per-block `const SANITY = {…}`
 objects are gone, so there is exactly one place per page that names the project.
 The id also appears a second time in each file, in the `preconnect` href, which
@@ -2102,7 +2166,7 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
   section holds one screen*.
 - `quote-strip.png` (the Vikram Raajlaxmi quote banner) has been **deleted** — Section III's `.sp-quote-img` figure was removed earlier. Recoverable from git if the quote is ever wanted back.
 - The root-level `Generate_*.jpeg` / `download.png` / `Minimalist_*.jpeg` source art has been **deleted** — it was working material, not site assets. `footer.png`, `Services_start.png`, the seals and the sketches are all still referenced and remain.
-- **Favicon**: `favicon.ico` (16/32/48, at the repo root so browsers find it unprompted) plus `assets/favicon-32.png`, `assets/favicon-192.png` and `assets/apple-touch-icon.png` (180). All eleven pages link them from `<head>`, right after `</title>`. Cut from the logo's building glyph with its dark ground **keyed out to transparency** (unmatted, so no dark fringe survives onto a light tab bar), squared up and centred with ~12% margin — the mark has to survive being read at 16px, so it sits deliberately large in frame.
+- **Favicon**: `favicon.ico` (16/32/48, at the repo root so browsers find it unprompted) plus `assets/favicon-32.png`, `assets/favicon-192.png` and `assets/apple-touch-icon.png` (180). All twelve pages link them from `<head>`, right after `</title>`. Cut from the logo's building glyph with its dark ground **keyed out to transparency** (unmatted, so no dark fringe survives onto a light tab bar), squared up and centred with ~12% margin — the mark has to survive being read at 16px, so it sits deliberately large in frame.
 - The logo ships as **two external PNGs**, `assets/logo.png` (brown/charcoal ink, for ivory grounds) and `assets/logo-light.png` (gold/cream ink, for the dark navbar **and the footer** — `.ft-mark`, which used to be the word RAAJLAXMI set in Cinzel with a tagline span under it; the artwork already carries both, so the text version was removed), both ~17KB with a transparent ground. The nav carries both stacked inside `.brand`; `.nav-wrap.on-light` crossfades between them via opacity, replacing the old `filter:` hack. Regenerating either from a new master means keying out its flat background and re-cutting both variants — edit them as a pair or the two states drift.
 
 ## Known content placeholders
