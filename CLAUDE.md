@@ -10,14 +10,68 @@ Deployed to Netlify from the CLI. There is no build step — but **do not publis
 
 `README.md` was rewritten on 26 Sep and now describes this build accurately (it previously documented a seven-section, single-file version that no longer exists). It is the public GitHub landing page; **CLAUDE.md is the detailed reference** — keep architecture notes here, not there.
 
-## Where this stands (handover, 30 Oct 2026)
+## Where this stands (handover, 8 Nov 2026)
 
 The site is **built, deployed and live** at
 <https://raajlaxmi-site.netlify.app> (Netlify team `magnus realtorsmktg`,
 deployed from `magnusrealtorsmktg-coder/raajlaxmi-site` on GitHub), and **almost
-every page is now driven by Sanity** — see *Content management*. Construction is essentially done.
-What remains is **content** the client has to supply, plus the two launch
-blockers below.
+every page is now driven by Sanity** — see *Content management*. Construction is
+essentially done and `main` is pushed and clean at `ed7975f`.
+
+**THE ONE THING BLOCKING LAUNCH IS THE DOMAIN**, and it is not a code job — see
+*The domain cutover*. Everything else below is content the client owes or a
+decision only they can make.
+
+### Start here if you are picking this up cold
+
+This file is long because the page is full of decisions that look arbitrary
+and are not. The ones that will cost you an afternoon if you do not know them:
+
+| before you touch… | read |
+|---|---|
+| anything in the shared chrome | *The `<head>` CSS is duplicated across all twelve files* — nav, cursor, footer, loader and the `:root` tokens live in twelve copies |
+| any Sanity query | *Every query starts in the document `<head>`* — the query text lives in one place per file and `get` memoises on the string |
+| a collection page | the three files are clones; a fix goes in all three |
+| a `project` document in a script | *Drafts shadow the live site* — a token-authenticated query sees drafts, the public API does not, and this has bitten twice |
+| the services band's height | *The services page runs a film* — the ratio is pinned by a watermark burnt into the footage, not by taste |
+| a video of any kind | *Hero, About and Why can each take a video* and the encode tables under it; every client upload so far has been a 60–265 MB master |
+| a headless check | *Verifying locally — and one headless trap* — and measure with CDP device metrics, never `--window-size --screenshot` |
+
+**Deploys:** `git push origin main` publishes the site. The Studio is separate
+and **Claude Code cannot run either** — the classifier blocks both. Hand the
+command over.
+
+**TWO THINGS ARE WAITING ON A COMMAND SOMEONE HAS TO RUN BY HAND:**
+
+1. **The Studio needs redeploying.** `cd studio && npm run build && npx sanity
+   deploy --no-build -y`. The `stages` tick-boxes shipped in the code on 7 Nov
+   but the deployed Studio still serves the old single-choice **Listing**
+   radio, so the client cannot put a project on two pages themselves. The data
+   is already correct either way. Verified 8 Nov: the live schema carries
+   `soldOut` and `Brochure (PDF)` but not `Listings`. Claude Code cannot run
+   this — the classifier blocks `sanity deploy`.
+2. **Gmail forwarding** from `rajjlaxmi20@gmail.com` to whoever on the client's
+   side should read enquiries. Until it is set up **an enquiry exists in
+   exactly one inbox and nowhere else** — see *The forms post to Web3Forms*.
+
+### The domain cutover (not done)
+
+`raajlaxmi.com` still points at Hostinger. The plan, settled on 6 Nov:
+
+1. Client renews the Hostinger **Business** plan for 24 months (₹17,813.28 —
+   3.3x cheaper over two years than hosting separately from email, and it
+   covers both domains' mailboxes). **Never remove `raajlaxmi.com` from the
+   plan**: the free email entitlement is attached to the domain on it.
+2. Confirm both email rows read **2028** before touching DNS.
+3. Then, and only then: delete the apex `A` records (88.223.91.x /
+   185.124.137.x) and the `CNAME www → www.raajlaxmi.com.cdn.hstgr.net`; add
+   `A @ 75.2.60.5` and `CNAME www → raajlaxmi-site.netlify.app`. **Touch
+   nothing else** — MX, SPF, DKIM and DMARC are what keep the 21 mailboxes
+   working and are independent of the A/CNAME records.
+4. **Add the new origin to Sanity's CORS allowlist in the same sitting.** This
+   is the step that fails silently: a missing origin does not error, the site
+   simply falls through to the placeholder content written into the HTML —
+   eight fictional Mumbai projects and five invented testimonials.
 
 ### Deploy: pushing to main is the deploy
 
@@ -88,50 +142,67 @@ compositions. `--window-size` is honored for `--screenshot` but **not** for
 `--dump-dom`, where `innerWidth` reports 756 regardless — size an iframe
 instead of trusting that number.
 
-### The launch blockers
+### What the CMS holds, measured 8 Nov
 
-- ~~**Neither form has a backend.**~~ **Both post to Web3Forms (5 Nov)** and
-  the round trip is verified end to end — see *The forms post to Web3Forms*.
-  **The one open risk is that there is now no second copy**: an enquiry exists
-  only as mail in `rajjlaxmi20@gmail.com`, and Gmail forwarding to whoever on
-  the client's side should read it **has not been set up yet**.
-- **The project detail pages are nearly empty.** Of 14 projects: **0 have a
-  gallery, 1 has an overview, 1 has specs, 1 has a price, and 7 of 14 have a
-  configuration**. Cards look right; `project.html?p=<slug>` is sparse, and the
-  7 with no configuration cannot appear in any property-type search.
+**Re-run these counts rather than trusting them.** The client edits daily, and
+often while you are working — twice now a document has changed shape between
+two queries in the same session.
 
-### Content the client still owes
-
-| Thing | State on 30 Oct |
+| | state |
 |---|---|
-| Projects | **14, all filed `completed`** — so the Ongoing page is empty and Redevelopment still shows its 3 placeholder cards |
-| Reviews | **6 real Google reviews**, all with Google links — the invented five are gone from the CMS |
-| Owners | **5 real people, each with a portrait and a role; no bios.** The `.ow-bio` line is removed per card when the field is empty, so the cards run name + role |
-| Client photo slider | empty, so the whole block stays hidden |
-| Social handles | **YouTube and WhatsApp are set** (6 Nov); Instagram, Facebook, LinkedIn and X are not, so only those two show |
-| Hero background | a photograph is set; no video |
+| Projects | **16.** Completed 9, Ongoing 4, Redevelopment 4 — Krishna Niwas is in two listings, which is what `stages` exists for |
+| Sold out | **8**, all of them Completed except Raajlaxmi Avenue (Redevelopment) |
+| Detail-page content | **0 of 16 have a gallery**, 1 an overview, 3 specs, 1 a price, 7 a configuration. Cards look right; `project.html?p=<slug>` is still sparse, and the 9 with no configuration cannot appear in any property-type search |
+| Brochures | **4 uploaded** (Nakshatra Auris 18.0 MB, Shanti Niwas 7.7 MB, Rajlaxxmi Park 5.0 MB, Aarvi Apartment 0.4 MB) |
+| Reviews | **6 real Google reviews**, all with Google links |
+| Client photo slider | **8 photographs** — the block is live now, no longer hidden |
+| Owners | **5 real people, each with a portrait and a role; no bios.** The card runs name + role and the panel is where a bio would show |
+| Social handles | **YouTube, WhatsApp, Instagram.** Facebook, LinkedIn and X are unset, so they do not render |
+| Hero background | the desktop film; `heroVideoMobile` is **still empty**, so phones use the committed `assets/hero-mobile.mp4` fallback |
 
-Setting any project's **Listing** to Ongoing or Redevelopment fills those pages
-and retires the placeholders for good.
+**THE BROCHURES ARE NOT LINEARISED — none of the four.** Checked by reading the
+first 2KB of each: no `/Linearized`. The asset CDN answers range requests, so a
+linearised PDF would paint page one immediately; these cannot, so the whole
+file has to arrive first. At 18 MB that is roughly **29 seconds of blank
+screen on a 5 Mbps phone**. Three of the four have `_compressed` in the
+filename, so the client did act on the size advice; Nakshatra Auris did not.
+Re-saving with Fast Web View, or `qpdf --linearize`, fixes this without
+touching the content. They serve `content-type: application/pdf` and
+`content-disposition: inline`, so they do open in the browser as intended.
 
 ### Open decisions for the client
 
+- **Which phone number is right.** The contact page prints `+91 9890823288`
+  and the footer `+91 77740 00939`. This stopped being cosmetic when the
+  footer's number started receiving WhatsApp messages — see *The WhatsApp
+  handle is rebuilt, not trusted*.
+- **The footer prints `info@raajlaxmigroup.com`, which does not exist.** It is
+  not one of the 21 Hostinger mailboxes; `info@raajlaxmi.com` is.
+- **Two badges disagree with their listing.** Shanti Niwas is filed
+  Redevelopment and Raajlaxmi Avenue is Redevelopment-and-sold-out, but both
+  print a **Completed** badge. That is `status` (free text) overriding the
+  listing label, working as designed — clearing `status` makes the badge follow
+  the listing.
+- **An orphan draft: a duplicate `Rajlaxxmi Park`**,
+  `drafts.26839014-0fed-4e80-9bb1-5ffe9f513cac`, created 10:40:39 on 7 Nov and
+  untouched two seconds later. It has never been on the site. Publish or delete
+  it in the Studio; nothing automated should adopt it.
 - **13+ years** (Section II) contradicts the 2004 timeline and the "Est. 2004"
   seal artwork, which imply ~22 years. One founding date has to win; the seals
   are images, so that side needs a re-export, not a code change.
-- ~~**The services philosophy plate has a typo painted into it**~~ — **fixed on
-  5 Nov, and not by a redraw.** The plate was "feel as carefully designed the
-  homes we create", missing the second "as", while the live copy below 820px
-  was correct, so the page said two different things depending on width. Both
-  plates on that page are now film with the copy set as live HTML over them
-  (see *The services page runs a film*), so the only surviving version is the
-  correct one in the markup. The artwork is no longer served.
-- **The associates plate carries three copy errors** (see *Photography*), and
-  the **contact page and footer print different phone numbers**
-  (`+91 9890823288` vs `+91 77740 00939`). Both are CMS-editable now; someone
-  has to say which is right.
+- **The associates plate carries three copy errors** (see *Photography*). Only
+  a redraw fixes the plate; the `alt` text already spells all three correctly.
+- **`services.html` still has no CMS behind it**, and neither does `emi.html`.
+  Both are hand-edited.
+- **The EMI calculator is not in the navigation bar**, by measurement rather
+  than preference — see *The EMI calculator*. Putting it there means dropping
+  one of the five existing items, which is the client's call.
 - `project.html`'s hand-written fallback (no `?p=`) is still the client's
-  unverified mock: fact-bar figures, landmark distances and the direct line.
+  unverified mock, and it now describes **Romal Kirti, which they deleted**.
+  Nothing on the site links to it (every route carries `?p=`), so it is a
+  latent oddity rather than a live bug.
+- ~~**The services philosophy plate has a typo painted into it**~~ — fixed on
+  5 Nov by deleting the plate; the band is film with no copy over it at all.
 
 ### History worth knowing
 
@@ -722,6 +793,8 @@ hand-written Romal Kirti page — that is the fallback. The home page's
 Signature Projects cards **no longer land there**: each one now resolves its own
 `project.html?p=<slug>` (see *The signature cards point at projects*), and a bare
 `project.html` typed into a card's link field is ignored for exactly that reason.
+
+### The EMI calculator
 
 `emi.html` — one section, `#emi` ("Section XIII — EMI Calculator"), added
 7 Nov. A visitor types any property price and gets the monthly instalment, the
@@ -1542,7 +1615,9 @@ The field is **`gallery`**, not `photos`, and the intro is **`introText`**, not
 `intro` — worth knowing before concluding from a hand-written GROQ query that
 the client has not published anything.
 
-**The WhatsApp handle is rebuilt, not trusted.** It is the one social entry that
+### The WhatsApp handle is rebuilt, not trusted
+
+It is the one social entry that
 is a phone number rather than a link, and it shipped broken: the client typed
 **`https://wa.me/9177740 00939`** — the number spaced as it is printed — and
 `wa.me` takes bare digits, so the href could never resolve. `waHref()` in the
@@ -2278,15 +2353,16 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
 
 **`projects-ongoing.html` / `projects-redevelopment.html`** are copies of `projects.html` with four differences: the `<title>`, the `.col-head` label/title/intro, `STATUS` hard-coded instead of read from the URL, and the Western Line banner swapped: the ongoing page carries its own (`assets/projects/western-line-ongoing.jpg`, "Rising Along the Western Line" — Vasai / Virar / Saphale, five projects), and the redevelopment page carries the **associates plate** (`assets/projects/associates.jpg`) in that slot instead — it has no corridor banner of its own. Both banners are client artwork used whole, same rules as the completed one: the band takes the artwork's ground colour so it dissolves, and below 760px it scrolls sideways at a fixed 900px because the station names are painted in. The redevelopment page additionally carries **placeholder cards** and one extra rule in its Sanity handler — `if(!result.some(inStatus)) return;` — so the live list is ignored while it contains no redevelopment project, which would otherwise blank the page. Publish one with that status and the placeholders are never seen again.
 
-- **The dataset is the client's own (checked 4 Nov 2026).** The seeded placeholders
-  are gone; there are **15 real projects with real photography** (14 until Shanti
-  Niwas's draft was published on 4 Nov), and **every one is
-  filed as `completed`**. So the **Ongoing page is empty** (it shows its "nothing listed
-  yet" line) and Redevelopment still shows placeholders. Midas Glory and Nakshatra Auris
-  carry the badge "Ongoing" while filed as Completed — the status/stage split working as
-  designed, but probably not what was meant; their **Listing** wants changing. Note the
-  count fell from 16 to 14 between 29 and 30 Oct: the client deletes as well as adds, so
-  **re-check counts rather than trusting this line**.
+- **The dataset is the client's own**, with real photography; the seeded
+  placeholders are long gone. For the live counts see *What the CMS holds* in
+  the handover at the top, and **re-run them rather than trusting any number
+  written down here** — the count has gone 16 → 14 → 16 across ten days, and
+  the client refiles as well as adds and deletes.
+- **The Redevelopment page's placeholders are no longer reachable** (four
+  projects are filed there since 7 Nov), but the markup and the
+  `if(!result.some(inStatus)) return;` guard both remain and are still
+  correct: with Sanity unreachable the placeholders are what shows, which is
+  the same fallback every other page makes.
 - **`Raajlaxmi Tower`'s slug is the literal string `Raajlaxmi Tower`** — a capital and a
   space, not kebab-case — so its detail link is `project.html?p=Raajlaxmi%20Tower`. It
   resolves, but it is the only slug in the dataset like that and it should be corrected to
