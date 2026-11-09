@@ -2122,7 +2122,7 @@
       <a href="testimonials.html" data-hover>Testimonials</a>
       <a href="contact.html" data-hover>Contact</a>
     </div>
-    <a href="contact.html#ctForm" class="nav-cta" data-hover data-magnetic>Book Consultation</a>
+    <a href="contact.html#ctForm" class="nav-cta" data-hover data-magnetic>Enquiry Now</a>
     <div class="burger" id="burger"><span></span><span></span><span></span></div>
   </nav>
 </div>
@@ -2133,7 +2133,7 @@
   <a href="emi.html">EMI Calculator</a>
   <a href="services.html">Services</a>
   <a href="testimonials.html">Testimonials</a><a href="contact.html">Contact</a>
-  <a href="contact.html#ctForm" class="sheet-cta">Book Consultation</a>
+  <a href="contact.html#ctForm" class="sheet-cta">Enquiry Now</a>
 </div>
 
 <main>
@@ -2160,10 +2160,18 @@
                aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor"
                stroke-width="1.3" stroke-linecap="round"/></svg>
         </button>
+        <!-- THE PLACEHOLDER OPTION IS THE HEADING on all three fields, so none of
+             them carries a <label>: the word would otherwise be printed twice, once
+             small and gold above the control and once inside it. `aria-label` is what
+             names each select for a screen reader now. The caps are typed in rather
+             than set in CSS because `text-transform` on an <option> is not honoured
+             reliably, and these selects carry none in any case.
+             Both fillers (`fill()` in the HERO SEARCH block and `paintSelect()` in the
+             home-page content block) keep the `option[value=""]` node and replace only
+             its siblings, so these three words survive the Sanity rebuild. -->
         <div class="hs-field">
-          <label for="hsType">Property</label>
-          <select id="hsType" name="type">
-            <option value="">Any residence</option>
+          <select id="hsType" name="type" aria-label="Property">
+            <option value="">PROPERTY</option>
             <option>3 BHK</option>
             <option>4 BHK</option>
             <option>Penthouse</option>
@@ -2171,9 +2179,8 @@
           </select>
         </div>
         <div class="hs-field">
-          <label for="hsLoc">Location</label>
-          <select id="hsLoc" name="location">
-            <option value="">Any location</option>
+          <select id="hsLoc" name="location" aria-label="Location">
+            <option value="">LOCATION</option>
             <option>Gomti Nagar</option>
             <option>Hazratganj</option>
             <option>Sushant Golf City</option>
@@ -2181,9 +2188,8 @@
           </select>
         </div>
         <div class="hs-field">
-          <label for="hsBudget">Budget</label>
-          <select id="hsBudget" name="budget">
-            <option value="">Any budget</option>
+          <select id="hsBudget" name="budget" aria-label="Budget">
+            <option value="">BUDGET</option>
             <option>₹18 – 25 Lacs</option>
             <option>₹35 – 45 Lacs</option>
             <option>₹45 – 65 Lacs</option>

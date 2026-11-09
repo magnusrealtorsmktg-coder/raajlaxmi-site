@@ -1259,7 +1259,18 @@ is **on from the start and lifts under `.on-light`** instead — over ivory the 
 is already charcoal and a dark veil there would be wrong. Shadows are cleared in the
 `.on-light` state, where they only muddy charcoal.
 
-**The `Book Consultation` button is a filled gold pill, and carries
+**The nav CTA reads `Enquiry Now` (9 Nov).** It was `Book Consultation`
+until then; the client asked for the change and it was made in all twelve
+files, in the bar and in the mobile sheet, 24 occurrences. **Both `.nav-cta`
+and `.sheet-cta` carry `text-transform:uppercase`**, so the markup keeps the
+file's Title Case convention and the button still renders ENQUIRY NOW — do not
+"fix" the source to caps thinking the rendering depends on it. **The three
+longer CTAs elsewhere were NOT part of that request and still say
+consultation**: `Schedule a Consultation` on the three collection pages,
+`Book a Private Consultation` on `services.html` and `contact.html`, and
+`Schedule a Site Visit` on the detail page.
+
+**The `Enquiry Now` button is a filled gold pill, and carries
 `position:relative`.** That last part is load-bearing: `.nav-wrap::before` is the
 scroll scrim and it is absolutely positioned, so it paints over any in-flow
 sibling. The nav links already carry `relative` for their underline and so escape
@@ -1286,6 +1297,34 @@ are **folded on a punctuation-free key** so one town does not appear twice and a
 search matches both spellings. Both blocks fill the same `<select>`s and their
 fetches race, so the project-derived list sets `dataset.src = 'projects'` and the
 CMS filler stands down — whichever lands second, the real data wins.
+
+**The hero filter's placeholder option IS its heading, and the three fields
+carry no `<label>` (9 Nov).** They used to read `Any residence` / `Any location`
+/ `Any budget` inside the control with a small gold `PROPERTY` / `LOCATION` /
+`BUDGET` label above it. The client asked for the headings in the control; the
+labels went with them rather than printing each word twice.
+
+- **The caps are typed into the markup, not set in CSS.** `text-transform` on
+  an `<option>` is not honoured reliably, and `.hs-field select` carries none
+  anyway — measured `textTransform: none`. So `PROPERTY` is literal text.
+- **`aria-label` on each `<select>` replaces the label.** Dropping the `<label>`
+  would otherwise leave three controls with no accessible name.
+- **The placeholder survives the Sanity rebuild for free.** Both fillers —
+  `fill()` in the HERO SEARCH block and `paintSelect()` in the home-page content
+  block — do `const keep = sel.querySelector('option[value=""]')`, empty the
+  select and put that same node back before appending the CMS values, so the
+  node is preserved by reference and its text is irrelevant to them. Nothing
+  about this changes when the client edits `heroPropertyOptions`.
+- **`.hs-field > label` is now dead** in `index.html`, in the base rule and in
+  the phone type-floor tier. Both are left in place: they sit in the stylesheet
+  that is byte-identical across all twelve files, and deleting them from one
+  copy would start the drift that block exists to prevent.
+- Measured after: the form is **77px at 1440** (was ~85) and **125px at 1024**
+  (was ~142) — one label row shorter, two where it wraps. The phone capsule is
+  unchanged closed at **55px** and **282px open** (was 343), still clearing the
+  navbar, still reporting the choice (`3 BHK · Hazratganj`) and still reading
+  "Find your home" with nothing set. No overflow and no console errors at
+  1440x900, 1024x800, 390x844, 360x640 or 844x390.
 
 **Budget is the exception: it is bands, not prices, and it is always shown.** It
 used to be filled from the projects like the other two — a dropdown of the literal
@@ -1352,7 +1391,9 @@ exists for.
 
 **2. The label type fell under 11px.** The site sets its small-caps labels
 between .58rem and .68rem with .16em to .34em of tracking; on a phone that
-measured 9.3px for the hero's PROPERTY / LOCATION / BUDGET, 9.6px for a project
+measured 9.3px for the hero's PROPERTY / LOCATION / BUDGET labels (those
+labels are gone now — see *The hero filter's placeholder option IS its
+heading*), 9.6px for a project
 card's category, 9.9px for the lead popup's eyebrow and the detail page's fact
 labels, and 9.0px for the brand-card trades. That is under the ~11px both
 platforms treat as the floor for secondary text, and worse than the number looks
