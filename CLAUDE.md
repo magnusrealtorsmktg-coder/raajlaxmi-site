@@ -2372,10 +2372,12 @@ holds one screen.
   than the photograph's own 3:2: at 3:2 it has to be ~630px tall to be 945 wide,
   and the heading then cannot share the screen with it.
 - **The stage is narrowed to the plate, not the plate centred inside a
-  full-width stage.** The rotating seal is a *sibling* of `.why-feature` — it has
-  to be, because the plate is `overflow:hidden` and the seal overhangs its corner
-  — so it only stays pinned to that corner when the stage is exactly the plate's
-  width.
+  full-width stage.** The reason used to be the rotating seal: it is a *sibling*
+  of `.why-feature`, because the plate is `overflow:hidden` and the seal
+  overhung its corner, so it only stayed pinned there while the stage was
+  exactly the plate's width. **That seal was removed on 9 Nov at the client's
+  request** — the plate carries no mark now — but keep the stage narrow anyway,
+  because it is also what gives the 2:1 crop its width.
 - The header was compressed to make room: top padding
   `clamp(8.4rem,calc(7.4rem + 1.6vh),9.4rem)` (it was `clamp(6rem,17vh,170px)`,
   which is the gap the client asked to cut), `.why-title` down from
@@ -2393,7 +2395,7 @@ identical declaration**, so a blind search-and-replace hits both.
 
 Measured at 1920x1080, 1600x1000, 1536x864, 1440x900, 1366x768, 1280x800,
 1024x800 and 1024x640: ratio exactly 2.000, plate clear of the fold by 16–132px,
-seal still on its corner.
+and the ratio still exactly 2.000 after the seal was removed.
 
 **Studio sidebar**, in order: `Home page`; **All Projects** — which holds the
 browse-everything page's own content and then one folder per stage
@@ -2556,7 +2558,15 @@ by design, and `.env` is gitignored), but don't put a write token there.
 
 Photography is a mix of committed local files and `picsum.photos` placeholders layered over a tonal gradient fallback (so the composition holds offline).
 
-- Committed and referenced: `seal-top.png`, `seal-bottom.png`, `sketch-tower.jpg`, `house-sketch.jpg`, `floor-plan.jpg`, `floor-plan-l.jpg`, `assets/project-blueprint-left.png`, `assets/project-floral-right.png` (760x424, **no alpha** — every use of it is `mix-blend-mode:multiply` over a cream ground, on the three collection pages, `testimonials.html` and now the owner detail panel on `index.html`).
+- **`seal-top.png` is no longer referenced by anything** (259KB). Section III's
+  copy of it went on 9 Nov and Section IV's — the mark over the team photograph
+  — went the same day, both at the client's request. The file is still on disk
+  and still ships with the repo; it is client artwork, so it was left rather
+  than deleted, and `git rm` is all it takes. **`seal-bottom.png` is the only
+  seal left on the site**, by the closing quote in Section IV (`.why-seal2`).
+  `.seal-face`, `.seal-spin.auto` and `.seal-spin.scroll` are dead CSS and were
+  dead before any of this — no markup has ever carried them.
+- Committed and referenced: `seal-bottom.png`, `sketch-tower.jpg`, `house-sketch.jpg`, `floor-plan.jpg`, `floor-plan-l.jpg`, `assets/project-blueprint-left.png`, `assets/project-floral-right.png` (760x424, **no alpha** — every use of it is `mix-blend-mode:multiply` over a cream ground, on the three collection pages, `testimonials.html` and now the owner detail panel on `index.html`).
 - `assets/sold-out.png` is the SOLD OUT stamp on the collection cards (506x294, 24KB, **with a real alpha channel**, trimmed to its ink). Client artwork, already drawn on the diagonal — do not add a `transform:rotate`. Its 1.7211 ratio is hard-coded into the card's `margin-top` calculation, so a re-crop means recomputing that; see *Sold-out properties sink to the foot of the collection*.
 - `assets/cert-maharera.png` and `assets/cert-credai-mchi.png` are the accreditation marks in Section II's `.ab-creds` row, cut out of one flat client sheet and keyed transparent. Their captions are live HTML, not baked into the artwork, so they reflow and stay readable — keep it that way if the marks are ever re-exported.
 - `assets/projects/western-line.jpg` is the corridor banner (1923x514, JPEG q94 — PNG was 498KB for no visible gain). Its copy is painted into the artwork, so the same content is written out in the `img`'s `alt` for screen readers and search. The band's background is set to the artwork's own ground (`#F4F0EF`) so the banner dissolves into it rather than showing as a rectangle, and one stray white pixel column was cropped off the left edge to make that work.
@@ -2660,17 +2670,19 @@ document `<head>`*, which is where the reasoning and the measurements are. Each
 page preconnects to `apicdn.sanity.io` and `cdn.sanity.io`. The three rotating
 seals on `index.html` carry `loading="lazy" decoding="async"`: they are
 `seal-top.png` (259KB) and `seal-bottom.png` (**716KB**). Section III's copy was
-removed on 9 Nov, so **two remain**, both in Section IV; they sat in Sections
-III and IV when this was written, well below the fold, and together they were ~975KB of decoration
+both removed on 9 Nov, so **one remains** — `seal-bottom.png`, by the closing
+quote in Section IV. `seal-top.png` is not requested by any page now. They sat
+in Sections III and IV when this was written, well below the fold, and together they were ~975KB of decoration
 competing with the first screen on a cold load. Nothing about how they look
 changed.
 
 ### Still to do
 
-1. **`seal-bottom.png` is 716KB for a 620×620 mark** and `seal-top.png` 258KB for
-   640×640 — between them the heaviest thing on the home page after the hero.
-   They are flat gold line-work on transparency, so a re-export should be a
-   fraction of that. This is an asset swap, not a code change.
+1. **`seal-bottom.png` is 716KB for a 620×620 mark** — now that `seal-top.png`
+   is no longer requested by any page, this one is the heaviest thing on the
+   home page after the hero on its own. It is flat gold line-work on
+   transparency, so a re-export should be a fraction of that. This is an asset
+   swap, not a code change.
 2. ~~`index.html` carries ~665KB of base64 (the hero JPEG)~~ — **done, 5 Nov.**
    The blob is gone and the file is **220KB**, down from 884KB; the still is
    `assets/hero-still.jpg`, a frame of the film, set from CSS. See *The still

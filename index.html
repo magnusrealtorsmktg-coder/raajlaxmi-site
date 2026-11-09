@@ -1177,10 +1177,12 @@
      About plate, so a video is shown whole rather than cropped to fill */
   .why-feature .cms-vid{object-fit:contain;}
 
-  /* rotating gold emblem, upper-left of the image */
+  /* THE SEAL OVER THE TEAM PHOTOGRAPH IS GONE (9 Nov, client's request), so
+     `.seal` now dresses `.why-seal2` — the medallion by the closing quote —
+     and nothing else. `.why-stage` is still narrowed to the plate's exact
+     width, but for the 2:1 crop rather than to keep a seal on its corner. */
   .seal{position:absolute;width:clamp(6rem,9vw,7.4rem);height:clamp(6rem,9vw,7.4rem);
     display:grid;place-items:center;z-index:4;}
-  .why-seal{top:-2.2rem;left:clamp(-1rem,1vw,1.5rem);}
   .seal-spin{position:absolute;inset:0;color:var(--gold);}
   .seal-spin svg{width:100%;height:100%;display:block;}
   .seal-img{width:100%;height:100%;display:block;object-fit:contain;}
@@ -1194,9 +1196,6 @@
   .seal-face .mono{font-size:clamp(1.6rem,2.4vw,2.1rem);font-weight:500;}
   .seal-face .sub{font-family:"Inter",sans-serif;font-size:.42rem;letter-spacing:.18em;
     text-transform:uppercase;margin-top:.15rem;color:rgba(176,138,62,.9);}
-  /* an ivory disc behind the mark so it reads as an embossed stamp on the photo */
-  .why-seal{background:radial-gradient(circle,#F4F1EA 62%,rgba(248,246,242,0) 72%);border-radius:50%;}
-
   /* ---- editorial list + timeline ---- */
   .why-grid{display:grid;grid-template-columns:65fr 35fr;gap:clamp(2.5rem,5vw,5rem);
     margin-top:clamp(4rem,8vw,7rem);align-items:start;}
@@ -2425,12 +2424,6 @@
                style="background-image:url('assets/why-team.jpg'),linear-gradient(160deg,#20304a,#54687f)"></div>
         </div>
 
-        <div class="seal why-seal">
-          <div class="seal-spin">
-            <img class="seal-img" src="seal-top.png" loading="lazy" decoding="async" alt="Crafting Legacies · R · Est. 2004">
-          </div>
-        </div>
-
       </div>
 
       <!-- editorial list + timeline -->
@@ -3149,7 +3142,7 @@
 
 
 
-    /* slow parallax on blueprints + feature image, and a lazy seal spin */
+    /* slow parallax on the corner blueprints */
     let live=false, ticking=false;
     function frame(){
       ticking=false;
