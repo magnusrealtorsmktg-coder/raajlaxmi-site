@@ -929,6 +929,58 @@ of slack**. The practical floor is about **600px of window height**, where it
 is level to within a few pixels. Phones are deliberately excluded and scroll as
 before. No horizontal overflow anywhere.
 
+### The left column: four cards under the heading, and a render under them
+
+Reworked 9 Nov from a client sketch. The column was label → heading → rule →
+invitation paragraph → a 2x2 grid of plain text quadrants separated by
+hairlines. It is now label → heading → rule → **four white cards** → **the
+building render**, and the paragraph is gone.
+
+- **`.ct-say` and its markup are DELETED**, and `introText` is no longer
+  queried or painted. The field stays on the `contact-page` document and in
+  the schema — clearing it would destroy the client's copy to tidy a form — so
+  this sets the same quiet trap as `cardText` and `heroHeadline`: **editing
+  `introText` in the Studio now does nothing.**
+- **The card's inner structure is untouched on purpose.** `.ct-item` still
+  holds `.ct-ic` and a `div` of `h4` + `a`/`p`, because the CMS block fills
+  exactly that shape and `fit()` reuses these nodes rather than rebuilding
+  them. Only the CSS changed, plus the `<wbr>` below.
+- **THE CARD IS A COLUMN, NOT A ROW.** Four across leaves each card about
+  148–179px on a desktop; the icon and the text cannot sit side by side in
+  that, so the icon goes above.
+- **The address decides the height.** Three cards hold a line or two and the
+  fourth holds the office address, so the grid stretches all four to match it:
+  **211–229px at four across against the live CMS text**, which is
+  considerably longer than the markup fallback. Measure against the live
+  document, not the file.
+- **`<wbr>` after the `@`, in the markup and in the painter.**
+  `info@raajlaxmigroup.com` is 23 unbroken characters, wider than a 148px
+  card. `overflow-wrap:anywhere` is the safety net that stops it pushing the
+  track out of alignment, but left alone it breaks at the last character that
+  fits — `…raajlaxmigroup.co` / `m`, which reads as a typo. The painter adds
+  the same `<wbr>` after escaping, so the only markup it ever injects is that
+  tag and `<br>`.
+- **Three column counts, and the middle one is the surprising part.** Four
+  across at ≥1366px, **two between 1081 and 1365**, four again below 1081, two
+  below 620. The left column is at its NARROWEST at 1081 — 494px, because the
+  section is still two columns there — and gets wider again the moment it
+  stacks and takes the full page. So four across is right on either side of
+  that band and wrong inside it.
+- **`assets/contact-render.jpg`** (1088x460, 60KB) closes the column. Its own
+  ground samples `#F8F6F2`, exactly this section's background, so it dissolves
+  into the page with no band or border — the same trick the Western-line
+  corridor banners use. It is `aria-hidden` with an empty `alt`: it is
+  decoration, and the section's own heading says what the page is.
+  **It displays up to 922 CSS px wide below 1080px**, so it is soft on a
+  retina screen; ask the client for a wider export, as with the associates
+  plate.
+
+Measured at 1920x1080, 1600x997, 1440x900, 1366x768, 1280x800, 1081x900,
+1024x800, 768x1024, 620x900, 390x844, 360x640 and 280x653, against the live
+CMS text: four items at every size, the right column count in each band, no
+card ever wider than its track, the render always exactly the column's width,
+no horizontal overflow and no console exceptions.
+
 ### The card has no intro paragraph, and it never really had one
 
 **`cardText` is not painted and the paragraph is not in the markup** - removed
@@ -3082,6 +3134,7 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
   `.seal-face`, `.seal-spin.auto` and `.seal-spin.scroll` are dead CSS and were
   dead before any of this — no markup has ever carried them.
 - Committed and referenced: `seal-bottom.png`, `sketch-tower.jpg`, `house-sketch.jpg`, `floor-plan.jpg`, `floor-plan-l.jpg`, `assets/project-blueprint-left.png`, `assets/project-floral-right.png` (760x424, **no alpha** — every use of it is `mix-blend-mode:multiply` over a cream ground, on the three collection pages, `testimonials.html` and now the owner detail panel on `index.html`).
+- `assets/contact-render.jpg` is the faded tower render at the foot of `contact.html`'s left column (1088x460, 60KB, JPEG q88). Its ground is `#F8F6F2`, the same as the section, so it needs no band or border — see *The left column: four cards under the heading*. It came in at 1088px and displays up to 922 CSS px, so it is soft on retina; a wider export would fix it.
 - `assets/oc-received.png` is the **OC RECEIVED** mark on every collection card (272x262, 21KB, **real alpha channel**). Keyed out of the client's flat red-on-white original by colour-to-alpha against white, which un-composites the anti-aliased edges instead of leaving a halo, then quantised to 128 colours; verified against the source by recompositing over white. Its ratio is declared in the CSS as `aspect-ratio:272/262`, so a re-crop means changing that line.
 - `assets/sold-out.png` (506x294, 24KB) was the SOLD OUT stamp and is **referenced by nothing** since 9 Nov. Client artwork, so it was left on disk and still ships — the same call as `seal-top.png`. `git rm` is all it takes.
 - `assets/cert-maharera.png` and `assets/cert-credai-mchi.png` are the accreditation marks in Section II's `.ab-creds` row, cut out of one flat client sheet and keyed transparent. Their captions are live HTML, not baked into the artwork, so they reflow and stay readable — keep it that way if the marks are ever re-exported.
