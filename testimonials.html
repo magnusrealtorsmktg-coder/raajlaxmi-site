@@ -1303,6 +1303,12 @@
   /* ---- header ---- */
   .tm-head{text-align:center;max-width:980px;margin:0 auto;}
   .tm-head-reviews{margin-top:clamp(2.6rem,4.5vw,4rem);}
+  /* label + photo slider take the whole first screen (minus the section's top
+     padding), so the next heading never peeks in at the bottom. Only when the
+     slider is actually showing — with it hidden, a near-empty screen is worse. */
+  .tm-first:has(.tg:not([hidden])){
+    min-height:calc(100vh - clamp(8rem,16vh,180px));
+    min-height:calc(100svh - clamp(8rem,16vh,180px));}
   .tm-label{display:inline-block;font-family:"Inter",sans-serif;font-weight:600;
     font-size:14px;letter-spacing:6px;text-transform:uppercase;color:#C6A15B;
     opacity:0;transform:translateY(16px);
@@ -1854,6 +1860,9 @@
 
     <div class="tm-wrap">
 
+      <!-- first screen: page label + client photographs. Fills the viewport
+           so the reviews heading below starts just under the fold. -->
+      <div class="tm-first">
       <!-- header -->
       <header class="tm-head">
         <span class="tm-label">Testimonials</span>
@@ -1890,7 +1899,7 @@
           </button>
         </div>
       </div>
-
+      </div>
 
       <!-- reviews heading: sits under the client photographs, right above
            the carousel it introduces -->
