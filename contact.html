@@ -88,7 +88,10 @@
     page: '*[_id=="contact-page"][0]{\n' +
       '  label,heading,headingHighlight,introText,\n' +
       '  items[]{title,text,link},\n' +
-      '  cardTitle,cardText,cardButton,thanksTitle,thanksText,\n' +
+      /* cardText is deliberately NOT asked for: the card's intro paragraph
+         was removed on 9 Nov and nothing paints it. The field still exists on
+         the document and in the schema. */
+      '  cardTitle,cardButton,thanksTitle,thanksText,\n' +
       '  locationTitle,locationText,locationButton,geo\n' +
       '}',
 
@@ -1411,8 +1414,6 @@
   .ct-card h2{text-align:center;font-family:"Cormorant Garamond",serif;font-weight:600;
     font-size:clamp(1.5rem,2.3vw,2rem);line-height:1.15;color:var(--ink);}
   .ct-cdiv{width:5.5rem;height:1px;background:rgba(198,161,91,.55);margin:1rem auto;}
-  .ct-card .ct-lead{text-align:center;max-width:26rem;margin:0 auto clamp(1.4rem,2.2vw,1.9rem);
-    font-family:"Inter",sans-serif;font-size:.88rem;line-height:1.7;font-weight:300;color:var(--say);}
 
   /* ---- continue with Google ----
      The button itself is RENDERED BY GOOGLE into `#ctGoogBtn`, not drawn here,
@@ -1549,30 +1550,11 @@
      Measured on the live card before this: 795px at 1366x768 and 799px at
      1440x828, against roughly 670px and 730px of room once the fixed navbar
      is allowed for. */
-  /* THE CARD'S INTRO PARAGRAPH IS THE FIRST THING TO GO, and it is the only
-     content this file drops to make the fit. It costs 85px — measured — which
-     is most of what the fold was short by, and it is the one element in the
-     card carrying no function: the left-hand column of this very section
-     already opens with the same invitation in more words. Everything else in
-     the card is either a control or the heading over them.
-
-     1040px, not 900: the full-size card stands 905px, so it wants about
-     995px of window plus the navbar before it is comfortable. Above that —
-     a 1080p monitor and up — the paragraph shows.
-
-     If the client would rather never see it, clearing `cardText` on the
-     `contact-page` document removes it everywhere with no code change. If they
-     would rather have it at every size, it is this one rule to delete, and the
-     two tiers below then need roughly 85px more taken out of them. */
-  @media (min-width:621px) and (min-height:561px) and (max-height:1040px){
-    .ct-card .ct-lead{display:none;}
-  }
   @media (min-width:621px) and (min-height:561px) and (max-height:900px){
     .ct-card{--ct-gap:.74rem;--ct-pad:.96rem;--ct-area:5.8rem;--ct-send:60px;
       padding:clamp(1rem,1.7vw,1.6rem) clamp(1.4rem,2.6vw,2.6rem) clamp(1.4rem,2.3vw,2.1rem);}
     .ct-crest{margin-bottom:.45rem;transform:scale(.9);}
     .ct-cdiv{margin:.75rem auto;}
-    .ct-card .ct-lead{margin-bottom:1.1rem;line-height:1.62;}
     .ct-goog{margin-bottom:.95rem;}
     .ct-or{margin-top:.95rem;}
     .ct-consent{margin:.2rem 0 1rem;}
@@ -1583,7 +1565,6 @@
     .ct-card h2{font-size:clamp(1.35rem,2vw,1.7rem);}
     .ct-crest{transform:scale(.8);margin-bottom:.3rem;}
     .ct-cdiv{margin:.55rem auto;}
-    .ct-card .ct-lead{margin-bottom:.85rem;font-size:.84rem;line-height:1.55;}
     .ct-goog{margin-bottom:.75rem;}
     .ct-or{margin-top:.75rem;}
     .ct-consent{margin:.15rem 0 .8rem;}
@@ -1923,16 +1904,26 @@
           </svg>
           <h2>Book a Private Consultation</h2>
           <div class="ct-cdiv" aria-hidden="true"></div>
-          <!-- `ct-lead`, NOT `lead`. The lead POPUP's base rule is a bare
-               `.lead { position:fixed; inset:0; visibility:hidden; opacity:0 }`
-               in the stylesheet every page carries, and it matched this
-               paragraph too — `.ct-card .lead` restyles the type but never
-               re-declares any of those four, so the client's `cardText` was an
-               invisible, viewport-sized, fixed-position box sitting inside the
-               card and had never once been seen. Renaming the paragraph fixes
-               it in one file; editing the popup's rule would be twelve. -->
-          <p class="ct-lead">Tell us about your requirements and a member of our team will be in
-            touch to arrange a time that suits you.</p>
+          <!-- THE CARD HAS NO INTRO PARAGRAPH (9 Nov, the client's request):
+               markup, CSS, the `cardText` field in the GROQ projection and the
+               line that painted it are all gone. The heading and the controls
+               are the whole card.
+
+               It had in fact never been seen. It was `<p class="lead">`, and
+               the lead POPUP's base rule is a bare
+               `.lead{position:fixed;inset:0;visibility:hidden;opacity:0}` in
+               the stylesheet all twelve files carry, which matched it too;
+               `.ct-card .lead` restyled the type but re-declared none of those
+               four, so it was an invisible viewport-sized box inside the card.
+               Renaming it `.ct-lead` made it appear, the client looked at it
+               and asked for it to go — so the bug is fixed and the element is
+               deleted, which are two separate things and both wanted.
+
+               `cardText` IS STILL ON THE DOCUMENT AND IN THE SCHEMA. Clearing
+               it would destroy the client's copy to tidy a form. The
+               consequence is the usual quiet trap, the same one `heroHeadline`
+               sets on the home page: editing it in the Studio now does
+               nothing. -->
 
           <!-- CONTINUE WITH GOOGLE. Hidden in the markup and revealed by the
                script only once Google's library has actually loaded AND a
@@ -2970,7 +2961,6 @@
       const card = document.getElementById('ctCard');
       if(card){
         setText(card.querySelector('h2'), d.cardTitle);
-        setText(card.querySelector('p.ct-lead'), d.cardText);
         const send = card.querySelector('.ct-send');
         if(send && txt(d.cardButton)){
           /* keep the arrow element, replace only the words before it */

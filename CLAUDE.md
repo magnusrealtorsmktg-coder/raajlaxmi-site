@@ -880,41 +880,40 @@ window rather than from the text — with one difference:
   also hides the crest, which is ornament where every remaining pixel belongs
   to a control.
 
-**THE CARD'S INTRO PARAGRAPH IS HIDDEN BELOW 1040px OF WINDOW HEIGHT, and it is
-the only content dropped to make the fit.** It costs **85px**, measured, which
-is most of what the fold was short by, and it is the one element in the card
-carrying no function — the left-hand column of the same section already opens
-with the same invitation in more words. 1040 rather than 900 because the
-full-size card stands 905px and wants about 995px of window plus the navbar
-before it is comfortable. Clearing `cardText` on the `contact-page` document
-removes it everywhere with no code change; deleting the one rule shows it at
-every size, and the tiers then need roughly 85px more taken out of them.
+Measured at 2560x1440, 1920x1080, 1680x1050, 1600x997, 1536x864, 1440x900,
+1440x828, 1366x768, 1280x800, 1280x720, 1366x650, 1024x768 and 1024x640: the
+whole card clears the fixed navbar and the fold at every one, with **14-651px
+of slack**. The practical floor is about **600px of window height**, where it
+is level to within a few pixels. Phones are deliberately excluded and scroll as
+before. No horizontal overflow anywhere.
 
-### `.lead` was two different things, and the card's copy lost
+### The card has no intro paragraph, and it never really had one
 
-**The enquiry card's intro paragraph had NEVER been visible**, on any page
-view, since the lead popup was added. The popup's base rule is a bare
+**`cardText` is not painted and the paragraph is not in the markup** - removed
+9 Nov at the client's request, along with its CSS and its entry in the GROQ
+projection. The heading and the controls are the whole card.
+
+It had in fact **never been visible**, which is how it survived this long
+unnoticed. It was `<p class="lead">`, and the lead POPUP's base rule is a bare
 `.lead{position:fixed;inset:0;visibility:hidden;opacity:0}` in the stylesheet
-all twelve files carry, and it matched the card's `<p class="lead">` too.
-`.ct-card .lead` restyles the type but re-declares none of those four, so the
-client's `cardText` was an **invisible, viewport-sized, fixed-position box
-sitting inside the card** — which is also why a naive
-`querySelector('.ct-card p.lead').getBoundingClientRect().height` reports
-roughly the viewport height and looks like a measuring bug.
+all twelve files carry - it matched this paragraph too, and `.ct-card .lead`
+restyled the type while re-declaring none of those four. So the client's
+`cardText` was an **invisible, viewport-sized, fixed-position box inside the
+card**. That is also why a naive
+`querySelector('.ct-card p.lead').getBoundingClientRect().height` reported
+roughly the viewport height and looked like a broken measurement.
 
-The paragraph is **`.ct-lead`** now. Renaming it is one file; rewriting the
-popup's rule would be twelve, and the popup's `.lead` is shared chrome.
-`contact.html` was the only file using `.lead` for copy — checked before
-renaming. The hydration selector moved with it
-(`card.querySelector('p.ct-lead')`).
+Renaming it `.ct-lead` made it appear; the client looked at it and asked for it
+to go. **Fixing the collision and deleting the element are two separate things
+and both were wanted** - had only the first been done, the next person to add
+a `class="lead"` paragraph to a page would have hit the same silent
+disappearance. `contact.html` was the only file using `.lead` for copy, checked
+before renaming.
 
-Measured after both changes, with the **live** `cardText` rather than the
-markup fallback, at 2560x1440, 1920x1200, 1920x1080, 1680x1050, 1600x997,
-1536x864, 1440x900, 1440x828, 1366x768, 1280x800, 1280x720, 1366x650, 1024x768
-and 1024x640: the whole card clears the fixed navbar and the fold at every one,
-with **14–445px of slack**. The practical floor is about **600px of window
-height**, where it is level to within a few pixels. Phones are deliberately
-excluded and scroll as before. No horizontal overflow anywhere.
+**`cardText` STAYS on the document and in the schema.** Clearing it would
+destroy the client's copy to tidy a form. The consequence is the same quiet
+trap `heroHeadline` sets on the home page: editing it in the Studio now does
+nothing.
 
 ### The enquiry card asks the hero's three questions
 
