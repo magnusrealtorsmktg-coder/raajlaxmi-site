@@ -2172,10 +2172,12 @@
         <div class="hs-field">
           <select id="hsType" name="type" aria-label="Property">
             <option value="">PROPERTY</option>
+            <option>1 BHK</option>
+            <option>2 BHK</option>
             <option>3 BHK</option>
-            <option>4 BHK</option>
-            <option>Penthouse</option>
-            <option>Sky villa</option>
+            <option>Jodi Flats</option>
+            <option>Office</option>
+            <option>Shops</option>
           </select>
         </div>
         <div class="hs-field">
@@ -2871,23 +2873,17 @@
 
     const txt = v => (typeof v === 'string' ? v.trim() : '');
 
-    /* "2 & 3 BHK" is two choices, not one. Split on the separators the client
-       actually types and carry the unit onto the bare numbers: 2 & 3 BHK ->
-       "2 BHK", "3 BHK". Anything that is not a number-plus-unit is kept whole,
-       so "Shop" or "Office" survive untouched. */
-    function typesOf(config){
-      const raw = txt(config);
-      if(!raw) return [];
-      const unit = (raw.match(/\b(BHK|RK)\b/i) || [])[1];
-      return raw.split(/\s*(?:&|,|\/|\band\b)\s*/i)
-        .map(part => {
-          const t = part.trim();
-          if(!t) return '';
-          if(unit && /^\d+(\.\d+)?$/.test(t)) return t + ' ' + unit.toUpperCase();
-          return t.replace(/\s+/g, ' ');
-        })
-        .filter(Boolean);
-    }
+    /* PROPERTY IS NOT DERIVED FROM THE PROJECTS ANY MORE, and that is the whole
+       point of this note. It used to be: every `config` on a published project
+       was split ("2 & 3 BHK" -> "2 BHK", "3 BHK") and the distinct results
+       became the list, so that every option had at least one property behind it.
+       The live data made that list read 1/2/3/4/5 BHK — and it was OVERWRITING
+       the list the client had already typed into `heroPropertyOptions`, which
+       the Studio offers and which nothing on the page was honouring.
+       It is a fixed list now, exactly as BUDGET already is: written in the CMS,
+       painted by the home-page content block, and the same whatever the
+       projects happen to carry. LOCATION is still derived, because a town with
+       nothing in it is a dead end in a way a property type is not. */
 
     /* The town is the LAST part of the address — "Oswal Nagari, Nallasopara
        (West)" is in Nallasopara, not Oswal Nagari. The collection page's own
@@ -2915,22 +2911,12 @@
       });
     };
 
-    /* "2 BHK" before "10 BHK"; words come after numbers, alphabetically */
-    const byType = (a, b) => {
-      const na = parseFloat(a), nb = parseFloat(b);
-      if(isFinite(na) && isFinite(nb)) return na - nb;
-      if(isFinite(na)) return -1;
-      if(isFinite(nb)) return 1;
-      return a.localeCompare(b);
-    };
-
     /* already in flight since the document head — see RL in <head> */
     RL.get(RL.q.search)
       .then(({result}) => {
         const rows = Array.isArray(result) ? result : [];
         if(!rows.length) return;                 // keep whatever the CMS set
 
-        const types = [...new Set(rows.flatMap(r => typesOf(r.config)))].sort(byType);
         /* "Vasai (East)" and "Vasai East" are the same town typed two ways, and
            they were producing two entries that each matched only half the
            properties. Fold them on a punctuation-free key and keep the first
@@ -2943,7 +2929,6 @@
         });
         const towns = [...townMap.values()].sort();
 
-        if(types.length) fill(typeSel, types);
         if(towns.length) fill(locSel, towns);
 
         /* BUDGET IS NOT FILLED FROM THE PROJECTS, and is no longer hidden when

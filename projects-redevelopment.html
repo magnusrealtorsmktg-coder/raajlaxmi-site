@@ -1954,7 +1954,19 @@
         })
         .filter(Boolean);
     }
-    const inType = p => !WANT_TYPE || typesOf(p.config).includes(WANT_TYPE);
+    /* THE TYPE IS MATCHED ON A FOLDED KEY, not on the exact string, and that is
+       what keeps the hero's list and the client's typing from having to agree
+       letter for letter. The dropdown offers "Shops" and "Jodi Flats" while a
+       project's `config` will say "Shop" or "Jodi Flat"; `1 BHK` and `1BHK` are
+       the same choice. So case, spaces and punctuation are dropped and a
+       trailing plural with them — the same forgiving idea as `nameKey` on the
+       banner hotspots and `townKey` on the chips. Matched strictly, as it was,
+       every one of those pairs returned a confident "nothing matches". */
+    const typeKey = t => String(t || '').toLowerCase()
+      .replace(/[^a-z0-9]+/g, '').replace(/s$/, '');
+    const WANT_TYPE_KEY = typeKey(WANT_TYPE);
+    const inType = p => !WANT_TYPE ||
+      typesOf(p.config).map(typeKey).includes(WANT_TYPE_KEY);
     /* ?loc= is matched anywhere in the address line, which is looser than the
        chips (they read the last part only). That is deliberate: a deep link may
        name a sub-locality the chips do not offer. */

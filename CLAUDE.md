@@ -1280,17 +1280,45 @@ with no ground of its own, so over a bright hero it dissolved into the photograp
 Filled, it is `--champagne` on `#14243C` — a 7:1 contrast ratio, the same treatment
 the page's other primary buttons use — and it keeps that fill over ivory too.
 
-**The hero search is built from the published projects.** Property and Location were
-a hand-typed list in the `homepage` singleton that matched nothing — a visitor could
-choose a locality the group does not build in, and the form merely scrolled the
-page. The block at the end of `index.html` now reads the completed projects and
-fills both lists from them, so every option has at least one property behind it, and
+**The hero search's LOCATION is built from the published projects; PROPERTY is
+not, since 9 Nov.** Both were a hand-typed list in the `homepage` singleton that
+matched nothing — a visitor could choose a locality the group does not build in,
+and the form merely scrolled the page. The block at the end of `index.html` reads
+the completed projects and fills the location list from them, so every option has at least one property behind it, and
 submitting navigates to `projects.html?status=completed&type=…&loc=…`, which the
 three collection files read and AND with the status and the active city chip.
 
-Three details are load-bearing. `"2 & 3 BHK"` is **expanded into separate options**
-(`2 BHK`, `3 BHK`) on both sides, or a search for one would never match the other.
-The **town is the last part of the address**, not the first — the chips key off the
+**PROPERTY IS A FIXED LIST AGAIN, and the reason is that the derived one was
+overwriting the client's own.** It used to split every project's `config`
+(`"2 & 3 BHK"` → `2 BHK`, `3 BHK`) and offer the distinct results, so that every
+option had a property behind it. Against the live data that printed 1/2/3/4/5
+BHK — and `fill()` claims the control with `dataset.src='projects'`, so
+`paintSelect()` stood down and **`heroPropertyOptions`, which the client had
+already filled in, never reached the page**. It is now fixed, exactly as BUDGET
+is: written in the CMS, painted by the home-page content block, the same
+whatever the projects carry. `typesOf()` and `byType()` went with the
+derivation. **LOCATION is still derived**, because a town with nothing in it is
+a dead end in a way a property type is not — someone may well search for a shop
+before the group lists one.
+
+The list is **1 BHK / 2 BHK / 3 BHK / Jodi Flats / Office / Shops** (9 Nov, the
+client's wording). It replaced their own `1 RK, 1 BHK, 2 BHK, 3 BHK, Shop,
+Office`, so **`1 RK` was dropped** — one Studio edit puts it back. Today the
+three BHK options return 1, 3 and 5 projects; **Jodi Flats, Office and Shops
+match nothing**, because no project's `config` mentions them.
+
+**The collection pages match the type on a FOLDED KEY, not an exact string.**
+`typeKey()` drops case, spaces and punctuation and a trailing plural, so
+`Shops` finds a project filed `Shop`, `Jodi Flats` finds `Jodi Flat`, and
+`1BHK` and `1 BHK` are one choice. Matched strictly, as it was until 9 Nov,
+every one of those pairs returned a confident "nothing matches" — and the
+dropdown deliberately offers plurals the client will type as singulars. It is
+the same forgiving idea as `nameKey` on the banner hotspots and `townKey` on
+the chips, and it lives in **all three collection files**.
+
+Two more details are load-bearing. `"2 & 3 BHK"` is **expanded into separate
+options** (`2 BHK`, `3 BHK`) when matching, or a search for one would never
+match the other. The **town is the last part of the address**, not the first — the chips key off the
 first part, which is a sub-locality, so the link filters on a substring of the whole
 line rather than trying to agree with them; and `"Vasai (East)"` and `"Vasai East"`
 are **folded on a punctuation-free key** so one town does not appear twice and a
