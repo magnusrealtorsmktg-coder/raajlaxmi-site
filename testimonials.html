@@ -1349,26 +1349,36 @@
   .tm-stage{position:relative;margin-top:clamp(2.6rem,4.5vw,4rem);}
   /* the track carries every card; the edge fade keeps only the three that
      matter in view and lets the outgoing ones dissolve instead of being cut */
-  .tm-viewport{overflow:hidden;padding:1.6rem clamp(0px,1vw,1rem) 2.2rem;
+  /* THE VIEWPORT IS A REAL SCROLLER, and that is the whole change. This strip
+     ran as a CSS animation on a transform, which the compositor drove for
+     free — but a transform is not a scroll position, so there was nothing for
+     a finger or a mouse to take hold of. The client asked for the same
+     behaviour Section XI on the home page has: it runs by itself, gives way
+     the moment anyone pushes it, and resumes a few seconds after they stop.
+     A scroller is the thing a browser already lets people push, so the script
+     advances `scrollLeft` here instead. `overflow-y` stays hidden, so a
+     vertical swipe over the strip still scrolls the page.
+     The scrollbar is hidden because the strip loops — a thumb that jumps back
+     to the middle every set width is noise, not information. */
+  .tm-viewport{overflow:hidden;overflow-x:auto;
+    scrollbar-width:none;-ms-overflow-style:none;
+    overscroll-behavior-x:contain;cursor:grab;
+    padding:1.6rem clamp(0px,1vw,1rem) 2.2rem;
     -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 7%,#000 93%,transparent 100%);
             mask-image:linear-gradient(90deg,transparent 0,#000 7%,#000 93%,transparent 100%);}
-  /* The strip runs continuously. One full set of cards is `--tm-loop` wide and
-     the set is rendered twice, so translating by exactly that much and
-     starting over is seamless. Both custom properties are written by the
-     script once the cards have been measured; until then the animation has
-     nothing to travel and simply sits still. */
-  @keyframes tm-marquee{
-    from{transform:translateX(0);}
-    to  {transform:translateX(calc(-1 * var(--tm-loop, 0px)));}
-  }
+  .tm-viewport::-webkit-scrollbar{display:none;}
+  /* while a drag is live the grab hand has to beat the card's own pointer */
+  .tm-viewport.is-drag,.tm-viewport.is-drag .tm-card{cursor:grabbing;}
+  /* A plain flex row now: no `@keyframes tm-marquee`, no `--tm-loop`, no
+     `--tm-dur` and no `will-change:transform`. The script moves the viewport's
+     `scrollLeft`, not this element. `width:max-content` keeps the row from
+     being squeezed to the scroller's width.
+     Hover and keyboard focus still hold the strip still — that used to be two
+     CSS rules on `animation-play-state`, and there is no animation to pause
+     now, so the script carries it. */
   .tm-track{display:flex;align-items:stretch;gap:clamp(1rem,1.8vw,1.9rem);
-    will-change:transform;
-    animation:tm-marquee var(--tm-dur, 40s) linear infinite;}
-
-  /* hover or keyboard focus anywhere on the stage holds it still — the card
-     under the pointer takes the gold border, so the pause is visible */
-  .tm-stage:hover .tm-track,
-  .tm-stage:focus-within .tm-track{animation-play-state:paused;}
+    width:max-content;
+    -webkit-user-select:none;user-select:none;}
 
   /* Every card is now equal: with the strip always moving there is no settled
      middle one to feature, and a card that grew as it drifted past would
@@ -1527,7 +1537,13 @@
     .tm-label,.tm-orn,.tm-intro,.tm-arw,.tm-dots,.tm-strip{opacity:1 !important;transform:none !important;}
     .tm-orn i{transform:scaleX(1) !important;}
     .tm-ln i{transform:none !important;}
-    .tm-track{animation:none;}
+    /* The strip used to simply rest here, which left every card past the
+       third unreachable. Now that the viewport is a scroller it can do what
+       Section XI does instead: one set, no drift, snap points, no edge mask,
+       and the visitor pushes it themselves. */
+    .tm-viewport{-webkit-mask-image:none;mask-image:none;cursor:auto;
+      scroll-snap-type:x mandatory;}
+    .tm-card{scroll-snap-align:center;}
     .tm-card{transition:none;}
   }
   /* =====================================================================
@@ -2197,20 +2213,20 @@
     let T = FALLBACK.map(([say,name,at]) =>
       ({say, name, at, stars: 5, google: ''}));
 
-    let cards = [], dotEls = [], at = 0;
+    let dotEls = [];
 
     /* Built as a function rather than inline, because the reviews can arrive
        from Sanity after this has already run and the whole spread then has to
        be laid out again. The listeners below are delegated to `track` and
        `dots`, which survive their children being replaced. */
-    /* The spread is rendered TWICE. A marquee that never stops needs a second
-       copy to slide into: when the first set has travelled its own width the
-       offset jumps back by exactly that width, and because the identical set
-       is sitting there the seam is invisible. `data-i` stays the review's
-       index, so both copies of a card answer to the same dot. */
+    /* ONE SET goes in here; `build()` below clones it as many times as the
+       stage needs. It used to render exactly TWICE, which is all a transform
+       marquee wants — travel one set width, jump back, seam invisible. A
+       SCROLLER needs more, because the visitor can push it BACKWARDS and
+       `scrollLeft` cannot go below zero, so there has to be a whole set in
+       hand on either side. */
     function render(){
-      const twice = T.concat(T);
-      track.innerHTML = twice.map((t,n)=>{ const i = n % T.length; return `
+      track.innerHTML = T.map((t,i)=>{ return `
       <article class="tm-card" data-i="${i}" tabindex="0">
         <div class="tm-q" aria-hidden="true"></div>
         <p class="tm-say">${esc(t.say)}</p>
@@ -2233,39 +2249,226 @@
         `<button class="tm-dot${i===0?' on':''}" data-i="${i}" role="tab"
                  aria-label="Testimonial ${i+1}"></button>`).join('');
 
-      cards  = [...track.querySelectorAll('.tm-card')];
       dotEls = [...dots.querySelectorAll('.tm-dot')];
+      base = [...track.children].map(el => el.cloneNode(true));
+      sets = 1; loop = 0;
+      build();
     }
 
-    /* ---- the marquee ----------------------------------------------------
-       The spread used to sit still for five seconds and then jump a card.
-       It now runs continuously, and it runs as a CSS animation rather than a
-       per-frame transform: the compositor drives it, so it stays smooth while
-       the main thread is busy, it pauses for free on hover, and the browser
-       stops it in a background tab without being asked.
+    /* ---- the strip ------------------------------------------------------
+       It drifts right-to-left on its own, GIVES WAY THE MOMENT ANYONE PUSHES
+       IT, and picks up again a few seconds after they stop — the behaviour
+       Section XI on the home page has, ported here at the client's request.
 
-       `--tm-loop` is the width of one full set of cards, measured after the
-       cards exist; `--tm-dur` turns that into a duration at SPEED pixels a
-       second, so the pace is the same whatever the card width resolves to.
-       Because the set is rendered twice, translating by exactly one set width
-       and starting over is seamless. */
-    const SPEED = 70;              // pixels per second — the one number to turn
+       It was a CSS animation until then, which the compositor drove for free.
+       The costs of leaving that are real and accepted: this runs on the main
+       thread (one scroll write a frame), rAF stops in a background tab — the
+       same free pause the animation got — and `dt` is clamped so returning
+       from a stall advances the strip a frame rather than teleporting it. In
+       exchange the whole loop is gated on the strip being visible, which the
+       CSS animation never was. */
+    const SPEED = 70;   // pixels a second — the one number to turn
+    /* How long it waits after the visitor stops pushing. Long enough that
+       pausing to read a review is not interrupted, short enough that it does
+       not look broken. The same 2.6s the owners strip uses. */
+    const IDLE  = 2600;
+    /* How far a mouse travels before the gesture counts as a drag rather than
+       a click on the Google button inside a card. */
+    const SLOP  = 6;
 
-    function measure(){
-      if(cards.length < T.length + 1) return;
-      const loop = cards[T.length].offsetLeft - cards[0].offsetLeft;
-      if(loop <= 0) return;
-      track.style.setProperty('--tm-loop', loop + 'px');
-      track.style.setProperty('--tm-dur', (loop / SPEED) + 's');
+    let base = [], sets = 0, loop = 0, pos = 0;
+    /* `held` is a DEADLINE, not a flag plus a timer: a scroll event fires
+       dozens of times a second and overwriting a number is cheaper than
+       clearing and re-arming one. Zero means nobody is holding it. */
+    let held = 0, hover = false, focus = false, seen = false;
+    let dragging = false, dragged = false, dragX = 0, dragFrom = 0;
+    let last = 0, running = false;
+
+    /* `ceil(stage/set) + 2` sets, where the transform marquee needed exactly
+       two in total. That extra set is the room to the LEFT: the position is
+       kept in [loop, 2*loop) so there is always a whole set either side to
+       give back when someone pushes the strip backwards and `scrollLeft`
+       cannot go below zero. Six reviews already overflow a wide stage, but
+       the client may publish two, so the count is measured rather than
+       assumed and re-worked on resize. */
+    function build(){
+      if(!base.length) return;
+
+      if(reduce){                      /* one set, pushed by hand only */
+        if(sets !== 1){ track.replaceChildren(...base.map(el => el.cloneNode(true))); sets = 1; }
+        loop = 0;
+        return;
+      }
+
+      const first = track.querySelector('.tm-card');
+      if(!first) return;
+      const gap  = parseFloat(getComputedStyle(track).columnGap) || 0;
+      const setW = base.length * (first.getBoundingClientRect().width + gap);
+      if(setW <= 0) return;            /* not laid out yet */
+
+      const want = Math.max(3, Math.ceil(vp.clientWidth / setW) + 2);
+      if(want !== sets){
+        const out = [];
+        for(let i = 0; i < want; i++)
+          base.forEach(el => {
+            const c = el.cloneNode(true);
+            if(i > 0){ c.setAttribute('aria-hidden','true'); c.removeAttribute('tabindex'); }
+            out.push(c);
+          });
+        track.replaceChildren(...out);
+        sets = want;
+      }
+
+      const items = track.querySelectorAll('.tm-card');
+      if(items.length <= base.length) return;
+      const span = items[base.length].offsetLeft - items[0].offsetLeft;
+      if(span <= 0) return;
+
+      /* Only re-seat the strip when the geometry actually changed. `resize`
+         fires when a mobile browser shows or hides its own toolbar, and
+         jumping back to the first review every time someone scrolls the page
+         would undo the visitor's own position for no reason. */
+      const moved = span !== loop;
+      loop = span;
+      if(moved || vp.scrollLeft < loop || vp.scrollLeft >= loop * 2)
+        vp.scrollLeft = pos = loop;
+      start();
     }
+
+    /* One set is identical to the next, so folding the scroll position back by
+       exactly one set width is invisible. Returns the shift it applied, which
+       is what lets a drag in progress move its own origin with it instead of
+       snapping back a whole set on the next pointermove. */
+    function norm(){
+      if(!loop) return 0;
+      const x = vp.scrollLeft;
+      if(x < loop)     { vp.scrollLeft = pos = x + loop; return  loop; }
+      if(x >= loop * 2){ vp.scrollLeft = pos = x - loop; return -loop; }
+      /* `pos` is the accumulator the auto-advance adds fractions of a pixel
+         to — scrollLeft reads back rounded, so it is not re-synced from a
+         difference that small. Anything bigger is the visitor. */
+      if(Math.abs(x - pos) > 2) pos = x;
+      return 0;
+    }
+
+    const paused = () => !seen || hover || focus || dragging || held;
+
+    function frame(t){
+      running = false;
+      if(reduce || !loop) return;
+      const dt = last ? Math.min(t - last, 100) : 0;
+      last = t;
+      if(held && t >= held) held = 0;
+      if(!paused()){
+        pos += SPEED * dt / 1000;
+        vp.scrollLeft = pos;
+        if(pos >= loop * 2){ vp.scrollLeft = pos -= loop; }
+      }
+      start();
+    }
+    /* `last` is deliberately NOT reset here: start() queues the next frame at
+       the end of every frame, so zeroing it would make `dt` zero every time
+       and the strip would never move. A stale `last` after a long pause is
+       handled by the clamp above instead. */
+    function start(){
+      if(reduce || running || !loop || !seen) return;
+      running = true;
+      requestAnimationFrame(frame);
+    }
+
+    /* Any real input stands the auto-advance down and starts the clock. */
+    const take = () => { held = performance.now() + IDLE; start(); };
+
+    /* THE SCROLL LISTENER MUST NOT BE WHAT DETECTS THE VISITOR. The strip's
+       own writes fire `scroll` too, so a handler that called take() would
+       suspend the auto-advance permanently on its own first frame. It only
+       EXTENDS a hold an input event has already placed — which is also what
+       keeps a momentum fling from being cut off at 2.6s and then fought by
+       the auto-advance. Once `held` is back to zero our own writes land here
+       harmlessly. */
+    vp.addEventListener('scroll', () => {
+      if(held) held = performance.now() + IDLE;
+      if(!dragging) norm();
+    }, {passive:true});
+
+    vp.addEventListener('pointerdown', e => {
+      take();
+      dragged = false;
+      /* touch and pen pan natively, with momentum this could not match */
+      if(e.pointerType !== 'mouse') return;
+      dragging = true;
+      dragX    = e.clientX;
+      dragFrom = vp.scrollLeft;
+    });
+    vp.addEventListener('pointermove', e => {
+      if(!dragging) return;
+      const dx = e.clientX - dragX;
+      if(!dragged && Math.abs(dx) < SLOP) return;  /* still a click */
+      if(!dragged){
+        /* CAPTURE ONLY ONCE THE DRAG IS REAL, never on pointerdown. Pointer
+           capture retargets the compatibility mouse events, so capturing on
+           every press would make a click's target the viewport rather than
+           whatever was pressed — which on this strip is how a press on a
+           Google button would stop reaching the link. */
+        try{ vp.setPointerCapture(e.pointerId); }catch(_){}
+        vp.classList.add('is-drag');
+      }
+      dragged = true;
+      e.preventDefault();
+      vp.scrollLeft = dragFrom - dx;
+      dragFrom += norm();
+      take();
+    });
+    const drop = () => {
+      if(!dragging) return;
+      dragging = false;
+      vp.classList.remove('is-drag');
+      take();
+    };
+    vp.addEventListener('pointerup', drop);
+    vp.addEventListener('pointercancel', drop);
+
+    /* A DRAG IS NOT A CLICK. Every card can carry a Google review link, so
+       without this, pushing the strip with the mouse over one would open that
+       review in a new tab. Capture phase, so it runs before the link's own
+       default. A touch swipe needs no equivalent — the browser already
+       withholds the click after a scroll gesture, which is also why a tap on
+       the Google button still works. */
+    vp.addEventListener('click', e => {
+      if(!dragged) return;
+      dragged = false;
+      e.stopPropagation();
+      e.preventDefault();
+    }, true);
+
+    /* A trackpad swipe sideways scrolls the strip with no pointerdown at all.
+       A vertical wheel over it is the page being scrolled past, not an
+       attempt to move it, so it is left alone. */
+    vp.addEventListener('wheel', e => {
+      if(Math.abs(e.deltaX) > Math.abs(e.deltaY)) take();
+    }, {passive:true});
+
+    /* Hover and keyboard focus hold the row still for as long as they last —
+       which is what makes the gold border on the card under the pointer read
+       as a pause rather than a smear going past. This used to be two CSS
+       rules on `animation-play-state`; there is no animation to pause now. */
+    vp.addEventListener('pointerenter', e => { if(e.pointerType === 'mouse') hover = true; });
+    vp.addEventListener('pointerleave', () => { hover = false; start(); });
+    vp.addEventListener('focusin',      () => { focus = true; });
+    vp.addEventListener('focusout',     () => { focus = false; start(); });
+
+    /* Nothing runs while the strip is off screen. The CSS animation drifted on
+       regardless; a rAF loop doing the same would burn a frame callback for
+       the whole of the rest of the page. */
+    new IntersectionObserver(e => { e.forEach(x => { seen = x.isIntersecting; }); start(); },
+      {threshold:0}).observe(vp);
 
     render();
-    measure();
 
     /* fonts land after first paint and change every width in here */
-    addEventListener('load', measure);
-    if(document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
-    addEventListener('resize', measure, {passive:true});
+    addEventListener('load', build);
+    if(document.fonts && document.fonts.ready) document.fonts.ready.then(build);
+    addEventListener('resize', build, {passive:true});
 
     /* The arrows and dots were the controls for a carousel that moved one card
        at a time. A strip that never stops has no discrete slides for them to
@@ -2293,8 +2496,7 @@
             stars: Math.min(5, Math.max(1, parseInt(r.stars, 10) || 5)),
             google: r.googleUrl || '',
           }));
-          render();
-          measure();          // a new set of cards is a new loop width
+          render();           // render() rebuilds the sets and re-measures
         })
         .catch(err => console.warn('testimonials: keeping the built-in five —', err));
     })();
@@ -2313,10 +2515,10 @@
 
     if(reduce){ sec.classList.add('in'); return; }
 
-    /* measure again on reveal: `.in` changes the cards' size and spacing, so
-       the loop width taken a moment ago is now wrong */
+    /* rebuild on reveal: `.in` changes the cards' size and spacing, so the
+       set width taken a moment ago is now wrong */
     new IntersectionObserver((e,o)=>{e.forEach(x=>{if(x.isIntersecting){
-      sec.classList.add('in'); measure(); o.disconnect();}});},
+      sec.classList.add('in'); build(); o.disconnect();}});},
       {threshold:.08}).observe(sec);
 
     /* --- very slow parallax on the corner sketches --- */

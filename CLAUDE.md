@@ -424,8 +424,9 @@ unlike the shared chrome there is nothing to sync to the other ten files.
 The client asked for a carousel that **runs by itself, follows the finger or
 the mouse the moment anyone pushes it, and resumes on its own a few seconds
 after they stop** — on a phone and on a desktop both. Section XI does that
-since 6 Nov; the other two strips on the site (the reviews and the photo
-gallery on `testimonials.html`) still do not, and were not part of the request.
+since 6 Nov. **The reviews strip on `testimonials.html` was given the same
+behaviour on 9 Nov** — see *The reviews strip gives way too*. The client photo
+gallery under it is the one strip left on the old CSS marquee.
 
 **IT DRIVES `scrollLeft`, NOT A TRANSFORM, AND THAT IS THE WHOLE CHANGE.** The
 other two marquees animate a `translateX` in CSS, which the compositor runs for
@@ -1767,19 +1768,61 @@ spread can be rebuilt and re-measured when the reviews arrive; its click and
 keyboard listeners are delegated to `track` and `dots`, which is what lets their
 children be replaced without rewiring.
 
-**The reviews run as a continuous marquee**, not a stepped carousel. The set is
-rendered **twice**; the script measures one set's width into `--tm-loop` and turns
-it into `--tm-dur` at `SPEED` (70) pixels a second, and `@keyframes tm-marquee`
-translates by exactly one set width before starting over, so the seam is invisible.
-`SPEED` is the one number to turn.
+### The reviews strip gives way too
 
-It is **a CSS animation rather than a per-frame transform** for three reasons: the
-compositor drives it so it stays smooth while the main thread is busy;
-`.tm-stage:hover` pauses it with `animation-play-state` and no script at all; and a
-background tab stops it without being asked. It is also the only version that can
-be **verified locally** — headless Chrome throttles `requestAnimationFrame` to
-about three frames a second, so an rAF marquee looks frozen in every local check,
-while a CSS animation advances with virtual time and shows up in a screenshot diff.
+**The reviews run as a continuous marquee**, not a stepped carousel — and since
+**9 Nov they are a real scroller**, not a CSS animation, because the client
+asked for the same behaviour Section XI on the home page has: it runs by
+itself, follows the finger or the mouse the moment anyone pushes it, and
+resumes a few seconds after they stop.
+
+It is **the owners strip's implementation, ported almost line for line**, so
+everything under *The owners strip gives way and comes back* applies here too
+and is not repeated: `SPEED` 70 px/s (unchanged), `IDLE` 2600ms, `SLOP` 6px,
+`held` as a deadline, the `scroll` listener that only *extends* a hold, capture
+only once a drag is real, and the capture-phase `click` that stops a drag from
+counting as one. What differs:
+
+- **`.tm-viewport` is the scroller, not `.tm-stage`.** This strip is
+  `stage > viewport > track` where the owners' is `stage > grid`; the viewport
+  is the element that already clipped and carried the edge mask, so it is the
+  one that becomes `overflow-x:auto`.
+- **`render()` now lays down ONE set and `build()` clones it.** It used to
+  render exactly two, which is all a transform marquee needs. A scroller can be
+  pushed *backwards* and `scrollLeft` cannot go below zero, so it needs
+  `ceil(stage/set) + 2` sets with a whole one in hand either side. Five reviews
+  give **3 sets / 15 cards** at every width measured.
+- **The capture-phase `click` guard protects the Google button**, not a detail
+  panel. Each card can carry a review link, so without it a drag with the mouse
+  over a card would open that review in a new tab.
+- **`measure()`, `--tm-loop`, `--tm-dur`, `@keyframes tm-marquee`,
+  `will-change:transform` and the two `animation-play-state` rules are all
+  gone.** Hover and focus now hold the strip still from the script. The stepped
+  carousel's `cards` and `at` state went with them — nothing had read them since
+  the arrows and dots were hidden.
+- **Reduced motion is now better than it was.** The strip used to simply rest,
+  which left every card past the third unreachable. It now renders a single set
+  with `scroll-snap-type:x mandatory`, no edge mask and `cursor:auto`, and the
+  visitor pushes it themselves — the same concession the owners strip makes.
+
+**VERIFYING THE DRIFT HEADLESSLY IS NOT POSSIBLE, and that is not a
+regression.** This was a CSS animation partly *because* it could be checked
+locally; a rAF loop cannot be. Measured on a plain page in this environment,
+`requestAnimationFrame` fires **once in two seconds** and an
+`IntersectionObserver` delivers once, so the loop is gated shut and nothing
+moves. Shimming rAF onto `setTimeout` does not help, because the gate is the
+observer. The control that settles it: **the shipped owners strip reports the
+identical zeros** under the same harness — 3 sets, seated at exactly one set
+width, `raf_ticks_in_1s: 0`, `auto_px_in_2s: 0`. Compare against that rather
+than concluding the strip is broken, and confirm the drift in a real browser.
+
+What *is* verifiable was verified at 1440x900, 1920x1080, 390x844 and 360x640:
+3 sets, `overflow-x:auto`, `cursor:grab`, no animation on the track, a 200px
+mouse drag moving the strip **exactly 200px**, the position seated at one set
+width, no horizontal page overflow and no console errors. Under
+`--force-prefers-reduced-motion`: 1 set, snap on, mask off, still scrollable.
+The photo gallery below still reports `tg-marquee`, confirming it was left
+alone.
 
 Hovering a card draws a **gold border**: the visible half of the same gesture,
 saying which card is being held still. The border lives on the rules that already
@@ -1791,8 +1834,8 @@ row — so `.tm-card`'s `scale(.94)`/`opacity:.62` side-card treatment is overri
 And the **arrows and dots are hidden**, because a strip with no discrete slides
 gives them nothing to point at; they are `display:none` rather than deleted, so
 dropping `.tm-stage .tm-arw` and `.tm-stage .tm-dots` brings the stepped controls
-back. Under `prefers-reduced-motion` the animation is `none` and the strip simply
-rests.
+back. Under `prefers-reduced-motion` it renders a single set that the visitor
+can still push — see above.
 
 **The circle beside the name holds initials, not a photograph.** The `portrait`
 field has been removed from the schema: nobody attaches a picture to a Google
