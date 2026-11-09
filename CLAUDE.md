@@ -852,6 +852,68 @@ video at `playbackRate` 0.9 revealed on the three desktop sizes and correctly
 refused on the short and phone ones, the poster painted in all six, and **zero
 surviving `.sv-side` / `.sv-band-copy` / `.sv-scrim` nodes**. No console errors.
 
+### The enquiry card asks the hero's three questions
+
+**`I'm interested in` is GONE** (9 Nov, the client's request). In its place the
+enquiry card carries **Property / Location / Budget** — the hero search's own
+three fields, with the same wording and the same lists — and **they arrive
+pre-filled with whatever the visitor chose in the hero.**
+
+- **The lists come from the `homepage` singleton, not from `contact-page`.**
+  That is the point: `heroPropertyOptions` / `heroLocationOptions` /
+  `heroBudgetOptions` fill the hero and this card both, so the question asked
+  on the way in and the question asked on the way out cannot drift. One edit in
+  the Studio moves both. It is a new `hero` entry in `contact.html`'s `<head>`
+  query block. The options written into the markup are the offline fallback and
+  are byte-identical to the live document today.
+- **THE CARRIER IS `sessionStorage`, NOT THE QUERY STRING, and it has to be.**
+  Nothing links to the enquiry page with a query on it — it is reached from the
+  navigation bar's `Enquiry Now` and from the various "Schedule a Consultation"
+  links, none of which pass anything along. The hero writes `rl-search`
+  (`{type, loc, budget}`) **when its form is submitted**, and this card reads
+  it. `?type=&loc=&budget=` is read too and **wins over storage**, which is
+  what makes the behaviour testable and leaves the door open for a future link
+  to say what it means.
+- **Session, not local.** It is this visit's search, not a standing preference;
+  it should not still be answering for somebody who comes back next week. Every
+  access is in a `try/catch` like the rest of the site's storage, and losing it
+  only means the form opens empty.
+- **Written on SUBMIT only.** Idly opening a dropdown is not a choice.
+- **A remembered value is NEVER invented as an option.** It is selected only if
+  the list actually offers it — session storage can outlive a Studio edit, and
+  appending a stale option would put a choice in front of the client that no
+  longer exists. Matching folds case, spacing and a trailing plural (`shop` →
+  `Shops`, `VIRAR` → `Virar`), the same forgiving key `typeKey`/`townKey` use
+  on the collection pages.
+- **`seed()` runs TWICE and that is load-bearing.** The CMS lands after the
+  markup has already been seeded and *replaces* the `<option>` nodes, which
+  would drop the selection; so it is re-applied after the rebuild. The
+  placeholder `<option value="">` is preserved by reference, the same idiom the
+  hero's own fillers use.
+- **`.picked` has to be set by hand on every path that sets a value.** It is
+  what takes a select from placeholder grey to ink, and the markup's `change`
+  listener does not fire for a value set from script.
+- **ALL THREE ARE OPTIONAL**, where the one field they replace was `required`.
+  Three compulsory dropdowns on an enquiry form is a real increase in friction
+  and budget is the one people least want to commit to. Adding `required` back
+  is one word each if the client would rather have the data than the lead.
+- **The enquiry email changes shape**: `interest` is gone and `property`,
+  `location` and `budget` arrive instead. Nothing needed doing for that — the
+  handler posts `Object.fromEntries(new FormData(form))`, so a renamed field
+  carries itself through.
+- **Layout is 2-up then full width**, not three across: at the card's ~520px of
+  inner width three columns leave about 90px of text per control after the icon
+  and the caret, which `₹45 – 65 Lacs` does not fit in.
+
+Verified end to end in a real browser: choosing 2 BHK / Virar / ₹45–65 Lacs in
+the hero and submitting writes `rl-search`, and the enquiry card then opens
+with all three set and inked; the Web3Forms payload carries them; a query
+string overrides storage; stale values (`5 BHK`, `Pune`, `nonsense`) are
+ignored with no option invented; `shop` and `VIRAR` fold to `Shops` and
+`Virar`; a clean visit opens empty; and with the CMS answering a *different*
+list the options are replaced and the seed is re-applied. No console
+exceptions, no page overflow.
+
 ### Continue with Google (contact page only)
 
 The enquiry card carries a **Continue with Google** button above the form,
@@ -2240,6 +2302,9 @@ thank-you state and the location card. Each info box swaps between a link and a
 paragraph depending on whether the CMS gives it a `link`, so "Business Hours"
 stays plain text while "Call Us" becomes a `tel:`. The **map pin is a geopoint**
 that drives both the directions button and the embedded Google frame.
+**The enquiry card's three dropdowns are NOT on this document** — Property,
+Location and Budget read the hero's own lists off `homepage`; see *The enquiry
+card asks the hero's three questions*.
 
 **The hero headline and its sub-paragraph are GONE** — markup, CSS, entrance
 animation, `fitHeadline()`, the `paint()` branch and the GROQ fields alike. The

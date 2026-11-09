@@ -92,6 +92,13 @@
       '  locationTitle,locationText,locationButton,geo\n' +
       '}',
 
+    /* THE ENQUIRY CARD'S THREE DROPDOWNS COME OFF THE HOME PAGE DOCUMENT, not
+       off `contact-page`, and that is the point: they are the hero search's
+       own lists, so the question a visitor was asked on the way in and the
+       question they are asked on the way out cannot drift apart. One edit in
+       the Studio moves both. */
+    hero: '*[_id=="homepage"][0]{heroPropertyOptions,heroLocationOptions,heroBudgetOptions}',
+
     /* the footer: social handles, telephone, email, address, copyright */
     settings: '*[_id=="site-settings"][0]{social[]{platform,url},phone,email,address,copyright}',
   };
@@ -1865,15 +1872,48 @@
               <span class="ic"><svg width="15" height="15" viewBox="0 0 20 20" fill="none"><g stroke="currentColor" stroke-width="1.2"><rect x="2.5" y="4.5" width="15" height="11" rx="2"/><path d="M3 6l7 5 7-5"/></g></svg></span>
               <input type="email" name="email" placeholder="Email Address" autocomplete="email" required>
             </div>
+            <!-- PROPERTY / LOCATION / BUDGET — the hero search's three fields,
+                 same wording and same CMS lists, and pre-filled from whatever
+                 the visitor chose there. The single "I'm interested in" select
+                 this replaces asked a question the rest of the site does not;
+                 these ask the three it already does. The options written in
+                 here are the offline fallback — `homepage` is what fills them.
+                 All three are OPTIONAL, unlike the one field they replace. -->
+            <div class="ct-row">
+              <div class="ct-field">
+                <span class="ic"><svg width="15" height="15" viewBox="0 0 20 20" fill="none"><g stroke="currentColor" stroke-width="1.2"><path d="M3 17V8l7-5 7 5v9"/><path d="M3 17h14M8 17v-4h4v4"/></g></svg></span>
+                <select name="property" id="ctProperty" aria-label="Property type">
+                  <option value="" selected>Property</option>
+                  <option>1 BHK</option>
+                  <option>2 BHK</option>
+                  <option>3 BHK</option>
+                  <option>Jodi Flats</option>
+                  <option>Office</option>
+                  <option>Shops</option>
+                </select>
+                <span class="caret"><svg width="11" height="7" viewBox="0 0 12 8" fill="none"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.3"/></svg></span>
+              </div>
+              <div class="ct-field">
+                <span class="ic"><svg width="15" height="15" viewBox="0 0 20 20" fill="none"><g stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><path d="M10 2.6c-2.7 0-4.9 2.2-4.9 4.9 0 3.7 4.9 10 4.9 10s4.9-6.3 4.9-10c0-2.7-2.2-4.9-4.9-4.9z"/><circle cx="10" cy="7.4" r="1.8"/></g></svg></span>
+                <select name="location" id="ctLocation" aria-label="Location">
+                  <option value="" selected>Location</option>
+                  <option>Vasai</option>
+                  <option>Nallasopara</option>
+                  <option>Virar</option>
+                  <option>Saphale</option>
+                </select>
+                <span class="caret"><svg width="11" height="7" viewBox="0 0 12 8" fill="none"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.3"/></svg></span>
+              </div>
+            </div>
             <div class="ct-field">
-              <span class="ic"><svg width="15" height="15" viewBox="0 0 20 20" fill="none"><g stroke="currentColor" stroke-width="1.2"><path d="M3 17V8l7-5 7 5v9"/><path d="M3 17h14M8 17v-4h4v4"/></g></svg></span>
-              <select name="interest" id="ctInterest" required>
-                <option value="" selected>I&rsquo;m interested in</option>
-                <option>A residence at Raajlaxmi Heights</option>
-                <option>Another Raajlaxmi development</option>
-                <option>An investment opportunity</option>
-                <option>Commercial space</option>
-                <option>Something else</option>
+              <span class="ic"><svg width="15" height="15" viewBox="0 0 20 20" fill="none"><g stroke="currentColor" stroke-width="1.2"><rect x="2.4" y="5.4" width="15.2" height="9.2" rx="2"/><circle cx="10" cy="10" r="2.1"/><path d="M5.2 10h.4M14.4 10h.4"/></g></svg></span>
+              <select name="budget" id="ctBudget" aria-label="Budget">
+                <option value="" selected>Budget</option>
+                <option>&#8377;18 &ndash; 25 Lacs</option>
+                <option>&#8377;35 &ndash; 45 Lacs</option>
+                <option>&#8377;45 &ndash; 65 Lacs</option>
+                <option>&#8377;65 &ndash; 80 Lacs</option>
+                <option>&#8377;80 Lacs +</option>
               </select>
               <span class="caret"><svg width="11" height="7" viewBox="0 0 12 8" fill="none"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.3"/></svg></span>
             </div>
@@ -2144,9 +2184,86 @@
     }
 
     /* the select sits at placeholder grey until something is actually chosen */
-    const interest = document.getElementById('ctInterest');
-    if(interest) interest.addEventListener('change', ()=>
-      interest.classList.toggle('picked', !!interest.value));
+    /* --- Property / Location / Budget -------------------------------------
+       The three fields are the hero search's, filled from the same `homepage`
+       lists, and PRE-FILLED FROM WHAT THE VISITOR CHOSE THERE.
+
+       `.picked` is what takes a select from placeholder grey to ink, so every
+       path that sets a value has to set it too — the markup's own `change`
+       listener never fires when a value is set from script. */
+    const PICK = [['ctProperty','type'], ['ctLocation','loc'], ['ctBudget','budget']]
+      .map(([id, key]) => ({el: document.getElementById(id), key}))
+      .filter(f => f.el);
+    const tone = el => el.classList.toggle('picked', !!el.value);
+    PICK.forEach(f => f.el.addEventListener('change', () => tone(f.el)));
+
+    /* What the visitor searched for, in priority order: an explicit query
+       string first — so a link can always say what it means, and so this is
+       testable — then the hero's own record of the last search it submitted.
+
+       THE QUERY STRING IS NOT HOW THE HERO REACHES THIS PAGE. Nothing links
+       here with one: the enquiry page is reached from the navigation bar and
+       from "Schedule a Consultation". The hero writes `rl-search` to session
+       storage when its form is submitted and that is the real carrier; the
+       query string is the open door beside it. */
+    function wanted(){
+      const qs = new URLSearchParams(location.search);
+      const out = {};
+      ['type','loc','budget'].forEach(k => { out[k] = (qs.get(k) || '').trim(); });
+      if(out.type || out.loc || out.budget) return out;
+      try{
+        const saved = JSON.parse(sessionStorage.getItem('rl-search') || '{}');
+        return {type: saved.type || '', loc: saved.loc || '', budget: saved.budget || ''};
+      }catch(err){ return out; }       /* private mode throws; an empty form is fine */
+    }
+
+    /* The same forgiving key the collection pages and the banner hotspots use.
+       A remembered value and a CMS option that differ only by case, spacing or
+       a trailing plural are the same answer, and refusing to match them would
+       silently drop the visitor's choice. */
+    const fold = v => String(v || '').toLowerCase()
+      .replace(/[^a-z0-9]+/g, '').replace(/s$/, '');
+
+    /* NEVER INVENTED: a remembered value is selected only if the list actually
+       offers it. Session storage can outlive a Studio edit, and appending a
+       stale option would put a choice in front of the client that no longer
+       exists. */
+    function seed(){
+      const want = wanted();
+      PICK.forEach(f => {
+        const v = want[f.key];
+        if(!v) return;
+        const hit = [...f.el.options].find(o => o.value && fold(o.value) === fold(v));
+        if(hit){ f.el.value = hit.value; tone(f.el); }
+      });
+    }
+    seed();
+
+    /* The CMS lists land after this has already run and REPLACE the options,
+       which would drop the seeded value — so seed again afterwards. Same
+       `keep the placeholder node` idiom as the hero's own fillers: the first
+       option is preserved by reference, so its wording is none of this
+       block's business. */
+    if(window.RL) RL.get(RL.q.hero).then(({result}) => {
+      const d = result || {};
+      const lists = {ctProperty: d.heroPropertyOptions,
+                     ctLocation: d.heroLocationOptions,
+                     ctBudget  : d.heroBudgetOptions};
+      PICK.forEach(f => {
+        const vals = (lists[f.el.id] || []).map(v => String(v || '').trim()).filter(Boolean);
+        if(!vals.length) return;                 /* keep the written-in fallback */
+        const keep = f.el.querySelector('option[value=""]');
+        f.el.innerHTML = '';
+        if(keep) f.el.appendChild(keep);
+        vals.forEach(v => {
+          const o = document.createElement('option');
+          o.value = v; o.textContent = v;
+          f.el.appendChild(o);
+        });
+        f.el.value = ''; tone(f.el);
+      });
+      seed();
+    }).catch(err => console.warn('enquiry dropdowns: keeping the built-in lists —', err));
 
     /* --- the form ---------------------------------------------------------
        Submitted by fetch to WEB3FORMS, which emails it. The thank-you state is

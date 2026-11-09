@@ -2906,6 +2906,28 @@
       if(typeSel && typeSel.value) q.set('type', typeSel.value);
       if(locSel  && locSel.value)  q.set('loc',  locSel.value);
       if(budgetSel && budgetSel.value) q.set('budget', budgetSel.value);
+
+      /* THE CHOICE IS REMEMBERED FOR THE ENQUIRY FORM. `contact.html` offers
+         the same three dropdowns and pre-fills them from this, so somebody who
+         searched for a 2 BHK in Virar does not have to say so twice. The query
+         string cannot carry it on its own: the enquiry page is reached from the
+         navigation bar and from "Schedule a Consultation", neither of which
+         passes anything through, so the carrier has to be storage.
+
+         SESSION storage, not local: it is the current visit's search, not a
+         standing preference, and it should not still be answering for someone
+         who comes back next week. Written only on SUBMIT, because that is the
+         explicit act — idly opening a dropdown is not a choice. Wrapped in
+         try/catch like every other storage access on this site, since private
+         mode throws; losing it only means the form opens empty. */
+      try{
+        sessionStorage.setItem('rl-search', JSON.stringify({
+          type  : typeSel   ? typeSel.value   : '',
+          loc   : locSel    ? locSel.value    : '',
+          budget: budgetSel ? budgetSel.value : '',
+        }));
+      }catch(err){}
+
       const qs = q.toString();
       location.href = qs ? 'projects.html?' + qs : 'projects.html';
     });
