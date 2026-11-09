@@ -1338,7 +1338,12 @@
      size; the range below is the coarse control. */
   .emi-fval input::-webkit-outer-spin-button,
   .emi-fval input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
-  .emi-pre,.emi-post{color:var(--gold-deep);font-size:.72em;}
+  .emi-post{color:var(--gold-deep);font-size:.72em;}
+  /* The rupee sign at FULL size, in Inter: Playfair Display has no U+20B9,
+     so the browser was falling back to a thin system glyph that read as
+     smaller than the figures even before the old .72em shrink. */
+  .emi-pre,.emi-big .cur{font-family:"Inter",sans-serif;font-weight:500;font-size:1em;
+    color:var(--gold-deep);margin-right:.12em;}
   .emi-post{margin-left:.35rem;}
   .emi-tie{margin:0 .55rem;color:rgba(28,28,28,.26);font-size:.8em;}
 
@@ -1390,7 +1395,7 @@
     font-family:"Playfair Display",serif;font-weight:600;color:var(--champagne);
     font-size:clamp(2.4rem,5.4vw,3.6rem);line-height:1;letter-spacing:-.02em;
     font-feature-settings:"lnum";font-variant-numeric:lining-nums tabular-nums;}
-  .emi-big .cur{font-size:.52em;}
+  .emi-big .cur{color:inherit;}
   .emi-sub{margin-top:.75rem;font-family:"Inter",sans-serif;font-size:.78rem;
     line-height:1.6;color:var(--paper-dim);}
 
