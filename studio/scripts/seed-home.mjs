@@ -45,7 +45,7 @@ await client.createOrReplace({
      instead — change them in the Studio if that is wrong. */
   heroLocationOptions: ['Vasai', 'Nallasopara', 'Virar', 'Saphale'],
   heroBudgetOptions: ['₹1 – 2 Cr', '₹2 – 4 Cr', '₹4 – 7 Cr', '₹7 Cr +'],
-  heroButton: 'View residences',
+  heroButton: 'Discover Your Space',
 
   /* ---- about ---- */
   aboutLabel: 'About Raajlaxmi',

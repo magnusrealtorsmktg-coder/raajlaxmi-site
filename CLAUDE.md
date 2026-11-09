@@ -1427,6 +1427,16 @@ labels went with them rather than printing each word twice.
   "Find your home" with nothing set. No overflow and no console errors at
   1440x900, 1024x800, 390x844, 360x640 or 844x390.
 
+**The hero's submit button reads `Discover Your Space` (9 Nov).** It was
+`View residences`. **Editing the markup and `seed-home.mjs` is not enough and
+this is the trap**: the button is painted by `setText('.hs-submit',
+d.heroButton)`, so whatever `heroButton` holds on the live `homepage` document
+wins over the markup every time, and `seed-home.mjs` is `createOrReplace` —
+for a fresh dataset only, never to be run against the client's. The field was
+patched on the live document directly. The markup still carries the new wording
+as the offline fallback, and `.hs-submit` is `text-transform:uppercase`, so it
+renders DISCOVER YOUR SPACE either way.
+
 **Budget is the exception: it is bands, not prices, and it is always shown.** It
 used to be filled from the projects like the other two — a dropdown of the literal
 figures the client had typed ("₹1.8 Cr") — and to remove itself below two of them,
