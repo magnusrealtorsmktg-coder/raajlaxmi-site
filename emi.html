@@ -1795,12 +1795,6 @@
           <div class="emi-big"><span class="cur">&#8377;</span><span id="emiEmi">34,713</span></div>
           <p class="emi-sub" id="emiSub">on a &#8377;40,00,000 loan over 20 years at 8.5% a year</p>
 
-          <dl class="emi-rows">
-            <div><dt>Loan amount</dt><dd id="emiLoan">&#8377;40,00,000</dd></div>
-            <div><dt>Total interest</dt><dd id="emiInt">&#8377;43,31,120</dd></div>
-            <div><dt>Total payable</dt><dd id="emiTotal">&#8377;83,31,120</dd></div>
-          </dl>
-
           <p class="emi-warn" id="emiWarn" hidden></p>
 
           <a class="emi-cta" href="contact.html#ctForm" data-hover data-magnetic>
@@ -2163,9 +2157,6 @@
         ? 'Nothing to borrow at this deposit.'
         : 'on a ' + inr(loan) + ' loan over ' + S.years +
           (S.years === 1 ? ' year' : ' years') + ' at ' + S.rate + '% a year';
-      $('emiLoan').textContent  = inr(loan);
-      $('emiInt').textContent   = inr(int);
-      $('emiTotal').textContent = inr(none ? 0 : total);
 
       const warn = $('emiWarn');
       if(none){
