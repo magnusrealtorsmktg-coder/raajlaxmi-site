@@ -40,7 +40,7 @@ and are not. The ones that will cost you an afternoon if you do not know them:
 | the services band's height | *The services page runs a film* — the ratio is pinned by a watermark burnt into the footage, not by taste |
 | a video of any kind | *Hero, About and Why can each take a video* and the encode tables under it; every client upload so far has been a 60–265 MB master |
 | a headless check | *Verifying locally — and one headless trap* — and measure with CDP device metrics, never `--window-size --screenshot` |
-| any of the three moving strips | *The owners strip gives way and comes back* — the owners, the reviews and the photo gallery all run **one** implementation now, and its drift cannot be verified headlessly |
+| any of the three moving strips | *The owners strip gives way and comes back* — the owners, the reviews and the photo gallery all run **one** implementation now; verify the drift by driving Chrome over CDP in real time, NOT with `--virtual-time-budget`, which reports zero for a working strip and a dead one alike — see *It shipped dead, and the harness is what hid it* |
 | a price, a budget band or the EMI link | *No project carries a price* — the field is empty on all fifteen projects, so three features are silently inert |
 
 **Deploys:** `git push origin main` publishes the site. The Studio is separate
@@ -1959,16 +1959,49 @@ counting as one. What differs:
   with `scroll-snap-type:x mandatory`, no edge mask and `cursor:auto`, and the
   visitor pushes it themselves — the same concession the owners strip makes.
 
-**VERIFYING THE DRIFT HEADLESSLY IS NOT POSSIBLE, and that is not a
-regression.** This was a CSS animation partly *because* it could be checked
-locally; a rAF loop cannot be. Measured on a plain page in this environment,
-`requestAnimationFrame` fires **once in two seconds** and an
-`IntersectionObserver` delivers once, so the loop is gated shut and nothing
-moves. Shimming rAF onto `setTimeout` does not help, because the gate is the
-observer. The control that settles it: **the shipped owners strip reports the
-identical zeros** under the same harness — 3 sets, seated at exactly one set
-width, `raf_ticks_in_1s: 0`, `auto_px_in_2s: 0`. Compare against that rather
-than concluding the strip is broken, and confirm the drift in a real browser.
+### It shipped dead, and the harness is what hid it
+
+**The strip did not move at all** between 9 Nov and the fix later the same day.
+The client reported it. The cause was a **name collision**, and it is worth
+reading in full because the shape of it will recur:
+
+`function frame(t)` — the drift loop — and `function frame()` — the corner
+sketches' scroll parallax at the foot of the block — were **two function
+declarations of the same name in one IIFE**. That is not two functions: the
+later declaration wins for the whole scope, hoisting and all. So `start()`
+queued the *parallax* function, which paints the sketches once and never
+re-queues. `running` was left `true` for ever, `start()` returned early on
+every subsequent call, and the strip advanced exactly zero frames. The parallax
+one is **`decorFrame()`** now. **Keep every function in that IIFE uniquely
+named** — a scan of all twelve files found this was the only collision on the
+site, which is why the owners and gallery strips were unaffected.
+
+**THE EARLIER CLAIM HERE THAT THE DRIFT COULD NOT BE VERIFIED HEADLESSLY WAS
+WRONG, and it is what let this ship.** It was measured with
+`--virtual-time-budget`, under which `requestAnimationFrame` reports zero ticks
+— so the broken strip and the working one both read `0px`, the zeros were taken
+as a limitation of the harness, and the conclusion was "confirm it in a real
+browser", which nobody did.
+
+**Drive Chrome over CDP with real wall-clock time instead.** Launch it with
+`--remote-debugging-port` and **no `--virtual-time-budget`**, open the page over
+the DevTools protocol, wait in real seconds and read `scrollLeft` twice. rAF
+then ticks at a true 60fps and the drift is exactly measurable. Measured that
+way: reviews **70.0 px/s**, owners **30.0 px/s**, gallery **42.0 px/s** — each
+its own `SPEED` to the tenth. Two traps in that harness: Chrome **caches the
+page across runs** when `--user-data-dir` is reused, so a fix can read as still
+broken — add a cache-busting query; and the strip only runs when its
+`IntersectionObserver` says it is visible, so `scrollIntoView()` it first.
+
+Verified after the fix, locally at 1440x900: 3 sets / 15 cards, drift **70
+px/s**, **0 px/s while hovered**, back to **70** on unhover, a 200px mouse drag
+moving it **exactly 200px**, **0 px/s** for the 2.6s idle window after the drag,
+**69.9 px/s** once it expires, the corner sketches' parallax still tracking the
+scroll, and no horizontal page overflow. Under `--force-prefers-reduced-motion`:
+1 set, 0 drift, snap on, mask off, `cursor:auto`, still scrollable by hand.
+The same harness against the **live, unfixed** site reproduced the fault — 18
+cards, **0 px/s** — while the gallery below it read **42 px/s**, which is what
+confirms the collision was local to this one block.
 
 What *is* verifiable was verified at 1440x900, 1920x1080, 390x844 and 360x640:
 3 sets, `overflow-x:auto`, `cursor:grab`, no animation on the track, a 200px

@@ -2528,18 +2528,28 @@
       sec.classList.add('in'); build(); o.disconnect();}});},
       {threshold:.08}).observe(sec);
 
-    /* --- very slow parallax on the corner sketches --- */
+    /* --- very slow parallax on the corner sketches ---
+       NAMED `decorFrame`, NOT `frame`, AND THAT IS NOT A STYLE CHOICE. This
+       block shares one IIFE with the reviews strip above, which declares its
+       own `function frame(t)` — the drift loop. Two function declarations of
+       the same name in one scope are not two functions: the later one wins
+       for the whole scope, hoisting and all. So the strip's `start()` was
+       queueing THIS function, which paints the sketches once and never
+       re-queues, leaving `running` stuck at true for ever. The strip ran
+       exactly one frame and then stood still, which is how it shipped on
+       9 Nov and what the client reported. Keep every function in this IIFE
+       uniquely named. */
     const decL = sec.querySelector('.tm-decor.l'), decR = sec.querySelector('.tm-decor.r');
     let live=false, ticking=false;
-    function frame(){
+    function decorFrame(){
       ticking=false;
       const r=sec.getBoundingClientRect(), vh=innerHeight;
       const p=(r.top+r.height/2-vh/2)/vh;
       if(decL) decL.style.transform=`translateY(${p*46}px)`;
       if(decR) decR.style.transform=`translateY(${p*-40}px)`;
     }
-    function onScroll(){ if(live && !ticking){ ticking=true; requestAnimationFrame(frame); } }
-    new IntersectionObserver(([e])=>{live=e.isIntersecting; if(live) frame();},{threshold:0}).observe(sec);
+    function onScroll(){ if(live && !ticking){ ticking=true; requestAnimationFrame(decorFrame); } }
+    new IntersectionObserver(([e])=>{live=e.isIntersecting; if(live) decorFrame();},{threshold:0}).observe(sec);
     addEventListener('scroll', onScroll, {passive:true});
     addEventListener('resize', onScroll, {passive:true});
   })();
