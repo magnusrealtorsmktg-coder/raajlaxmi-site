@@ -1314,8 +1314,15 @@
       radial-gradient(1px 1px at 34% 84%,#8A6E33,transparent);}
   .ct-wrap{position:relative;z-index:2;max-width:1500px;margin:0 auto;}
 
-  .ct-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.86fr);
+  /* `position:relative` is what the render is pinned to — see `.ct-render`.
+     It has to be THIS box and not `.ct`, because `.ct` runs on past the
+     location card and the closing strip, and `bottom:0` there would put the
+     artwork at the foot of the page. */
+  .ct-top{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.86fr);
     gap:clamp(2.4rem,5vw,5.5rem);align-items:start;}
+  /* both columns paint above the render; nothing else in here is positioned,
+     so without this the artwork would cover the cards rather than back them */
+  .ct-left,.ct-card{position:relative;z-index:1;}
 
   /* ---- left column ---- */
   .ct-label{display:inline-block;font-family:"Inter",sans-serif;font-weight:600;
@@ -1406,8 +1413,30 @@
     font-weight:300;line-height:1.6;color:var(--say);overflow-wrap:anywhere;}
   .ct-item a:hover{color:var(--au-deep);}
 
-  /* ---- the render at the foot of the left column ---- */
-  .ct-render{margin:clamp(1.8rem,3vw,2.8rem) 0 0;line-height:0;
+  /* ---- the render, pinned to the bottom-left of the screen ----
+     `left:50%` + `margin-left:-50vw` is the centred full-bleed idiom, and it
+     is used here instead of simply backing out the section's padding BECAUSE
+     OF `.ct-wrap`: that box caps the content at 1500px and centres it, so on
+     a 1920 screen there is another 210px of margin either side that a
+     padding-sized negative offset knows nothing about — measured, the
+     artwork started 146px in from the edge. Pinning to the container's
+     centre and stepping back half a viewport lands on the screen edge
+     whatever the wrapper is doing. The page hides its own scrollbar, so `vw`
+     and the client width agree; `.ct` carries `overflow-x:clip`, which is the
+     backstop that stops the bleed becoming a horizontal scrollbar — do not
+     remove it.
+
+     `52vw` is measured, not chosen: the left column's right edge lands at
+     50.8% of the window at 1440 and 51% at 1920, so 52vw reaches it and stops
+     inside the gutter before the enquiry card. The `1088px` cap is the
+     artwork's own width — above about 2090px of window it stops growing
+     rather than being upscaled, and simply sits narrower.
+
+     `z-index:0` and not `-1`: at `-1` it would paint behind `.ct`'s own
+     background and disappear entirely. */
+  .ct-render{position:absolute;z-index:0;pointer-events:none;
+    left:50%;margin-left:-50vw;bottom:0;
+    width:min(52vw,1088px);line-height:0;
     opacity:0;transform:translateY(22px);
     transition:opacity 1s var(--lux) .5s,transform 1s var(--lux) .5s;}
   .ct.in .ct-render{opacity:1;transform:none;}
@@ -1630,6 +1659,14 @@
 
   @media(max-width:1080px){
     .ct-top{grid-template-columns:minmax(0,1fr);}
+    /* STACKED, THE RENDER GOES BACK INTO THE FLOW. `.ct-top`'s bottom edge is
+       under the enquiry card here, not under the cards, so a bottom-pinned
+       layer would sit behind the form instead of closing the column. It still
+       bleeds to the left edge of the screen. */
+    /* the shorthand also clears the -50vw the pinned version carries */
+    .ct-render{position:static;width:auto;
+      margin:clamp(1.8rem,3vw,2.8rem) calc(-1 * clamp(1.4rem,5vw,4rem)) 0
+             calc(-1 * clamp(1.4rem,5vw,4rem));}
     .ct-card{margin-left:0;max-width:none;}
     .ct-loc{grid-template-columns:minmax(0,1fr);}
   }
@@ -1946,17 +1983,24 @@
             </div>
           </div>
 
-          <!-- The render closes the left column, under the cards (9 Nov, the
-               client's request). Its own ground samples #F8F6F2 — exactly
-               this section's background — so it dissolves into the page with
-               no band around it, the same trick the Western-line corridor
-               banners use. No scrim, no border, nothing: the artwork already
-               fades out at its own edges. -->
-          <figure class="ct-render" aria-hidden="true">
-            <img src="assets/contact-render.jpg" alt="" loading="lazy" decoding="async"
-                 width="1088" height="460">
-          </figure>
         </div>
+
+        <!-- THE RENDER IS A BACKGROUND LAYER, and it is a SIBLING of the two
+             columns rather than a child of the left one. It is pinned to the
+             bottom-left of `.ct-top` and bleeds past the section's padding to
+             the edge of the screen, so whatever of it rises behind the contact
+             cards passes behind them. A child of `.ct-left` could not do
+             either: it would start at the column's padded edge, and taking it
+             out of the flow inside a box its siblings also paint in makes the
+             stacking order depend on their opacity transitions.
+
+             Its own ground samples #F8F6F2 — exactly this section's background
+             — so it dissolves into the page with no band or border, the same
+             trick the Western-line corridor banners use. -->
+        <figure class="ct-render" aria-hidden="true">
+          <img src="assets/contact-render.jpg" alt="" loading="lazy" decoding="async"
+               width="1088" height="460">
+        </figure>
 
         <!-- ---- consultation card ---- -->
         <div class="ct-card" id="ctCard">

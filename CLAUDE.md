@@ -966,20 +966,51 @@ building render**, and the paragraph is gone.
   section is still two columns there — and gets wider again the moment it
   stacks and takes the full page. So four across is right on either side of
   that band and wrong inside it.
-- **`assets/contact-render.jpg`** (1088x460, 60KB) closes the column. Its own
-  ground samples `#F8F6F2`, exactly this section's background, so it dissolves
-  into the page with no band or border — the same trick the Western-line
-  corridor banners use. It is `aria-hidden` with an empty `alt`: it is
+- **`assets/contact-render.jpg`** (1088x460, 60KB) is a **background layer
+  pinned to the bottom-left of the screen**, not a block at the foot of the
+  column. Its own ground samples `#F8F6F2`, exactly this section's background,
+  so it dissolves into the page with no band or border — the same trick the
+  Western-line corridor banners use. It is `aria-hidden` with an empty `alt`:
   decoration, and the section's own heading says what the page is.
-  **It displays up to 922 CSS px wide below 1080px**, so it is soft on a
-  retina screen; ask the client for a wider export, as with the associates
-  plate.
+  **It displays up to 1088 CSS px wide**, so it is soft on a retina screen;
+  ask the client for a wider export, as with the associates plate.
+  - **It is a SIBLING of the two columns, not a child of the left one.** A
+    child could neither start at the screen edge nor pass behind the cards
+    reliably: it would begin at the column's padded edge, and taking it out of
+    the flow inside a box its siblings also paint in makes the stacking order
+    depend on their opacity transitions. `.ct-top` carries `position:relative`
+    for it, and `.ct-left` / `.ct-card` carry `position:relative;z-index:1` so
+    they paint over it.
+  - **`left:50%` + `margin-left:-50vw`, NOT a negative padding.** `.ct-wrap`
+    caps the content at 1500px and centres it, so on a 1920 screen there are
+    another 210px of margin either side that a padding-sized offset knows
+    nothing about — measured, the artwork started **146px in from the edge**.
+    Pinning to the container's centre and stepping back half a viewport lands
+    on the screen edge whatever the wrapper is doing.
+  - **`z-index:0`, not `-1`.** At `-1` it would paint behind `.ct`'s own
+    background and vanish.
+  - **`width:min(52vw,1088px)` is measured.** The left column's right edge
+    lands at 50.8% of the window at 1440 and 51% at 1920, so 52vw reaches it
+    and stops inside the gutter: it clears the enquiry card by 40–399px at
+    every size tested.
+  - **It is pinned to `.ct-top`, not to `.ct`.** The section runs on past the
+    location card and the closing strip, so `bottom:0` there would drop the
+    artwork to the foot of the page.
+  - **Stacked below 1080px it goes back into the flow**, still bleeding to the
+    screen edge. `.ct-top`'s bottom edge is under the *enquiry card* there, so
+    a bottom-pinned layer would sit behind the form. In that order it lands
+    after the form rather than under the cards, which is deliberate — a
+    decorative band must not push the form down the page on a phone.
 
 Measured at 1920x1080, 1600x997, 1440x900, 1366x768, 1280x800, 1081x900,
 1024x800, 768x1024, 620x900, 390x844, 360x640 and 280x653, against the live
 CMS text: four items at every size, the right column count in each band, no
-card ever wider than its track, the render always exactly the column's width,
-no horizontal overflow and no console exceptions.
+card ever wider than its track, no horizontal overflow and no console
+exceptions. For the render, at 2560x1440 down to 360x640: it starts at **x=0**
+at every desktop size, sits flush with the bottom of `.ct-top`, overlaps the
+contact cards by 47–257px with **the cards painting on top in every case**
+(tested with `elementFromPoint` inside the overlap, not by eye), and clears the
+enquiry card by 40–399px.
 
 ### The card has no intro paragraph, and it never really had one
 
