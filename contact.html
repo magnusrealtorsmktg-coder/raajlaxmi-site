@@ -53,6 +53,24 @@
      eleven copies and a swap is eleven edits. */
   var W3F = 'a9733cbb-57c5-4410-aaf3-73f87a6b0948';
 
+  /* GOOGLE SIGN-IN — contact.html ONLY, and it only pre-fills the form.
+     The client ID is public by design (it is in the page source of every site
+     that offers Sign in with Google) and carries nothing secret; the secret
+     half of an OAuth client is the client *secret*, which this flow never uses
+     and which must never be put in here.
+
+     BLANK IS A SUPPORTED STATE. With no id the button is not rendered, the
+     Google script is never fetched and the form behaves exactly as it did
+     before — which is how this shipped before the id existed.
+
+     Authorized JavaScript origins are set on the client in the Google Cloud
+     console and are matched EXACTLY, scheme and host and port. Today:
+     the Netlify host, raajlaxmi.com, www.raajlaxmi.com and
+     http://localhost:8000. A new origin -- the live domain after the cutover
+     is the one to remember -- fails CLOSED: the button renders and then does
+     nothing, with `origin is not allowed` in the console. */
+  var GOOGLE_ID = '1021223830481-q994u4gkueeceit5gojmk7dcflgk8p19.apps.googleusercontent.com';
+
   var base = 'https://' + S.projectId + '.apicdn.sanity.io/v' + S.apiVersion +
              '/data/query/' + S.dataset + '?query=';
   var memo = {};
@@ -82,7 +100,7 @@
      already-encoded tail here, keyed the same as the query */
   var qp = window.__rlParams || {};
 
-  window.RL = {sanity: S, q: q, p: qp, get: get, w3f: W3F};
+  window.RL = {sanity: S, q: q, p: qp, get: get, w3f: W3F, gid: GOOGLE_ID};
 
   if(S.projectId) for(var k in q) if(q[k]) get(q[k], qp[k]).catch(function(){});
 })();
@@ -1368,6 +1386,30 @@
   .ct-card .lead{text-align:center;max-width:26rem;margin:0 auto clamp(1.4rem,2.2vw,1.9rem);
     font-family:"Inter",sans-serif;font-size:.88rem;line-height:1.7;font-weight:300;color:var(--say);}
 
+  /* ---- continue with Google ----
+     The button itself is RENDERED BY GOOGLE into `#ctGoogBtn`, not drawn here,
+     and that is a requirement rather than a shortcut: their terms ask for
+     their own mark and wording. What it gives back is an iframe-like element
+     whose inside cannot be styled, so everything below shapes the space AROUND
+     it — width, centring and the rule under it. `--ct-goog-w` is read by the
+     script and handed to `renderButton`, because the width is the one
+     dimension their API takes and CSS cannot stretch the result. */
+  .ct-goog{--ct-goog-w:380;margin:0 0 clamp(1.1rem,2vw,1.5rem);}
+  .ct-goog-btn{display:flex;justify-content:center;min-height:44px;}
+  /* their button sets its own width; this only stops it overflowing a narrow
+     card if the measured figure and the painted one ever disagree */
+  .ct-goog-btn > div{max-width:100%;}
+  .ct-goog-note{margin:.7rem 0 0;text-align:center;
+    font:300 .8rem/1.55 'Inter',sans-serif;color:var(--say);}
+  .ct-goog-note b{font-weight:500;color:var(--ink);}
+  /* a hairline with the words sitting in a gap in it, so the two routes into
+     the form read as alternatives rather than as two steps */
+  .ct-or{display:flex;align-items:center;gap:.9rem;
+    margin:clamp(1.1rem,2vw,1.5rem) 0 0;
+    font:300 .72rem/1 'Inter',sans-serif;letter-spacing:.12em;text-transform:uppercase;
+    color:#8C877E;}
+  .ct-or::before,.ct-or::after{content:"";flex:1;height:1px;background:rgba(35,33,29,.12);}
+
   .ct-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem;}
   .ct-field{position:relative;margin-bottom:.85rem;}
   .ct-field .ic{position:absolute;left:1rem;top:50%;transform:translateY(-50%);
@@ -1791,6 +1833,18 @@
           <p class="lead">Tell us about your requirements and a member of our team will be in
             touch to arrange a time that suits you.</p>
 
+          <!-- CONTINUE WITH GOOGLE. Hidden in the markup and revealed by the
+               script only once Google's library has actually loaded AND a
+               client id is configured — so a blocked script, an offline
+               visitor or a missing id leaves no empty slot above the form.
+               It fills the name and the email and nothing else; see the
+               block at the foot of this file. -->
+          <div class="ct-goog" id="ctGoog" hidden>
+            <div id="ctGoogBtn" class="ct-goog-btn"></div>
+            <p class="ct-goog-note" id="ctGoogNote" role="status" aria-live="polite" hidden></p>
+            <div class="ct-or" aria-hidden="true"><span>or enter your details</span></div>
+          </div>
+
           <!-- Submitted by fetch to Web3Forms; see the handler in the trailing
                script. `botcheck` is Web3Forms' honeypot — hidden from everyone
                but a bot, and the submission is rejected if anything fills it. -->
@@ -2165,6 +2219,138 @@
     if(reduce){ sec.classList.add('in'); return; }
     new IntersectionObserver((e,o)=>{e.forEach(x=>{if(x.isIntersecting){
       sec.classList.add('in'); o.disconnect();}});},{threshold:.04}).observe(sec);
+  })();
+
+  /* ============ CONTINUE WITH GOOGLE ============ */
+  /* Fills the enquiry card's Name and Email from the visitor's Google account.
+     It is a CONVENIENCE AND NOTHING ELSE — the form still posts to Web3Forms
+     exactly as it did, and signing in is not a step anyone has to take.
+
+     THE PAGE HAS NO BACKEND, which is what settles the design. Google's
+     "Sign in with Google" returns a signed JWT in the browser; this reads the
+     name and the email out of its payload WITHOUT verifying the signature,
+     because verifying it needs a server. That is fine for putting text in two
+     boxes and it is NOT fine for anything else: nothing here may treat the
+     address as proven, and the enquiry email must never claim it is. If a
+     verified identity is ever needed, that is a server, not a tweak.
+
+     THERE IS NO PHONE NUMBER IN IT and there is no way to get one. Basic
+     consent carries name, email, picture and locale; a phone needs a
+     sensitive scope, a Google verification review, and a number on the
+     person's profile that most people do not have. Phone stays typed in by
+     hand, which is worth knowing before anyone goes looking for the bug.
+
+     ONE TAP IS DELIBERATELY NOT USED. Only the rendered button, so nothing
+     depends on third-party cookies or on FedCM being available, and no
+     visitor is interrupted by a sign-in prompt they did not ask for.
+
+     This is the FIRST third-party script on the site, so it is loaded by hand
+     rather than with a <script> tag in the head: it is not fetched at all
+     unless a client id is configured, and every failure — blocked, offline,
+     throwing — leaves the form exactly as it is with no empty slot above it. */
+  (function(){
+    const wrap = document.getElementById('ctGoog'),
+          slot = document.getElementById('ctGoogBtn'),
+          note = document.getElementById('ctGoogNote'),
+          form = document.getElementById('ctForm');
+    if(!wrap || !slot || !form) return;
+    const CID = window.RL && window.RL.gid;
+    if(!CID) return;                      /* no id: no button, no script, no change */
+
+    const field = n => form.elements.namedItem(n);
+
+    /* `atob` gives one byte per character; a name with any non-ASCII letter in
+       it — which is most of this client's enquirers — is UTF-8 inside those
+       bytes and comes out mangled unless it is decoded as such. */
+    function payload(jwt){
+      const part = String(jwt || '').split('.')[1];
+      if(!part) return null;
+      let b64 = part.replace(/-/g, '+').replace(/_/g, '/');
+      while(b64.length % 4) b64 += '=';
+      const bytes = atob(b64);
+      let pct = '';
+      for(let i = 0; i < bytes.length; i++)
+        pct += '%' + ('00' + bytes.charCodeAt(i).toString(16)).slice(-2);
+      return JSON.parse(decodeURIComponent(pct));
+    }
+
+    function fill(n, v){
+      const el = field(n);
+      if(!el || !v) return false;
+      el.value = v;
+      el.dispatchEvent(new Event('input', {bubbles:true}));
+      return true;
+    }
+
+    function onCredential(res){
+      let who;
+      try{ who = payload(res && res.credential); }
+      catch(err){ console.warn('google sign-in: could not read the token —', err); return; }
+      if(!who) return;
+
+      /* It OVERWRITES what is already typed, on purpose: clicking the button
+         is an explicit request to be filled in, and quietly declining to
+         because a box had a character in it reads as the button not working. */
+      fill('name',  who.name || [who.given_name, who.family_name].filter(Boolean).join(' '));
+      fill('email', who.email);
+
+      /* THE CONSENT BOX IS NOT TICKED HERE. Agreeing to be contacted is a
+         different act from signing in, and ticking it on someone's behalf
+         would be both wrong and worthless as a record of consent. */
+      const phone = field('phone');
+      const needsPhone = phone && !phone.value.trim();
+      if(note){
+        note.innerHTML = 'Filled in from <b></b>.' + (needsPhone ? ' Please add your phone number.' : '');
+        note.querySelector('b').textContent = who.email || 'your Google account';
+        note.hidden = false;
+      }
+      /* Land the cursor on the first thing still to do rather than leaving it
+         on a button that has finished its job. */
+      if(needsPhone) try{ phone.focus({preventScroll:true}); }catch(_){ phone.focus(); }
+    }
+
+    /* Their API takes a width in pixels and the element it returns cannot be
+       stretched with CSS, so the figure is measured and handed over. 200–400
+       is the range they accept. */
+    const widthOf = () =>
+      Math.max(200, Math.min(400, Math.round(slot.clientWidth || 380)));
+
+    let drawn = 0;
+    function draw(){
+      const w = widthOf();
+      if(w === drawn) return;
+      drawn = w;
+      try{
+        google.accounts.id.renderButton(slot, {
+          type:'standard', theme:'outline', size:'large', shape:'pill',
+          text:'continue_with', logo_alignment:'center', width:w,
+        });
+      }catch(err){ console.warn('google sign-in: could not draw the button —', err); }
+    }
+
+    function ready(){
+      if(!(window.google && google.accounts && google.accounts.id)) return;
+      try{
+        google.accounts.id.initialize({
+          client_id: CID,
+          callback : onCredential,
+          ux_mode  : 'popup',     /* a redirect would need a backend to land on */
+          auto_select: false,     /* never sign someone in without them asking */
+        });
+      }catch(err){ console.warn('google sign-in: not available —', err); return; }
+      wrap.hidden = false;        /* only now is there something to show */
+      draw();
+      let t;
+      addEventListener('resize', () => { clearTimeout(t); t = setTimeout(draw, 180); },
+        {passive:true});
+    }
+
+    const sc = document.createElement('script');
+    sc.src   = 'https://accounts.google.com/gsi/client';
+    sc.async = true; sc.defer = true;
+    sc.onload  = ready;
+    sc.onerror = () => console.warn('google sign-in: library did not load — the form is unaffected');
+    document.head.appendChild(sc);
   })();
 
   /* ============ ADAPTIVE NAV ============ */

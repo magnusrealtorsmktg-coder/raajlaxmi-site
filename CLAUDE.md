@@ -47,7 +47,7 @@ and are not. The ones that will cost you an afternoon if you do not know them:
 and **Claude Code cannot run either** — the classifier blocks both. Hand the
 command over.
 
-**TWO THINGS ARE WAITING ON A COMMAND SOMEONE HAS TO RUN BY HAND:**
+**THREE THINGS ARE WAITING ON SOMEONE DOING THEM BY HAND:**
 
 1. **The Studio needs redeploying.** `cd studio && npm run build && npx sanity
    deploy --no-build -y`. The `stages` tick-boxes shipped in the code on 7 Nov
@@ -59,6 +59,10 @@ command over.
 2. **Gmail forwarding** from `rajjlaxmi20@gmail.com` to whoever on the client's
    side should read enquiries. Until it is set up **an enquiry exists in
    exactly one inbox and nowhere else** — see *The forms post to Web3Forms*.
+3. **The Google sign-in app needs publishing.** It is in *Testing*, so the
+   contact page's Continue with Google button works only for accounts added by
+   hand as test users. Publishing needs a homepage and privacy-policy URL on
+   the Branding page first, and no Google review. See *Continue with Google*.
 
 ### The domain cutover (not done)
 
@@ -78,6 +82,12 @@ command over.
    is the step that fails silently: a missing origin does not error, the site
    simply falls through to the placeholder content written into the HTML —
    eight fictional Mumbai projects and five invented testimonials.
+5. **Point the Google app's Branding URLs at the live domain** — homepage,
+   privacy policy and terms, which today name the Netlify host because
+   `raajlaxmi.com/privacy` is a 404 on the old site. The *origins* already
+   list both `raajlaxmi.com` and `www.raajlaxmi.com`, so sign-in itself keeps
+   working across the cutover; it is only the consent screen that would
+   otherwise go on citing a netlify.app address. See *Continue with Google*.
 
 ### Deploy: pushing to main is the deploy
 
@@ -841,6 +851,77 @@ with the rail full width at every size, the `<h1>` present and not drawn, one
 video at `playbackRate` 0.9 revealed on the three desktop sizes and correctly
 refused on the short and phone ones, the poster painted in all six, and **zero
 surviving `.sv-side` / `.sv-band-copy` / `.sv-scrim` nodes**. No console errors.
+
+### Continue with Google (contact page only)
+
+The enquiry card carries a **Continue with Google** button above the form,
+which fills **Name and Email** and nothing else. Added 9 Nov at the client's
+request. It is `contact.html`-only — the 30-second lead popup, which is on all
+twelve pages, was deliberately left alone.
+
+- **The client id is `GOOGLE_ID` in that file's `<head>` data-layer block**,
+  beside `W3F` and the Sanity config, published as `RL.gid`. It is
+  `1021223830481-q994u4gkueeceit5gojmk7dcflgk8p19.apps.googleusercontent.com`,
+  and it is **public by design** — every site offering Google sign-in has one
+  in its page source. The *client secret* is the half that must never appear
+  here, and this flow never uses one.
+- **BLANK IS A SUPPORTED STATE AND IS THE FALLBACK FOR EVERY FAILURE.** With no
+  id the button is not drawn, **Google's script is never even requested**
+  (verified: zero requests to `accounts.google.com`) and the form is byte-for-
+  byte the form it was. The same is true if the library is blocked, the visitor
+  is offline, or `initialize()` throws. The block ships `hidden` and is revealed
+  only once there is something to show, so a failure never leaves an empty slot
+  above the form.
+- **THERE IS NO PHONE NUMBER IN IT, AND THERE IS NO WAY TO GET ONE.** Basic
+  consent carries name, email, picture and locale. A phone needs a sensitive
+  scope, a Google verification review, and a number on the person's Google
+  profile that most people have never set. **Phone stays typed by hand** — worth
+  knowing before someone goes hunting for the bug, because it is the field the
+  client's team actually calls on.
+- **The token's signature is NOT verified, and nothing may be built on this.**
+  Verifying it needs a server and this site has none, so the JWT payload is
+  read straight out of the browser. That is fine for putting text in two boxes
+  and fine for nothing else: **nothing may treat the address as proven and the
+  enquiry email must never say it is**. A verified identity is a backend, not a
+  tweak.
+- **The consent tick-box is deliberately NOT ticked by signing in.** Agreeing to
+  be contacted is a different act, and ticking it on someone's behalf is both
+  wrong and worthless as a record.
+- **It OVERWRITES what is already typed.** Clicking the button is an explicit
+  request to be filled in; declining because a box had a character in it reads
+  as the button not working.
+- **One Tap is not used** — only the rendered button, so nothing depends on
+  third-party cookies or on FedCM, and nobody is interrupted by a sign-in
+  prompt they did not ask for.
+- **The JWT payload is decoded as UTF-8, not with bare `atob`.** `atob` gives
+  one byte per character, so any non-ASCII letter — which is most of this
+  client's enquirers — arrives mangled. Verified with `Priyá Deshpande-Ünal`.
+- **Google draws the button; the CSS only shapes the space around it.** Their
+  terms ask for their own mark and wording, and what `renderButton` returns
+  cannot be styled from here. **Width is the one dimension their API takes**, so
+  `widthOf()` measures the slot, clamps to their 200–400 range and hands the
+  number over; it is re-drawn on resize. Measured: 400px inside the card at
+  1440 and 1024, 298 at 390, 268 at 360, 188 at 280 — fits at every one, no page
+  overflow.
+- **The button renders in the VISITOR's language, not English.** A headless
+  screenshot with no `Accept-Language` shows Arabic; that is the harness, not a
+  bug. Pin it with `locale:'en'` in `initialize()` if a single language is ever
+  wanted.
+- **`http://localhost:8000` is an authorized origin**, which is why local
+  testing works — serve on that exact port or the button draws and then does
+  nothing. Origins are matched exactly, scheme and host and port.
+
+**STILL TO DO BEFORE LAUNCH, and it is not a code job:** the Google app is in
+**Testing**, so it works only for accounts added by hand under *Test users*
+(100 maximum). **Publish it** — Google Auth Platform → Audience → *Publish app*
+— which needs a homepage and a privacy-policy URL filled in on the **Branding**
+page first. Those currently point at the Netlify host because
+`raajlaxmi.com/privacy` is a 404 on the old Hostinger site; **swap all three
+Branding URLs to `raajlaxmi.com` at the domain cutover**, alongside adding the
+new origin to Sanity's CORS allowlist. With only `openid`/`email`/`profile` —
+the non-sensitive scopes — publishing is self-serve and needs no Google review.
+`raajlaxmi.com` and `www.raajlaxmi.com` are already in the client's authorized
+origins, so the cutover needs no change there.
 
 `contact.html` — one section, `#contact` ("Section VIII — Contact"): the invitation and a 2×2 contact grid on the left, a floating consultation card on the right, then the location card + drawn map and a closing CTA. **The form posts to Netlify Forms** as `contact`, and the thank-you state is shown only once that POST has succeeded — see *The forms post to Netlify Forms*. Deliberately carries no corner artwork, per the brief.
 
