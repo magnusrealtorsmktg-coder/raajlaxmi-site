@@ -295,10 +295,59 @@ Check at 1440×900, 1024×800 and 420×860; scroll the full page; confirm no con
 |---|---------|-----|--------------|
 | I | Hero | `hero` | Night skyline (inline base64 JPEG) under the CMS film, mouse parallax, property-selector form. **The headline and its sub-paragraph are gone** — markup, CSS, the line-mask entrance and `fitHeadline()` with them, so the page carries no `<h1>`; see *The hero headline and its sub-paragraph are GONE*. **Its remaining copy, and the three dropdown lists, come from the `homepage` singleton** — the four localities hard-coded in the markup (Gomti Nagar, Hazratganj, Sushant Golf City, Vibhuti Khand) are in **Lucknow**, not this developer's corridor; the seeded CMS values replace them with Vasai / Nallasopara / Virar / Saphale. |
 | II | About | `about` | Ivory. Plate showing **the CMS's About video** (`assets/about-plate.jpg` is only the fallback underneath it), four counting stats, then a full-width RERA / CREDAI-MCHI trust strip (`.ab-creds`, a sibling of `.ab-inner`, not inside the content column). **It holds exactly one screen** — see *The About section holds one screen*. The ghost word "Legacy" that used to sit behind the copy is gone, markup, CSS, parallax and schema field alike. |
-| III | Signature Projects | `signature` | Four project cards, corner blueprint decor with slow parallax, rotating seal. The section now ends on the card grid, so its **bottom** padding alone sets the run into Why — it was written to mirror `.about`'s old `clamp(5rem,14vh,140px)`, which **no longer exists**: About was rebuilt to one screen and its padding is now much tighter, so this value is a standalone constant that only looks like it is paired with something. |
+| III | Signature Projects | `signature` | Four project cards and corner blueprint decor with slow parallax. **It holds one screen above 1080px** — see *Signature Projects holds one screen*. The rotating `seal-top.png` that used to float in its top-right corner is **gone** (9 Nov, client's request); the same file still draws Section IV's seal, so it is not orphaned. |
 | IV | Why Raajlaxmi | `why` | Team photograph as the feature plate, **sized so the heading and the photograph share one screen** (see *The Why heading and photograph share one screen*), four numbered rows, a year timeline (2004→2026), closing quote + spinning seal. The auto-scrolling brand marquee (`.why-carousel`) that used to sit before the quote is gone — Section X replaced it. |
 | XI | Meet Our Owners | `owners` | **Sits between Why and Brands in scroll order**, despite the number. Portrait cards running as a **continuous right-to-left marquee that the visitor can take hold of** — see *The owners strip gives way and comes back*. `SPEED` is 30 px/s, the slowest of the three strips because a tall portrait going past at speed is harder to read than a line of text. `.ow-stage` is the scroll container and carries the edge-fade mask. The copy sits over the foot of the photograph behind a gradient scrim, so the card *is* the picture rather than a picture with a caption under it. **Hovering one card pauses the strip and blurs and dims the others** — the blur is pure CSS (`.ow-grid:hover .ow-card:not(:hover)`), the pause is now JS, with `:focus-within` / `focusin` carrying both for a keyboard, and the blur dropped below 620px where `:hover` sticks after a tap. **Clicking a card opens the detail panel** — hover is the invitation, the click is the choice; see *The owner detail panel*. **Copies are computed, not fixed**, exactly as the client photo strip does it: `build()` measures a card, renders `max(3, ceil(stageWidth / setWidth) + 2)` sets and re-measures, so two published owners loop as cleanly as six. (The photo strip uses `+ 1`; this one needs `+ 2` because it can be pushed backwards.) **The CMS fills the cards from a later block**, so that block fires **`rl:owners`** and this one rebuilds the strip from whatever it left — the same handshake the About counters use with `rl:home-stats`. Reduced motion renders a single set, puts scroll-snap back and drops the mask, so no card is stranded off a stage that no longer moves. **Driven by the `ownersPage` singleton, not the home-page document** — see *The owners live on their own document*. **Its six cards are bracketed placeholders and it is the one section on the home page that removes itself**: an empty `owners` list deletes the section rather than printing "[Owner name]" six times to the public, and it returns the moment anyone is published. With Sanity unreachable the placeholders stay, so a failed fetch never costs the design. **The card prints the name and the role only** — "About them" is the detail panel's content and never appears here; it rides on the card as `data-bio` so the panel can read it off whichever card was opened. The card carries the person, the panel carries what there is to say about them. |
 | X | Brands We Use | `brands` | Follows Why in scroll order. `OUR PARTNERS` header, six category tabs (All / Structure / Interiors / Electrical / Fittings / Utilities) and a card grid, all rendered from the `BRANDS` array in the Section X IIFE — adding a supplier is one line of data, no markup. Each row is `[name, logo file, trade, tab]`: `trade` is the line from the client's sheet and prints on the card, `tab` is the coarser bucket the tabs filter by. Johnson and Hindware appear twice on purpose, under two different trades. Its header (`.br-head` / `.br-label` / `.br-title` / `.br-intro`) is a **copy of Section IV's** rather than a shared rule — change one and the other will not follow. **On a phone the All view is clipped to the first six cards behind a "Show all 30 brands" pill** — see *Brands are clipped on a phone*. |
+
+### Signature Projects holds one screen
+
+The client's complaint, with a screenshot: the four cards were cut off at the
+fold. Measured, the section stood **1156–1303px against a 768–1080px window**,
+so it was over by 223–388px at every desktop size. It is now `min-height:100svh`
+and a centred flex column, and **every vertical step inside it is sized in `vh`
+rather than `rem`** — the same treatment `.about` and `.why` already have.
+
+- **The media box is sized by HEIGHT, not by ratio, above 1080px.**
+  `aspect-ratio:4/3.1` is a function of the card's *width*, so a wider screen
+  made the card taller — 275px of photograph at 1920 — which is the opposite of
+  what fitting a fold needs. It is `height:clamp(116px,18.5vh,208px)` now. **The
+  ratio comes back in the stacked tiers**, which must reset `height:auto` or it
+  wins over `aspect-ratio`.
+- **`.sp-desc` is clamped to three lines (four when stacked), and that is what
+  holds the budget.** The text is the project's CMS `blurb`, so its length is
+  the one thing on the card the page does not decide; one long blurb would put
+  all four cards back past the fold.
+- **`.sp-wrap` must never carry `margin:0 auto` again.** `.sp` is a flex column
+  now, and an auto cross-axis margin beats `stretch` — it shrink-wraps the box
+  to its content. This is the identical trap `.ab-top` fell into; use
+  `width:100%` + `margin-inline:auto`.
+- **The navbar measures a flat 122px at ≥1366 (114 at 1080, 111 at 1024)**, and
+  the section scrolls *under* it. While the content is centred inside
+  `min-height` the top padding is only a floor and the centring does the work —
+  but in the two tiers where centring is off (stacked, and a short window) the
+  padding is the only thing holding the label clear, so each of those tiers
+  sets its own. Measured, the label cleared the bar by **−15px** before that was
+  added.
+- **One screen is off the table below 1080px**, where the grid becomes two
+  columns and therefore two rows, and below 620px of height. Both return the
+  section to natural flow — the same concession `.about` makes when it stacks.
+
+Measured at 1920×1080, 1600×997, 1536×864, 1440×900, 1366×768 and 1280×800:
+the section is exactly one viewport at every one, the cards finish **55–145px
+above the fold**, and the label clears the navbar by **22–103px**. At 1440×600,
+1080×900, 1024×800, 768×1024, 390×844 and 844×390 it is correctly taller than
+the window, with the label clear by 14–57px. No horizontal overflow and no
+console errors anywhere.
+
+**Verifying the reveal headlessly does not work and is not a regression.**
+`.sp`'s `IntersectionObserver` (`threshold:.12`) does not deliver inside a
+sized iframe under `--virtual-time-budget`, so `.sp` never gains `.in` and
+every card reads `opacity:0`. The **pre-change file behaves identically** —
+checked side by side with `git show HEAD:index.html` — so compare against that
+rather than concluding the reveal broke. `--force-prefers-reduced-motion` takes
+the `reduce` branch, which adds `.in` outright, and there all four cards and
+their buttons read as revealed.
 
 ### Brands are clipped on a phone
 
@@ -2549,8 +2598,9 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
 document `<head>`*, which is where the reasoning and the measurements are. Each
 page preconnects to `apicdn.sanity.io` and `cdn.sanity.io`. The three rotating
 seals on `index.html` carry `loading="lazy" decoding="async"`: they are
-`seal-top.png` (259KB) and `seal-bottom.png` (**716KB**), they sit in Sections
-III and IV, well below the fold, and together they were ~975KB of decoration
+`seal-top.png` (259KB) and `seal-bottom.png` (**716KB**). Section III's copy was
+removed on 9 Nov, so **two remain**, both in Section IV; they sat in Sections
+III and IV when this was written, well below the fold, and together they were ~975KB of decoration
 competing with the first screen on a cold load. Nothing about how they look
 changed.
 
