@@ -70,10 +70,6 @@
 
   /* what this page asks the CMS for */
   var q = {
-    /* the hero search's Property and Location lists, built from real projects */
-    search: '*[_type=="project" && (stage=="completed" || status=="Completed")]' +
-            '{config,location,price}',
-
     /* every word and picture on the page: hero, About, Why, Signature, Owners */
     home: '*[_id=="homepage"][0]{\n' +
       /* heroHeadline and heroSub are deliberately NOT asked for: the hero's
@@ -2900,87 +2896,43 @@
     /* the collection page is the thing that actually lists properties */
     form.addEventListener('submit', e => {
       e.preventDefault();
-      const q = new URLSearchParams({status: 'completed'});
+      /* NO `status` HERE, and that is load-bearing now that LOCATION is a fixed
+         list. It used to pin the search to `status=completed`, which was safe
+         only while the options were derived from the completed projects. Virar
+         is offered now and has no completed property, so a forced Completed
+         view would answer the client's own dropdown with "nothing matches". The
+         hero searches the whole collection. */
+      const q = new URLSearchParams();
       if(typeSel && typeSel.value) q.set('type', typeSel.value);
       if(locSel  && locSel.value)  q.set('loc',  locSel.value);
       if(budgetSel && budgetSel.value) q.set('budget', budgetSel.value);
-      location.href = 'projects.html?' + q.toString();
+      const qs = q.toString();
+      location.href = qs ? 'projects.html?' + qs : 'projects.html';
     });
 
-    if(!window.RL) return;
+    /* NEITHER DROPDOWN IS DERIVED FROM THE PROJECTS ANY MORE (9 Nov).
+       PROPERTY stopped being derived earlier the same day; LOCATION follows it
+       now, at the client's request: the list is to read Vasai / Nallasopara /
+       Virar / Saphale, in Western-line order.
 
-    const txt = v => (typeof v === 'string' ? v.trim() : '');
+       The derivation could not produce that list. It read the LAST part of each
+       published project's address and offered the distinct results, so what a
+       visitor actually saw was the sub-locality spellings the client had typed
+       — `Nallasopara (West)`, `Saphale (West)`, `Vasai East` — and NO VIRAR AT
+       ALL, because it only looked at completed projects and all three Virar
+       properties are Ongoing or Redevelopment. It also claimed the control with
+       `dataset.src='projects'`, so `heroLocationOptions`, which the client had
+       already filled in, never reached the page. That is the same trap PROPERTY
+       was in.
 
-    /* PROPERTY IS NOT DERIVED FROM THE PROJECTS ANY MORE, and that is the whole
-       point of this note. It used to be: every `config` on a published project
-       was split ("2 & 3 BHK" -> "2 BHK", "3 BHK") and the distinct results
-       became the list, so that every option had at least one property behind it.
-       The live data made that list read 1/2/3/4/5 BHK — and it was OVERWRITING
-       the list the client had already typed into `heroPropertyOptions`, which
-       the Studio offers and which nothing on the page was honouring.
-       It is a fixed list now, exactly as BUDGET already is: written in the CMS,
-       painted by the home-page content block, and the same whatever the
-       projects happen to carry. LOCATION is still derived, because a town with
-       nothing in it is a dead end in a way a property type is not. */
+       Both lists are fixed now: written in the CMS, painted by the home-page
+       content block, with the markup as the offline fallback. `townOf()`,
+       `fill()` and the `RL.q.search` fetch went with the derivation — nothing
+       else used that query, so it is gone from the <head> data layer too.
 
-    /* The town is the LAST part of the address — "Oswal Nagari, Nallasopara
-       (West)" is in Nallasopara, not Oswal Nagari. The collection page's own
-       chips key off the first part, which is why the link below filters on a
-       substring of the whole line rather than trying to agree with them. */
-    const townOf = loc => {
-      const parts = txt(loc).split(',').map(x => x.trim()).filter(Boolean);
-      return parts.length ? parts[parts.length - 1] : '';
-    };
-
-    const fill = (sel, values) => {
-      if(!sel) return;
-      /* claim the control: the home-page content block also knows how to fill
-         these from the CMS, and the two fetches race. Whoever lands second
-         would otherwise win, so the list built from real projects stakes a
-         flag and the CMS list stands down. */
-      sel.dataset.src = 'projects';
-      const keep = sel.querySelector('option[value=""]');
-      sel.innerHTML = '';
-      if(keep) sel.appendChild(keep);
-      values.forEach(v => {
-        const o = document.createElement('option');
-        o.value = v; o.textContent = v;
-        sel.appendChild(o);
-      });
-    };
-
-    /* already in flight since the document head — see RL in <head> */
-    RL.get(RL.q.search)
-      .then(({result}) => {
-        const rows = Array.isArray(result) ? result : [];
-        if(!rows.length) return;                 // keep whatever the CMS set
-
-        /* "Vasai (East)" and "Vasai East" are the same town typed two ways, and
-           they were producing two entries that each matched only half the
-           properties. Fold them on a punctuation-free key and keep the first
-           spelling seen as the label. */
-        const key = t => t.toLowerCase().replace(/[()]/g, '').replace(/\s+/g, ' ').trim();
-        const townMap = new Map();
-        rows.forEach(r => {
-          const t = townOf(r.location);
-          if(t && !townMap.has(key(t))) townMap.set(key(t), t);
-        });
-        const towns = [...townMap.values()].sort();
-
-        if(towns.length) fill(locSel, towns);
-
-        /* BUDGET IS NOT FILLED FROM THE PROJECTS, and is no longer hidden when
-           few of them carry a price. It used to list the distinct prices
-           themselves and remove itself below two of them — which made it a
-           dropdown of literal figures ("₹1.8 Cr") that came and went as the
-           client typed. It is a fixed set of BANDS now, written in the CMS
-           (`heroBudgetOptions`) and painted by the home-page content block, so
-           it reads the same whether one project is priced or all of them. The
-           collection pages match a band by overlapping RANGES rather than by
-           string equality, which is what lets a band find a price nobody typed
-           to match it. */
-      })
-      .catch(err => console.warn('hero search: keeping the built-in lists —', err));
+       What the derivation bought was the guarantee that every option had a
+       property behind it. That is given back by the submit below no longer
+       forcing `status=completed`. */
   })();
   /* ============ SECTION II — about ============ */
   (function(){
@@ -3950,9 +3902,12 @@
 
     function paintSelect(sel, values){
       if(!sel || !values.length) return;
-      /* the hero search builds these from the published projects — a
-         hand-typed list must not overwrite one that is known to match
-         something (see the HERO SEARCH block at the end of this file) */
+      /* NOTHING SETS `dataset.src` ANY MORE. The hero search used to build
+         PROPERTY and LOCATION from the published projects and stake this flag
+         so the CMS lists stood down; both derivations are gone (9 Nov) and all
+         three dropdowns are CMS content now. The guard is kept as the hook a
+         future derived list would claim the control with — see the HERO SEARCH
+         block at the end of this file. */
       if(sel.dataset.src === 'projects') return;
       /* the first option is the "Any …" placeholder — keep it, replace the rest */
       const keep = sel.querySelector('option[value=""]');

@@ -166,7 +166,7 @@ two queries in the same session.
 | Owners | **5 real people, each with a portrait and a role; no bios.** The card runs name + role and the panel is where a bio would show |
 | Social handles | **YouTube, WhatsApp, Instagram.** Facebook, LinkedIn and X are unset, so they do not render |
 | Hero background | the desktop film; `heroVideoMobile` is **still empty**, so phones use the committed `assets/hero-mobile.mp4` fallback |
-| Hero dropdowns | `heroButton` **Discover Your Space**; `heroPropertyOptions` 1 BHK / 2 BHK / 3 BHK / Jodi Flats / Office / Shops (the last three match nothing); `heroBudgetOptions` five bands (all match nothing — no project has a price); `heroLocationOptions` the four towns, **which the page ignores** because LOCATION is derived from the projects |
+| Hero dropdowns | `heroButton` **Discover Your Space**; `heroPropertyOptions` 1 BHK / 2 BHK / 3 BHK / Jodi Flats / Office / Shops (the last three match nothing); `heroBudgetOptions` five bands (all match nothing — no project has a price); `heroLocationOptions` the four towns, **now painted on the page** — the derivation that was overwriting them was removed on 9 Nov |
 
 **THE BROCHURES ARE NOT LINEARISED — none of the four.** Checked by reading the
 first 2KB of each: no `/Linearized`. The asset CDN answers range requests, so a
@@ -242,9 +242,11 @@ property that is not sold out in its place on the home page. Both halves are
 - **Krishna Niwas has no `blurb`**, so signature card four prints the invented
   placeholder sentence and its collection card shows no description.
 - **Nakshatra Auris is `soldOut` and is still signature card three.**
-- **The hero's LOCATION dropdown shows sub-locality spellings and no Virar** —
-  see the note under *The hero search*. Either fix the towns on the projects or
-  stop deriving the list.
+- ~~**The hero's LOCATION dropdown shows sub-locality spellings and no Virar**~~
+  — resolved 9 Nov by dropping the derivation; it reads the client's four towns
+  now. See *LOCATION is a fixed list too*. One consequence to be aware of: the
+  hero search no longer pins itself to the Completed view, because Virar has no
+  completed property.
 - **`seal-top.png` (259KB) is referenced by nothing** and still ships.
 - **`EMI-image.png` (924KB) sits untracked at the repo root.** Nothing
   references it — `assets/emi-hero.jpg` is what the EMI page uses — so it is
@@ -1413,13 +1415,10 @@ Filled, it is `--champagne` on `#14243C` — a 7:1 contrast ratio, the same trea
 the page's other primary buttons use — and it keeps that fill over ivory too.
 
 **The markup's location list was corrected on 9 Nov** (`a3647e7`) from the four
-Lucknow localities to Vasai / Nallasopara / Virar / Saphale. **That changes only
-the fallback**, because the project-derived `fill(locSel, towns)` still claims
-the control at runtime — so what a visitor actually sees is still the derived
-list, which today reads `Nallasopara (West)`, `Saphale (West)`, `Vasai East`
-and **has no Virar entry at all**. The clean four only appear when Sanity is
-unreachable. Worth settling: either drop the derivation so the tidy names show,
-or fix the towns on the projects.
+Lucknow localities to Vasai / Nallasopara / Virar / Saphale — and **later the
+same day the derivation that was overwriting it was removed**, so those four
+are now what a visitor actually sees. See *LOCATION is a fixed list too* below
+for why, and for the one other thing that had to change with it.
 
 **The hero fields were tightened on 9 Nov** (`7cac551`): `.hs-field` went from
 `flex:1 1 8.5rem` to `flex:1 1 0` with a `6.5rem` floor, and the select's right
@@ -1427,13 +1426,17 @@ padding from `1.6rem` to `1.15rem`, so each dropdown's chevron sits just after
 its word instead of being pushed out to a fixed column — which is what keeps
 the longer `Discover Your Space` button on the same row.
 
-**The hero search's LOCATION is built from the published projects; PROPERTY is
-not, since 9 Nov.** Both were a hand-typed list in the `homepage` singleton that
-matched nothing — a visitor could choose a locality the group does not build in,
-and the form merely scrolled the page. The block at the end of `index.html` reads
-the completed projects and fills the location list from them, so every option has at least one property behind it, and
-submitting navigates to `projects.html?status=completed&type=…&loc=…`, which the
-three collection files read and AND with the status and the active city chip.
+**NEITHER hero dropdown is built from the projects any more, since 9 Nov.** All
+three — PROPERTY, LOCATION and BUDGET — are now CMS content: written on the
+`homepage` singleton, painted by the home-page content block, with the markup as
+the offline fallback. Submitting navigates to `projects.html?type=…&loc=…&budget=…`,
+which the three collection files read and AND with the active city chip.
+
+They were derived because a hand-typed list matched nothing — a visitor could
+choose a locality the group does not build in and the form merely scrolled the
+page. Both derivations were removed for the same reason: each one **claimed the
+control with `dataset.src='projects'`, so the list the client had typed into the
+Studio never reached the page at all.**
 
 **PROPERTY IS A FIXED LIST AGAIN, and the reason is that the derived one was
 overwriting the client's own.** It used to split every project's `config`
@@ -1444,9 +1447,44 @@ BHK — and `fill()` claims the control with `dataset.src='projects'`, so
 already filled in, never reached the page**. It is now fixed, exactly as BUDGET
 is: written in the CMS, painted by the home-page content block, the same
 whatever the projects carry. `typesOf()` and `byType()` went with the
-derivation. **LOCATION is still derived**, because a town with nothing in it is
-a dead end in a way a property type is not — someone may well search for a shop
-before the group lists one.
+derivation.
+
+### LOCATION is a fixed list too
+
+**The client asked for Vasai / Nallasopara / Virar / Saphale**, in Western-line
+order — the same four the corridor banner and the town-filter capsule already
+use. The derivation could not produce that list, for two separate reasons:
+
+- **It printed the client's sub-locality spellings.** It read the LAST
+  comma-separated part of each address and offered the distinct results, so the
+  dropdown read `Nallasopara (West)`, `Saphale (West)`, `Vasai East`.
+- **It had no Virar at all.** It queried only `completed` projects, and all
+  three Virar properties — Krishna Niwas, Raajlaxmi Meenakshi, Raajlaxmi Avenue
+  — are Ongoing or Redevelopment.
+
+`townOf()`, `fill()` and the `RL.q.search` fetch are gone with it. **Nothing
+else used that query**, so it was removed from the `<head>` data layer too —
+the home page now makes one query fewer.
+
+**THE SUBMIT NO LONGER FORCES `status=completed`, AND THAT IS NOT A SEPARATE
+CHANGE.** It is what gives back the one thing the derivation bought: the
+guarantee that every option has a property behind it. Pinned to the Completed
+view, the client's own Virar option would have answered with "nothing matches".
+The hero now searches the whole collection, and with nothing chosen it opens a
+bare `projects.html`.
+
+Measured against the live dataset, each of the four returns properties — Vasai
+3, Nallasopara 3, Saphale 5, Virar 5. Virar is 5 rather than 4 because `?loc=`
+is matched **anywhere** in the address line, so Nakshatra Auris's
+"Virar-Nallasopara Link Road, Nallasopara (West)" answers to both Virar and
+Nallasopara. That looseness is pre-existing and deliberate — see the note under
+*The town filter is a capsule of four towns* — and it errs towards showing a
+property rather than hiding one.
+
+**`dataset.src` is now set by nothing.** The guard in `paintSelect()` is kept as
+the hook a future derived list would claim a control with; do not delete it
+believing it is dead weight, and do not re-add a derivation without reading why
+both of these were taken out.
 
 The list is **1 BHK / 2 BHK / 3 BHK / Jodi Flats / Office / Shops** (9 Nov, the
 client's wording). It replaced their own `1 RK, 1 BHK, 2 BHK, 3 BHK, Shop,
@@ -1469,9 +1507,9 @@ match the other. The **town is the last part of the address**, not the first —
 first part, which is a sub-locality, so the link filters on a substring of the whole
 line rather than trying to agree with them; and `"Vasai (East)"` and `"Vasai East"`
 are **folded on a punctuation-free key** so one town does not appear twice and a
-search matches both spellings. Both blocks fill the same `<select>`s and their
-fetches race, so the project-derived list sets `dataset.src = 'projects'` and the
-CMS filler stands down — whichever lands second, the real data wins.
+search matches both spellings. (The folding now matters only on the collection
+side: nothing derives a list from the projects any more, so there is no longer
+a race between two fillers for the same `<select>`.)
 
 **The hero filter's placeholder option IS its heading, and the three fields
 carry no `<label>` (9 Nov).** They used to read `Any residence` / `Any location`
