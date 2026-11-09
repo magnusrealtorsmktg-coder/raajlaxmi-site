@@ -640,13 +640,17 @@ drifting; only the three collection pages have `#colChips` and the logic.
 
 `testimonials.html` — one section, `#testimonials` ("Section VII — Testimonials"). **The running order was changed by the client on 9 Nov** and is now: the page header, then the **client photo gallery**, then a second header introducing the reviews (`.tm-head-reviews`), then the **reviews strip**, then the closing consultation strip. The photographs used to sit under the reviews; they now come first and are sized to fill the first screen, with the reviews heading deliberately starting below the fold. **The gallery is no longer hidden** — the CMS carries eight photographs. **Both strips are now real scrollers** with the owners-strip behaviour, not CSS marquees. The reviews come from Sanity (the five written into the `T` array are only the fallback); each card carries the reviewer's initials rather than a photograph, and a Google button when that review has a link. The arrows and dots are `display:none` — a strip with no discrete slides has nothing for them to point at. All the detail is under *Content management → Testimonials*. The nav's Testimonials item points here from every page.
 
-`services.html` — one section, `#services` ("Section IX — Services"), **five** blocks: the film band, the journey rail **with a service card inside each of its five steps**, the six-step buying flow, a FAQ accordion and a closing CTA. Both rails fill their gold line from scroll position (`--fill` on `.sv-rail` / `.sv-flow`). Each block carries `data-rev` and gets its own observer, so the page reveals in movements rather than all at once. Its first two blocks **were finished artwork with the copy painted in** (`Services_start.png` at 2164:380 and `assets/service-philosophy.jpg` at 1376:513); the first is **the client's film with no copy at all over it** and the second **is gone** — see *The services page runs a film* below.
+`services.html` — one section, `#services` ("Section IX — Services"), **five** blocks: the film band, the journey rail **with a service card inside each of its five steps** (a card is one centred paragraph now — no heading, no icon), the six-step buying flow, a FAQ accordion and a closing CTA. Both rails fill their gold line from scroll position (`--fill` on `.sv-rail` / `.sv-flow`). Each block carries `data-rev` and gets its own observer, so the page reveals in movements rather than all at once. Its first two blocks **were finished artwork with the copy painted in** (`Services_start.png` at 2164:380 and `assets/service-philosophy.jpg` at 1376:513); the first is **the client's film with no copy at all over it** and the second **is gone** — see *The services page runs a film* below.
 
 **EACH SERVICE CARD LIVES INSIDE ITS JOURNEY STEP (7 Nov).**
 Property Consultation → Private Consultation, Private Site Visit → Site Visits,
 Home Selection → Investment Advisory, Documentation → Documentation Support,
 Welcome Home → After-Sales Support. **Home Personalization was deleted** to make
 it five and five, and **the "Our Services" rule-head between the two is gone**.
+Those five card headings on the right of each pair no longer appear on the page
+— see the first bullet below — but the pairing is what the five cards were
+written for, so the list is kept as the record of which copy belongs to which
+step.
 
 - **The pairing is the DOM, not two grids that agree.** The cards spent half a
   day as a separate `.sv-grid` aligned to the rail by making both grids share a
@@ -660,9 +664,31 @@ it five and five, and **the "Our Services" rule-head between the two is gone**.
 - **`.sv-step` is a flex column and the card is `flex:1`.** The grid stretches
   the steps to equal height; without `flex:1` that height would sit under the
   card as white space instead of making the cards match.
-- **`.sv-step > h3` needs the child combinator.** The card inside now has an
-  `h3` of its own at a different size, and the bare `.sv-step h3` reached
-  straight into it.
+- **THE CARD IS A PARAGRAPH AND NOTHING ELSE (9 Nov).** Its own `<h3>` and its
+  `.sv-badge` icon were removed at the client's request: the step already
+  carries an icon and a heading directly above the card, so each card was
+  printing a second, differently-worded pair under them — *Property
+  Consultation* over *Private Consultation*, *Welcome Home* over *After-Sales
+  Support*. Those five card headings are **gone, not hidden**; the step
+  headings above them are what name the five services now.
+  - **`.sv-card`'s `text-align:left` went with them**, which is the alignment
+    half of the same request. The card overrode `.sv-step`'s centring because
+    it read as a little composition of its own; with only the copy left, it
+    belongs to the heading above it, so it inherits the step's centring and
+    the two line up as one column. Measured at 1920, 1440, 1280, 1100, 1024
+    and 390: the card's centre is **exactly** the heading's centre, 0.00px, at
+    every width.
+  - **`.sv-card p` lost its `margin-top:.5rem`.** That was the gap under the
+    card's own heading; as the body's only child it was just adding to the
+    top padding.
+  - **`.sv-badge` and `.sv-card h3` were DELETED, not left dead.** This page's
+    CSS is its own — it is not the stylesheet duplicated across all twelve
+    files — so there is no other copy to drift from. `.sv-badge` appears in no
+    other file; checked before deleting.
+- **`.sv-step > h3` keeps the child combinator** even though no `h3` is left
+  inside a card for a bare `.sv-step h3` to reach. It costs nothing and it is
+  what stops a heading added inside a card later from silently taking the step
+  heading's size.
 - **The card has no reveal of its own any more.** The step fades and rises as
   one thing, card included; a second opacity transition inside it only fought
   the first. The hover lift stays.

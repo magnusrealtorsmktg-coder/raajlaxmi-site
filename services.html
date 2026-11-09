@@ -1460,29 +1460,38 @@
      NO REVEAL OF ITS OWN. The step fades and rises as one thing, card
      included; a second opacity transition on the card inside it only fought
      the first. The hover lift stays, because that is the card's own. */
+  /* NO text-align HERE ANY MORE, and that is the alignment the client asked
+     for. The card used to override `.sv-step`'s centring with `text-align:left`
+     because it carried a heading and an icon of its own and read as a little
+     composition. With only the paragraph left (9 Nov) it is the step's heading
+     that the copy belongs to, so it inherits the step's centring and the two
+     line up as one column. */
   .sv-card{position:relative;display:flex;flex-direction:column;flex:1;
-    margin-top:clamp(1rem,1.8vw,1.5rem);text-align:left;background:#fff;
+    margin-top:clamp(1rem,1.8vw,1.5rem);background:#fff;
     border:1px solid rgba(198,161,91,.22);border-radius:14px;
     box-shadow:0 26px 54px -46px rgba(60,48,28,.4),0 6px 16px -14px rgba(60,48,28,.12);
     transition:transform .5s var(--lux),box-shadow .5s var(--lux);}
   .sv-card:hover{transform:translateY(-6px);
     box-shadow:0 44px 84px -46px rgba(60,48,28,.48),0 10px 24px -16px rgba(60,48,28,.18);}
-  /* The icon used to ride the seam between the photograph and the body,
-     absolutely positioned and hanging above it. With the photograph gone it
-     is an ordinary first child of the body — absolute, it would have floated
-     off the top edge of the card into the gap above. */
-  .sv-badge{width:2.7rem;height:2.7rem;border-radius:50%;display:grid;place-items:center;
-    background:#FBF9F5;color:var(--au-deep);border:1px solid rgba(198,161,91,.3);
-    box-shadow:0 10px 22px -14px rgba(60,48,28,.5);
-    margin-bottom:clamp(.8rem,1.2vw,1rem);
-    transition:transform .5s var(--lux);}
-  .sv-card:hover .sv-badge{transform:translateY(-3px);}
+  /* `.sv-badge` AND `.sv-card h3` ARE GONE (9 Nov, the client's request): the
+     card carries its paragraph and nothing else. Both rules were deleted
+     rather than left dead — this page's CSS is its own, not the stylesheet
+     that is duplicated across all twelve files, so there is no copy elsewhere
+     to drift from. The step above the card still has the icon and the heading;
+     repeating a second pair inside the card was the duplication the client was
+     looking at.
+
+     `.sv-step > h3` keeps its child combinator even though there is no longer
+     an `h3` inside the card for a bare `.sv-step h3` to reach. Leave it: it
+     costs nothing and it is what stops the next heading added inside a card
+     from silently taking the step heading's size. */
   .sv-cbody{position:relative;display:flex;flex-direction:column;flex:1;
     padding:clamp(1.2rem,1.7vw,1.5rem) clamp(.95rem,1.3vw,1.2rem) clamp(1.2rem,1.6vw,1.45rem);}
-  .sv-card h3{font-family:"Cormorant Garamond",serif;font-weight:600;
-    font-size:clamp(1.02rem,1.25vw,1.18rem);line-height:1.2;color:var(--ink);}
-  .sv-card p{margin-top:.5rem;font-family:"Inter",sans-serif;font-size:.74rem;font-weight:300;
-    line-height:1.62;color:var(--say);}
+  /* `margin-top` is 0 because the paragraph is the body's first and only
+     child now — the .5rem it carried was the gap under the card's own heading
+     and, with that gone, it was simply adding to the body's top padding. */
+  .sv-card p{margin:0;font-family:"Inter",sans-serif;font-size:.74rem;font-weight:300;
+    line-height:1.62;color:var(--say);text-wrap:balance;}
 
   /* ---- 6. faq ---- */
   .sv-faq{padding:clamp(3.5rem,8vh,7rem) 0 0;}
@@ -1841,8 +1850,6 @@
           <h3>Property Consultation</h3>
           <article class="sv-card">
             <div class="sv-cbody">
-              <span class="sv-badge" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M16 4h5v6h-5l-2 2V4z"/></g></svg></span>
-              <h3>Private Consultation</h3>
               <p>One-to-one guidance shaped around your lifestyle, budget and long-term plans.</p>
             </div>
           </article>
@@ -1853,8 +1860,6 @@
           <h3>Private Site Visit</h3>
           <article class="sv-card">
             <div class="sv-cbody">
-              <span class="sv-badge" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><path d="M12 2.5c-3.3 0-6 2.7-6 6 0 4.5 6 13 6 13s6-8.5 6-13c0-3.3-2.7-6-6-6z"/><circle cx="12" cy="8.5" r="2.2"/></g></svg></span>
-              <h3>Site Visits</h3>
               <p>Curated visits that let you experience a project and its neighbourhood properly.</p>
             </div>
           </article>
@@ -1865,8 +1870,6 @@
           <h3>Home Selection</h3>
           <article class="sv-card">
             <div class="sv-cbody">
-              <span class="sv-badge" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><path d="M4 20V9l6-4 6 4v11"/><path d="M4 20h16M16 20v-7h4v7"/><path d="M8 12h2M8 16h2"/></g></svg></span>
-              <h3>Investment Advisory</h3>
               <p>Considered advice on location, timing and yield, grounded in what the market
                 actually does.</p>
             </div>
@@ -1878,8 +1881,6 @@
           <h3>Documentation</h3>
           <article class="sv-card">
             <div class="sv-cbody">
-              <span class="sv-badge" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><path d="M6 2.5h8l5 5v14H6z"/><path d="M14 2.5v5h5"/><path d="M9.5 12h6M9.5 15.5h6M9.5 19h4"/></g></svg></span>
-              <h3>Documentation Support</h3>
               <p>End-to-end help with paperwork, approvals and every legal formality in between.</p>
             </div>
           </article>
@@ -1890,8 +1891,6 @@
           <h3>Welcome Home</h3>
           <article class="sv-card">
             <div class="sv-cbody">
-              <span class="sv-badge" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><circle cx="8" cy="13.5" r="4.4"/><path d="M12 11L21.5 3M19 5.5l2 2M16.4 8.1l1.8 1.8"/></g></svg></span>
-              <h3>After-Sales Support</h3>
               <p>A dedicated point of contact who stays with you well past possession.</p>
             </div>
           </article>
