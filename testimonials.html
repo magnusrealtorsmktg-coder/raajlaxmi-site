@@ -1661,7 +1661,7 @@
   /* ===== CLIENT PHOTO SLIDER (above the reviews) ===== */
   /* Hidden until Sanity carries at least one photograph — an empty slider is
      worse than no slider, so the markup ships with [hidden] on it. */
-  .tg{margin-bottom:clamp(3.5rem,7vw,6rem);opacity:0;transform:translateY(26px);
+  .tg{margin:clamp(2.6rem,4.5vw,4rem) 0 clamp(1rem,2vw,2rem);opacity:0;transform:translateY(26px);
     transition:opacity 1s var(--lux) .1s,transform 1s var(--lux) .1s;}
   .tm.in .tg{opacity:1;transform:none;}
   .tg[hidden]{display:none;}
@@ -1853,7 +1853,27 @@
 
     <div class="tm-wrap">
 
-      <!-- client photographs (shown FIRST, above the reviews): filled from the testimonials page document in
+      <!-- header -->
+      <header class="tm-head">
+        <span class="tm-label">Testimonials</span>
+        <div class="tm-orn" aria-hidden="true">
+          <i class="l"></i>
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+            <g stroke="currentColor" stroke-width="1">
+              <path d="M8 1.6c1.5 1.4 1.5 3.6 0 5-1.5-1.4-1.5-3.6 0-5zM8 14.4c-1.5-1.4-1.5-3.6 0-5 1.5 1.4 1.5 3.6 0 5zM1.6 8c1.4-1.5 3.6-1.5 5 0-1.4 1.5-3.6 1.5-5 0zM14.4 8c-1.4 1.5-3.6 1.5-5 0 1.4-1.5 3.6-1.5 5 0z"/>
+            </g>
+          </svg>
+          <i class="r"></i>
+        </div>
+        <h2 class="tm-title">
+          <span class="tm-ln"><i>Words That Reflect</i></span>
+          <span class="tm-ln"><i>Our <span class="gold">Promise.</span></i></span>
+        </h2>
+        <p class="tm-intro">Real experiences from homeowners who trusted Raajlaxmi to create
+          the place they proudly call home.</p>
+      </header>
+
+      <!-- client photographs (between the page header and the reviews): filled from the testimonials page document in
            Sanity, and hidden until there is at least one -->
       <div class="tg" id="tmGallery" hidden>
         <header class="tg-head">
@@ -1876,25 +1896,6 @@
         </div>
       </div>
 
-      <!-- header -->
-      <header class="tm-head">
-        <span class="tm-label">Testimonials</span>
-        <div class="tm-orn" aria-hidden="true">
-          <i class="l"></i>
-          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-            <g stroke="currentColor" stroke-width="1">
-              <path d="M8 1.6c1.5 1.4 1.5 3.6 0 5-1.5-1.4-1.5-3.6 0-5zM8 14.4c-1.5-1.4-1.5-3.6 0-5 1.5 1.4 1.5 3.6 0 5zM1.6 8c1.4-1.5 3.6-1.5 5 0-1.4 1.5-3.6 1.5-5 0zM14.4 8c-1.4 1.5-3.6 1.5-5 0 1.4-1.5 3.6-1.5 5 0z"/>
-            </g>
-          </svg>
-          <i class="r"></i>
-        </div>
-        <h2 class="tm-title">
-          <span class="tm-ln"><i>Words That Reflect</i></span>
-          <span class="tm-ln"><i>Our <span class="gold">Promise.</span></i></span>
-        </h2>
-        <p class="tm-intro">Real experiences from homeowners who trusted Raajlaxmi to create
-          the place they proudly call home.</p>
-      </header>
 
       <!-- carousel -->
       <div class="tm-stage">
