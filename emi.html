@@ -1762,8 +1762,8 @@
               </div>
             </div>
             <input type="range" class="emi-range" id="emiPriceR" aria-label="Property price"
-                   min="500000" max="50000000" step="50000" value="5000000">
-            <div class="emi-hint"><b id="emiPriceW">&#8377;50 Lakh</b><span>&#8377;5 Lakh &ndash; &#8377;5 Cr</span></div>
+                   min="0" max="271" step="1" value="71">
+            <div class="emi-hint"><b id="emiPriceW">&#8377;50 Lakh</b><span>&#8377;15 Lakh &ndash; &#8377;1.5 Cr</span></div>
           </div>
 
           <div class="emi-field">
@@ -1790,7 +1790,7 @@
               </div>
             </div>
             <input type="range" class="emi-range" id="emiRateR" aria-label="Interest rate"
-                   min="5" max="16" step="0.05" value="8.5">
+                   min="0" max="221" step="1" value="71">
             <div class="emi-hint"><b>Floating home-loan rates sit near 8&ndash;9%</b><span>5 &ndash; 16%</span></div>
           </div>
 
@@ -1802,7 +1802,7 @@
               </div>
             </div>
             <input type="range" class="emi-range" id="emiYearsR" aria-label="Loan tenure in years"
-                   min="1" max="30" step="1" value="20">
+                   min="0" max="30" step="1" value="20">
             <div class="emi-hint"><b id="emiMonthsW">240 instalments</b><span>1 &ndash; 30 years</span></div>
           </div>
 
@@ -2036,7 +2036,32 @@
     const $ = id => document.getElementById(id);
 
     const DEFAULTS = {price:5000000, pct:20, rate:8.5, years:20};
-    const LIM = {price:[500000,50000000], pct:[0,90], rate:[5,16], years:[1,30]};
+    const LIM = {price:[1500000,15000000], pct:[0,90], rate:[5,16], years:[1,30]};
+
+    /* Sliders map 0 at the extreme left, and when moved from the left
+       they update within the active range:
+       - Price: 0 at left, then ₹15 Lakh to ₹1.5 Cr (step 50k)
+       - Down Payment: 0 to 90%
+       - Interest Rate: 0 at left, then 5% to 16% (step 0.05%)
+       - Loan Tenure: 0 at left, then 1 to 30 years (step 1 year) */
+    const SLIDERS = {
+      price: {
+        toPos: v => v <= 0 ? 0 : 1 + Math.round((Math.max(1500000, Math.min(15000000, v)) - 1500000) / 50000),
+        toVal: p => p <= 0 ? 0 : 1500000 + (p - 1) * 50000
+      },
+      pct: {
+        toPos: v => Math.max(0, Math.min(90, Math.round(v))),
+        toVal: p => Math.max(0, Math.min(90, p))
+      },
+      rate: {
+        toPos: v => v <= 0 ? 0 : 1 + Math.round((Math.max(5, Math.min(16, v)) - 5) / 0.05),
+        toVal: p => p <= 0 ? 0 : Math.round((5 + (p - 1) * 0.05) * 100) / 100
+      },
+      years: {
+        toPos: v => Math.max(0, Math.min(30, Math.round(v))),
+        toVal: p => Math.max(0, Math.min(30, p))
+      }
+    };
 
     /* THE PERCENTAGE IS AUTHORITATIVE, NOT THE RUPEE FIGURE, and that is the
        one modelling decision in here. People think "twenty percent down", so
@@ -2171,23 +2196,27 @@
       [els.price, els.down, els.downPct, els.rate, els.years]
         .forEach(el => { el.size = Math.max(2, el.value.length); });
 
-      els.priceR.value = price; els.downR.value = S.pct;
-      els.rateR.value  = S.rate; els.yearsR.value = S.years;
+      els.priceR.value = SLIDERS.price.toPos(price);
+      els.downR.value  = SLIDERS.pct.toPos(S.pct);
+      els.rateR.value  = SLIDERS.rate.toPos(S.rate);
+      els.yearsR.value = SLIDERS.years.toPos(S.years);
       [els.priceR, els.downR, els.rateR, els.yearsR].forEach(fill);
 
       $('emiPriceW').textContent  = words(price);
       $('emiLtvW').textContent    = 'Borrowing ' + (100 - S.pct) + '% of the price';
       $('emiMonthsW').textContent = months + (months === 1 ? ' instalment' : ' instalments');
 
-      const none = loan <= 0;
+      const none = loan <= 0 || months <= 0 || price <= 0;
       $('emiEmi').textContent   = none ? '0' : group(emi);
       $('emiSub').textContent   = none
-        ? 'Nothing to borrow at this deposit.'
+        ? (price <= 0 ? 'Enter a property price to calculate.' : (months <= 0 ? 'Select a loan tenure to calculate.' : 'Nothing to borrow at this deposit.'))
         : 'on a ' + inr(loan) + ' loan over ' + S.years +
           (S.years === 1 ? ' year' : ' years') + ' at ' + S.rate + '% a year';
 
       const warn = $('emiWarn');
-      if(none){
+      if(price <= 0 || months <= 0){
+        warn.hidden = true;
+      }else if(none){
         warn.textContent = 'The deposit covers the whole price, so there is no loan to repay.';
         warn.hidden = false;
       }else if(S.pct < 10){
@@ -2198,7 +2227,7 @@
         warn.hidden = true;
       }
 
-      rows = none ? [] : schedule(loan, S.rate, months, emi);
+      rows = (none || months <= 0 || loan <= 0) ? [] : schedule(loan, S.rate, months, emi);
       if(!$('emiSched').hidden) table();
     }
 
@@ -2220,7 +2249,7 @@
       typing = el;
       const raw = digits(el.value);
       /* an emptied box is not a zero — it is a box someone is in the middle of
-         retyping, so the last good value stands until they leave it */
+          retyping, so the last good value stands until they leave it */
       if(raw === '' || raw === '.') return;
       const v = dec ? parseFloat(raw) : Math.round(parseFloat(raw));
       if(!isFinite(v)) return;
@@ -2237,8 +2266,12 @@
        because no sensible value is reached by passing through a larger one. */
     function settle(key, lim, dec){
       typing = null;
-      S[key] = clamp(isFinite(S[key]) ? S[key] : DEFAULTS[key], lim);
-      if(!dec) S[key] = Math.round(S[key]);
+      if(S[key] === 0 || S[key] <= 0){
+        S[key] = 0;
+      }else{
+        S[key] = clamp(isFinite(S[key]) ? S[key] : DEFAULTS[key], lim);
+        if(!dec) S[key] = Math.round(S[key]);
+      }
       paint();
     }
 
@@ -2263,7 +2296,7 @@
     /* a slider move is always a complete, in-range value, so it also ends any
        half-finished typing elsewhere */
     function drag(r, key){
-      r.addEventListener('input', () => { typing = null; S[key] = +r.value; paint(); });
+      r.addEventListener('input', () => { typing = null; S[key] = SLIDERS[key].toVal(+r.value); paint(); });
     }
     drag(els.priceR, 'price'); drag(els.downR, 'pct');
     drag(els.rateR,  'rate');  drag(els.yearsR, 'years');
