@@ -424,9 +424,10 @@ unlike the shared chrome there is nothing to sync to the other ten files.
 The client asked for a carousel that **runs by itself, follows the finger or
 the mouse the moment anyone pushes it, and resumes on its own a few seconds
 after they stop** — on a phone and on a desktop both. Section XI does that
-since 6 Nov. **The reviews strip on `testimonials.html` was given the same
-behaviour on 9 Nov** — see *The reviews strip gives way too*. The client photo
-gallery under it is the one strip left on the old CSS marquee.
+since 6 Nov, and **both strips on `testimonials.html` were given the same
+behaviour on 9 Nov** — the reviews first, then the client photo gallery once
+the client confirmed the reviews felt right. **All three strips on the site now
+share this implementation**; there is no CSS-animation marquee left anywhere.
 
 **IT DRIVES `scrollLeft`, NOT A TRANSFORM, AND THAT IS THE WHOLE CHANGE.** The
 other two marquees animate a `translateX` in CSS, which the compositor runs for
@@ -1857,13 +1858,37 @@ advance the carousel, and Enter on it would be swallowed by the handler's
 `preventDefault` instead of opening the review.
 
 **The client photo slider** (`.tg`, between the carousel and the closing strip)
-**runs as a continuous marquee, the same way the reviews above it do** — a CSS
-animation on `.tg-track` (`@keyframes tg-marquee`, `--tg-loop` / `--tg-dur`,
-`SPEED` 42 px/s, slower than the reviews' 70 because these are photographs
-rather than lines of text). The compositor drives it, `.tg-stage:hover` and
-`:focus-within` pause it with no script, a background tab stops it for free, and
-it is verifiable in headless Chrome. The stage carries the same edge-fade mask as
-the reviews. It ships with `hidden` on it and is revealed only once the CMS
+**runs as a real scroller, the same way the reviews above it do** — the owners
+strip's implementation again, ported on 9 Nov after the client confirmed the
+reviews strip felt right and asked for this one to match. `SPEED` is **42 px/s**,
+slower than the reviews' 70 because these are photographs rather than lines of
+text. Everything under *The owners strip gives way and comes back* applies and
+is not repeated. **One thing differs from both other strips:**
+
+- **THE TRACK IS THE SCROLLER HERE, NOT THE STAGE.** `.tg-arw` prev/next are
+  absolutely positioned children of `.tg-stage`, so making the stage scroll
+  would scroll the arrows away with the photographs. The stage keeps the clip
+  and the edge mask and stays what the arrows are pinned to; `.tg-track` does
+  the scrolling — which is what the reduced-motion branch already did, so that
+  branch now only adds the snap and drops the grab cursor.
+- **`width:max-content` had to come off `.tg-track`.** A scroller sized to its
+  own content never scrolls; the tiles are `flex:0 0 <size>` and overflow it.
+- **Copies went from `max(2, ceil(stage/set) + 1)` to `max(3, … + 2)`**, for
+  the same reason the reviews did: a transform marquee only travels one way,
+  and this one can be pushed backwards past zero.
+- **The arrows still only appear under reduced motion.** They steer discrete
+  slides, and a drifting strip has none; `ends()` keeps its
+  `if(!slow.matches) return;` guard.
+
+`@keyframes tg-marquee`, `--tg-loop`, `--tg-dur`, `will-change:transform` and
+the two `animation-play-state` rules are gone. Measured at 1440x900, 1920x1080
+and 390x844 with eight photographs: **3 sets / 24 tiles**, `overflow-x:auto`,
+`cursor:grab`, no animation, seated at exactly one set width, a 200px mouse
+drag moving it **exactly 200px**, arrows hidden, no page overflow, no console
+errors. Under `--force-prefers-reduced-motion`: 1 set, snap on, arrows back.
+**The strip is `hidden` until Sanity carries a photograph and localhost is not
+in the CORS allowlist**, so testing it locally means stubbing `RL.get` for the
+query containing `gallery[]` — that is how the numbers above were taken. It ships with `hidden` on it and is revealed only once the CMS
 carries at least one photograph — the one place on the site where an empty block
 removes itself rather than falling back to markup.
 

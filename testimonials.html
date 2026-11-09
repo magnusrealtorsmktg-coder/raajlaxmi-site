@@ -1708,26 +1708,33 @@
   .tg-intro{margin:.9rem auto 0;max-width:48ch;font-family:"Inter",sans-serif;
     font-weight:300;font-size:clamp(.95rem,1.1vw,1.05rem);line-height:1.7;color:var(--body);}
 
-  /* The photographs run continuously, the same way the reviews above them do:
-     a CSS animation rather than a per-frame transform, so the compositor drives
-     it, hover pauses it with no script, a background tab stops it for free, and
-     it can actually be verified in headless Chrome (which throttles rAF to about
-     three frames a second). The edges fade so tiles enter and leave rather than
-     being chopped off by the stage. */
+  /* The photographs run continuously and, since 9 Nov, as a REAL SCROLLER —
+     the same behaviour the reviews below them and Section XI on the home page
+     have: it drifts on its own, gives way the moment anyone pushes it, and
+     resumes a few seconds after they stop. It was a CSS animation on a
+     transform, and a transform is not a scroll position, so there was nothing
+     for a finger or a mouse to take hold of.
+
+     THE TRACK IS THE SCROLLER HERE, NOT THE STAGE, which is where this differs
+     from the other two strips. The arrows are absolutely positioned children
+     of `.tg-stage`; making the stage scroll would scroll them away with the
+     photographs. So the stage keeps the clip and the edge mask and stays the
+     thing the arrows are pinned to, and the row inside it does the scrolling —
+     which is also exactly what the reduced-motion branch below already did. */
   .tg-stage{position:relative;overflow:hidden;
     -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 7%,#000 93%,transparent 100%);
             mask-image:linear-gradient(90deg,transparent 0,#000 7%,#000 93%,transparent 100%);}
-  @keyframes tg-marquee{
-    from{transform:translateX(0);}
-    to  {transform:translateX(calc(-1 * var(--tg-loop, 0px)));}
-  }
+  /* no `width:max-content`: a scroller sized to its own content never scrolls.
+     The tiles are `flex:0 0 <size>` so they overflow this box and it pans. */
   .tg-track{display:flex;gap:clamp(.8rem,1.6vw,1.3rem);
     padding:.4rem clamp(.2rem,1vw,.6rem) 1rem;
-    width:max-content;will-change:transform;
-    animation:tg-marquee var(--tg-dur, 40s) linear infinite;}
-  /* hover or keyboard focus holds the row still so a photograph can be looked at */
-  .tg-stage:hover .tg-track,
-  .tg-stage:focus-within .tg-track{animation-play-state:paused;}
+    overflow:hidden;overflow-x:auto;
+    scrollbar-width:none;-ms-overflow-style:none;
+    overscroll-behavior-x:contain;cursor:grab;
+    -webkit-user-select:none;user-select:none;}
+  .tg-track::-webkit-scrollbar{display:none;}
+  /* while a drag is live the grab hand has to beat the tile's own pointer */
+  .tg-track.is-drag,.tg-track.is-drag .tg-item{cursor:grabbing;}
   .tg-item{flex:0 0 clamp(210px,26vw,300px);margin:0;}
   /* Square, because these are handover photographs and the client's are square
      posters — a 4:3 tile threw away 25% of a 1:1 file, which on the first one
@@ -1770,9 +1777,9 @@
        come back with it. The script renders a single set in this mode, so
        there is nothing duplicated to scroll past. */
     .tg-stage{overflow:visible;-webkit-mask-image:none;mask-image:none;}
-    .tg-track{animation:none;width:auto;overflow-x:auto;scroll-behavior:auto;
-      scroll-snap-type:x mandatory;scrollbar-width:none;-ms-overflow-style:none;}
-    .tg-track::-webkit-scrollbar{display:none;}
+    /* the row is already the scroller; this only adds the snap and takes the
+       grab cursor off, since nothing drifts for the visitor to catch */
+    .tg-track{scroll-behavior:auto;scroll-snap-type:x mandatory;cursor:auto;}
     .tg-item{scroll-snap-align:center;}
     .tg-arw{display:grid;}
     .tg-item:hover .tg-ph img{transform:none;}
@@ -2842,19 +2849,31 @@
          are photographs rather than lines of text, and they read better at a
          drift than at a scroll. */
       const SPEED = 42;
-      let sets = 0;
+      /* How long the strip waits after the visitor stops pushing it, and how
+         far a mouse travels before the gesture counts as a drag. The same
+         numbers the owners strip and the reviews use. */
+      const IDLE  = 2600;
+      const SLOP  = 6;
 
-      /* A marquee has to be at least one full set wider than its stage, or
-         translating by one set width runs off the end and shows a gap before
-         the loop restarts. With a single photograph published that means
-         repeating it several times over, so the number of copies is worked out
-         from the measured tile rather than assumed — and re-worked on resize,
-         because a wider window needs more of them. */
+      let sets = 0, loop = 0, pos = 0;
+      /* `held` is a DEADLINE, not a flag plus a timer: a scroll event fires
+         dozens of times a second and overwriting a number is cheaper than
+         clearing and re-arming one. Zero means nobody is holding it. */
+      let held = 0, hover = false, focus = false, seen = false;
+      let dragging = false, dragged = false, dragX = 0, dragFrom = 0;
+      let last = 0, running = false;
+
+      /* `ceil(stage/set) + 2` sets, where the transform marquee used `+ 1`.
+         That marquee only ever travelled one way; a visitor can push this one
+         BACKWARDS and `scrollLeft` cannot go below zero, so the position is
+         kept in [loop, 2*loop) with a whole set either side to give back.
+         With a single photograph published that means repeating it several
+         times over, so the count is measured from the laid-out tile rather
+         than assumed, and re-worked on resize. */
       function build(){
-        if(slow.matches){                     /* one set; the row is a scroller */
+        if(slow.matches){                     /* one set; pushed by hand only */
           if(sets !== 1){ track.innerHTML = shots.map(g => tile(g, false)).join(''); sets = 1; }
-          track.style.removeProperty('--tg-loop');
-          track.style.removeProperty('--tg-dur');
+          loop = 0;
           return;
         }
         if(!sets){ track.innerHTML = shots.map(g => tile(g, false)).join(''); sets = 1; }
@@ -2865,7 +2884,7 @@
         const setW = shots.length * (first.getBoundingClientRect().width + gap);
         if(setW <= 0) return;                 /* not laid out yet */
 
-        const want = Math.max(2, Math.ceil(stage.clientWidth / setW) + 1);
+        const want = Math.max(3, Math.ceil(track.clientWidth / setW) + 2);
         if(want !== sets){
           let html = '';
           for(let i = 0; i < want; i++) html += shots.map(g => tile(g, i > 0)).join('');
@@ -2875,18 +2894,149 @@
 
         const items = track.querySelectorAll('.tg-item');
         if(items.length <= shots.length) return;
-        const loop = items[shots.length].offsetLeft - items[0].offsetLeft;
-        if(loop <= 0) return;
-        track.style.setProperty('--tg-loop', loop + 'px');
-        track.style.setProperty('--tg-dur', (loop / SPEED) + 's');
+        const span = items[shots.length].offsetLeft - items[0].offsetLeft;
+        if(span <= 0) return;
+
+        /* Only re-seat the strip when the geometry actually changed. `resize`
+           fires when a mobile browser shows or hides its own toolbar, and
+           jumping back to the first photograph every time someone scrolls the
+           page would undo the visitor's own position for no reason. */
+        const moved = span !== loop;
+        loop = span;
+        if(moved || track.scrollLeft < loop || track.scrollLeft >= loop * 2)
+          track.scrollLeft = pos = loop;
+        start();
       }
+
+      /* One set is identical to the next, so folding the scroll position back
+         by exactly one set width is invisible. Returns the shift it applied,
+         which is what lets a drag in progress move its own origin with it
+         instead of snapping back a whole set on the next pointermove. */
+      function norm(){
+        if(!loop) return 0;
+        const x = track.scrollLeft;
+        if(x < loop)     { track.scrollLeft = pos = x + loop; return  loop; }
+        if(x >= loop * 2){ track.scrollLeft = pos = x - loop; return -loop; }
+        /* `pos` is the accumulator the auto-advance adds fractions of a pixel
+           to — scrollLeft reads back rounded, so it is not re-synced from a
+           difference that small. Anything bigger is the visitor. */
+        if(Math.abs(x - pos) > 2) pos = x;
+        return 0;
+      }
+
+      const paused = () => !seen || hover || focus || dragging || held;
+
+      function frame(t){
+        running = false;
+        if(slow.matches || !loop) return;
+        const dt = last ? Math.min(t - last, 100) : 0;
+        last = t;
+        if(held && t >= held) held = 0;
+        if(!paused()){
+          pos += SPEED * dt / 1000;
+          track.scrollLeft = pos;
+          if(pos >= loop * 2){ track.scrollLeft = pos -= loop; }
+        }
+        start();
+      }
+      /* `last` is deliberately NOT reset here: start() queues the next frame at
+         the end of every frame, so zeroing it would make `dt` zero every time
+         and the strip would never move. A stale `last` after a long pause is
+         handled by the clamp above instead. */
+      function start(){
+        if(slow.matches || running || !loop || !seen) return;
+        running = true;
+        requestAnimationFrame(frame);
+      }
+
+      /* Any real input stands the auto-advance down and starts the clock. */
+      const take = () => { held = performance.now() + IDLE; start(); };
+
+      /* THE SCROLL LISTENER MUST NOT BE WHAT DETECTS THE VISITOR. The strip's
+         own writes fire `scroll` too, so a handler that called take() would
+         suspend the auto-advance permanently on its own first frame. It only
+         EXTENDS a hold an input event has already placed — which is what keeps
+         a momentum fling from being cut off at 2.6s and then fought by the
+         auto-advance. `ends()` rides along because the arrows, when they are
+         shown at all, care about the same event. */
+      track.addEventListener('scroll', () => {
+        if(held) held = performance.now() + IDLE;
+        if(!dragging) norm();
+        ends();
+      }, {passive:true});
+
+      track.addEventListener('pointerdown', e => {
+        take();
+        dragged = false;
+        /* touch and pen pan natively, with momentum this could not match */
+        if(e.pointerType !== 'mouse') return;
+        dragging = true;
+        dragX    = e.clientX;
+        dragFrom = track.scrollLeft;
+      });
+      track.addEventListener('pointermove', e => {
+        if(!dragging) return;
+        const dx = e.clientX - dragX;
+        if(!dragged && Math.abs(dx) < SLOP) return;   /* still a click */
+        if(!dragged){
+          /* capture only once the drag is real, never on pointerdown — pointer
+             capture retargets the compatibility mouse events, so capturing on
+             every press changes what a click lands on */
+          try{ track.setPointerCapture(e.pointerId); }catch(_){}
+          track.classList.add('is-drag');
+        }
+        dragged = true;
+        e.preventDefault();
+        track.scrollLeft = dragFrom - dx;
+        dragFrom += norm();
+        take();
+      });
+      const drop = () => {
+        if(!dragging) return;
+        dragging = false;
+        track.classList.remove('is-drag');
+        take();
+      };
+      track.addEventListener('pointerup', drop);
+      track.addEventListener('pointercancel', drop);
+
+      /* A drag is not a click. Nothing on a tile is clickable today, but the
+         guard costs nothing and stops a push from counting as one if a link is
+         ever added to a photograph. */
+      track.addEventListener('click', e => {
+        if(!dragged) return;
+        dragged = false;
+        e.stopPropagation();
+        e.preventDefault();
+      }, true);
+
+      /* A trackpad swipe sideways scrolls the row with no pointerdown at all.
+         A vertical wheel over it is the page being scrolled past, not an
+         attempt to move it, so it is left alone. */
+      track.addEventListener('wheel', e => {
+        if(Math.abs(e.deltaX) > Math.abs(e.deltaY)) take();
+      }, {passive:true});
+
+      /* Hover and keyboard focus hold the row still for as long as they last,
+         so a photograph can be looked at. This used to be two CSS rules on
+         `animation-play-state`; there is no animation to pause now. */
+      track.addEventListener('pointerenter', e => { if(e.pointerType === 'mouse') hover = true; });
+      track.addEventListener('pointerleave', () => { hover = false; start(); });
+      track.addEventListener('focusin',      () => { focus = true; });
+      track.addEventListener('focusout',     () => { focus = false; start(); });
+
+      /* Nothing runs while the strip is off screen. The CSS animation drifted
+         on regardless; a rAF loop doing the same would burn a frame callback
+         for the whole of the rest of the page. */
+      new IntersectionObserver(e => { e.forEach(x => { seen = x.isIntersecting; }); start(); },
+        {threshold:0}).observe(track);
 
       build();
       /* the photographs land after this runs and change every width in here */
       addEventListener('load', build);
       if(document.fonts && document.fonts.ready) document.fonts.ready.then(build);
       addEventListener('resize', build, {passive:true});
-      slow.addEventListener?.('change', () => { sets = 0; build(); });
+      slow.addEventListener?.('change', () => { sets = 0; loop = 0; build(); ends(); });
 
       /* --- arrows: only the reduced-motion branch shows them, and only there
              is the row a scroller for them to nudge --- */
@@ -2911,7 +3061,7 @@
         if(prev) prev.style.display = fits ? 'none' : '';
         if(next) next.style.display = fits ? 'none' : '';
       }
-      track.addEventListener('scroll', ends, {passive:true});
+      /* the scroll listener above already calls ends() */
       addEventListener('resize', ends, {passive:true});
       addEventListener('load', ends);
       setTimeout(ends, 0);
