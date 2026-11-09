@@ -305,15 +305,37 @@ Check at 1440×900, 1024×800 and 420×860; scroll the full page; confirm no con
 The client's complaint, with a screenshot: the four cards were cut off at the
 fold. Measured, the section stood **1156–1303px against a 768–1080px window**,
 so it was over by 223–388px at every desktop size. It is now `min-height:100svh`
-and a centred flex column, and **every vertical step inside it is sized in `vh`
+and a flex column **anchored to the top**, and **every vertical step inside it is sized in `vh`
 rather than `rem`** — the same treatment `.about` and `.why` already have.
 
+- **IT IS ANCHORED TO THE TOP, NOT CENTRED (9 Nov).** It was
+  `justify-content:center` for a day, which split the leftover height above and
+  below the composition — 181px of it at 1920 — so it spent on empty paper the
+  room the cards wanted and pushed the label 103px down the screen. The client
+  drew a line across their screenshot asking for the header higher and the
+  cards taller; both are the same fix. `justify-content:flex-start` now puts
+  the header straight after the top padding, a steady **9–12px under the
+  navbar** at every size, and the cards take the rest.
 - **The media box is sized by HEIGHT, not by ratio, above 1080px.**
   `aspect-ratio:4/3.1` is a function of the card's *width*, so a wider screen
   made the card taller — 275px of photograph at 1920 — which is the opposite of
-  what fitting a fold needs. It is `height:clamp(116px,18.5vh,208px)` now. **The
-  ratio comes back in the stacked tiers**, which must reset `height:auto` or it
-  wins over `aspect-ratio`.
+  what fitting a fold needs. **The ratio comes back in the stacked tiers**,
+  which must reset `height:auto` or it wins over `aspect-ratio`.
+- **Its height is a LINE THROUGH THE MEASUREMENTS, not a plain `vh`:**
+  `clamp(128px,calc(68.6vh - 374px),352px)`. What is left for the picture after
+  the navbar, the header and the card's own body does not scale with the
+  window — those are close to fixed — so the slack grows *faster* than the
+  viewport does. A straight `vh` therefore left 181px unused at 1920 and
+  nothing at 768. The `-374px` is fitted to both ends with 16px held back so
+  the cards never touch the fold, and **the 352px cap is a taste limit, not a
+  fit one**: the card is ~357px wide there, so beyond that the photograph goes
+  portrait. On a very tall monitor the cap binds and the spare height is left
+  as whitespace below the cards (180px at 1200, 396px at 1440).
+- **Card heights now run 367px at 1366×768 to 609px at 2560×1440**, against a
+  flat 447–565px before any of this. Growing the card means growing the
+  picture, since the body is content-sized — so the media/body split goes from
+  roughly 49/51 to 59/41 at 1920. That is a real change in the card's balance
+  and it was the client's call.
 - **`.sp-desc` is clamped to three lines (four when stacked), and that is what
   holds the budget.** The text is the project's CMS `blurb`, so its length is
   the one thing on the card the page does not decide; one long blurb would put
@@ -333,9 +355,11 @@ rather than `rem`** — the same treatment `.about` and `.why` already have.
   columns and therefore two rows, and below 620px of height. Both return the
   section to natural flow — the same concession `.about` makes when it stacks.
 
-Measured at 1920×1080, 1600×997, 1536×864, 1440×900, 1366×768 and 1280×800:
-the section is exactly one viewport at every one, the cards finish **55–145px
-above the fold**, and the label clears the navbar by **22–103px**. At 1440×600,
+Measured at 1920×1080, 1920×1200, 2560×1440, 1600×997, 1536×864, 1440×900,
+1366×768 and 1280×800: the section is one viewport at every one, the cards
+finish **57–83px above the fold** (more where the media cap binds), **all four
+`VIEW PROJECT` buttons are inside the fold**, and the label clears the navbar
+by **9–12px**. At 1440×600,
 1080×900, 1024×800, 768×1024, 390×844 and 844×390 it is correctly taller than
 the window, with the label clear by 14–57px. No horizontal overflow and no
 console errors anywhere.
