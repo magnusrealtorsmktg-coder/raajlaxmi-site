@@ -47,7 +47,7 @@ and are not. The ones that will cost you an afternoon if you do not know them:
 and **Claude Code cannot run either** — the classifier blocks both. Hand the
 command over.
 
-**THREE THINGS ARE WAITING ON SOMEONE DOING THEM BY HAND:**
+**FOUR THINGS ARE WAITING ON SOMEONE DOING THEM BY HAND:**
 
 1. **The Studio needs redeploying.** `cd studio && npm run build && npx sanity
    deploy --no-build -y`. The `stages` tick-boxes shipped in the code on 7 Nov
@@ -59,7 +59,13 @@ command over.
 2. **Gmail forwarding** from `rajjlaxmi20@gmail.com` to whoever on the client's
    side should read enquiries. Until it is set up **an enquiry exists in
    exactly one inbox and nowhere else** — see *The forms post to Web3Forms*.
-3. **The Google sign-in app needs publishing.** It is in *Testing*, so the
+3. **`soldOut` needs clearing off the documents.**
+   `cd studio && npx sanity exec scripts/retire-sold-out.mjs --with-user-token`
+   (add `-- --dry` first). The field is out of the schema, but seven projects
+   still hold the value and the Studio flags an "unknown field" on each until
+   it is unset. **Then redeploy the Studio** — which is item 1 above, and is
+   now also needed for this.
+4. **The Google sign-in app needs publishing.** It is in *Testing*, so the
    contact page's Continue with Google button works only for accounts added by
    hand as test users. Publishing needs a homepage and privacy-policy URL on
    the Branding page first, and no Google review. See *Continue with Google*.
@@ -167,7 +173,7 @@ two queries in the same session.
 | | state |
 |---|---|
 | Projects | **15.** Completed 9, Ongoing 4, Redevelopment 3 — Krishna Niwas is in two listings, which is what `stages` exists for. Aarvi Apartment was unpublished on 8 Nov, see *Aarvi Apartment was taken off the site* |
-| Sold out | **7.** It was 8 — `Raajlaxmi Apartment` was un-ticked on 9 Nov, so it is a Completed project that is no longer marked sold |
+| Sold out | **Not a thing any more.** The field is out of the schema and the stamp is off the cards (9 Nov). Seven documents still carry a stale `soldOut: true` until `retire-sold-out.mjs` is run |
 | Detail-page content | **6 of 15 now have a gallery** (Rajlaxxmi Park 4, Priti Pearrl 3, and 2 each on Krishna Niwas, Raajlaxmi Avenue, Raajlaxmi Meenakshi, Shanti Niwas), 2 an overview, 3 specs, **0 a price**, 7 a configuration. The client is filling these in; the gallery count was 0 on 8 Nov |
 | Prices | **NONE.** Not one project carries a `price` any more — `Raajlaxmi Apartment`'s ₹1.8 Cr was cleared on 9 Nov. See *No project carries a price* for the three things that silently depend on this |
 | Brochures | **3 on published projects** (Nakshatra Auris 18.0 MB, Shanti Niwas 7.7 MB, Rajlaxxmi Park 5.0 MB). A fourth, 0.4 MB, is on the unpublished Aarvi Apartment draft |
@@ -207,8 +213,9 @@ property that is not sold out in its place on the home page. Both halves are
 - **The signature card was repointed to Krishna Niwas, not removed.** The grid
   is drawn for four and `fit()` reuses the existing `<article>` nodes, so a
   deleted card would also drop that node's animation hooks. Krishna Niwas is
-  the only project with `soldOut` explicitly `false` rather than unset, and the
-  only one the client deliberately filed into two listings.
+  the only project with `soldOut` explicitly `false` rather than unset (that
+  field is gone now), and the only one the client deliberately filed into two
+  listings.
 - **The card's `category` override was cleared in the same patch.** It read
   `Luxury Living`, which was a deliberate disagreement about *Aarvi*; left in
   place it would have silently relabelled Krishna Niwas.
@@ -227,9 +234,8 @@ property that is not sold out in its place on the home page. Both halves are
   sentence Aarvi's card printed, so nothing regressed on screen. Its
   **collection** card shows no description at all. One `blurb` in the Studio
   fixes both.
-- **Nakshatra Auris, signature card three, is still `soldOut`.** The brief was
-  only about Aarvi, so it was left; raise it with the client if the grid is
-  meant to carry no sold-out property.
+- ~~**Nakshatra Auris, signature card three, is still `soldOut`.**~~ Moot since
+  9 Nov: sold-out is gone from the site altogether.
 - **The ongoing corridor banner still paints "Aarvi Apartment".**
   `assets/projects/western-line-ongoing.jpg` has the name burnt into the
   artwork and `projects-ongoing.html`'s `alt` lists it to match. The alt was
@@ -251,7 +257,10 @@ property that is not sold out in its place on the home page. Both halves are
   offered although Nakshatra Auris and Midas Glory have them.
 - **Krishna Niwas has no `blurb`**, so signature card four prints the invented
   placeholder sentence and its collection card shows no description.
-- **Nakshatra Auris is `soldOut` and is still signature card three.**
+- **Every card now claims OC RECEIVED, including the four Ongoing projects**,
+  which cannot have an Occupancy Certificate yet. See *Every collection card
+  carries the OC RECEIVED mark* for the one-field fix if the client wants it
+  per project.
 - ~~**The hero's LOCATION dropdown shows sub-locality spellings and no Virar**~~
   — resolved 9 Nov by dropping the derivation; it reads the client's four towns
   now. See *LOCATION is a fixed list too*. One consequence to be aware of: the
@@ -545,61 +554,60 @@ keeps running.
 
 `projects.html` — one section, `#projects` ("Section V — Our Collection"): cards rendered from the `P` array in JS, a **town filter capsule** (see *The town filter is a capsule of four towns*), a **Western line corridor band** (`.cor`, between the pagination and the consultation strip) showing the delivered portfolio under four stations — Vasai / Nallasopara / Virar / Saphale. It is the client's finished banner used whole (`assets/projects/western-line.jpg`), **by explicit instruction — do not substitute a markup rebuild for it**. **Its twelve painted logos are clickable**: `.cor-hot` boxes inside `.cor-map` lie over the artwork as percentages of it, so they ride the image at every width — including the 900px plate inside the phone scroller, which is why the img is wrapped in `.cor-plate` (`.cor-figure` becomes the narrower scroll container and cannot be the positioning context). The boxes are measured from the ink, so **a recrop or a replacement banner invalidates all twelve**; `paint()` removes the whole layer if the CMS supplies a banner that is a *different* picture. It tells them apart by **SHA-1**: Sanity names an uploaded asset after the hash of its bytes, so the check is exact rather than a guess — and the usual answer is that they are the same file, because `seed-collections.mjs` uploaded this very banner and the live page therefore serves it from the CDN under a different URL. **Replacing `western-line.jpg` means updating `ART` in that guard**, or the boxes vanish the moment the CMS copy is re-uploaded. Each box carries `data-project` — the name *as the artwork paints it* — and `wireBanner()` matches it against the published projects to set the href, so a slug fixed in the Studio is picked up with no code change. `nameKey()` does the matching and is deliberately forgiving: it folds case and punctuation, collapses doubled letters (`Raajlaxmi`/`Rajlaxxmi` → `rajlaxmi`, `Pearrl` → `pearl`) and drops a trailing plural (`Towers` → `tower`), because the banner and the CMS do not spell the names the same way. **A box with no published project stays inert** — no href, no pointer, no hover tint; `Midas Heights` is painted on the banner but has no document, so today it is the one logo that does not respond. The layer is also inert with Sanity unreachable, which is correct: `project.html?p=` needs Sanity to render anything anyway; a `?status=` filter (exact case-insensitive match on `p.status`, ANDed with the active city chip, read once on load so the chips never clear it, with a `.col-empty` message when nothing matches) — the nav's **Projects** item *and* its **Completed** sub-item both deep-link to `?status=completed`, so the bar reaches the Completed view whether or not the dropdown is used and the browse-everything view is now reached only from the footer and the in-page "See the whole collection" / "Clear filters" links, a "showing N of M" line and a consultation CTA. **The pagination is gone** — the 1/2/3 buttons were decorative markup that never paged anything (every matching card always rendered), so they promised a second page that did not exist. Cross-links back to `index.html#about` / `index.html#signature`.
 
-**Sold-out properties sink to the foot of the collection and carry a stamp.**
-Eight of them on 7 Nov, the first eight cards of the Completed view as it then
-stood — Raajlaxmi Apartment through Priti Darpan.
+**Every collection card carries the OC RECEIVED mark, and the SOLD OUT idea is
+gone.** Asked for on 9 Nov, in one instruction: drop sold-out from the site and
+from the Studio, and put the client's OC stamp on every card at the spot they
+marked on a screenshot — to the right of the name, inside the white body.
 
-- **`soldOut` is a BOOLEAN on `project`, not a `status` string.** "Sold Out"
-  could have been typed into the badge, but the listing has to *sort* on this,
-  and sorting on free text means one typo ("Sold out", "SOLD OUT", "Sold-out")
-  silently returns a card to the top. It is also independent of the listing:
-  two of the eight carry an **Ongoing** badge and one **Ready Possession**,
-  because a property can be sold off-plan.
-- **The sort is stable and that is the point.** `.sort((a,b) => (a.soldOut?1:0)
-  - (b.soldOut?1:0))` only moves the sold ones down; the CMS `order` field
-  still decides the sequence *within* each of the two groups. `Array.prototype
-  .sort` has been required to be stable since ES2019.
-- **The stamp is `assets/sold-out.png`** (506x294, 24KB, real alpha channel —
-  so unlike `project-floral-right.png` it needs no `mix-blend-mode` trick). It
-  is the client's artwork, trimmed to its ink so the box has no dead margin.
-- **It straddles the seam between the photograph and the white body**, which
-  is where the client asked for it and also the only place it fits: centred on
-  the card it would sit across the name and the View Details link.
-- **THE OFFSET IS A PERCENTAGE MARGIN PLUS A FIXED PIXEL VALUE, AND BOTH HALVES
-  ARE LOAD-BEARING.** A percentage `top` resolves against the containing
-  block's *height*, which differs card to card as the descriptions run to
-  different lengths; a percentage *margin* resolves against its **width**,
-  which is identical for every card in the grid. Hence
-  `margin-top:calc(75% - 41.834% + 14px)` — the 4:3 media box, less the stamp's
-  own height at 72% of the card, plus a **fixed** 14px. That last term is not
-  proportional because the thing it has to clear is not: the gold RESIDENTIAL
-  line sits one `clamp(1.3rem,1.5vw,1.6rem)` of body padding below the seam,
-  never less than 20.8px whatever the card is doing. A proportional overlap
-  that looked right at 1440 (card 311px) crossed straight through the category
-  at **768x1024**, where the four-column grid becomes two and the card grows to
-  338px. Measured at seven viewports, cards 235px to 356px: the lower edge is
-  always exactly 14px onto the white and always above the text.
-- **The stamp carries `aspect-ratio:506/294`** so its box is the right shape
-  before the file arrives. These cards are below the fold and the image is
-  `loading="lazy"`; without it the element is zero-height until load.
-- **It is an `<img>`, not a background on a pseudo-element**, so the words
-  reach a screen reader as `alt="Sold out"`. The card otherwise says nothing
-  at all about being sold — the message is carried entirely by a picture.
-- **A white double `drop-shadow` haloes it**, because the artwork is red
-  line-work on transparency and the photograph behind it can be anything; over
-  a dark facade the ink would vanish. The picture itself also steps back
-  (`saturate(.72) brightness(.88)`) — mild on purpose, since the card still has
-  to sell the building.
-- **Nothing is hidden.** A sold-out project keeps its card, its price and its
-  own page; it is marked as gone, not removed.
+- **IT IS UNCONDITIONAL. Every card gets it, Ongoing and Redevelopment
+  included.** That is what was asked for and it is the one thing here worth
+  querying: an Occupancy Certificate is issued when a building is finished, so
+  the four Ongoing projects are claiming something that cannot be true of them
+  yet. Making it a per-project tick-box is a `boolean` on `project`, one
+  `${p.ocReceived ? …}` in the card template of all three files, and a Studio
+  redeploy — the same shape the `soldOut` field had. Raise it with the client.
+- **The badge is IN THE FLOW, not absolutely positioned**, which is the
+  difference from the stamp it replaces. That stamp hung over the photograph
+  where nothing could collide with it; this sits beside live text whose length
+  the CMS decides, so `.col-chead` is a flex row and a long name wraps inside
+  its own column rather than running under the badge. See the CSS comment for
+  why reserving the width in a padding instead would not have held: the
+  percentage would resolve against the content box while the badge's resolves
+  against the padding box.
+- **`assets/oc-received.png` (272x262, 21KB) has a REAL alpha channel.** The
+  client supplied flat red line-work on white; it was keyed out by
+  colour-to-alpha against white, which un-composites the anti-aliased edges
+  properly rather than leaving a halo, then quantised to 128 colours. Verified
+  by recompositing over white against the source: max channel error 45 on a
+  handful of edge pixels, mean 3.0. So unlike `project-floral-right.png` it
+  needs no `mix-blend-mode:multiply` and would survive being moved onto the
+  photograph.
+- **Measured 19% of the card's width at every size** — 59px on a 311px card at
+  1440, 67px at 1920, 56px at 280 where the floor binds. `clamp(56px,22%,80px)`
+  because the grid runs four columns, then two, then one: a flat proportion
+  would be a postage stamp at one width and a dinner plate at another.
+- **What went with sold-out:** `.col-stamp` / `.col-card.is-sold` and the
+  picture's `saturate(.72) brightness(.88)` knock-back, the stable sort that
+  pushed those cards to the foot of the list, `soldOut` in the GROQ projection
+  of all three files, and the field itself from `studio/schemaTypes/project.js`.
+  `studio/scripts/mark-sold-out.mjs` was deleted — it set a field that no
+  longer exists.
+- **`assets/sold-out.png` (506x294, 24KB) is now referenced by nothing** and
+  still ships. It is the client's artwork, so it was left rather than deleted,
+  the same call as `seal-top.png`; `git rm` is all it takes.
+- **REMOVING THE FIELD FROM THE SCHEMA DOES NOT REMOVE IT FROM THE DOCUMENTS.**
+  Seven projects still carry `soldOut: true`, and a value with no field behind
+  it shows as an "unknown field" warning on every edit in the Studio.
+  `studio/scripts/retire-sold-out.mjs` unsets it — **drafts as well as
+  published documents**, because a draft left carrying the field would put it
+  straight back on the next press of Publish. It is idempotent and takes
+  `--dry`. Run it, then redeploy the Studio.
 
-`studio/scripts/mark-sold-out.mjs` set the eight. It matches names the same
-forgiving way the banner hotspots and signature cards do (case and punctuation
-folded, doubled letters collapsed, so `Rajlaxxmi` and `Raajlaxmi` agree),
-patches only `soldOut`, never clears it, and prints any name that matched
-nothing — a name that quietly matched nothing being the one failure that looks
-like success. A ninth property sold next month is a tick in the Studio, not an
-edit to that script.
+Verified at 1920x1080, 1440x900, 1200x900, 768x1024, 620x900, 390x844, 360x640
+and 280x653, on all three collection pages: every card carries the badge, the
+file loads, its right edge is level with the body's padding to the pixel, the
+name never overlaps it, no `.col-stamp` survives anywhere, no horizontal
+overflow and no console exceptions.
 
 **The town filter is a capsule of four towns, not a chip per sub-locality.**
 It used to key off the part of `location` BEFORE the first comma, which is a
@@ -3040,7 +3048,8 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
   `.seal-face`, `.seal-spin.auto` and `.seal-spin.scroll` are dead CSS and were
   dead before any of this — no markup has ever carried them.
 - Committed and referenced: `seal-bottom.png`, `sketch-tower.jpg`, `house-sketch.jpg`, `floor-plan.jpg`, `floor-plan-l.jpg`, `assets/project-blueprint-left.png`, `assets/project-floral-right.png` (760x424, **no alpha** — every use of it is `mix-blend-mode:multiply` over a cream ground, on the three collection pages, `testimonials.html` and now the owner detail panel on `index.html`).
-- `assets/sold-out.png` is the SOLD OUT stamp on the collection cards (506x294, 24KB, **with a real alpha channel**, trimmed to its ink). Client artwork, already drawn on the diagonal — do not add a `transform:rotate`. Its 1.7211 ratio is hard-coded into the card's `margin-top` calculation, so a re-crop means recomputing that; see *Sold-out properties sink to the foot of the collection*.
+- `assets/oc-received.png` is the **OC RECEIVED** mark on every collection card (272x262, 21KB, **real alpha channel**). Keyed out of the client's flat red-on-white original by colour-to-alpha against white, which un-composites the anti-aliased edges instead of leaving a halo, then quantised to 128 colours; verified against the source by recompositing over white. Its ratio is declared in the CSS as `aspect-ratio:272/262`, so a re-crop means changing that line.
+- `assets/sold-out.png` (506x294, 24KB) was the SOLD OUT stamp and is **referenced by nothing** since 9 Nov. Client artwork, so it was left on disk and still ships — the same call as `seal-top.png`. `git rm` is all it takes.
 - `assets/cert-maharera.png` and `assets/cert-credai-mchi.png` are the accreditation marks in Section II's `.ab-creds` row, cut out of one flat client sheet and keyed transparent. Their captions are live HTML, not baked into the artwork, so they reflow and stay readable — keep it that way if the marks are ever re-exported.
 - `assets/projects/western-line.jpg` is the corridor banner (1923x514, JPEG q94 — PNG was 498KB for no visible gain). Its copy is painted into the artwork, so the same content is written out in the `img`'s `alt` for screen readers and search. The band's background is set to the artwork's own ground (`#F4F0EF`) so the banner dissolves into it rather than showing as a rectangle, and one stray white pixel column was cropped off the left edge to make that work.
 - The banner is 3.7:1 with baked-in type, so below 760px it would render the station names at ~6px. It is put in a horizontal scroller at a fixed 900px instead.
@@ -3107,7 +3116,7 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
   empty and stays hidden until real photographs are added.
 - `project.html` carries its own placeholders, each marked with a `PLACEHOLDER` comment: **every figure in the fact bar** (~1,15,000 sq.ft, 8 towers, ~640+ units, Completed) is from the client's mock and unverified, as are the landmark distances and the direct line. Its five gallery shots are seeded `picsum.photos/seed/rl-rk-*` placeholders. **Three projects now carry a `brochure` PDF** (Nakshatra Auris, Rajlaxxmi Park, Shanti Niwas), so those show "View Brochure"; the other twelve still fall back to "Request Brochure" pointing at the enquiry form.
 - **Romal Kirti has been DELETED from the dataset** (gone as of 6 Nov; it was published on 29 Oct). `project.html?p=romal-kirti` now resolves to nothing, and the hand-written fallback in `project.html` — which is still that property, and still the unverified mock content — describes a project the client no longer lists. The fallback only shows when the page is opened with **no** `?p=` at all, which nothing on the site links to, so this is a latent oddity rather than a live bug.
-- **Counts on 9 Nov: 15 published projects — Completed 9 (6 of them `soldOut`), Ongoing 4, Redevelopment 3 (1 `soldOut`).** Seven sold out in all. Krishna Niwas is in two listings, so those add to 16. Nothing is unfiled. Re-check rather than trusting it: the client adds, deletes and refiles, sometimes while you are working.
+- **Counts on 9 Nov: 15 published projects — Completed 9, Ongoing 4, Redevelopment 3.** Krishna Niwas is in two listings, so those add to 16. Nothing is unfiled. Re-check rather than trusting it: the client adds, deletes and refiles, sometimes while you are working. (Seven still carry a stale `soldOut: true` in their data; the field is out of the schema and off the cards — see *Every collection card carries the OC RECEIVED mark*.)
 - **Two badges disagree with their listing, and only one of them is a mistake.** Re-measured 9 Nov: **Shanti Niwas** is filed Redevelopment but its badge reads **Ongoing**, and **Shakun Solitaire** is Completed but reads **Ready Possession**. The second is the status/stage split doing exactly the job it exists for — a finished building that is ready to move into. The first looks like a leftover. Clearing `status` makes a badge follow its listing. (The older note here named Raajlaxmi Avenue and said both read "Completed"; that is no longer true — the client has edited these since.)
 - Most nav links and CTAs are `href="#"`; only Projects and the cross-links resolve. Section II's "Discover our story" button and the "Raajlaxmi Group / Building trust. Creating legacy." signature are both gone — the accreditation strip replaced them, so About no longer offers a CTA or a sign-off of its own.
 - Section IV's statistics panel (`.why-stats`, the old 20+ / 1500+ / 45+ / 98% placeholders) has been **deleted** — markup, CSS, counter JS and all. Section II's row is now the only set of figures on the page. Its `.why-float` interior card went with it: it overlapped the team photo and hid a dozen faces.

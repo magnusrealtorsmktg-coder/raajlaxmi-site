@@ -81,7 +81,7 @@
     /* every published property -- the cards, the city chips and the banner
        hotspots are all built from this one answer */
     projects: '*[_type=="project"]|order(order asc,_createdAt asc){\n' +
-      '  name,stage,stages,status,soldOut,category,location,blurb,config,area,price,detailUrl,\n' +
+      '  name,stage,stages,status,category,location,blurb,config,area,price,detailUrl,\n' +
       '  "slug":slug.current,"imageUrl":image.asset->url\n' +
       '}',
 
@@ -1186,53 +1186,38 @@
     background-color:var(--navy);transition:transform 1.8s var(--lux);}
   .col-card:hover .col-cimg{transform:scale(1.07);}
 
-  /* ---- sold out ----
-     The stamp STRADDLES THE SEAM between the photograph and the white body,
-     which is where the client asked for it and also the only place it fits:
-     centred on the card it would sit across the name and the View Details
-     link, and card heights are not equal anyway because the descriptions run
-     to different lengths.
+  /* ---- OC RECEIVED ----
+     Replaces the SOLD OUT stamp that straddled the photograph's lower edge
+     (9 Nov, the client's request). The client marked the spot on a card: to
+     the RIGHT OF THE NAME, inside the white body, its right edge level with
+     the body's own padding.
 
-     That uneven height is why the offset is a PERCENTAGE MARGIN. A percentage
-     `top` resolves against the containing block's height, which differs card
-     to card; a percentage MARGIN resolves against its WIDTH, which is
-     identical for every card in the grid. The stamp is 72% of the card wide,
-     so at the artwork's 1.7211 ratio it is 41.834% of the card tall, and the
-     media box ends at 75% — hence `75% - 41.834%` to stand it ON the seam.
+     IT IS IN THE FLOW, NOT ABSOLUTELY POSITIONED, and that is the difference
+     from the stamp it replaces. The stamp hung over the photograph, where
+     nothing could collide with it, so it could be placed by a percentage
+     margin and left alone. This sits beside live text whose length the CMS
+     decides — `Raajlaxmi Apartment` fits on one line and the next property
+     may not — so `.col-chead` is a flex row and the name wraps inside its own
+     column instead of running underneath the badge. Positioned absolutely it
+     would have meant reserving the width by hand in a padding, and the
+     percentage there resolves against the content box while the badge's own
+     resolves against the padding box, so the two could never quite agree.
 
-     THE `+ 14px` IS THE WHOLE TRICK AND IT IS NOT PROPORTIONAL. It pushes the
-     stamp's lower edge a FIXED 14px past the photograph, because the thing it
-     has to stay clear of is fixed too: the gold RESIDENTIAL line, which sits
-     one `clamp(1.3rem,1.5vw,1.6rem)` of body padding below the seam — never
-     less than 20.8px, whatever the card is doing. A proportional overlap
-     cannot hold that. Fifteen percent of the stamp looked right at 1440,
-     where a card is 311px, and crossed straight through the category at
-     768x1024, where a four-column grid becomes two and the card grows to
-     338px. Measured at six widths from 235px to 356px: the lower edge is
-     always 14px onto the white and always above the text.
+     `22%` of the head row, floored and capped in px: the grid runs four
+     columns, then two, then one, so a card is 235px wide at some sizes and
+     560px at others, and a badge held at a flat proportion would be a postage
+     stamp on one and a dinner plate on the other.
 
-     Re-crop the artwork, change the 72%, or change the body's top padding,
-     and this wants recomputing.
-
-     It is an <img> rather than a background on a pseudo-element so the words
-     reach a screen reader as alt text — the card otherwise says nothing at
-     all about being sold, since it is a picture that carries the message. */
-  .col-stamp{display:none;}
-  .col-card.is-sold .col-stamp{display:block;position:absolute;z-index:3;
-    pointer-events:none;top:0;left:14%;width:72%;height:auto;
-    /* the artwork's own ratio, so the box is the right shape BEFORE the file
-       arrives — these cards are below the fold and the image is lazy */
-    aspect-ratio:506/294;
-    margin-top:calc(75% - 41.834% + 14px);
-    /* a white halo, because the stamp is red line-work on transparency and
-       the photograph behind it can be anything — over a dark facade the ink
-       would otherwise disappear */
-    filter:drop-shadow(0 0 7px rgba(255,255,255,.95))
-           drop-shadow(0 1px 2px rgba(255,255,255,.9));}
-  /* the picture steps back so the stamp is what the eye lands on. Mild on
-     purpose: this is the client's photography and the card still has to sell
-     the building. */
-  .col-card.is-sold .col-cimg{filter:saturate(.72) brightness(.88);}
+     The artwork is `assets/oc-received.png`, keyed out of the client's flat
+     white original to a REAL alpha channel (272x262, 21KB) — so unlike
+     `project-floral-right.png` it needs no `mix-blend-mode:multiply` and
+     would survive being moved onto the photograph. `aspect-ratio` is declared
+     so the box is the right shape before the file arrives: these cards are
+     below the fold and the image is lazy. */
+  .col-chead{display:flex;align-items:flex-start;justify-content:space-between;gap:.8rem;}
+  .col-chead > div{min-width:0;}
+  .col-oc{flex:none;width:clamp(56px,22%,80px);height:auto;aspect-ratio:272/262;
+    margin-top:-.15rem;}
   .col-badge{position:absolute;top:1rem;left:1rem;z-index:2;font-family:"Inter",sans-serif;
     font-size:.56rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#fff;
     background:rgba(140,104,44,.9);padding:.45rem .75rem;border-radius:6px;
@@ -2035,27 +2020,30 @@
     /* render cards */
     function renderCards(city){
       const filtered = P.filter(p => (city === 'all' || townOf(p) === city) && wanted(p))
-        /* Sold-out properties go to the FOOT of the list. `sort` is stable in
-           every engine that matters (required by the spec since ES2019), so
-           this only moves the sold ones down — the CMS `order` field still
-           decides the sequence within each of the two groups. */
-        .sort((a, b) => (a.soldOut ? 1 : 0) - (b.soldOut ? 1 : 0));
+        /* NO SORT ANY MORE. Sold-out properties used to be pushed to the
+           foot of the list by a stable sort on a boolean the project carried;
+           the whole sold-out idea went on 9 Nov, so the CMS `order` field is
+           once again the only thing deciding the sequence. */;
       if(grid){
         grid.innerHTML = !filtered.length
           ? `<p class="col-empty">${window.RL_EMPTY_MESSAGE ||
                `No ${STATUS || ''} properties are listed here yet.`}
                <a href="projects.html">See the whole collection</a>.</p>`
           : filtered.map(p=>`
-          <article class="col-card${p.soldOut ? ' is-sold' : ''}">
-            ${p.soldOut ? '<img class="col-stamp" src="assets/sold-out.png" alt="Sold out" loading="lazy">' : ''}
+          <article class="col-card">
             <div class="col-media">
               <span class="col-badge">${p.status || STAGE_LABEL[stagesOf(p)[0]] || ''}</span>
               <span class="col-heart" role="button" aria-label="Save">${HEART}</span>
               <div class="col-cimg" style="background-image:${imgCss(p)}"></div>
             </div>
             <div class="col-cbody">
-              <div class="col-cat">${p.category || ''}</div>
-              <h3 class="col-name">${p.name || ''}</h3>
+              <div class="col-chead">
+                <div>
+                  <div class="col-cat">${p.category || ''}</div>
+                  <h3 class="col-name">${p.name || ''}</h3>
+                </div>
+                <img class="col-oc" src="assets/oc-received.png" alt="OC received" loading="lazy" decoding="async">
+              </div>
               <div class="col-loc">${PIN}${p.location || ''}</div>
               <p class="col-desc">${p.blurb || ''}</p>
               <div class="col-meta"><div>${BED}${p.config || ''}</div><div>${AREA}${p.area || ''}</div></div>

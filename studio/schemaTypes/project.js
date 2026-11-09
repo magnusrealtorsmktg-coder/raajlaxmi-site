@@ -93,23 +93,17 @@ export default {
         'Set it when the badge should read something the listing does not, e.g. a ' +
         'Completed project whose badge should say "Ready Possession".',
     },
-    {
-      /* A FLAG, NOT A `status` STRING. "Sold Out" could have been typed into
-         the badge above, but the listing has to SORT on this — sold-out
-         properties go to the foot of the collection — and sorting on free
-         text means one typo ("Sold out", "SOLD OUT", "Sold-out") silently
-         puts a card back at the top. A boolean cannot be misspelled.
-         It is also independent of the listing: an Ongoing project can be sold
-         out off-plan, which is true of two of the eight today. */
-      name: 'soldOut',
-      title: 'Sold out',
-      type: 'boolean',
-      initialValue: false,
-      description:
-        'Tick this and the card drops to the bottom of the collection with a SOLD OUT ' +
-        'stamp across it. The project keeps its own page and stays fully readable — ' +
-        'it is marked as gone, not hidden.',
-    },
+    /* THE `soldOut` TICK-BOX IS GONE (9 Nov, the client's request). It was a
+       boolean that dropped a card to the foot of the collection under a SOLD
+       OUT stamp; the stamp has been replaced on every card by the OC RECEIVED
+       mark, which is not a per-project flag, so the field had nothing left to
+       drive.
+
+       REMOVING IT FROM THE SCHEMA DOES NOT REMOVE IT FROM THE DOCUMENTS. Seven
+       projects still carry `soldOut: true` and the Studio shows an "unknown
+       field" warning on each of them until it is unset.
+       `scripts/retire-sold-out.mjs` does that; it is idempotent and takes
+       `--dry`. Run it, then redeploy the Studio. */
     {
       name: 'category',
       title: 'Category',
