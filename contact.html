@@ -1320,9 +1320,13 @@
      artwork at the foot of the page. */
   .ct-top{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.86fr);
     gap:clamp(2.4rem,5vw,5.5rem);align-items:start;}
-  /* both columns paint above the render; nothing else in here is positioned,
-     so without this the artwork would cover the cards rather than back them */
-  .ct-left,.ct-card{position:relative;z-index:1;}
+  /* Both columns paint above the render; nothing else in here is positioned,
+     so without this the artwork would cover the cards rather than back them.
+     `.ct-loc` is in the list because the render now hangs BELOW `.ct-top` into
+     that card's top margin — and a positioned element at `z-index:0` paints
+     over an unpositioned block however late it comes in the DOM, so without
+     this the artwork would lie across the top of the location card. */
+  .ct-left,.ct-card,.ct-loc{position:relative;z-index:1;}
 
   /* ---- left column ---- */
   .ct-label{display:inline-block;font-family:"Inter",sans-serif;font-weight:600;
@@ -1434,8 +1438,14 @@
 
      `z-index:0` and not `-1`: at `-1` it would paint behind `.ct`'s own
      background and disappear entirely. */
+  /* IT HANGS BELOW `.ct-top` BY EXACTLY `.ct-loc`'S TOP MARGIN. At `bottom:0`
+     the artwork stopped level with the foot of the enquiry card and left a
+     band of bare ivory between it and the location card — 56px to 88px of it,
+     which is what the client pointed at. The same expression is used here as
+     on that margin on purpose: the two cannot drift apart, and the artwork's
+     lower edge now lands exactly on the card below it and tucks behind it. */
   .ct-render{position:absolute;z-index:0;pointer-events:none;
-    left:50%;margin-left:-50vw;bottom:0;
+    left:50%;margin-left:-50vw;bottom:calc(-1 * clamp(3.5rem,6vw,5.5rem));
     width:min(52vw,1088px);line-height:0;
     opacity:0;transform:translateY(22px);
     transition:opacity 1s var(--lux) .5s,transform 1s var(--lux) .5s;}

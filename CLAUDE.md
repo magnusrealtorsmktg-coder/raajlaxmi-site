@@ -996,6 +996,23 @@ building render**, and the paragraph is gone.
   - **It is pinned to `.ct-top`, not to `.ct`.** The section runs on past the
     location card and the closing strip, so `bottom:0` there would drop the
     artwork to the foot of the page.
+  - **IT HANGS BELOW `.ct-top` BY EXACTLY `.ct-loc`'S TOP MARGIN**,
+    `bottom:calc(-1 * clamp(3.5rem,6vw,5.5rem))`. At `bottom:0` the artwork
+    stopped level with the foot of the enquiry card and left 56–88px of bare
+    ivory between it and the location card, which the client pointed at. The
+    same expression is used here as on that margin on purpose: the two cannot
+    drift apart. Measured, the gap below the render is now **0px at every
+    desktop size**.
+  - **`.ct-loc` therefore carries `position:relative;z-index:1` too.** The
+    render reaches into that card's margin, and a positioned element at
+    `z-index:0` paints over an unpositioned block however late it comes in
+    the DOM — without it the artwork would lie across the top of the location
+    card.
+  - **Moving it down cost the overlap with the contact cards**, which is the
+    trade the client asked for: 47–257px before, **0–180px after**, and at
+    1600x997 the two no longer meet at all. The artwork's lower edge is also a
+    HARD CUT rather than a fade, which did not show while there was ivory
+    under it. A mask would soften it if that ever matters.
   - **Stacked below 1080px it goes back into the flow**, still bleeding to the
     screen edge. `.ct-top`'s bottom edge is under the *enquiry card* there, so
     a bottom-pinned layer would sit behind the form. In that order it lands
@@ -1007,10 +1024,16 @@ Measured at 1920x1080, 1600x997, 1440x900, 1366x768, 1280x800, 1081x900,
 CMS text: four items at every size, the right column count in each band, no
 card ever wider than its track, no horizontal overflow and no console
 exceptions. For the render, at 2560x1440 down to 360x640: it starts at **x=0**
-at every desktop size, sits flush with the bottom of `.ct-top`, overlaps the
-contact cards by 47–257px with **the cards painting on top in every case**
-(tested with `elementFromPoint` inside the overlap, not by eye), and clears the
-enquiry card by 40–399px.
+at every desktop size, leaves **0px** between itself and the location card,
+overlaps the contact cards by 0–180px with **the cards painting on top in
+every case** (tested with `elementFromPoint` inside the overlap, not by eye),
+and clears the enquiry card by 40–399px.
+
+**One trap in testing this:** `elementFromPoint` takes VIEWPORT coordinates, so
+scrolling the location card to centre puts the contact cards above the window
+and every stacking probe on them returns `false` — which reads exactly like a
+z-index regression. Scroll the element you are probing into view, not its
+neighbour.
 
 ### The card has no intro paragraph, and it never really had one
 
