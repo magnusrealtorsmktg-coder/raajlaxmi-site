@@ -1553,7 +1553,8 @@ by now it drives nearly every page:
 
 **The owners live on their own document.** `ownersPage`, fixed id
 `owners-page`, holding `label` / `heading` / `intro` and the `owners` array of
-name / role / bio / portrait. It drives **Section XI of the home page**, not a
+name / role / bio / portrait. **`heading` is no longer painted** — see *The
+owners section has no heading any more*. It drives **Section XI of the home page**, not a
 page of its own — the id is a leftover and is kept on purpose.
 
 The short history, because the id will otherwise look like a mistake: these
@@ -1566,9 +1567,45 @@ up an id would have risked their work for nothing. The home page's query reaches
 across for it:
 
 ```groq
-"ownersPage":*[_id=="owners-page"][0]{label,heading,intro,
+"ownersPage":*[_id=="owners-page"][0]{label,intro,
   owners[]{name,role,bio,"photoUrl":photo.asset->url}}
 ```
+
+### The owners section has no heading any more
+
+`<h2 class="ow-title">Meet Our Owners.</h2>` is **gone** (9 Nov, the client's
+request), and the small gold `Our Leadership` label above it was enlarged to
+carry the job in its place.
+
+- **The label IS the heading now, and is marked up as one.** It was a `<span>`;
+  it is an `<h2 class="ow-label">`. Deleting the only heading in a section is
+  the SEO cost the hero already pays, and it is not worth repeating when an
+  `<h2>` costs nothing. It needs `margin-top:0`, because the UA gives an `h2`
+  one and the old rule never had to say so.
+- **Its tracking scales with its size.** 6px of letter-spacing is `.43em` at
+  14px and reads as a label; held at 6px while the type grew it would push
+  "OUR LEADERSHIP" wider than a 280px screen. `font-size:clamp(1.15rem,2.1vw,
+  1.9rem)` and `letter-spacing:clamp(3px,.42vw,6px)` bottom out together.
+  Measured 18.4px/3px and 200px wide at 280px, 30.4px/6px and 345px at 1920 —
+  one line at every size with no horizontal overflow.
+- **`.ow-title`, `.ow-ln` and their reveal rules are deleted**, along with the
+  `.ow-ln i` line in the reduced-motion branch and the `heading` field in the
+  GROQ projection — the same clean-out the hero headline got.
+- **`heading` stays on the document and in the schema.** Clearing it would
+  destroy the client's copy to tidy a form. The consequence is the same quiet
+  trap `heroHeadline` sets: editing "Meet Our Owners." in the Studio now does
+  nothing. **To change this heading, edit the `label` field**, not `heading`.
+- **Nothing of the client's was lost**, because `label`, `heading` and `intro`
+  are all **null** on the live `owners-page` document — everything this section
+  shows comes from the markup. The five owners and their portraits are real and
+  are untouched.
+
+**`.ow`'s own top padding (63px) is less than the navbar (122px)**, so the
+label sits under the bar if you stop with the section's top exactly at the top
+of the window. That is **pre-existing** — measured at −57px on the file before
+this change and −59px after, the 2px being the taller label — and it is not the
+same problem the one-screen sections solve, because nothing lands on this
+section's top edge. Raise `.ow`'s `padding-top` if it ever matters.
 
 `move-owners.mjs` has been run and is spent. It is kept because it documents the
 move and is a no-op if run again — it refuses to overwrite anything already on

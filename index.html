@@ -92,7 +92,7 @@
       '    "ref":project->{name,category,location,blurb,detailUrl,"slug":slug.current,\n' +
       '                    "imageUrl":image.asset->url}},\n' +
       '  "projects":*[_type=="project" && defined(slug.current)]{name,detailUrl,"slug":slug.current},\n' +
-      '  "ownersPage":*[_id=="owners-page"][0]{label,heading,intro,\n' +
+      '  "ownersPage":*[_id=="owners-page"][0]{label,intro,\n' +
       '    owners[]{name,role,bio,"photoUrl":photo.asset->url}}\n' +
       '}',
 
@@ -1625,23 +1625,21 @@
 
   /* the header is Section IV's, to the pixel — same label, scale and entrance */
   .ow-head{text-align:center;max-width:900px;margin:0 auto clamp(3rem,5vw,4.2rem);}
+  /* THIS IS THE SECTION'S HEADING NOW, not a label over one, so it is sized to
+     carry that job — up from a flat 14px. The TRACKING SCALES WITH IT: 6px of
+     letter-spacing is .43em at 14px and reads as a label, but held at 6px on a
+     19px phone it would push "OUR LEADERSHIP" to 14 characters wider than a
+     280px screen. Both clamps bottom out together so the line always fits.
+     `margin-top:0` because this is an <h2> now and the UA gives it one. */
   .ow-label{display:inline-block;font-family:"Inter",sans-serif;font-weight:600;
-    font-size:14px;letter-spacing:6px;text-transform:uppercase;color:var(--gold);
-    margin-bottom:1.7rem;opacity:0;transform:translateY(16px);
+    font-size:clamp(1.15rem,2.1vw,1.9rem);letter-spacing:clamp(3px,.42vw,6px);
+    text-transform:uppercase;color:var(--gold);
+    margin-top:0;margin-bottom:1.7rem;opacity:0;transform:translateY(16px);
     transition:opacity .9s var(--lux),transform .9s var(--lux);}
   .ow-label::after{content:"";display:block;width:2.6rem;height:1px;background:var(--gold);
     margin:1rem auto 0;transform:scaleX(0);transition:transform 1s var(--lux) .2s;}
   .ow.in .ow-label{opacity:1;transform:none;}
   .ow.in .ow-label::after{transform:scaleX(1);}
-  .ow-title{font-family:"Playfair Display",serif;font-weight:700;
-    font-size:clamp(2rem,3.6vw,52px);line-height:1.06;letter-spacing:-.015em;color:var(--charcoal);}
-  .ow-title .dot{color:var(--gold);}
-  .ow-ln{display:block;overflow:hidden;padding-bottom:.04em;}
-  .ow-ln i{display:block;font-style:normal;transform:translateY(115%);
-    transition:transform 1s var(--lux);}
-  .ow.in .ow-ln i{transform:translateY(0);}
-  .ow.in .ow-ln:nth-child(1) i{transition-delay:.12s;}
-  .ow.in .ow-ln:nth-child(2) i{transition-delay:.24s;}
   .ow-intro{max-width:700px;margin:clamp(1rem,1.8vh,1.5rem) auto 0;
     font-size:clamp(.95rem,1.05vw,18px);line-height:1.7;font-weight:300;color:var(--body);
     opacity:0;transform:translateY(18px);
@@ -1731,7 +1729,6 @@
   }
   @media (prefers-reduced-motion:reduce){
     .ow-card,.ow-label,.ow-intro{opacity:1 !important;transform:none !important;}
-    .ow-ln i{transform:none !important;}
     .ow-card,.ow-ph{transition:none !important;}
     .ow-card:hover .ow-ph{transform:none;}
     /* nothing drifts here — the script renders a single set and never advances
@@ -2502,10 +2499,11 @@
   <section class="ow" id="owners">
     <div class="ow-wrap">
       <header class="ow-head">
-        <span class="ow-label">Our Leadership</span>
-        <h2 class="ow-title">
-          <span class="ow-ln"><i>Meet Our Owners<span class="dot">.</span></i></span>
-        </h2>
+        <!-- "Meet Our Owners." is gone at the client's request, so this label
+             IS the section's heading now and is marked up as one. A section
+             with no heading at all is the SEO cost the hero already pays; it
+             is not worth repeating here when an <h2> costs nothing. -->
+        <h2 class="ow-label">Our Leadership</h2>
         <p class="ow-intro">The people who carry the name &mdash; and the decisions
           behind every Raajlaxmi address.</p>
       </header>
@@ -4399,12 +4397,11 @@
          away, so the query reaches across instead. */
       const op = d.ownersPage || {};
       setText(document.querySelector('.ow-label'), op.label);
-      const owHead = list(op.heading);
-      if(owHead.length){
-        const h2 = document.querySelector('.ow-title');
-        fit(h2 ? h2.querySelectorAll('.ow-ln') : [], owHead.length, h2)
-          .forEach((ln, i) => setLine(ln.querySelector('i'), owHead[i]));
-      }
+      /* `heading` is NOT painted any more — there is nothing left to paint it
+         into. The field stays on the `ownersPage` document and in the schema,
+         because clearing it would destroy the client's copy to tidy a form;
+         the consequence is that editing "Meet Our Owners." in the Studio now
+         does nothing, which is the same quiet trap `heroHeadline` sets. */
       setText(document.querySelector('.ow-intro'), op.intro);
 
       const owners = Array.isArray(op.owners)
