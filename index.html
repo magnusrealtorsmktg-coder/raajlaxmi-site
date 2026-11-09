@@ -1018,6 +1018,22 @@
   .sp-card:hover .sp-img{transform:scale(1.07);}
   .sp-body{display:flex;flex-direction:column;flex:1;
     padding:clamp(1rem,1.9vh,1.35rem) clamp(1.3rem,1.5vw,1.6rem) clamp(1rem,2vh,1.4rem);}
+  /* OC RECEIVED, the same mark and the same placement as the collection
+     cards (9 Nov) — right of the name, inside the white body, right edge
+     level with the body's own padding. The declaration is deliberately
+     identical to `.col-oc` so the two cards agree; `.sp-*` and `.col-*` are
+     separate rule sets, so changing one will NOT change the other.
+
+     IT COSTS THE SECTION ABOUT 11px OF CARD HEIGHT, and this section holds one
+     screen — see *Signature Projects holds one screen*. The badge is taller
+     than the category and the name stacked beside it, so the body grows by the
+     difference. Measured before: the lowest VIEW PROJECT button cleared the
+     fold by 74-106px, so there was room. Re-measure if anything else is ever
+     added to this card. */
+  .sp-chead{display:flex;align-items:flex-start;justify-content:space-between;gap:.7rem;}
+  .sp-chead > div{min-width:0;}
+  .sp-oc{flex:none;width:clamp(56px,22%,80px);height:auto;aspect-ratio:272/262;
+    margin-top:-.1rem;}
   .sp-cat{font-family:"Inter",sans-serif;font-size:.6rem;font-weight:600;letter-spacing:.22em;
     text-transform:uppercase;color:#C6A15B;margin-bottom:clamp(.4rem,.9vh,.75rem);}
   .sp-name{font-family:"Cormorant Garamond",serif;font-weight:400;
@@ -2349,8 +2365,13 @@
           <div class="sp-media"><div class="sp-img"
             style="background-image:url('https://picsum.photos/seed/rl-heights/800/620'),linear-gradient(160deg,#26364e,#5a6b82)"></div></div>
           <div class="sp-body">
-            <div class="sp-cat">Residential</div>
-            <h3 class="sp-name">Raajlaxmi Heights</h3>
+            <div class="sp-chead">
+              <div>
+                <div class="sp-cat">Residential</div>
+                <h3 class="sp-name">Raajlaxmi Heights</h3>
+              </div>
+              <img class="sp-oc" src="assets/oc-received.png" alt="OC received" loading="lazy" decoding="async">
+            </div>
             <div class="sp-loc"><svg class="pin" width="9" height="12" viewBox="0 0 9 12" fill="none"><path d="M4.5.5C2.3.5.5 2.3.5 4.5c0 3 4 7 4 7s4-4 4-7C8.5 2.3 6.7.5 4.5.5z" stroke="currentColor"/><circle cx="4.5" cy="4.5" r="1.5" stroke="currentColor"/></svg>Borivali West, Mumbai</div>
             <p class="sp-desc">A premium residential community designed for modern families
               seeking comfort and convenience.</p>
@@ -2362,8 +2383,13 @@
           <div class="sp-media"><div class="sp-img"
             style="background-image:url('https://picsum.photos/seed/rl-villa/800/620'),linear-gradient(160deg,#3a2f24,#8a7a63)"></div></div>
           <div class="sp-body">
-            <div class="sp-cat">Residential</div>
-            <h3 class="sp-name">Raajlaxmi Villa</h3>
+            <div class="sp-chead">
+              <div>
+                <div class="sp-cat">Residential</div>
+                <h3 class="sp-name">Raajlaxmi Villa</h3>
+              </div>
+              <img class="sp-oc" src="assets/oc-received.png" alt="OC received" loading="lazy" decoding="async">
+            </div>
             <div class="sp-loc"><svg class="pin" width="9" height="12" viewBox="0 0 9 12" fill="none"><path d="M4.5.5C2.3.5.5 2.3.5 4.5c0 3 4 7 4 7s4-4 4-7C8.5 2.3 6.7.5 4.5.5z" stroke="currentColor"/><circle cx="4.5" cy="4.5" r="1.5" stroke="currentColor"/></svg>Juhu, Mumbai</div>
             <p class="sp-desc">Exclusive villa residences crafted for privacy, elegance and a
               refined lifestyle.</p>
@@ -2375,8 +2401,13 @@
           <div class="sp-media"><div class="sp-img"
             style="background-image:url('https://picsum.photos/seed/rl-crest/800/620'),linear-gradient(160deg,#2c3f4e,#6f8698)"></div></div>
           <div class="sp-body">
-            <div class="sp-cat">Residential</div>
-            <h3 class="sp-name">Raajlaxmi Crest</h3>
+            <div class="sp-chead">
+              <div>
+                <div class="sp-cat">Residential</div>
+                <h3 class="sp-name">Raajlaxmi Crest</h3>
+              </div>
+              <img class="sp-oc" src="assets/oc-received.png" alt="OC received" loading="lazy" decoding="async">
+            </div>
             <div class="sp-loc"><svg class="pin" width="9" height="12" viewBox="0 0 9 12" fill="none"><path d="M4.5.5C2.3.5.5 2.3.5 4.5c0 3 4 7 4 7s4-4 4-7C8.5 2.3 6.7.5 4.5.5z" stroke="currentColor"/><circle cx="4.5" cy="4.5" r="1.5" stroke="currentColor"/></svg>Kandivali East, Mumbai</div>
             <p class="sp-desc">Iconic tower residences offering breathtaking views and
               world-class amenities.</p>
@@ -2388,8 +2419,13 @@
           <div class="sp-media"><div class="sp-img"
             style="background-image:url('https://picsum.photos/seed/rl-essence/800/620'),linear-gradient(160deg,#4a4a40,#9a958a)"></div></div>
           <div class="sp-body">
-            <div class="sp-cat">Luxury Living</div>
-            <h3 class="sp-name">Raajlaxmi Essence</h3>
+            <div class="sp-chead">
+              <div>
+                <div class="sp-cat">Luxury Living</div>
+                <h3 class="sp-name">Raajlaxmi Essence</h3>
+              </div>
+              <img class="sp-oc" src="assets/oc-received.png" alt="OC received" loading="lazy" decoding="async">
+            </div>
             <div class="sp-loc"><svg class="pin" width="9" height="12" viewBox="0 0 9 12" fill="none"><path d="M4.5.5C2.3.5.5 2.3.5 4.5c0 3 4 7 4 7s4-4 4-7C8.5 2.3 6.7.5 4.5.5z" stroke="currentColor"/><circle cx="4.5" cy="4.5" r="1.5" stroke="currentColor"/></svg>Malad West, Mumbai</div>
             <p class="sp-desc">Thoughtfully designed homes that blend luxury, space and
               functionality in perfect harmony.</p>

@@ -554,18 +554,42 @@ keeps running.
 
 `projects.html` — one section, `#projects` ("Section V — Our Collection"): cards rendered from the `P` array in JS, a **town filter capsule** (see *The town filter is a capsule of four towns*), a **Western line corridor band** (`.cor`, between the pagination and the consultation strip) showing the delivered portfolio under four stations — Vasai / Nallasopara / Virar / Saphale. It is the client's finished banner used whole (`assets/projects/western-line.jpg`), **by explicit instruction — do not substitute a markup rebuild for it**. **Its twelve painted logos are clickable**: `.cor-hot` boxes inside `.cor-map` lie over the artwork as percentages of it, so they ride the image at every width — including the 900px plate inside the phone scroller, which is why the img is wrapped in `.cor-plate` (`.cor-figure` becomes the narrower scroll container and cannot be the positioning context). The boxes are measured from the ink, so **a recrop or a replacement banner invalidates all twelve**; `paint()` removes the whole layer if the CMS supplies a banner that is a *different* picture. It tells them apart by **SHA-1**: Sanity names an uploaded asset after the hash of its bytes, so the check is exact rather than a guess — and the usual answer is that they are the same file, because `seed-collections.mjs` uploaded this very banner and the live page therefore serves it from the CDN under a different URL. **Replacing `western-line.jpg` means updating `ART` in that guard**, or the boxes vanish the moment the CMS copy is re-uploaded. Each box carries `data-project` — the name *as the artwork paints it* — and `wireBanner()` matches it against the published projects to set the href, so a slug fixed in the Studio is picked up with no code change. `nameKey()` does the matching and is deliberately forgiving: it folds case and punctuation, collapses doubled letters (`Raajlaxmi`/`Rajlaxxmi` → `rajlaxmi`, `Pearrl` → `pearl`) and drops a trailing plural (`Towers` → `tower`), because the banner and the CMS do not spell the names the same way. **A box with no published project stays inert** — no href, no pointer, no hover tint; `Midas Heights` is painted on the banner but has no document, so today it is the one logo that does not respond. The layer is also inert with Sanity unreachable, which is correct: `project.html?p=` needs Sanity to render anything anyway; a `?status=` filter (exact case-insensitive match on `p.status`, ANDed with the active city chip, read once on load so the chips never clear it, with a `.col-empty` message when nothing matches) — the nav's **Projects** item *and* its **Completed** sub-item both deep-link to `?status=completed`, so the bar reaches the Completed view whether or not the dropdown is used and the browse-everything view is now reached only from the footer and the in-page "See the whole collection" / "Clear filters" links, a "showing N of M" line and a consultation CTA. **The pagination is gone** — the 1/2/3 buttons were decorative markup that never paged anything (every matching card always rendered), so they promised a second page that did not exist. Cross-links back to `index.html#about` / `index.html#signature`.
 
-**Every collection card carries the OC RECEIVED mark, and the SOLD OUT idea is
-gone.** Asked for on 9 Nov, in one instruction: drop sold-out from the site and
-from the Studio, and put the client's OC stamp on every card at the spot they
-marked on a screenshot — to the right of the name, inside the white body.
+**Every project card carries the OC RECEIVED mark, and the SOLD OUT idea is
+gone.** Asked for on 9 Nov: drop sold-out from the site and from the Studio,
+and put the client's OC stamp on every card at the spot they marked on a
+screenshot — to the right of the name, inside the white body. Then, in a
+follow-up, the same on the home page's **Signature Projects** cards.
+
+**THE BADGE IS IN FOUR FILES AND TWO RULE SETS.** `.col-oc` / `.col-chead` in
+the three collection pages, `.sp-oc` / `.sp-chead` in `index.html`. The width
+declaration is deliberately identical (`clamp(56px,22%,80px)`) so the two kinds
+of card agree, but **they are separate rules and changing one will not change
+the other** — the usual arrangement in this codebase, where `.col-*` lives in
+the shared Section V stylesheet and `.sp-*` is Section III's own.
+
+**On the signature cards it costs about 11px of card height**, because the
+badge is taller than the category and the name stacked beside it. That section
+holds one screen (*Signature Projects holds one screen*), so it was measured
+before and after: the lowest VIEW PROJECT button cleared the fold by 74–106px
+before and **66–96px after**, the section is still exactly one viewport at
+every desktop size, and the label still clears the navbar by 9–12px. There is
+room, but it is the budget to check against if anything else is ever added to
+that card.
 
 - **IT IS UNCONDITIONAL. Every card gets it, Ongoing and Redevelopment
   included.** That is what was asked for and it is the one thing here worth
   querying: an Occupancy Certificate is issued when a building is finished, so
   the four Ongoing projects are claiming something that cannot be true of them
   yet. Making it a per-project tick-box is a `boolean` on `project`, one
-  `${p.ocReceived ? …}` in the card template of all three files, and a Studio
-  redeploy — the same shape the `soldOut` field had. Raise it with the client.
+  conditional in the card template of the three collection files plus the
+  signature-card paint in `index.html`, and a Studio redeploy — the same shape
+  the `soldOut` field had. Raise it with the client.
+- **The signature cards are HAND-WRITTEN MARKUP, four copies**, not a template
+  — the home-page content block hydrates the nodes that are already there. So
+  the badge is written into each of the four `.sp-card`s. The hydration
+  selectors are all descendant queries (`card.querySelector('.sp-cat')`), which
+  is why wrapping the category and the name in `.sp-chead` did not break the
+  paint.
 - **The badge is IN THE FLOW, not absolutely positioned**, which is the
   difference from the stamp it replaces. That stamp hung over the photograph
   where nothing could collide with it; this sits beside live text whose length
@@ -608,6 +632,16 @@ and 280x653, on all three collection pages: every card carries the badge, the
 file loads, its right edge is level with the body's padding to the pixel, the
 name never overlaps it, no `.col-stamp` survives anywhere, no horizontal
 overflow and no console exceptions.
+
+On `index.html`, at 2560x1440, 1920x1200, 1920x1080, 1600x997, 1536x864,
+1440x900, 1366x768, 1280x800 and the stacked tiers 1080x900, 1024x800,
+768x1024, 844x390, 390x844, 360x640 and 280x653: all four cards carry it, it
+loads, the name never overlaps it, the section is exactly one viewport at every
+desktop size and correctly taller than the window below 1080px, and there is no
+overflow and no console exception anywhere. **`loading="lazy"` means a probe
+that measures in the same tick as its own `scrollIntoView` reports
+`naturalWidth === 0`** — that is the harness, not the badge; wait a beat and
+all four read loaded.
 
 **The town filter is a capsule of four towns, not a chip per sub-locality.**
 It used to key off the part of `location` BEFORE the first comma, which is a
