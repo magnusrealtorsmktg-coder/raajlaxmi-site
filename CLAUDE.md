@@ -150,10 +150,10 @@ two queries in the same session.
 
 | | state |
 |---|---|
-| Projects | **16.** Completed 9, Ongoing 4, Redevelopment 4 — Krishna Niwas is in two listings, which is what `stages` exists for |
+| Projects | **15.** Completed 9, Ongoing 4, Redevelopment 3 — Krishna Niwas is in two listings, which is what `stages` exists for. Aarvi Apartment was unpublished on 8 Nov, see *Aarvi Apartment was taken off the site* |
 | Sold out | **8**, all of them Completed except Raajlaxmi Avenue (Redevelopment) |
-| Detail-page content | **0 of 16 have a gallery**, 1 an overview, 3 specs, 1 a price, 7 a configuration. Cards look right; `project.html?p=<slug>` is still sparse, and the 9 with no configuration cannot appear in any property-type search |
-| Brochures | **4 uploaded** (Nakshatra Auris 18.0 MB, Shanti Niwas 7.7 MB, Rajlaxxmi Park 5.0 MB, Aarvi Apartment 0.4 MB) |
+| Detail-page content | **0 of 15 have a gallery**, 1 an overview, 3 specs, 1 a price, 7 a configuration. Cards look right; `project.html?p=<slug>` is still sparse, and the 9 with no configuration cannot appear in any property-type search |
+| Brochures | **3 on published projects** (Nakshatra Auris 18.0 MB, Shanti Niwas 7.7 MB, Rajlaxxmi Park 5.0 MB). A fourth, 0.4 MB, is on the unpublished Aarvi Apartment draft |
 | Reviews | **6 real Google reviews**, all with Google links |
 | Client photo slider | **8 photographs** — the block is live now, no longer hidden |
 | Owners | **5 real people, each with a portrait and a role; no bios.** The card runs name + role and the panel is where a bio would show |
@@ -169,6 +169,55 @@ filename, so the client did act on the size advice; Nakshatra Auris did not.
 Re-saving with Fast Web View, or `qpdf --linearize`, fixes this without
 touching the content. They serve `content-type: application/pdf` and
 `content-disposition: inline`, so they do open in the browser as intended.
+
+### Aarvi Apartment was taken off the site
+
+Asked for on 8 Nov: remove every project card of Aarvi Apartment, and put a
+property that is not sold out in its place on the home page. Both halves are
+**CMS data, not code** — no HTML changed and no deploy was needed.
+`studio/scripts/retire-aarvi.mjs` did it and is idempotent.
+
+- **It is UNPUBLISHED, not deleted.** The published document was copied to
+  `drafts.94cf850b-df7b-4a68-b43f-3854050b9ace` and the published copy deleted.
+  The public API cannot see a draft, so its cards left `projects.html` and
+  `projects-redevelopment.html` and its detail page resolves to nothing — the
+  same mechanism that hid Shanti Niwas for a week in October. The client's
+  content, the card photograph and the 0.4 MB brochure all survive, and one
+  press of Publish brings the property back. **It is therefore a new orphan
+  draft**, the second in the Studio after the duplicate Rajlaxxmi Park; do not
+  let a future script adopt it, and do not read it as work in progress.
+- **The signature card was repointed to Krishna Niwas, not removed.** The grid
+  is drawn for four and `fit()` reuses the existing `<article>` nodes, so a
+  deleted card would also drop that node's animation hooks. Krishna Niwas is
+  the only project with `soldOut` explicitly `false` rather than unset, and the
+  only one the client deliberately filed into two listings.
+- **The card's `category` override was cleared in the same patch.** It read
+  `Luxury Living`, which was a deliberate disagreement about *Aarvi*; left in
+  place it would have silently relabelled Krishna Niwas.
+- **The home page had to be patched BEFORE the document was touched.** Sanity
+  refuses to delete a document something still references, so the order is not
+  a preference — reversed, the unpublish fails.
+- **`project.html?p=aarvi-apartment` now falls through to the hand-written
+  Romal Kirti mock**, exactly as `?p=romal-kirti` has since 6 Nov. Nothing on
+  the site links to it, so it is reachable only from a stale bookmark or an
+  indexed URL. The page has no "not found" state; that is the pre-existing gap,
+  not something this change introduced.
+- **Krishna Niwas has no `blurb`**, and the home page's hydration rule leaves
+  markup text alone when a field is empty — so signature card four still prints
+  *"Thoughtfully designed homes that blend luxury, space and functionality in
+  perfect harmony."* That is the invented placeholder copy, and it is the same
+  sentence Aarvi's card printed, so nothing regressed on screen. Its
+  **collection** card shows no description at all. One `blurb` in the Studio
+  fixes both.
+- **Nakshatra Auris, signature card three, is still `soldOut`.** The brief was
+  only about Aarvi, so it was left; raise it with the client if the grid is
+  meant to carry no sold-out property.
+- **The ongoing corridor banner still paints "Aarvi Apartment".**
+  `assets/projects/western-line-ongoing.jpg` has the name burnt into the
+  artwork and `projects-ongoing.html`'s `alt` lists it to match. The alt was
+  left agreeing with the picture rather than quietly disagreeing with it. Only
+  a redraw fixes the plate — and note the artwork was already wrong before
+  this, since Aarvi had been refiled from Ongoing to Redevelopment.
 
 ### Open decisions for the client
 
@@ -1417,8 +1466,8 @@ filled form rather than a blank one; it is `createOrReplace`, so re-running it
 SCHEMA.** This is the one thing about the home page that reliably confuses
 people, and it came up again on 6 Nov as "signature projects do not have
 brochure upload". They do: all four cards reference ordinary `project`
-documents — today Shanti Niwas, Rajlaxxmi Park, Nakshatra Auris and Aarvi
-Apartment, the same documents the collection page lists — so every field a
+documents — today Shanti Niwas, Rajlaxxmi Park, Nakshatra Auris and Krishna
+Niwas, the same documents the collection page lists — so every field a
 completed project has, a signature project has, the `brochure` PDF included.
 What the card object itself holds is a reference plus a few collapsed
 *overrides*; it deliberately carries no gallery, price, specs or brochure of
@@ -1453,12 +1502,15 @@ no project behind any of them: the override fields read as *the* form, and
 picking a project looked optional. A filled override still shows through the
 collapsed summary, which is what makes a deliberate disagreement easy to find.
 
-**Three overrides were deliberately LEFT** rather than cleared, because the card
+**Two overrides are deliberately LEFT** rather than cleared, because the card
 and the project genuinely say different things and only the client can say which
 wins: Rajlaxxmi Park's card says `Residential` where the project says
-`Luxury Apartment`; Aarvi Apartment's says `Luxury Living` against `Residential`;
-and Nakshatra Auris's card carries the abbreviated `Virar-Nsp link Road` against
-the project's fuller `Virar-Nallasopara Link Road`. Deleting one in the Studio
+`Luxury Apartment`, and Nakshatra Auris's card carries the abbreviated
+`Virar-Nsp link Road` against the project's fuller `Virar-Nallasopara Link
+Road`. (There were three. The fourth card's `Luxury Living` belonged to Aarvi
+Apartment and was cleared when that card was repointed at Krishna Niwas — an
+override is a disagreement about one property and must not be carried to
+another.) Deleting one in the Studio
 hands that wording back to the project, and both pages then agree — which is
 what *Project names differ between pages* has been asking for.
 
@@ -2393,7 +2445,7 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
   empty and stays hidden until real photographs are added.
 - `project.html` carries its own placeholders, each marked with a `PLACEHOLDER` comment: **every figure in the fact bar** (~1,15,000 sq.ft, 8 towers, ~640+ units, Completed) is from the client's mock and unverified, as are the landmark distances and the direct line. Its five gallery shots are seeded `picsum.photos/seed/rl-rk-*` placeholders. "Request Brochure" has no brochure behind it and points at the enquiry form — no project carries a `brochure` PDF yet.
 - **Romal Kirti has been DELETED from the dataset** (gone as of 6 Nov; it was published on 29 Oct). `project.html?p=romal-kirti` now resolves to nothing, and the hand-written fallback in `project.html` — which is still that property, and still the unverified mock content — describes a project the client no longer lists. The fallback only shows when the page is opened with **no** `?p=` at all, which nothing on the site links to, so this is a latent oddity rather than a live bug.
-- **Counts after the 7 Nov refiling: 16 published projects — Completed 9 (7 of them `soldOut`), Ongoing 5, Redevelopment 4.** Krishna Niwas and Shanti Niwas are in two listings each, so those add to 18. Nothing is unfiled. Re-check rather than trusting it: the client adds, deletes and refiles, sometimes while you are working.
+- **Counts after unpublishing Aarvi Apartment on 8 Nov: 15 published projects — Completed 9 (8 of them `soldOut`), Ongoing 4, Redevelopment 3.** Krishna Niwas is in two listings, so those add to 16. Nothing is unfiled. Re-check rather than trusting it: the client adds, deletes and refiles, sometimes while you are working.
 - **Two badges disagree with their listing.** Shanti Niwas is Ongoing+Redevelopment but its badge still says **Completed**; Raajlaxmi Avenue is Redevelopment, `soldOut`, and its badge says **Completed**. Both are the status/stage split working as designed — `status` is free text and overrides the listing label — but neither is likely to be what was meant. Clearing `status` makes the badge follow the listing.
 - Most nav links and CTAs are `href="#"`; only Projects and the cross-links resolve. Section II's "Discover our story" button and the "Raajlaxmi Group / Building trust. Creating legacy." signature are both gone — the accreditation strip replaced them, so About no longer offers a CTA or a sign-off of its own.
 - Section IV's statistics panel (`.why-stats`, the old 20+ / 1500+ / 45+ / 98% placeholders) has been **deleted** — markup, CSS, counter JS and all. Section II's row is now the only set of figures on the page. Its `.why-float` interior card went with it: it overlapped the team photo and hid a dozen faces.
