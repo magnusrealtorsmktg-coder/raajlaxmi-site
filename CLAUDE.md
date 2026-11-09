@@ -852,6 +852,70 @@ video at `playbackRate` 0.9 revealed on the three desktop sizes and correctly
 refused on the short and phone ones, the poster painted in all six, and **zero
 surviving `.sv-side` / `.sv-band-copy` / `.sv-scrim` nodes**. No console errors.
 
+### The enquiry card holds one screen
+
+The client's complaint, with a screenshot: the foot of the form was cut off at
+the fold. Measured on the live page, the card stood **795–805px** at every
+desktop size, so on a 1366x768 or a 1440x828 laptop the submit button and the
+line under it were below the fold. The Continue with Google block and the extra
+dropdown row added on 9 Nov are what tipped it over.
+
+It is the same answer `.about` and `.sp` give — size the composition from the
+window rather than from the text — with one difference:
+
+- **IT IS DRIVEN BY CUSTOM PROPERTIES, NOT BY `vh` UNITS.** What has to shrink
+  here is a stack of a dozen controls whose heights come from their own padding
+  and font. A `vh` on each would be a dozen independent clamps to keep in
+  agreement; `--ct-gap`, `--ct-pad`, `--ct-area` and `--ct-send` on `.ct-card`
+  are four numbers, stepped together in three tiers.
+- **Do not size the fields in `vh`.** A text input whose padding is a fraction
+  of the window changes shape as a phone's toolbar slides in and out, which is
+  worse than the problem it solves.
+- **The tiers are guarded by `(min-width:621px) and (min-height:561px)`** — the
+  exact inverse of the phone tier this file already carries, so a handset
+  upright *and* in landscape keep full-size controls while a laptop at 1366x768
+  and a tablet at 1024x768 both get the treatment. On a phone the page plainly
+  scrolls and a 44px tap target matters more than the fold.
+- Three steps: **≤900px**, **≤800px** and **≤690px** of window height. The last
+  also hides the crest, which is ornament where every remaining pixel belongs
+  to a control.
+
+**THE CARD'S INTRO PARAGRAPH IS HIDDEN BELOW 1040px OF WINDOW HEIGHT, and it is
+the only content dropped to make the fit.** It costs **85px**, measured, which
+is most of what the fold was short by, and it is the one element in the card
+carrying no function — the left-hand column of the same section already opens
+with the same invitation in more words. 1040 rather than 900 because the
+full-size card stands 905px and wants about 995px of window plus the navbar
+before it is comfortable. Clearing `cardText` on the `contact-page` document
+removes it everywhere with no code change; deleting the one rule shows it at
+every size, and the tiers then need roughly 85px more taken out of them.
+
+### `.lead` was two different things, and the card's copy lost
+
+**The enquiry card's intro paragraph had NEVER been visible**, on any page
+view, since the lead popup was added. The popup's base rule is a bare
+`.lead{position:fixed;inset:0;visibility:hidden;opacity:0}` in the stylesheet
+all twelve files carry, and it matched the card's `<p class="lead">` too.
+`.ct-card .lead` restyles the type but re-declares none of those four, so the
+client's `cardText` was an **invisible, viewport-sized, fixed-position box
+sitting inside the card** — which is also why a naive
+`querySelector('.ct-card p.lead').getBoundingClientRect().height` reports
+roughly the viewport height and looks like a measuring bug.
+
+The paragraph is **`.ct-lead`** now. Renaming it is one file; rewriting the
+popup's rule would be twelve, and the popup's `.lead` is shared chrome.
+`contact.html` was the only file using `.lead` for copy — checked before
+renaming. The hydration selector moved with it
+(`card.querySelector('p.ct-lead')`).
+
+Measured after both changes, with the **live** `cardText` rather than the
+markup fallback, at 2560x1440, 1920x1200, 1920x1080, 1680x1050, 1600x997,
+1536x864, 1440x900, 1440x828, 1366x768, 1280x800, 1280x720, 1366x650, 1024x768
+and 1024x640: the whole card clears the fixed navbar and the fold at every one,
+with **14–445px of slack**. The practical floor is about **600px of window
+height**, where it is level to within a few pixels. Phones are deliberately
+excluded and scroll as before. No horizontal overflow anywhere.
+
 ### The enquiry card asks the hero's three questions
 
 **`I'm interested in` is GONE** (9 Nov, the client's request). In its place the

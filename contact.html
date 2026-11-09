@@ -1379,7 +1379,28 @@
   /* the top padding is lighter than the sides and the foot: the crest already
      puts ~50px of ornament above the heading, so a symmetric pad left the copy
      sitting a long way down inside the card */
-  .ct-card{max-width:620px;margin-left:auto;background:#fff;border-radius:32px;
+  /* THE WHOLE CARD HAS TO FIT ONE SCREEN, and every vertical step in it is
+     named here so a short window can step them all down together. The client's
+     complaint was the foot of the form cut off at the fold: measured, the card
+     stood 795-803px against windows from 768px up, so on a 1366x768 or a
+     1440x828 laptop the button and the fine print were below the fold.
+
+     It is the same answer `.about` and `.sp` give — size the composition from
+     the window rather than from the text — but it is driven by CUSTOM
+     PROPERTIES rather than by `vh` units directly, because what has to shrink
+     here is a stack of a dozen controls whose own heights come from their
+     padding and their font. A `vh` on each would be a dozen independent
+     clamps to keep in agreement; one variable each for the gap, the field
+     padding and the message box is three numbers, stepped in two tiers below.
+
+     DO NOT size the fields in `vh`. A text input whose padding is a fraction
+     of the window is a control that changes shape as a phone's toolbar slides
+     in and out, which is worse than the problem it solves. */
+  .ct-card{--ct-gap:.85rem;      /* between fields */
+           --ct-pad:1.05rem;     /* a field's own vertical padding */
+           --ct-area:7.5rem;     /* the message box */
+           --ct-send:64px;       /* the submit button */
+    max-width:620px;margin-left:auto;background:#fff;border-radius:32px;
     border:1px solid rgba(198,161,91,.26);
     padding:clamp(1.1rem,2vw,1.9rem) clamp(1.4rem,2.6vw,2.6rem) clamp(1.6rem,2.8vw,2.8rem);
     box-shadow:0 60px 120px -60px rgba(60,48,28,.42),0 14px 34px -22px rgba(60,48,28,.16);
@@ -1390,7 +1411,7 @@
   .ct-card h2{text-align:center;font-family:"Cormorant Garamond",serif;font-weight:600;
     font-size:clamp(1.5rem,2.3vw,2rem);line-height:1.15;color:var(--ink);}
   .ct-cdiv{width:5.5rem;height:1px;background:rgba(198,161,91,.55);margin:1rem auto;}
-  .ct-card .lead{text-align:center;max-width:26rem;margin:0 auto clamp(1.4rem,2.2vw,1.9rem);
+  .ct-card .ct-lead{text-align:center;max-width:26rem;margin:0 auto clamp(1.4rem,2.2vw,1.9rem);
     font-family:"Inter",sans-serif;font-size:.88rem;line-height:1.7;font-weight:300;color:var(--say);}
 
   /* ---- continue with Google ----
@@ -1417,17 +1438,17 @@
     color:#8C877E;}
   .ct-or::before,.ct-or::after{content:"";flex:1;height:1px;background:rgba(35,33,29,.12);}
 
-  .ct-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem;}
-  .ct-field{position:relative;margin-bottom:.85rem;}
+  .ct-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--ct-gap);}
+  .ct-field{position:relative;margin-bottom:var(--ct-gap);}
   .ct-field .ic{position:absolute;left:1rem;top:50%;transform:translateY(-50%);
     color:var(--au);pointer-events:none;display:flex;}
   .ct-field.area .ic{top:1.15rem;transform:none;}
   .ct-field input,.ct-field select,.ct-field textarea{
     width:100%;font-family:"Inter",sans-serif;font-size:.88rem;font-weight:300;color:var(--ink);
     background:#FCFBF8;border:1px solid rgba(35,33,29,.12);border-radius:14px;
-    padding:1.05rem 1.1rem 1.05rem 2.9rem;
+    padding:var(--ct-pad) 1.1rem var(--ct-pad) 2.9rem;
     transition:border-color .4s var(--lux),box-shadow .4s var(--lux),background .4s var(--lux);}
-  .ct-field textarea{min-height:7.5rem;resize:vertical;line-height:1.65;}
+  .ct-field textarea{min-height:var(--ct-area);resize:vertical;line-height:1.65;}
   .ct-field select{appearance:none;-webkit-appearance:none;cursor:pointer;color:var(--say);}
   .ct-field select.picked{color:var(--ink);}
   .ct-field .caret{position:absolute;right:1.1rem;top:50%;transform:translateY(-50%);
@@ -1449,7 +1470,7 @@
   .ct-consent input:checked + .box svg{opacity:1;transform:none;}
   .ct-consent input:focus-visible + .box{box-shadow:0 0 0 3px rgba(198,161,91,.22);}
 
-  .ct-send{width:100%;height:64px;border-radius:16px;display:flex;align-items:center;
+  .ct-send{width:100%;height:var(--ct-send);border-radius:16px;display:flex;align-items:center;
     justify-content:center;gap:.9rem;font-family:"Inter",sans-serif;font-size:.78rem;
     font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#fff;
     background:linear-gradient(120deg,#C6A15B,#A8823C);
@@ -1515,6 +1536,71 @@
   .ct-btn .arw::after{content:"";position:absolute;right:-1px;top:-3px;width:7px;height:7px;
     border-top:1px solid currentColor;border-right:1px solid currentColor;transform:rotate(45deg);}
   .ct-btn:hover .arw{transform:translateX(5px);}
+
+  /* ---- short windows: step the whole card down together ----
+     Keyed on HEIGHT, because this is about the fold rather than the device.
+     The guard is `(min-width:621px) and (min-height:561px)` — the exact
+     inverse of the phone tier this file already carries, so a handset upright
+     and a handset in landscape are both excluded and keep full-size controls,
+     while a laptop at 1366x768 and a tablet at 1024x768 both get it. On a
+     phone the page plainly scrolls and a 44px tap target matters more than
+     the fold. The two tiers mirror `.about`'s 880/700 pair.
+
+     Measured on the live card before this: 795px at 1366x768 and 799px at
+     1440x828, against roughly 670px and 730px of room once the fixed navbar
+     is allowed for. */
+  /* THE CARD'S INTRO PARAGRAPH IS THE FIRST THING TO GO, and it is the only
+     content this file drops to make the fit. It costs 85px — measured — which
+     is most of what the fold was short by, and it is the one element in the
+     card carrying no function: the left-hand column of this very section
+     already opens with the same invitation in more words. Everything else in
+     the card is either a control or the heading over them.
+
+     1040px, not 900: the full-size card stands 905px, so it wants about
+     995px of window plus the navbar before it is comfortable. Above that —
+     a 1080p monitor and up — the paragraph shows.
+
+     If the client would rather never see it, clearing `cardText` on the
+     `contact-page` document removes it everywhere with no code change. If they
+     would rather have it at every size, it is this one rule to delete, and the
+     two tiers below then need roughly 85px more taken out of them. */
+  @media (min-width:621px) and (min-height:561px) and (max-height:1040px){
+    .ct-card .ct-lead{display:none;}
+  }
+  @media (min-width:621px) and (min-height:561px) and (max-height:900px){
+    .ct-card{--ct-gap:.74rem;--ct-pad:.96rem;--ct-area:5.8rem;--ct-send:60px;
+      padding:clamp(1rem,1.7vw,1.6rem) clamp(1.4rem,2.6vw,2.6rem) clamp(1.4rem,2.3vw,2.1rem);}
+    .ct-crest{margin-bottom:.45rem;transform:scale(.9);}
+    .ct-cdiv{margin:.75rem auto;}
+    .ct-card .ct-lead{margin-bottom:1.1rem;line-height:1.62;}
+    .ct-goog{margin-bottom:.95rem;}
+    .ct-or{margin-top:.95rem;}
+    .ct-consent{margin:.2rem 0 1rem;}
+  }
+  @media (min-width:621px) and (min-height:561px) and (max-height:800px){
+    .ct-card{--ct-gap:.6rem;--ct-pad:.86rem;--ct-area:4.4rem;--ct-send:56px;
+      padding:clamp(.8rem,1.4vw,1.25rem) clamp(1.4rem,2.6vw,2.6rem) clamp(1.1rem,1.8vw,1.6rem);}
+    .ct-card h2{font-size:clamp(1.35rem,2vw,1.7rem);}
+    .ct-crest{transform:scale(.8);margin-bottom:.3rem;}
+    .ct-cdiv{margin:.55rem auto;}
+    .ct-card .ct-lead{margin-bottom:.85rem;font-size:.84rem;line-height:1.55;}
+    .ct-goog{margin-bottom:.75rem;}
+    .ct-or{margin-top:.75rem;}
+    .ct-consent{margin:.15rem 0 .8rem;}
+  }
+
+  /* A third step for a genuinely short desktop window — 1024x640, a netbook,
+     a browser with three toolbars. The crest goes here: it is ornament, and by
+     this point every remaining pixel belongs to a control. */
+  @media (min-width:621px) and (min-height:561px) and (max-height:690px){
+    .ct-card{--ct-gap:.46rem;--ct-pad:.72rem;--ct-area:3rem;--ct-send:50px;
+      padding:clamp(.6rem,1vw,.9rem) clamp(1.4rem,2.6vw,2.6rem) clamp(.85rem,1.4vw,1.2rem);}
+    .ct-crest{display:none;}
+    .ct-cdiv{margin:.45rem auto;}
+    .ct-goog{margin-bottom:.6rem;}
+    .ct-or{margin-top:.6rem;}
+    .ct-consent{margin:.1rem 0 .65rem;}
+  }
 
   @media(max-width:1080px){
     .ct-top{grid-template-columns:minmax(0,1fr);}
@@ -1837,7 +1923,15 @@
           </svg>
           <h2>Book a Private Consultation</h2>
           <div class="ct-cdiv" aria-hidden="true"></div>
-          <p class="lead">Tell us about your requirements and a member of our team will be in
+          <!-- `ct-lead`, NOT `lead`. The lead POPUP's base rule is a bare
+               `.lead { position:fixed; inset:0; visibility:hidden; opacity:0 }`
+               in the stylesheet every page carries, and it matched this
+               paragraph too — `.ct-card .lead` restyles the type but never
+               re-declares any of those four, so the client's `cardText` was an
+               invisible, viewport-sized, fixed-position box sitting inside the
+               card and had never once been seen. Renaming the paragraph fixes
+               it in one file; editing the popup's rule would be twelve. -->
+          <p class="ct-lead">Tell us about your requirements and a member of our team will be in
             touch to arrange a time that suits you.</p>
 
           <!-- CONTINUE WITH GOOGLE. Hidden in the markup and revealed by the
@@ -2876,7 +2970,7 @@
       const card = document.getElementById('ctCard');
       if(card){
         setText(card.querySelector('h2'), d.cardTitle);
-        setText(card.querySelector('p.lead'), d.cardText);
+        setText(card.querySelector('p.ct-lead'), d.cardText);
         const send = card.querySelector('.ct-send');
         if(send && txt(d.cardButton)){
           /* keep the arrow element, replace only the words before it */
