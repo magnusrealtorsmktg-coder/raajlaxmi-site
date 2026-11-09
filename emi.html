@@ -1285,6 +1285,27 @@
     transition:opacity .9s var(--lux) .16s,transform .9s var(--lux) .16s;}
   .emi.in .emi-intro{opacity:1;transform:none;}
 
+  /* ---- the header picture (right side) ----
+     Pinned to the section's top-right corner and bled to the viewport edge,
+     with the text left of it. Its left and bottom edges dissolve into the
+     page's ivory so there is no hard frame — the photo already fades to a
+     warm white on its left. The wrap sits above it, so the calculator cards
+     can overlap the faded bottom without being covered. */
+  .emi-wrap{position:relative;z-index:1;}
+  .emi-art{position:absolute;top:0;right:0;z-index:0;pointer-events:none;
+    width:min(60vw,1100px);aspect-ratio:1032/590;
+    background:url('assets/emi-hero.jpg') no-repeat right top/cover;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 30%),
+                       linear-gradient(180deg,#000 72%,transparent 100%);
+    -webkit-mask-composite:source-in;
+    mask-image:linear-gradient(90deg,transparent 0%,#000 30%),
+               linear-gradient(180deg,#000 72%,transparent 100%);
+    mask-composite:intersect;
+    opacity:0;transition:opacity 1.2s var(--lux) .1s;}
+  .emi.in .emi-art{opacity:1;}
+  /* the text column stays clear of the picture on a desktop */
+  .emi-head{position:relative;z-index:1;}
+
   .emi-grid{display:grid;grid-template-columns:1.04fr .96fr;
     gap:clamp(1.4rem,2.6vw,2.4rem);align-items:start;
     opacity:0;transform:translateY(26px);
@@ -1453,6 +1474,11 @@
   .emi-note a{color:var(--gold-deep);border-bottom:1px solid rgba(176,138,62,.4);}
 
   @media(max-width:940px){
+    /* the picture becomes a banner in the flow, above the heading */
+    .emi-art{position:relative;width:auto;margin:0 calc(-1 * clamp(1.4rem,5vw,4rem)) clamp(1.6rem,4vw,2.4rem);
+      -webkit-mask-image:linear-gradient(180deg,transparent 0%,#000 14%,#000 80%,transparent 100%);
+      mask-image:linear-gradient(180deg,transparent 0%,#000 14%,#000 80%,transparent 100%);
+      background-position:center;}
     /* THE ANSWER GOES FIRST. On one column the figure has to be above the
        controls, or every slider drag means scrolling down to see what it did. */
     .emi-grid{grid-template-columns:minmax(0,1fr);}
@@ -1463,6 +1489,7 @@
     .emi-tbl{min-width:30rem;}
   }
   @media (prefers-reduced-motion:reduce){
+    .emi-art{opacity:1 !important;transition:none !important;}
     .emi-label,.emi-title,.emi-intro,.emi-grid,.emi-more{
       opacity:1 !important;transform:none !important;}
     .emi-ring .arc{transition:none;}
@@ -1710,15 +1737,16 @@
        corridor's range and a rate near what the banks are quoting — and they
        are meant to be edited here when either drifts. -->
   <section class="emi" id="emi">
+    <!-- header picture: top-right on a desktop, a banner above the heading below 940px -->
+    <div class="emi-art" role="img" aria-label="Modern Raajlaxmi residential tower at sunrise"></div>
     <div class="emi-wrap">
 
       <header class="emi-head">
         <span class="emi-label">Plan your purchase</span>
         <h1 class="emi-title">EMI Calculator<span class="dot">.</span></h1>
-        <p class="emi-intro">Put in any property price and see what the monthly
-          instalment comes to, what the loan will cost you in interest over its
-          life, and how that splits between the two. Nothing is sent anywhere —
-          the sums happen in your browser.</p>
+        <p class="emi-intro">Calculate your monthly instalment with ease. Adjust the
+          property price, down payment and interest rate to plan your home
+          purchase with confidence.</p>
       </header>
 
       <div class="emi-grid">
