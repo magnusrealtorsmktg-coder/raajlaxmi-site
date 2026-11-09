@@ -523,7 +523,11 @@
     padding:1rem 1.1rem;border:1px solid var(--glass-line-2);border-radius:18px;
     background:rgba(10,16,24,.32);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
     max-width:42rem;}
-  .hs-field{display:flex;flex-direction:column;gap:.4rem;flex:1 1 8.5rem;min-width:8.5rem;}
+  /* Fields start from ZERO width and share what the button leaves, so the
+     arrow sits just after the word instead of being pushed out to a fixed
+     8.5rem column. 6.5rem still fits "PROPERTY" + its chevron, and three of
+     those plus the button fit one 42rem row, so the button stays on the line. */
+  .hs-field{display:flex;flex-direction:column;gap:.4rem;flex:1 1 0;min-width:6.5rem;}
   /* a field the script hides must leave the row, not just go invisible */
   .hs-field[hidden]{display:none;}
   .hs-field > label{font-size:.58rem;letter-spacing:.24em;text-transform:uppercase;
@@ -531,10 +535,10 @@
   .hs-field select{appearance:none;-webkit-appearance:none;
     font-family:inherit;font-size:.82rem;letter-spacing:.02em;color:var(--paper);
     background:transparent;border:0;border-bottom:1px solid var(--glass-line-2);
-    padding:.5rem 1.6rem .55rem .15rem;cursor:pointer;width:100%;
+    padding:.5rem 1.15rem .55rem .15rem;cursor:pointer;width:100%;
     transition:border-color .4s var(--lux);
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'><path d='M1 1l4 4 4-4' stroke='%23CBA96B' stroke-width='1.2'/></svg>");
-    background-repeat:no-repeat;background-position:right .25rem center;}
+    background-repeat:no-repeat;background-position:right .1rem center;}
   .hs-field select:hover{border-bottom-color:var(--champagne);}
   .hs-field select:focus{outline:none;border-bottom-color:var(--champagne);}
   .hs-field select option{color:#0A121C;background:var(--paper);}
