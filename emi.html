@@ -1795,18 +1795,6 @@
           <div class="emi-big"><span class="cur">&#8377;</span><span id="emiEmi">34,713</span></div>
           <p class="emi-sub" id="emiSub">on a &#8377;40,00,000 loan over 20 years at 8.5% a year</p>
 
-          <div class="emi-split">
-            <svg class="emi-ring" viewBox="0 0 120 120" aria-hidden="true">
-              <circle class="trk" cx="60" cy="60" r="52"></circle>
-              <circle class="arc" id="emiArc" cx="60" cy="60" r="52"
-                      stroke-dasharray="0 326.726"></circle>
-            </svg>
-            <ul class="emi-key">
-              <li><i class="kp"></i><span>Principal</span><b id="emiPrin">&#8377;40,00,000</b></li>
-              <li><i class="ki"></i><span>Interest</span><b id="emiIntK">&#8377;43,31,120</b></li>
-            </ul>
-          </div>
-
           <dl class="emi-rows">
             <div><dt>Loan amount</dt><dd id="emiLoan">&#8377;40,00,000</dd></div>
             <div><dt>Total interest</dt><dd id="emiInt">&#8377;43,31,120</dd></div>
@@ -2136,7 +2124,6 @@
       el.setSelectionRange(before ? pos : 0, before ? pos : 0);
     }
 
-    const C = 2 * Math.PI * 52;        /* the ring's circumference, r=52 */
 
     function paint(){
       const price  = S.price;
@@ -2176,14 +2163,9 @@
         ? 'Nothing to borrow at this deposit.'
         : 'on a ' + inr(loan) + ' loan over ' + S.years +
           (S.years === 1 ? ' year' : ' years') + ' at ' + S.rate + '% a year';
-      $('emiPrin').textContent  = inr(loan);
-      $('emiIntK').textContent  = inr(int);
       $('emiLoan').textContent  = inr(loan);
       $('emiInt').textContent   = inr(int);
       $('emiTotal').textContent = inr(none ? 0 : total);
-
-      const share = total > 0 ? loan / total : 0;
-      $('emiArc').setAttribute('stroke-dasharray', (share * C).toFixed(2) + ' ' + C.toFixed(2));
 
       const warn = $('emiWarn');
       if(none){
