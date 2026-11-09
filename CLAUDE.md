@@ -10,13 +10,17 @@ Deployed to Netlify from the CLI. There is no build step — but **do not publis
 
 `README.md` was rewritten on 26 Sep and now describes this build accurately (it previously documented a seven-section, single-file version that no longer exists). It is the public GitHub landing page; **CLAUDE.md is the detailed reference** — keep architecture notes here, not there.
 
-## Where this stands (handover, 8 Nov 2026)
+## Where this stands (handover, 9 Nov 2026)
 
 The site is **built, deployed and live** at
 <https://raajlaxmi-site.netlify.app> (Netlify team `magnus realtorsmktg`,
 deployed from `magnusrealtorsmktg-coder/raajlaxmi-site` on GitHub), and **almost
 every page is now driven by Sanity** — see *Content management*. Construction is
-essentially done and `main` is pushed and clean at `ed7975f`.
+essentially done and `main` is pushed and clean; the last code change is
+`a3647e7`. **The client commits to this repo themselves** — ten commits on
+9 Nov were theirs (the EMI page, the testimonials running order, the hero
+search). Run `git log` before assuming the working tree is only yours, and
+`git fetch` before pushing.
 
 **THE ONE THING BLOCKING LAUNCH IS THE DOMAIN**, and it is not a code job — see
 *The domain cutover*. Everything else below is content the client owes or a
@@ -36,6 +40,8 @@ and are not. The ones that will cost you an afternoon if you do not know them:
 | the services band's height | *The services page runs a film* — the ratio is pinned by a watermark burnt into the footage, not by taste |
 | a video of any kind | *Hero, About and Why can each take a video* and the encode tables under it; every client upload so far has been a 60–265 MB master |
 | a headless check | *Verifying locally — and one headless trap* — and measure with CDP device metrics, never `--window-size --screenshot` |
+| any of the three moving strips | *The owners strip gives way and comes back* — the owners, the reviews and the photo gallery all run **one** implementation now, and its drift cannot be verified headlessly |
+| a price, a budget band or the EMI link | *No project carries a price* — the field is empty on all fifteen projects, so three features are silently inert |
 
 **Deploys:** `git push origin main` publishes the site. The Studio is separate
 and **Claude Code cannot run either** — the classifier blocks both. Hand the
@@ -142,7 +148,7 @@ compositions. `--window-size` is honored for `--screenshot` but **not** for
 `--dump-dom`, where `innerWidth` reports 756 regardless — size an iframe
 instead of trusting that number.
 
-### What the CMS holds, measured 8 Nov
+### What the CMS holds, measured 9 Nov
 
 **Re-run these counts rather than trusting them.** The client edits daily, and
 often while you are working — twice now a document has changed shape between
@@ -151,14 +157,16 @@ two queries in the same session.
 | | state |
 |---|---|
 | Projects | **15.** Completed 9, Ongoing 4, Redevelopment 3 — Krishna Niwas is in two listings, which is what `stages` exists for. Aarvi Apartment was unpublished on 8 Nov, see *Aarvi Apartment was taken off the site* |
-| Sold out | **8**, all of them Completed except Raajlaxmi Avenue (Redevelopment) |
-| Detail-page content | **0 of 15 have a gallery**, 1 an overview, 3 specs, 1 a price, 7 a configuration. Cards look right; `project.html?p=<slug>` is still sparse, and the 9 with no configuration cannot appear in any property-type search |
+| Sold out | **7.** It was 8 — `Raajlaxmi Apartment` was un-ticked on 9 Nov, so it is a Completed project that is no longer marked sold |
+| Detail-page content | **6 of 15 now have a gallery** (Rajlaxxmi Park 4, Priti Pearrl 3, and 2 each on Krishna Niwas, Raajlaxmi Avenue, Raajlaxmi Meenakshi, Shanti Niwas), 2 an overview, 3 specs, **0 a price**, 7 a configuration. The client is filling these in; the gallery count was 0 on 8 Nov |
+| Prices | **NONE.** Not one project carries a `price` any more — `Raajlaxmi Apartment`'s ₹1.8 Cr was cleared on 9 Nov. See *No project carries a price* for the three things that silently depend on this |
 | Brochures | **3 on published projects** (Nakshatra Auris 18.0 MB, Shanti Niwas 7.7 MB, Rajlaxxmi Park 5.0 MB). A fourth, 0.4 MB, is on the unpublished Aarvi Apartment draft |
 | Reviews | **6 real Google reviews**, all with Google links |
 | Client photo slider | **8 photographs** — the block is live now, no longer hidden |
 | Owners | **5 real people, each with a portrait and a role; no bios.** The card runs name + role and the panel is where a bio would show |
 | Social handles | **YouTube, WhatsApp, Instagram.** Facebook, LinkedIn and X are unset, so they do not render |
 | Hero background | the desktop film; `heroVideoMobile` is **still empty**, so phones use the committed `assets/hero-mobile.mp4` fallback |
+| Hero dropdowns | `heroButton` **Discover Your Space**; `heroPropertyOptions` 1 BHK / 2 BHK / 3 BHK / Jodi Flats / Office / Shops (the last three match nothing); `heroBudgetOptions` five bands (all match nothing — no project has a price); `heroLocationOptions` the four towns, **which the page ignores** because LOCATION is derived from the projects |
 
 **THE BROCHURES ARE NOT LINEARISED — none of the four.** Checked by reading the
 first 2KB of each: no `/Linearized`. The asset CDN answers range requests, so a
@@ -220,6 +228,28 @@ property that is not sold out in its place on the home page. Both halves are
   this, since Aarvi had been refiled from Ongoing to Redevelopment.
 
 ### Open decisions for the client
+
+**Added 9 Nov, all content rather than code:**
+
+- **No project has a price** — see *No project carries a price*. Every budget
+  band returns nothing until one does.
+- **`Jodi Flats`, `Office` and `Shops` match no project.** They are offered in
+  the hero's PROPERTY dropdown but no project's `config` names them, so each
+  returns an empty collection. The matcher folds plurals and spacing, so typing
+  "Shop" or "Jodi Flat" into a project's configuration is all it takes.
+- **`1 RK` was dropped** from that dropdown, and `4 BHK` / `5 BHK` are no longer
+  offered although Nakshatra Auris and Midas Glory have them.
+- **Krishna Niwas has no `blurb`**, so signature card four prints the invented
+  placeholder sentence and its collection card shows no description.
+- **Nakshatra Auris is `soldOut` and is still signature card three.**
+- **The hero's LOCATION dropdown shows sub-locality spellings and no Virar** —
+  see the note under *The hero search*. Either fix the towns on the projects or
+  stop deriving the list.
+- **`seal-top.png` (259KB) is referenced by nothing** and still ships.
+- **`EMI-image.png` (924KB) sits untracked at the repo root.** Nothing
+  references it — `assets/emi-hero.jpg` is what the EMI page uses — so it is
+  working material, not a missing asset. Delete it or leave it; it is not
+  committed and so never reaches the site.
 
 - **Which phone number is right.** The contact page prints `+91 9890823288`
   and the footer `+91 77740 00939`. This stopped being cosmetic when the
@@ -606,7 +636,7 @@ is the affordance. Measured at 1440/1024/390/360: no page overflow at any width.
 `index.html` carries, so the capsule rules were applied to all ten to stop them
 drifting; only the three collection pages have `#colChips` and the logic.
 
-`testimonials.html` — one section, `#testimonials` ("Section VII — Testimonials"): a **continuously scrolling marquee** of review cards, a hidden client-photo slider under it, and a closing consultation strip. The reviews come from Sanity (the five written into the `T` array are only the fallback); each card carries the reviewer's initials rather than a photograph, and a Google button when that review has a link. The arrows and dots are `display:none` — a strip with no discrete slides has nothing for them to point at. All the detail is under *Content management → Testimonials*. The nav's Testimonials item points here from every page.
+`testimonials.html` — one section, `#testimonials` ("Section VII — Testimonials"). **The running order was changed by the client on 9 Nov** and is now: the page header, then the **client photo gallery**, then a second header introducing the reviews (`.tm-head-reviews`), then the **reviews strip**, then the closing consultation strip. The photographs used to sit under the reviews; they now come first and are sized to fill the first screen, with the reviews heading deliberately starting below the fold. **The gallery is no longer hidden** — the CMS carries eight photographs. **Both strips are now real scrollers** with the owners-strip behaviour, not CSS marquees. The reviews come from Sanity (the five written into the `T` array are only the fallback); each card carries the reviewer's initials rather than a photograph, and a Google button when that review has a link. The arrows and dots are `display:none` — a strip with no discrete slides has nothing for them to point at. All the detail is under *Content management → Testimonials*. The nav's Testimonials item points here from every page.
 
 `services.html` — one section, `#services` ("Section IX — Services"), **five** blocks: the film band, the journey rail **with a service card inside each of its five steps**, the six-step buying flow, a FAQ accordion and a closing CTA. Both rails fill their gold line from scroll position (`--fill` on `.sv-rail` / `.sv-flow`). Each block carries `data-rev` and gets its own observer, so the page reveals in movements rather than all at once. Its first two blocks **were finished artwork with the copy painted in** (`Services_start.png` at 2164:380 and `assets/service-philosophy.jpg` at 1376:513); the first is **the client's film with no copy at all over it** and the second **is gone** — see *The services page runs a film* below.
 
@@ -921,10 +951,23 @@ Signature Projects cards **no longer land there**: each one now resolves its own
 ### The EMI calculator
 
 `emi.html` — one section, `#emi` ("Section XIII — EMI Calculator"), added
-7 Nov. A visitor types any property price and gets the monthly instalment, the
-total interest over the life of the loan, the split between the two as a ring,
-and a year-by-year amortisation table behind a toggle. Four inputs — price,
-deposit, rate, tenure — each a typed field and a slider driving the same value.
+7 Nov and **cut back by the client on 9 Nov to the monthly instalment and
+nothing else**. A visitor types a property price and gets the instalment. Four
+inputs — price, deposit, rate, tenure — each a typed field and a slider driving
+the same value, plus a header photograph (`assets/emi-hero.jpg`) on the right.
+
+**The ring, the totals and the amortisation table are GONE** (commits
+`84f802e`, `e0f5100`, `5bebca7`), in that order: first the principal/interest
+ring and its key, then the totals beside it, then the year-by-year schedule.
+The page now answers one question. Two leftovers to know about:
+
+- **`.emi-ring` and `.emi-key` are dead CSS** — eleven rules in the stylesheet
+  and one more in the reduced-motion block. No markup references them. They
+  were left rather than deleted, so putting the ring back is a markup change
+  only.
+- **The month-by-month amortisation walk went with the table.** The note that
+  used to be here about 360 iterations and the balance landing on exactly ₹0
+  no longer describes anything in the file.
 
 **It is the second page with no CMS behind it**, after `services.html`, and the
 only one that needs none: it is arithmetic, not content. Nothing is fetched but
@@ -933,7 +976,7 @@ with Sanity unreachable and with the network off once it has loaded. The
 defaults written into the markup (₹50 Lakh, 20% down, 8.5%, 20 years) are the
 only content in it and are meant to be edited there when the market moves.
 
-Seven things are load-bearing:
+Six things are load-bearing:
 
 - **THE PERCENTAGE IS AUTHORITATIVE FOR THE DEPOSIT, NOT THE RUPEE FIGURE.**
   People think "twenty percent down", so when the price moves the deposit
@@ -968,11 +1011,25 @@ Seven things are load-bearing:
   controls above the result would mean scrolling down after every slider drag
   to see what it did.
 
-The amortisation table is walked month by month rather than solved per year,
-because that is what a lender does: each instalment pays the interest accrued
-on the balance and only the remainder comes off the principal. 360 iterations
-at the longest tenure. Verified against the closed form — the balance lands on
-exactly ₹0 in the final year.
+**THE SLIDERS ARE INDEXES, NOT VALUES (9 Nov).** They used to carry the real
+figure — `min="500000" max="50000000" step="50000"` for the price. The client
+wanted every slider to read **0 at the extreme left** and only then enter its
+working range, which a plain `min`/`max` cannot express: a price slider whose
+minimum is ₹15 Lakh can never show zero. So each is `min="0"` over a step
+index now, and a `SLIDERS` map converts:
+
+| slider | positions | 0 at left, then |
+|---|---|---|
+| price | 0–271 | ₹15 Lakh → ₹1.5 Cr, step ₹50,000 |
+| deposit | 0–90 | a straight percentage, no offset |
+| rate | 0–221 | 5% → 16%, step 0.05% |
+| tenure | 0–30 | 1 → 30 years |
+
+`toPos` and `toVal` are inverses and **both have to be edited together** — and
+`LIM` (now `price:[1500000,15000000]`) is what clamps the typed field, so a
+range change means three edits, not one. Deposit and tenure need no offset
+because 0 is already inside their range; price and rate reserve position 0 for
+it, which is why their counts are `1 + (span / step)`.
 
 **The disclaimer under it is not boilerplate to trim.** The page prints a
 figure that looks like a quote, so it says in as many words that it excludes
@@ -1355,6 +1412,21 @@ with no ground of its own, so over a bright hero it dissolved into the photograp
 Filled, it is `--champagne` on `#14243C` — a 7:1 contrast ratio, the same treatment
 the page's other primary buttons use — and it keeps that fill over ivory too.
 
+**The markup's location list was corrected on 9 Nov** (`a3647e7`) from the four
+Lucknow localities to Vasai / Nallasopara / Virar / Saphale. **That changes only
+the fallback**, because the project-derived `fill(locSel, towns)` still claims
+the control at runtime — so what a visitor actually sees is still the derived
+list, which today reads `Nallasopara (West)`, `Saphale (West)`, `Vasai East`
+and **has no Virar entry at all**. The clean four only appear when Sanity is
+unreachable. Worth settling: either drop the derivation so the tidy names show,
+or fix the towns on the projects.
+
+**The hero fields were tightened on 9 Nov** (`7cac551`): `.hs-field` went from
+`flex:1 1 8.5rem` to `flex:1 1 0` with a `6.5rem` floor, and the select's right
+padding from `1.6rem` to `1.15rem`, so each dropdown's chevron sits just after
+its word instead of being pushed out to a fixed column — which is what keeps
+the longer `Discover Your Space` button on the same row.
+
 **The hero search's LOCATION is built from the published projects; PROPERTY is
 not, since 9 Nov.** Both were a hand-typed list in the `homepage` singleton that
 matched nothing — a visitor could choose a locality the group does not build in,
@@ -1462,9 +1534,26 @@ each of them a real case from this dataset:
 - Text with **no number in it** ("Price on request") returns `null`, which keeps
   such a project out of every specific band while leaving it in "Any budget".
 
-Only one project carries a price today (`Raajlaxmi Apartment`, ₹1.8 Cr), so most
-bands correctly return the "nothing matches" line. Verified end to end: no band
-→ 14 cards; ₹80 Lacs + → that one project; ₹45 – 65 Lacs → none.
+### No project carries a price
+
+**On 9 Nov the last `price` was cleared**, so the field is empty on all fifteen
+projects. Nothing is broken by it, but three things quietly stop doing
+anything, and all three will look like bugs to whoever meets them next:
+
+- **Every budget band returns "nothing matches".** `money()` reads `null` for a
+  project with no price and keeps it out of every specific band, so the hero's
+  Budget dropdown can now only ever produce an empty collection — except
+  "Any budget", which is unfiltered. It was verified working on 8 Nov against
+  the one priced project (₹80 Lacs + → that project; ₹45–65 Lacs → none); that
+  test cannot be re-run until a price exists again.
+- **No price line renders**, on a collection card or on a detail page. Both
+  remove themselves rather than printing an empty row, which is correct and is
+  why this is invisible.
+- **`project.html` always links to a bare `emi.html`.** The price handover
+  (`emi.html?price=<rupees>`) needs a number to pass, so the calculator always
+  opens on its own default. The link is shown regardless, which is deliberate.
+
+Put a price on one project and all three come back with no code change.
 
 **The navbar's `Book Consultation` went nowhere on six of eight pages.** It was
 `href="#ctForm"` — a same-page anchor, and `#ctForm` is the enquiry card on
@@ -2710,10 +2799,10 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
   offline fallback and are still invented — they show only if the query fails, so do not
   treat anything in that array as true. The client photo slider under the reviews is
   empty and stays hidden until real photographs are added.
-- `project.html` carries its own placeholders, each marked with a `PLACEHOLDER` comment: **every figure in the fact bar** (~1,15,000 sq.ft, 8 towers, ~640+ units, Completed) is from the client's mock and unverified, as are the landmark distances and the direct line. Its five gallery shots are seeded `picsum.photos/seed/rl-rk-*` placeholders. "Request Brochure" has no brochure behind it and points at the enquiry form — no project carries a `brochure` PDF yet.
+- `project.html` carries its own placeholders, each marked with a `PLACEHOLDER` comment: **every figure in the fact bar** (~1,15,000 sq.ft, 8 towers, ~640+ units, Completed) is from the client's mock and unverified, as are the landmark distances and the direct line. Its five gallery shots are seeded `picsum.photos/seed/rl-rk-*` placeholders. **Three projects now carry a `brochure` PDF** (Nakshatra Auris, Rajlaxxmi Park, Shanti Niwas), so those show "View Brochure"; the other twelve still fall back to "Request Brochure" pointing at the enquiry form.
 - **Romal Kirti has been DELETED from the dataset** (gone as of 6 Nov; it was published on 29 Oct). `project.html?p=romal-kirti` now resolves to nothing, and the hand-written fallback in `project.html` — which is still that property, and still the unverified mock content — describes a project the client no longer lists. The fallback only shows when the page is opened with **no** `?p=` at all, which nothing on the site links to, so this is a latent oddity rather than a live bug.
-- **Counts after unpublishing Aarvi Apartment on 8 Nov: 15 published projects — Completed 9 (8 of them `soldOut`), Ongoing 4, Redevelopment 3.** Krishna Niwas is in two listings, so those add to 16. Nothing is unfiled. Re-check rather than trusting it: the client adds, deletes and refiles, sometimes while you are working.
-- **Two badges disagree with their listing.** Shanti Niwas is Ongoing+Redevelopment but its badge still says **Completed**; Raajlaxmi Avenue is Redevelopment, `soldOut`, and its badge says **Completed**. Both are the status/stage split working as designed — `status` is free text and overrides the listing label — but neither is likely to be what was meant. Clearing `status` makes the badge follow the listing.
+- **Counts on 9 Nov: 15 published projects — Completed 9 (6 of them `soldOut`), Ongoing 4, Redevelopment 3 (1 `soldOut`).** Seven sold out in all. Krishna Niwas is in two listings, so those add to 16. Nothing is unfiled. Re-check rather than trusting it: the client adds, deletes and refiles, sometimes while you are working.
+- **Two badges disagree with their listing, and only one of them is a mistake.** Re-measured 9 Nov: **Shanti Niwas** is filed Redevelopment but its badge reads **Ongoing**, and **Shakun Solitaire** is Completed but reads **Ready Possession**. The second is the status/stage split doing exactly the job it exists for — a finished building that is ready to move into. The first looks like a leftover. Clearing `status` makes a badge follow its listing. (The older note here named Raajlaxmi Avenue and said both read "Completed"; that is no longer true — the client has edited these since.)
 - Most nav links and CTAs are `href="#"`; only Projects and the cross-links resolve. Section II's "Discover our story" button and the "Raajlaxmi Group / Building trust. Creating legacy." signature are both gone — the accreditation strip replaced them, so About no longer offers a CTA or a sign-off of its own.
 - Section IV's statistics panel (`.why-stats`, the old 20+ / 1500+ / 45+ / 98% placeholders) has been **deleted** — markup, CSS, counter JS and all. Section II's row is now the only set of figures on the page. Its `.why-float` interior card went with it: it overlapped the team photo and hid a dozen faces.
 - 13+ years in Section II contradicts the timeline (2004→2026) and "Est. 2004" on the seals (`seal-top.png`, and the Section VII strip art) — those imply ~22 years. Pick one founding date and make the artwork, timeline and counters agree.
