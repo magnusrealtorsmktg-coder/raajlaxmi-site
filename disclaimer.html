@@ -1013,16 +1013,21 @@
   .why-mat .cap .s{font-size:.7rem;letter-spacing:.02em;color:rgba(255,255,255,.72);margin-top:.25rem;}
 
   /* ---- quote + bottom seal ---- */
+  /* ONE COLUMN, CENTRED. The second track held the Est. 2004 medallion,
+     which was removed on 12 Nov at the client's request; left as `1fr auto`
+     the empty track still contributed its gap, so the quote sat off-centre
+     under a full-width rule. Centred is also exactly what the phone tier
+     below already does, so the two agree now instead of disagreeing. */
   .why-quote{position:relative;margin-top:clamp(4.5rem,8vw,7rem);text-align:center;
-    display:grid;grid-template-columns:1fr auto;gap:clamp(2rem,4vw,4rem);align-items:center;}
+    display:grid;grid-template-columns:1fr;gap:clamp(2rem,4vw,4rem);align-items:center;}
   .why-quote::before{content:"";position:absolute;left:0;right:0;top:-2.6rem;height:1px;
     background:linear-gradient(to right,transparent,rgba(201,161,90,.5),transparent);}
-  .why-quote-in{text-align:left;position:relative;}
+  .why-quote-in{text-align:center;position:relative;}
   .why-quote-in .mark{font-family:"Cormorant Garamond",serif;font-size:5rem;line-height:.6;
     color:var(--gold);opacity:.5;}
   .why-quote-in blockquote{font-family:"Cormorant Garamond",serif;font-style:italic;font-weight:300;
     font-size:clamp(1.5rem,2.8vw,2.3rem);line-height:1.3;color:var(--charcoal);
-    max-width:32rem;margin:.4rem 0 1.2rem;}
+    max-width:32rem;margin:.4rem auto 1.2rem;}
   .why-quote-in cite{font-style:normal;font-size:.74rem;letter-spacing:.18em;
     text-transform:uppercase;color:var(--gold);}
   .why-quote{opacity:0;transform:translateY(24px);
@@ -1490,6 +1495,18 @@
   .lead-card.sent .lead-done{display:block;}
   .lead-done .tick{width:46px;height:46px;margin:0 auto 1.1rem;border-radius:50%;
     border:1px solid var(--champagne);display:grid;place-items:center;color:var(--champagne);}
+  /* The brochure itself, handed over in the thank-you panel. It is a real
+     link the visitor clicks rather than an automatic window.open: that call
+     would land after an async fetch, outside the gesture that started it,
+     and browsers block it as a popup. Shown only when the popup was opened
+     by a brochure button AND that project has a PDF attached. */
+  .lead-dl{display:inline-flex;align-items:center;gap:.5rem;margin-top:1.1rem;
+    padding:.85rem 1.4rem;border-radius:999px;background:var(--champagne);
+    color:#14243C;font-family:"Inter",sans-serif;font-weight:650;font-size:.78rem;
+    letter-spacing:.1em;text-transform:uppercase;text-decoration:none;
+    transition:filter .3s var(--lux);}
+  .lead-dl:hover{filter:brightness(1.07);}
+  .lead-dl[hidden]{display:none;}
   @media (max-width:520px){ .lead-row{grid-template-columns:minmax(0,1fr);} }
   @media (prefers-reduced-motion:reduce){
     .lead,.lead.on{transition:none;}
@@ -1551,7 +1568,7 @@
      the head). Purely decorative, so it is hidden from assistive tech. -->
 <div class="ld" id="loader" aria-hidden="true">
   <div class="ld-in">
-    <img class="ld-mark" src="assets/logo-light.png" width="966" height="240" alt="">
+    <img class="ld-mark" src="assets/logo-light.png" width="1157" height="291" alt="">
     <div class="ld-bar"><i></i></div>
   </div>
 </div>
@@ -1561,7 +1578,7 @@
 
 <div class="nav-wrap" id="navWrap">
   <nav class="nav" id="nav">
-    <a href="index.html" class="brand" data-hover aria-label="Raajlaxmi Group"><img class="brand-logo brand-logo-dark" alt="Raajlaxmi Group" src="assets/logo-light.png" width="966" height="240"><img class="brand-logo brand-logo-light" alt="" aria-hidden="true" src="assets/logo.png" width="966" height="240"></a>
+    <a href="index.html" class="brand" data-hover aria-label="Raajlaxmi Group"><img class="brand-logo brand-logo-dark" alt="Raajlaxmi Group" src="assets/logo-light.png" width="1157" height="291"><img class="brand-logo brand-logo-light" alt="" aria-hidden="true" src="assets/logo.png" width="1157" height="291"></a>
     <div class="nav-links">
       <a href="index.html#about" data-hover>About</a>
       <span class="nav-drop">
@@ -1670,7 +1687,7 @@
 
     <div>
       <a href="index.html" class="ft-mark" data-hover aria-label="Raajlaxmi Group">
-        <img src="assets/logo-light.png" width="966" height="240"
+        <img src="assets/logo-light.png" width="1157" height="291"
              alt="Raajlaxmi Group — We Understand Realty">
       </a>
       <p class="ft-say">Homes built on the long view — considered architecture, honest
@@ -1770,6 +1787,7 @@
           </select>
           <span class="caret"><svg width="11" height="7" viewBox="0 0 12 8" fill="none" aria-hidden="true"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.3"/></svg></span>
         </div>
+        <input type="hidden" name="property" id="leadCtx" value="" disabled>
         <button type="submit" class="lead-send" data-hover data-magnetic>Request a Callback</button>
         <p class="lead-fine">By submitting, you agree to be contacted by Raajlaxmi Group about your enquiry.</p>
         <p class="lead-err" id="leadErr" hidden>We could not send that just now.
@@ -1780,6 +1798,7 @@
     <div class="lead-done" aria-live="polite">
       <div class="tick"><svg width="18" height="14" viewBox="0 0 18 14" fill="none" aria-hidden="true"><path d="M1 7l5.5 5.5L17 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <h2 class="lead-title" id="leadDoneMsg">Thank you. We&rsquo;ll be in touch shortly.</h2>
+      <a class="lead-dl" id="leadDl" hidden target="_blank" rel="noopener">Download the brochure</a>
     </div>
   </div>
 </div>
@@ -1932,8 +1951,13 @@
     const get = (s,k)=>{ try{ return s.getItem(k); }catch(err){ return null; } };
     const set = (s,k,v)=>{ try{ s.setItem(k,v); }catch(err){} };
 
-    if(get(localStorage,'rl-lead-done') === '1') return;   // already submitted
-    if(get(sessionStorage,'rl-lead-seen') === '1') return; // already shown this visit
+    /* THESE TWO FLAGS GATE THE TIMER, NOT THE BLOCK. The brochure button on
+       project.html opens this same popup on demand, so someone who has
+       already seen or sent it must still get a working form. Returning here
+       would also leave the submit handler unbound — and an unbound form does
+       a native, page-reloading POST, which is worse than not opening at all. */
+    const autoOK = get(localStorage,'rl-lead-done') !== '1'      // already submitted
+                && get(sessionStorage,'rl-lead-seen') !== '1';  // already shown this visit
 
     let start = parseInt(get(sessionStorage,'rl-visit-start') || '', 10);
     if(!start){ start = Date.now(); set(sessionStorage,'rl-visit-start', String(start)); }
@@ -1950,6 +1974,36 @@
 
     const card  = document.getElementById('leadCard');
     const form  = document.getElementById('leadForm');
+
+    /* ---- opening this popup on demand, with its own wording -------------
+       The brochure button on a property page asks for details before it
+       hands the file over, which is the same form with a different promise
+       on it. The copy is swapped rather than duplicated, and `dress(null)`
+       on close puts the standing wording back so the 30-second opening is
+       never left wearing a brochure's label. */
+    const elLabel = modal.querySelector('.lead-label'),
+          elTitle = document.getElementById('leadTitle'),
+          elSub   = modal.querySelector('.lead-sub'),
+          elSend  = form.querySelector('.lead-send'),
+          elDl    = document.getElementById('leadDl');
+    const DEF = {label:elLabel.textContent, title:elTitle.textContent,
+                 sub:elSub.textContent, send:elSend.textContent,
+                 done:'Thank you. We\u2019ll be in touch shortly.'};
+    let custom = null;
+
+    function dress(o){
+      custom = o || null;
+      const c = o || {};
+      elLabel.textContent = c.label || DEF.label;
+      elTitle.textContent = c.title || DEF.title;
+      elSub.textContent   = c.sub   || DEF.sub;
+      elSend.textContent  = c.send  || DEF.send;
+      /* Which property the request is about. Disabled when empty, because a
+         disabled control is not submitted at all — an always-present blank
+         `property:` line in every callback email would be noise. */
+      const ctx = document.getElementById('leadCtx');
+      if(ctx){ ctx.value = c.property || ''; ctx.disabled = !ctx.value; }
+    }
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const FOCUSABLE = 'button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])';
     let lastFocus = null;
@@ -1977,7 +2031,21 @@
       document.documentElement.classList.remove('lead-open');
       removeEventListener('keydown', onKey, true);
       try{ lastFocus?.focus({preventScroll:true}); }catch(err){}
+      dress(null);                               // back to the standing wording
     }
+
+    /* The published opener. Ignores both flags on purpose: having already
+       sent the callback form is no reason to refuse someone a brochure. */
+    function openWith(o){
+      dress(o);
+      card.classList.remove('sent');            // a previous send left the thank-you showing
+      if(elSend){ elSend.disabled = false; }
+      if(elDl){ elDl.hidden = true; }
+      const e0 = document.getElementById('leadErr'); if(e0) e0.hidden = true;
+      open();
+    }
+    window.RL = window.RL || {};
+    window.RL.lead = {open: openWith};
 
     modal.querySelectorAll('[data-lead-close]').forEach(el => el.addEventListener('click', close));
 
@@ -2027,7 +2095,8 @@
           headers:{'Content-Type':'application/json','Accept':'application/json'},
           body: JSON.stringify(Object.assign({
             access_key: (window.RL && window.RL.w3f) || '',
-            subject   : 'New enquiry from the Raajlaxmi website (popup)',
+            subject   : (custom && custom.subject)
+                        || 'New enquiry from the Raajlaxmi website (popup)',
             from_name : 'Raajlaxmi Group website',
             replyto   : data.email || ''
           }, data))})
@@ -2035,18 +2104,23 @@
           if(!r.ok || j.success === false) throw new Error(r.status);
         }))
         .then(() => {
-          if(msg && first) msg.textContent = `Thank you, ${first}. We’ll be in touch shortly.`;
+          /* Both the standing line and every custom one open with "Thank
+             you", so personalising is a prefix swap rather than a second
+             set of strings to keep in step. */
+          const base = (custom && custom.done) || DEF.done;
+          if(msg) msg.textContent = first ? base.replace(/^Thank you/, `Thank you, ${first}`) : base;
+          if(elDl && custom && custom.file){ elDl.href = custom.file; elDl.hidden = false; }
           card.classList.add('sent');
           set(localStorage,'rl-lead-done','1');   // never ask this visitor again
           setTimeout(close, 2800);
         })
         .catch(() => {
-          if(btn){ btn.disabled = false; btn.textContent = 'Request a Callback'; }
+          if(btn){ btn.disabled = false; btn.textContent = (custom && custom.send) || DEF.send; }
           if(err) err.hidden = false;
         });
     });
 
-    setTimeout(open, wait);
+    if(autoOK) setTimeout(open, wait);
   })();
 
   /* ============ LEGAL PAGE CONTENT (Sanity) ============ */

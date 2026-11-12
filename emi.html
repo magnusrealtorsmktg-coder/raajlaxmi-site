@@ -1003,16 +1003,21 @@
   .why-mat .cap .s{font-size:.7rem;letter-spacing:.02em;color:rgba(255,255,255,.72);margin-top:.25rem;}
 
   /* ---- quote + bottom seal ---- */
+  /* ONE COLUMN, CENTRED. The second track held the Est. 2004 medallion,
+     which was removed on 12 Nov at the client's request; left as `1fr auto`
+     the empty track still contributed its gap, so the quote sat off-centre
+     under a full-width rule. Centred is also exactly what the phone tier
+     below already does, so the two agree now instead of disagreeing. */
   .why-quote{position:relative;margin-top:clamp(4.5rem,8vw,7rem);text-align:center;
-    display:grid;grid-template-columns:1fr auto;gap:clamp(2rem,4vw,4rem);align-items:center;}
+    display:grid;grid-template-columns:1fr;gap:clamp(2rem,4vw,4rem);align-items:center;}
   .why-quote::before{content:"";position:absolute;left:0;right:0;top:-2.6rem;height:1px;
     background:linear-gradient(to right,transparent,rgba(201,161,90,.5),transparent);}
-  .why-quote-in{text-align:left;position:relative;}
+  .why-quote-in{text-align:center;position:relative;}
   .why-quote-in .mark{font-family:"Cormorant Garamond",serif;font-size:5rem;line-height:.6;
     color:var(--gold);opacity:.5;}
   .why-quote-in blockquote{font-family:"Cormorant Garamond",serif;font-style:italic;font-weight:300;
     font-size:clamp(1.5rem,2.8vw,2.3rem);line-height:1.3;color:var(--charcoal);
-    max-width:32rem;margin:.4rem 0 1.2rem;}
+    max-width:32rem;margin:.4rem auto 1.2rem;}
   .why-quote-in cite{font-style:normal;font-size:.74rem;letter-spacing:.18em;
     text-transform:uppercase;color:var(--gold);}
   .why-quote{opacity:0;transform:translateY(24px);
@@ -1442,38 +1447,6 @@
   .emi-cta .arw::after{content:"";position:absolute;right:-1px;top:-2.5px;width:6px;height:6px;
     border-top:1px solid currentColor;border-right:1px solid currentColor;transform:rotate(45deg);}
 
-  /* ---- the year-by-year table ---- */
-  .emi-more{margin-top:clamp(2rem,4vw,3rem);
-    opacity:0;transform:translateY(22px);
-    transition:opacity .9s var(--lux) .3s,transform .9s var(--lux) .3s;}
-  .emi.in .emi-more{opacity:1;transform:none;}
-  .emi-togg{display:inline-flex;align-items:center;gap:.6rem;padding:.9rem 1.4rem;
-    border:1px solid rgba(28,28,28,.16);border-radius:999px;background:#fff;
-    font-family:"Inter",sans-serif;font-size:.66rem;font-weight:600;
-    letter-spacing:.14em;text-transform:uppercase;color:var(--charcoal);
-    transition:border-color .4s var(--lux);}
-  .emi-togg:hover{border-color:rgba(198,161,91,.6);}
-  .emi-togg svg{width:.9em;height:.9em;transition:transform .4s var(--lux);}
-  .emi-togg[aria-expanded="true"] svg{transform:rotate(180deg);}
-  /* the table is wider than a phone, so it pans inside its own box rather
-     than widening the page — the same idiom as the corridor banner */
-  .emi-tblwrap{margin-top:1.4rem;overflow-x:auto;background:#fff;border-radius:20px;
-    border:1px solid rgba(198,161,91,.22);
-    box-shadow:0 30px 60px -48px rgba(60,48,28,.3);}
-  .emi-tbl{width:100%;min-width:34rem;border-collapse:collapse;
-    font-family:"Inter",sans-serif;font-size:.8rem;
-    font-variant-numeric:lining-nums tabular-nums;}
-  .emi-tbl th,.emi-tbl td{padding:.85rem clamp(.8rem,1.5vw,1.3rem);text-align:right;
-    white-space:nowrap;}
-  .emi-tbl th:first-child,.emi-tbl td:first-child{text-align:left;}
-  .emi-tbl thead th{font-size:.62rem;font-weight:600;letter-spacing:.14em;
-    text-transform:uppercase;color:var(--gold-deep);
-    border-bottom:1px solid rgba(198,161,91,.3);}
-  .emi-tbl tbody td{color:var(--body);font-weight:300;
-    border-bottom:1px solid rgba(28,28,28,.06);}
-  .emi-tbl tbody tr:last-child td{border-bottom:0;}
-  .emi-tbl tbody td:first-child{color:var(--charcoal);font-weight:600;}
-
   .emi-note{max-width:48rem;margin:clamp(2rem,4vw,3rem) 0 0;
     font-family:"Inter",sans-serif;font-size:.74rem;line-height:1.75;color:#8A8377;}
   .emi-note a{color:var(--gold-deep);border-bottom:1px solid rgba(176,138,62,.4);}
@@ -1491,11 +1464,10 @@
   }
   @media(max-width:620px),(max-height:560px){
     .emi-frow{align-items:flex-end;}
-    .emi-tbl{min-width:30rem;}
   }
   @media (prefers-reduced-motion:reduce){
     .emi-art{opacity:1 !important;transition:none !important;}
-    .emi-label,.emi-title,.emi-intro,.emi-grid,.emi-more{
+    .emi-label,.emi-title,.emi-intro,.emi-grid{
       opacity:1 !important;transform:none !important;}
     .emi-ring .arc{transition:none;}
     .emi-range::-webkit-slider-thumb{transition:none;}
@@ -1635,6 +1607,18 @@
   .lead-card.sent .lead-done{display:block;}
   .lead-done .tick{width:46px;height:46px;margin:0 auto 1.1rem;border-radius:50%;
     border:1px solid var(--champagne);display:grid;place-items:center;color:var(--champagne);}
+  /* The brochure itself, handed over in the thank-you panel. It is a real
+     link the visitor clicks rather than an automatic window.open: that call
+     would land after an async fetch, outside the gesture that started it,
+     and browsers block it as a popup. Shown only when the popup was opened
+     by a brochure button AND that project has a PDF attached. */
+  .lead-dl{display:inline-flex;align-items:center;gap:.5rem;margin-top:1.1rem;
+    padding:.85rem 1.4rem;border-radius:999px;background:var(--champagne);
+    color:#14243C;font-family:"Inter",sans-serif;font-weight:650;font-size:.78rem;
+    letter-spacing:.1em;text-transform:uppercase;text-decoration:none;
+    transition:filter .3s var(--lux);}
+  .lead-dl:hover{filter:brightness(1.07);}
+  .lead-dl[hidden]{display:none;}
   @media (max-width:520px){ .lead-row{grid-template-columns:minmax(0,1fr);} }
   @media (prefers-reduced-motion:reduce){
     .lead,.lead.on{transition:none;}
@@ -1696,7 +1680,7 @@
      the head). Purely decorative, so it is hidden from assistive tech. -->
 <div class="ld" id="loader" aria-hidden="true">
   <div class="ld-in">
-    <img class="ld-mark" src="assets/logo-light.png" width="966" height="240" alt="">
+    <img class="ld-mark" src="assets/logo-light.png" width="1157" height="291" alt="">
     <div class="ld-bar"><i></i></div>
   </div>
 </div>
@@ -1706,7 +1690,7 @@
 
 <div class="nav-wrap" id="navWrap">
   <nav class="nav" id="nav">
-    <a href="index.html" class="brand" data-hover aria-label="Raajlaxmi Group"><img class="brand-logo brand-logo-dark" alt="Raajlaxmi Group" src="assets/logo-light.png" width="966" height="240"><img class="brand-logo brand-logo-light" alt="" aria-hidden="true" src="assets/logo.png" width="966" height="240"></a>
+    <a href="index.html" class="brand" data-hover aria-label="Raajlaxmi Group"><img class="brand-logo brand-logo-dark" alt="Raajlaxmi Group" src="assets/logo-light.png" width="1157" height="291"><img class="brand-logo brand-logo-light" alt="" aria-hidden="true" src="assets/logo.png" width="1157" height="291"></a>
     <div class="nav-links">
       <a href="index.html#about" data-hover>About</a>
       <span class="nav-drop">
@@ -1762,13 +1746,13 @@
               <label class="emi-flabel" for="emiPrice">Property price</label>
               <div class="emi-fval">
                 <span class="emi-pre">&#8377;</span>
-                <input type="text" id="emiPrice" inputmode="numeric" value="50,00,000"
+                <input type="text" id="emiPrice" inputmode="numeric" value="0"
                        aria-describedby="emiPriceW">
               </div>
             </div>
             <input type="range" class="emi-range" id="emiPriceR" aria-label="Property price"
-                   min="0" max="271" step="1" value="71">
-            <div class="emi-hint"><b id="emiPriceW">&#8377;50 Lakh</b><span>&#8377;15 Lakh &ndash; &#8377;1.5 Cr</span></div>
+                   min="0" max="271" step="1" value="0">
+            <div class="emi-hint"><b id="emiPriceW">&#8377;0</b><span>&#8377;15 Lakh &ndash; &#8377;1.5 Cr</span></div>
           </div>
 
           <div class="emi-field">
@@ -1776,26 +1760,26 @@
               <label class="emi-flabel" for="emiDown">Down payment</label>
               <div class="emi-fval">
                 <span class="emi-pre">&#8377;</span>
-                <input type="text" id="emiDown" inputmode="numeric" value="10,00,000">
+                <input type="text" id="emiDown" inputmode="numeric" value="0">
                 <span class="emi-tie">&#8226;</span>
-                <input type="text" id="emiDownPct" inputmode="decimal" value="20"
+                <input type="text" id="emiDownPct" inputmode="decimal" value="0"
                        aria-label="Down payment as a percentage"><span class="emi-post">%</span>
               </div>
             </div>
             <input type="range" class="emi-range" id="emiDownR" aria-label="Down payment percentage"
-                   min="0" max="90" step="1" value="20">
-            <div class="emi-hint"><b id="emiLtvW">Borrowing 80% of the price</b><span>0 &ndash; 90%</span></div>
+                   min="0" max="90" step="1" value="0">
+            <div class="emi-hint"><b id="emiLtvW">Borrowing 100% of the price</b><span>0 &ndash; 90%</span></div>
           </div>
 
           <div class="emi-field">
             <div class="emi-frow">
               <label class="emi-flabel" for="emiRate">Interest rate</label>
               <div class="emi-fval">
-                <input type="text" id="emiRate" inputmode="decimal" value="8.5"><span class="emi-post">% p.a.</span>
+                <input type="text" id="emiRate" inputmode="decimal" value="0"><span class="emi-post">% p.a.</span>
               </div>
             </div>
             <input type="range" class="emi-range" id="emiRateR" aria-label="Interest rate"
-                   min="0" max="221" step="1" value="71">
+                   min="0" max="221" step="1" value="0">
             <div class="emi-hint"><b>Floating home-loan rates sit near 8&ndash;9%</b><span>5 &ndash; 16%</span></div>
           </div>
 
@@ -1803,12 +1787,12 @@
             <div class="emi-frow">
               <label class="emi-flabel" for="emiYears">Loan tenure</label>
               <div class="emi-fval">
-                <input type="text" id="emiYears" inputmode="numeric" value="20"><span class="emi-post">years</span>
+                <input type="text" id="emiYears" inputmode="numeric" value="0"><span class="emi-post">years</span>
               </div>
             </div>
             <input type="range" class="emi-range" id="emiYearsR" aria-label="Loan tenure in years"
-                   min="0" max="30" step="1" value="20">
-            <div class="emi-hint"><b id="emiMonthsW">240 instalments</b><span>1 &ndash; 30 years</span></div>
+                   min="0" max="30" step="1" value="0">
+            <div class="emi-hint"><b id="emiMonthsW">0 instalments</b><span>1 &ndash; 30 years</span></div>
           </div>
 
           <button type="button" class="emi-reset" id="emiReset" data-hover>
@@ -1816,7 +1800,7 @@
                  stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
               <path d="M3 12a9 9 0 1 0 2.6-6.4M3 4v5h5"/>
             </svg>
-            Reset to defaults
+            Clear
           </button>
         </form>
 
@@ -1825,8 +1809,8 @@
              interrupt a screen reader on each one. -->
         <aside class="emi-out" aria-live="polite">
           <span class="emi-ol">Monthly instalment</span>
-          <div class="emi-big"><span class="cur">&#8377;</span><span id="emiEmi">34,713</span></div>
-          <p class="emi-sub" id="emiSub">on a &#8377;40,00,000 loan over 20 years at 8.5% a year</p>
+          <div class="emi-big"><span class="cur">&#8377;</span><span id="emiEmi">0</span></div>
+          <p class="emi-sub" id="emiSub">Enter a property price to calculate.</p>
 
           <p class="emi-warn" id="emiWarn" hidden></p>
 
@@ -1834,24 +1818,6 @@
             Talk to us about this<i class="arw"></i>
           </a>
         </aside>
-      </div>
-
-      <div class="emi-more">
-        <button type="button" class="emi-togg" id="emiTogg"
-                aria-expanded="false" aria-controls="emiSched" data-hover>
-          Year-by-year breakdown
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-               stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-        </button>
-        <div class="emi-tblwrap" id="emiSched" hidden>
-          <table class="emi-tbl">
-            <thead>
-              <tr><th scope="col">Year</th><th scope="col">Principal paid</th>
-                  <th scope="col">Interest paid</th><th scope="col">Balance</th></tr>
-            </thead>
-            <tbody id="emiBody"></tbody>
-          </table>
-        </div>
       </div>
 
       <p class="emi-note"><strong>Indicative only.</strong> This is a standard
@@ -1875,7 +1841,7 @@
 
     <div>
       <a href="index.html" class="ft-mark" data-hover aria-label="Raajlaxmi Group">
-        <img src="assets/logo-light.png" width="966" height="240"
+        <img src="assets/logo-light.png" width="1157" height="291"
              alt="Raajlaxmi Group — We Understand Realty">
       </a>
       <p class="ft-say">Homes built on the long view — considered architecture, honest
@@ -1975,6 +1941,7 @@
           </select>
           <span class="caret"><svg width="11" height="7" viewBox="0 0 12 8" fill="none" aria-hidden="true"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.3"/></svg></span>
         </div>
+        <input type="hidden" name="property" id="leadCtx" value="" disabled>
         <button type="submit" class="lead-send" data-hover data-magnetic>Request a Callback</button>
         <p class="lead-fine">By submitting, you agree to be contacted by Raajlaxmi Group about your enquiry.</p>
         <p class="lead-err" id="leadErr" hidden>We could not send that just now.
@@ -1985,6 +1952,7 @@
     <div class="lead-done" aria-live="polite">
       <div class="tick"><svg width="18" height="14" viewBox="0 0 18 14" fill="none" aria-hidden="true"><path d="M1 7l5.5 5.5L17 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       <h2 class="lead-title" id="leadDoneMsg">Thank you. We&rsquo;ll be in touch shortly.</h2>
+      <a class="lead-dl" id="leadDl" hidden target="_blank" rel="noopener">Download the brochure</a>
     </div>
   </div>
 </div>
@@ -2040,7 +2008,13 @@
     if(!sec) return;
     const $ = id => document.getElementById(id);
 
-    const DEFAULTS = {price:5000000, pct:20, rate:8.5, years:20};
+    /* Every default is 0, so the calculator opens empty and the visitor
+       fills it in rather than being shown an answer to a question nobody
+       asked. `settle()` already treats 0 as a first-class value and does
+       NOT pull it up to each field's floor, and `emiOf()`/`paint()`
+       already have the no-price / no-tenure branches, so nothing else had
+       to change. "Reset to defaults" therefore clears the form. */
+    const DEFAULTS = {price:0, pct:0, rate:0, years:0};
     const LIM = {price:[1500000,15000000], pct:[0,90], rate:[5,16], years:[1,30]};
 
     /* Sliders map 0 at the extreme left, and when moved from the left
@@ -2110,27 +2084,6 @@
       return P * r * f / (f - 1);
     }
 
-    /* Walked month by month rather than solved per year, because that is what
-       a lender does: each instalment pays the interest accrued on what is
-       left, and only the remainder comes off the principal. 360 iterations at
-       the longest tenure, which costs nothing. */
-    function schedule(P, annual, months, emi){
-      const r = annual / 1200;
-      const out = [];
-      let bal = P, yp = 0, yi = 0;
-      for(let m = 1; m <= months; m++){
-        const i = bal * r;
-        const p = Math.min(emi - i, bal);
-        bal = Math.max(0, bal - p);
-        yp += p; yi += i;
-        if(m % 12 === 0 || m === months){
-          out.push({year: Math.ceil(m / 12), p: yp, i: yi, bal});
-          yp = 0; yi = 0;
-        }
-      }
-      return out;
-    }
-
     const els = {
       price:  $('emiPrice'),  priceR: $('emiPriceR'),
       down:   $('emiDown'),   downPct: $('emiDownPct'), downR: $('emiDownR'),
@@ -2183,8 +2136,6 @@
       const loan   = Math.max(0, price - down);
       const months = Math.round(S.years * 12);
       const emi    = emiOf(loan, S.rate, months);
-      const total  = emi * months;
-      const int    = Math.max(0, total - loan);
 
       /* the fields, unless the visitor is mid-type in one of them */
       setGrouped(els.price, price);
@@ -2231,17 +2182,6 @@
       }else{
         warn.hidden = true;
       }
-
-      rows = (none || months <= 0 || loan <= 0) ? [] : schedule(loan, S.rate, months, emi);
-      if(!$('emiSched').hidden) table();
-    }
-
-    let rows = [];
-    function table(){
-      $('emiBody').innerHTML = rows.length
-        ? rows.map(r => '<tr><td>' + r.year + '</td><td>' + inr(r.p) + '</td><td>' +
-            inr(r.i) + '</td><td>' + inr(r.bal) + '</td></tr>').join('')
-        : '<tr><td colspan="4">No loan to schedule.</td></tr>';
     }
 
     /* --- the inputs ---
@@ -2316,14 +2256,6 @@
 
     $('emiReset').addEventListener('click', () => {
       typing = null; Object.assign(S, DEFAULTS); paint();
-    });
-
-    const togg = $('emiTogg'), sched = $('emiSched');
-    togg.addEventListener('click', () => {
-      const open = togg.getAttribute('aria-expanded') === 'true';
-      togg.setAttribute('aria-expanded', open ? 'false' : 'true');
-      sched.hidden = open;
-      if(!open) table();
     });
 
     paint();
@@ -2413,8 +2345,13 @@
     const get = (s,k)=>{ try{ return s.getItem(k); }catch(err){ return null; } };
     const set = (s,k,v)=>{ try{ s.setItem(k,v); }catch(err){} };
 
-    if(get(localStorage,'rl-lead-done') === '1') return;   // already submitted
-    if(get(sessionStorage,'rl-lead-seen') === '1') return; // already shown this visit
+    /* THESE TWO FLAGS GATE THE TIMER, NOT THE BLOCK. The brochure button on
+       project.html opens this same popup on demand, so someone who has
+       already seen or sent it must still get a working form. Returning here
+       would also leave the submit handler unbound — and an unbound form does
+       a native, page-reloading POST, which is worse than not opening at all. */
+    const autoOK = get(localStorage,'rl-lead-done') !== '1'      // already submitted
+                && get(sessionStorage,'rl-lead-seen') !== '1';  // already shown this visit
 
     let start = parseInt(get(sessionStorage,'rl-visit-start') || '', 10);
     if(!start){ start = Date.now(); set(sessionStorage,'rl-visit-start', String(start)); }
@@ -2431,6 +2368,36 @@
 
     const card  = document.getElementById('leadCard');
     const form  = document.getElementById('leadForm');
+
+    /* ---- opening this popup on demand, with its own wording -------------
+       The brochure button on a property page asks for details before it
+       hands the file over, which is the same form with a different promise
+       on it. The copy is swapped rather than duplicated, and `dress(null)`
+       on close puts the standing wording back so the 30-second opening is
+       never left wearing a brochure's label. */
+    const elLabel = modal.querySelector('.lead-label'),
+          elTitle = document.getElementById('leadTitle'),
+          elSub   = modal.querySelector('.lead-sub'),
+          elSend  = form.querySelector('.lead-send'),
+          elDl    = document.getElementById('leadDl');
+    const DEF = {label:elLabel.textContent, title:elTitle.textContent,
+                 sub:elSub.textContent, send:elSend.textContent,
+                 done:'Thank you. We\u2019ll be in touch shortly.'};
+    let custom = null;
+
+    function dress(o){
+      custom = o || null;
+      const c = o || {};
+      elLabel.textContent = c.label || DEF.label;
+      elTitle.textContent = c.title || DEF.title;
+      elSub.textContent   = c.sub   || DEF.sub;
+      elSend.textContent  = c.send  || DEF.send;
+      /* Which property the request is about. Disabled when empty, because a
+         disabled control is not submitted at all — an always-present blank
+         `property:` line in every callback email would be noise. */
+      const ctx = document.getElementById('leadCtx');
+      if(ctx){ ctx.value = c.property || ''; ctx.disabled = !ctx.value; }
+    }
     const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const FOCUSABLE = 'button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])';
     let lastFocus = null;
@@ -2458,7 +2425,21 @@
       document.documentElement.classList.remove('lead-open');
       removeEventListener('keydown', onKey, true);
       try{ lastFocus?.focus({preventScroll:true}); }catch(err){}
+      dress(null);                               // back to the standing wording
     }
+
+    /* The published opener. Ignores both flags on purpose: having already
+       sent the callback form is no reason to refuse someone a brochure. */
+    function openWith(o){
+      dress(o);
+      card.classList.remove('sent');            // a previous send left the thank-you showing
+      if(elSend){ elSend.disabled = false; }
+      if(elDl){ elDl.hidden = true; }
+      const e0 = document.getElementById('leadErr'); if(e0) e0.hidden = true;
+      open();
+    }
+    window.RL = window.RL || {};
+    window.RL.lead = {open: openWith};
 
     modal.querySelectorAll('[data-lead-close]').forEach(el => el.addEventListener('click', close));
 
@@ -2508,7 +2489,8 @@
           headers:{'Content-Type':'application/json','Accept':'application/json'},
           body: JSON.stringify(Object.assign({
             access_key: (window.RL && window.RL.w3f) || '',
-            subject   : 'New enquiry from the Raajlaxmi website (popup)',
+            subject   : (custom && custom.subject)
+                        || 'New enquiry from the Raajlaxmi website (popup)',
             from_name : 'Raajlaxmi Group website',
             replyto   : data.email || ''
           }, data))})
@@ -2516,18 +2498,23 @@
           if(!r.ok || j.success === false) throw new Error(r.status);
         }))
         .then(() => {
-          if(msg && first) msg.textContent = `Thank you, ${first}. We’ll be in touch shortly.`;
+          /* Both the standing line and every custom one open with "Thank
+             you", so personalising is a prefix swap rather than a second
+             set of strings to keep in step. */
+          const base = (custom && custom.done) || DEF.done;
+          if(msg) msg.textContent = first ? base.replace(/^Thank you/, `Thank you, ${first}`) : base;
+          if(elDl && custom && custom.file){ elDl.href = custom.file; elDl.hidden = false; }
           card.classList.add('sent');
           set(localStorage,'rl-lead-done','1');   // never ask this visitor again
           setTimeout(close, 2800);
         })
         .catch(() => {
-          if(btn){ btn.disabled = false; btn.textContent = 'Request a Callback'; }
+          if(btn){ btn.disabled = false; btn.textContent = (custom && custom.send) || DEF.send; }
           if(err) err.hidden = false;
         });
     });
 
-    setTimeout(open, wait);
+    if(autoOK) setTimeout(open, wait);
   })();
 
   /* ============ SITE SETTINGS (Sanity) ============ */

@@ -347,7 +347,7 @@ Check at 1440×900, 1024×800 and 420×860; scroll the full page; confirm no con
 | I | Hero | `hero` | Night skyline (inline base64 JPEG) under the CMS film, mouse parallax, property-selector form. **The headline and its sub-paragraph are gone** — markup, CSS, the line-mask entrance and `fitHeadline()` with them, so the page carries no `<h1>`; see *The hero headline and its sub-paragraph are GONE*. **Its remaining copy, and the three dropdown lists, come from the `homepage` singleton** — the four localities hard-coded in the markup (Gomti Nagar, Hazratganj, Sushant Golf City, Vibhuti Khand) are in **Lucknow**, not this developer's corridor; the seeded CMS values replace them with Vasai / Nallasopara / Virar / Saphale. |
 | II | About | `about` | Ivory. Plate showing **the CMS's About video** (`assets/about-plate.jpg` is only the fallback underneath it), four counting stats, then a full-width RERA / CREDAI-MCHI trust strip (`.ab-creds`, a sibling of `.ab-inner`, not inside the content column). **It holds exactly one screen** — see *The About section holds one screen*. The ghost word "Legacy" that used to sit behind the copy is gone, markup, CSS, parallax and schema field alike. |
 | III | Signature Projects | `signature` | Four project cards and corner blueprint decor with slow parallax. **It holds one screen above 1080px** — see *Signature Projects holds one screen*. The rotating `seal-top.png` that used to float in its top-right corner is **gone** (9 Nov, client's request); the same file still draws Section IV's seal, so it is not orphaned. |
-| IV | Why Raajlaxmi | `why` | Team photograph as the feature plate, **sized so the heading and the photograph share one screen** (see *The Why heading and photograph share one screen*), four numbered rows, a year timeline (2004→2026), closing quote + spinning seal. The auto-scrolling brand marquee (`.why-carousel`) that used to sit before the quote is gone — Section X replaced it. |
+| IV | Why Raajlaxmi | `why` | Team photograph as the feature plate, **sized so the heading and the photograph share one screen** (see *The Why heading and photograph share one screen*), four numbered rows, a year timeline (2004→2026), and a closing quote. **The Est. 2004 medallion beside that quote is gone** (12 Nov, client's request) — see *No seal is drawn anywhere now*. The auto-scrolling brand marquee (`.why-carousel`) that used to sit before the quote is gone — Section X replaced it. |
 | XI | Meet Our Owners | `owners` | **Sits between Why and Brands in scroll order**, despite the number. Portrait cards running as a **continuous right-to-left marquee that the visitor can take hold of** — see *The owners strip gives way and comes back*. `SPEED` is 30 px/s, the slowest of the three strips because a tall portrait going past at speed is harder to read than a line of text. `.ow-stage` is the scroll container and carries the edge-fade mask. The copy sits over the foot of the photograph behind a gradient scrim, so the card *is* the picture rather than a picture with a caption under it. **Hovering one card pauses the strip and blurs and dims the others** — the blur is pure CSS (`.ow-grid:hover .ow-card:not(:hover)`), the pause is now JS, with `:focus-within` / `focusin` carrying both for a keyboard, and the blur dropped below 620px where `:hover` sticks after a tap. **Clicking a card opens the detail panel** — hover is the invitation, the click is the choice; see *The owner detail panel*. **Copies are computed, not fixed**, exactly as the client photo strip does it: `build()` measures a card, renders `max(3, ceil(stageWidth / setWidth) + 2)` sets and re-measures, so two published owners loop as cleanly as six. (The photo strip uses `+ 1`; this one needs `+ 2` because it can be pushed backwards.) **The CMS fills the cards from a later block**, so that block fires **`rl:owners`** and this one rebuilds the strip from whatever it left — the same handshake the About counters use with `rl:home-stats`. Reduced motion renders a single set, puts scroll-snap back and drops the mask, so no card is stranded off a stage that no longer moves. **Driven by the `ownersPage` singleton, not the home-page document** — see *The owners live on their own document*. **Its six cards are bracketed placeholders and it is the one section on the home page that removes itself**: an empty `owners` list deletes the section rather than printing "[Owner name]" six times to the public, and it returns the moment anyone is published. With Sanity unreachable the placeholders stay, so a failed fetch never costs the design. **The card prints the name and the role only** — "About them" is the detail panel's content and never appears here; it rides on the card as `data-bio` so the panel can read it off whichever card was opened. The card carries the person, the panel carries what there is to say about them. |
 | X | Brands We Use | `brands` | Follows Why in scroll order. `OUR PARTNERS` header, six category tabs (All / Structure / Interiors / Electrical / Fittings / Utilities) and a card grid, all rendered from the `BRANDS` array in the Section X IIFE — adding a supplier is one line of data, no markup. Each row is `[name, logo file, trade, tab]`: `trade` is the line from the client's sheet and prints on the card, `tab` is the coarser bucket the tabs filter by. Johnson and Hindware appear twice on purpose, under two different trades. Its header (`.br-head` / `.br-label` / `.br-title` / `.br-intro`) is a **copy of Section IV's** rather than a shared rule — change one and the other will not follow. **On a phone the All view is clipped to the first six cards behind a "Show all 30 brands" pill** — see *Brands are clipped on a phone*. |
 
@@ -552,7 +552,32 @@ horizontal page overflow anywhere. The `rl:owners` rebuild was exercised by
 replacing the grid with one card and firing the event — it re-copies to six and
 keeps running.
 
-`projects.html` — one section, `#projects` ("Section V — Our Collection"): cards rendered from the `P` array in JS, a **town filter capsule** (see *The town filter is a capsule of four towns*), a **Western line corridor band** (`.cor`, between the pagination and the consultation strip) showing the delivered portfolio under four stations — Vasai / Nallasopara / Virar / Saphale. It is the client's finished banner used whole (`assets/projects/western-line.jpg`), **by explicit instruction — do not substitute a markup rebuild for it**. **Its twelve painted logos are clickable**: `.cor-hot` boxes inside `.cor-map` lie over the artwork as percentages of it, so they ride the image at every width — including the 900px plate inside the phone scroller, which is why the img is wrapped in `.cor-plate` (`.cor-figure` becomes the narrower scroll container and cannot be the positioning context). The boxes are measured from the ink, so **a recrop or a replacement banner invalidates all twelve**; `paint()` removes the whole layer if the CMS supplies a banner that is a *different* picture. It tells them apart by **SHA-1**: Sanity names an uploaded asset after the hash of its bytes, so the check is exact rather than a guess — and the usual answer is that they are the same file, because `seed-collections.mjs` uploaded this very banner and the live page therefore serves it from the CDN under a different URL. **Replacing `western-line.jpg` means updating `ART` in that guard**, or the boxes vanish the moment the CMS copy is re-uploaded. Each box carries `data-project` — the name *as the artwork paints it* — and `wireBanner()` matches it against the published projects to set the href, so a slug fixed in the Studio is picked up with no code change. `nameKey()` does the matching and is deliberately forgiving: it folds case and punctuation, collapses doubled letters (`Raajlaxmi`/`Rajlaxxmi` → `rajlaxmi`, `Pearrl` → `pearl`) and drops a trailing plural (`Towers` → `tower`), because the banner and the CMS do not spell the names the same way. **A box with no published project stays inert** — no href, no pointer, no hover tint; `Midas Heights` is painted on the banner but has no document, so today it is the one logo that does not respond. The layer is also inert with Sanity unreachable, which is correct: `project.html?p=` needs Sanity to render anything anyway; a `?status=` filter (exact case-insensitive match on `p.status`, ANDed with the active city chip, read once on load so the chips never clear it, with a `.col-empty` message when nothing matches) — the nav's **Projects** item *and* its **Completed** sub-item both deep-link to `?status=completed`, so the bar reaches the Completed view whether or not the dropdown is used and the browse-everything view is now reached only from the footer and the in-page "See the whole collection" / "Clear filters" links, a "showing N of M" line and a consultation CTA. **The pagination is gone** — the 1/2/3 buttons were decorative markup that never paged anything (every matching card always rendered), so they promised a second page that did not exist. Cross-links back to `index.html#about` / `index.html#signature`.
+`projects.html` — one section, `#projects` ("Section V — Our Collection"): cards rendered from the `P` array in JS, a **town filter capsule** (see *The town filter is a capsule of four towns*), a **Western line corridor band** (`.cor`, between the pagination and the consultation strip) showing the delivered portfolio under four stations — Vasai / Nallasopara / Virar / Saphale. It is the client's finished banner used whole (`assets/projects/western-line.jpg`), **by explicit instruction — do not substitute a markup rebuild for it**. **Its twelve painted logos are clickable**: `.cor-hot` boxes inside `.cor-map` lie over the artwork as percentages of it, so they ride the image at every width — including the 900px plate inside the phone scroller, which is why the img is wrapped in `.cor-plate` (`.cor-figure` becomes the narrower scroll container and cannot be the positioning context). The boxes are measured from the ink, so **a recrop or a replacement banner invalidates all twelve**; `paint()` removes the whole layer if the CMS supplies a banner that is a *different* picture. It tells them apart by **SHA-1**: Sanity names an uploaded asset after the hash of its bytes, so the check is exact rather than a guess — and the usual answer is that they are the same file, because `seed-collections.mjs` uploaded this very banner and the live page therefore serves it from the CDN under a different URL. **Replacing `western-line.jpg` means updating `ART` in that guard**, or the boxes vanish the moment the CMS copy is re-uploaded. Each box carries `data-project` — the name *as the artwork paints it* — and `wireBanner()` matches it against the published projects to set the href, so a slug fixed in the Studio is picked up with no code change. `nameKey()` does the matching and is deliberately forgiving: it folds case and punctuation, collapses doubled letters (`Raajlaxmi`/`Rajlaxxmi` → `rajlaxmi`, `Pearrl` → `pearl`) and drops a trailing plural (`Towers` → `tower`), because the banner and the CMS do not spell the names the same way. **A box with no published project stays inert** — no href, no pointer, no hover tint. **`Midas Heights` is no longer one of them: that mark is covered over (12 Nov) and its hotspot was deleted** — see *Midas Heights is painted over, not redrawn out*. So there are **eleven** hotspots now, not twelve. The layer is also inert with Sanity unreachable, which is correct: `project.html?p=` needs Sanity to render anything anyway; a `?status=` filter (exact case-insensitive match on `p.status`, ANDed with the active city chip, read once on load so the chips never clear it, with a `.col-empty` message when nothing matches) — the nav's **Projects** item *and* its **Completed** sub-item both deep-link to `?status=completed`, so the bar reaches the Completed view whether or not the dropdown is used and the browse-everything view is now reached only from the footer and the in-page "See the whole collection" / "Clear filters" links, a "showing N of M" line and a consultation CTA. **The pagination is gone** — the 1/2/3 buttons were decorative markup that never paged anything (every matching card always rendered), so they promised a second page that did not exist. Cross-links back to `index.html#about` / `index.html#signature`.
+
+### Midas Heights is painted over, not redrawn out
+
+The client asked on 12 Nov for that one logo to stop showing on the completed
+banner. Its copy is painted into `western-line.jpg`, so short of a redraw the
+only way to take it off is to lay a patch over it in the artwork's own ground.
+
+- **`.cor-mask` is a plain `#F4F0EF` box**, positioned in percentages inside
+  `.cor-map` exactly as the hotspots are, so it rides the image at every width
+  — verified identical at 1440, 1100 and 390px, including the 900px plate in
+  the phone scroller.
+- **The colour is sampled, not guessed.** The pixels around that mark are
+  exactly `(244,240,239)`, which is also what `.cor` uses as the band
+  background, so the patch dissolves completely instead of reading as a
+  rectangle.
+- **The box is measured.** All of that mark's ink sits inside x 1171–1368,
+  y 191–286 of the 1923x514 artwork; the patch runs 1160–1380 / 180–292,
+  clearing the Virar ring above (ends y=161) and the Raajlaxmi Avenue mark
+  below (starts y=363) by 14px on every side. **A recrop or a replacement
+  banner invalidates it**, exactly as it does the hotspots.
+- **Its hotspot was deleted rather than left inert.** It is inert today only
+  because that project has no document; publishing Midas Heights in the Studio
+  would have brought a live link up under an invisible logo.
+- **The `alt` text dropped it too**, so what a screen reader is told still
+  matches what is drawn.
 
 **Every project card carries the OC RECEIVED mark, and the SOLD OUT idea is
 gone.** Asked for on 9 Nov: drop sold-out from the site and from the Studio,
@@ -1264,12 +1289,16 @@ configuration-plus-location line), `highlightsTitle`, `brochure` and `phone`.
 string, so filling it meant hosting the file somewhere else first — there was
 nowhere to put the brochure the client actually has. It is now a `file` field
 with `accept: 'application/pdf'`. No project ever had the old string set, so
-the swap lost nothing and the field was removed rather than left dead. With a
-PDF attached the button becomes **"View Brochure"**, `target="_blank"`, opening
-the asset URL; with none it is left exactly as the markup has it — "Request
-Brochure", pointing at the enquiry form. **Above 5MB the button prints the
-weight** ("View Brochure (58 MB)"), because someone on mobile data should know
-before tapping. The Studio warns — never blocks — above 25MB; the size is not in
+the swap lost nothing and the field was removed rather than left dead.
+
+**THE BUTTON NO LONGER OPENS THE FILE. IT OPENS THE LEAD POPUP (12 Nov)** —
+see *The brochure asks for details first*. With a PDF attached the label
+becomes **"Download Brochure"** and **above 5MB it prints the weight**
+("Download Brochure (48 MB)"), because someone on mobile data should know
+before committing; with none it stays "Request Brochure". **The `href` is left
+pointing at the enquiry form in both cases** and is never repointed at the
+asset — that would hand the file to anyone who opened the link in a new tab,
+which is the one thing the form exists to stop. The Studio warns — never blocks — above 25MB; the size is not in
 the asset reference, so that rule goes and asks for it, which is also why a
 failed lookup lets the publish through.
 
@@ -1338,25 +1367,48 @@ nothing else**. A visitor types a property price and gets the instalment. Four
 inputs — price, deposit, rate, tenure — each a typed field and a slider driving
 the same value, plus a header photograph (`assets/emi-hero.jpg`) on the right.
 
-**The ring, the totals and the amortisation table are GONE** (commits
-`84f802e`, `e0f5100`, `5bebca7`), in that order: first the principal/interest
-ring and its key, then the totals beside it, then the year-by-year schedule.
-The page now answers one question. Two leftovers to know about:
+**The ring, the totals and the year-by-year breakdown are GONE**, in that
+order: first the principal/interest ring and its key (`84f802e`), then the
+totals beside it (`e0f5100`), then the schedule — **the toggle and its table
+on 12 Nov, at the client's request**. The page answers one question now: what
+is the monthly instalment.
 
-- **`.emi-ring` and `.emi-key` are dead CSS** — eleven rules in the stylesheet
-  and one more in the reduced-motion block. No markup references them. They
-  were left rather than deleted, so putting the ring back is a markup change
-  only.
-- **The month-by-month amortisation walk went with the table.** The note that
-  used to be here about 360 iterations and the balance landing on exactly ₹0
-  no longer describes anything in the file.
+**The 9 Nov note here claiming the amortisation table had already gone was
+WRONG**, and is worth knowing as a warning: `5bebca7` removed the *totals*,
+not the schedule. `.emi-more`, `.emi-togg`, `.emi-tbl`, `schedule()`,
+`table()` and the `rows` state were all still in the file and still working
+until 12 Nov. **Re-read the file rather than trusting a line in here that says
+something was deleted.**
+
+- **This time it was taken out properly**, markup and all: the `.emi-more`
+  block, 32 lines of CSS, the phone tier's `.emi-tbl{min-width:30rem}`,
+  `.emi-more` in the reduced-motion reveal list, `schedule()`, `table()`,
+  `rows`, the toggle listener and paint()'s two lines that drove them. A grep
+  for any of those names now returns nothing.
+- **`total` and `int` went too.** They were computed in `paint()` on every
+  keystroke and read by nothing — dead since the totals block was removed, and
+  the last thing that might have used them was the schedule.
+- **`.emi-ring` and `.emi-key` are still dead CSS** — eleven rules in the
+  stylesheet and one more in the reduced-motion block, referenced by no
+  markup. Left rather than deleted, so putting the ring back is a markup
+  change only.
+- **`emiOf()` stays**, obviously, as does its `r === 0` branch: the rate field
+  is free text and at r = 0 the formula is 0/0.
 
 **It is the second page with no CMS behind it**, after `services.html`, and the
 only one that needs none: it is arithmetic, not content. Nothing is fetched but
 the footer's `site-settings`, nothing is posted, and the page keeps working
 with Sanity unreachable and with the network off once it has loaded. The
-defaults written into the markup (₹50 Lakh, 20% down, 8.5%, 20 years) are the
-only content in it and are meant to be edited there when the market moves.
+**Every default is 0** (12 Nov, the client's request): the page opens empty —
+₹0, 0% down, 0%, 0 years, "Enter a property price to calculate." — and the
+visitor fills it in rather than being shown an answer to a question nobody
+asked. It needed no new logic: `settle()` already treated 0 as a first-class
+value rather than pulling it up to each field's floor, and `emiOf()` and
+`paint()` already carried the no-price and no-tenure branches. `DEFAULTS` in
+the Section XIII block and the `value=` attributes that mirror it are the only
+content in the page, and are where to put real numbers back if that is ever
+wanted. **The reset button now reads `Clear`**, because resetting to defaults
+and clearing the form are the same act when the defaults are zero.
 
 Six things are load-bearing:
 
@@ -1676,6 +1728,47 @@ do not "sync" it without checking which copy is current.
 
 - The 30s is measured **from arrival, not from page load**. Each page here is its own document, so a per-page timer would restart on every nav click — a visitor clicking around every 20s would never see it, and one sitting still would see it again and again. The arrival timestamp lives in `sessionStorage` (`rl-visit-start`) and the delay is measured from it, floored at 1.5s so it can't slam open mid-navigation.
 - It shows **once per tab session** (`rl-lead-seen`) and never again once submitted (`rl-lead-done`, in `localStorage`). Every storage access is wrapped in `try/catch` — private mode falls through to default behaviour rather than throwing.
+
+### The brochure asks for details first
+
+**`window.RL.lead.open(opts)` opens this same popup on demand**, wearing
+different wording, and `project.html`'s brochure button is its only caller
+(12 Nov, the client's request). The point is the lead: a brochure is the one
+thing on a property page worth a name and a number, and it was being given
+away for nothing.
+
+- **THOSE TWO FLAGS NOW GATE THE TIMER, NOT THE BLOCK**, and that is the part
+  that would have bitten. They used to be bare `return`s at the top of the
+  IIFE, so for a visitor who had already seen or sent the popup **the submit
+  handler was never bound** — opening the modal by hand would have given them
+  a form that did a native, page-reloading POST. They are one `autoOK` boolean
+  now, read only where the timer is armed. Having sent the callback form is
+  also no reason to refuse someone a brochure, so the manual opener ignores
+  both.
+- **The copy is swapped, not duplicated.** `dress(o)` sets the label, title,
+  sub-line and button text, and `dress(null)` on close puts the standing
+  wording back — so the 30-second opening is never left wearing a brochure's
+  label. Verified: open the brochure popup, close it, and the next automatic
+  one reads "Private Enquiry / Let us find your address." again.
+- **The file is handed over as a LINK in the thank-you panel** (`.lead-dl`),
+  not with `window.open`. That call would land after the async send, outside
+  the gesture that started it, and browsers block it as a popup.
+- **The wording follows the file.** Only three of the fifteen projects carry a
+  PDF, so on the other twelve the title reads "Request the brochure" and the
+  thank-you promises to send it, rather than offering a download that cannot
+  happen. Both lines open with "Thank you", which is why personalising is a
+  prefix swap rather than a second set of strings.
+- **A hidden `property` field carries which brochure was asked for**, and the
+  subject line says so too — without it the client gets a brochure request
+  with no idea which brochure. It is `disabled` when empty, because a disabled
+  control is not submitted at all and an always-blank `property:` line in every
+  callback email would be noise.
+- **The opener is on all twelve pages** (it is shared chrome) but
+  `contact.html` still returns before it, since that page already is this
+  form. Nothing there calls it.
+- **`project.html` wires the click OUTSIDE its `if(DOC)` branch**, so the
+  hand-written fallback page behaves the same way, and it falls through to the
+  markup `href` if `RL.lead` is missing — the button can never become inert.
 - **It is suppressed on `contact.html`**, which already *is* this form; covering it with a duplicate is the one place the popup would actively get in the way.
 - The blur is `backdrop-filter` on `.lead-scrim`, with an `@supports not` fallback that takes the scrim to near-opaque where the property is unavailable, so the card is never read against live page content. It sits at `z-index:900` — above the nav (100), below the loader (9999), so the cover is never what the backdrop is blurring.
 
@@ -3183,10 +3276,24 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
   copy of it went on 9 Nov and Section IV's — the mark over the team photograph
   — went the same day, both at the client's request. The file is still on disk
   and still ships with the repo; it is client artwork, so it was left rather
-  than deleted, and `git rm` is all it takes. **`seal-bottom.png` is the only
-  seal left on the site**, by the closing quote in Section IV (`.why-seal2`).
-  `.seal-face`, `.seal-spin.auto` and `.seal-spin.scroll` are dead CSS and were
-  dead before any of this — no markup has ever carried them.
+  than deleted, and `git rm` is all it takes.
+- **`seal-bottom.png` (716KB) is no longer referenced either, since 12 Nov.**
+  The client asked for the Est. 2004 medallion beside the Section IV closing
+  quote to go, so `.seal why-seal2` and its `<img>` came out of `index.html`.
+  **No seal is drawn anywhere on the site now.** Both files are still on disk
+  and still ship — client artwork, the same call as `sold-out.png`.
+  - **`.why-quote` had to become one column with it.** It was
+    `grid-template-columns:1fr auto`, the second track being the medallion;
+    an empty track still contributes its `gap`, so the quote would have sat
+    off-centre under a full-width rule. It is `1fr` and centred now, which is
+    what the phone tier below it already did — the two agree instead of
+    disagreeing. **That rule is in the shared block, so the change went into
+    all twelve files**; only `index.html` has the markup.
+  - **The `.seal*` rules are now dead in all twelve files** and were left
+    there, the same call as `.hs-field > label` and the phone tier's
+    `.sv-slot` — a selector that matches nothing in a block that must stay
+    byte-identical costs nothing. `.seal-face`, `.seal-spin.auto` and
+    `.seal-spin.scroll` were dead long before this.
 - Committed and referenced: `seal-bottom.png`, `sketch-tower.jpg`, `house-sketch.jpg`, `floor-plan.jpg`, `floor-plan-l.jpg`, `assets/project-blueprint-left.png`, `assets/project-floral-right.png` (760x424, **no alpha** — every use of it is `mix-blend-mode:multiply` over a cream ground, on the three collection pages, `testimonials.html` and now the owner detail panel on `index.html`).
 - `assets/contact-render.jpg` is the faded tower render at the foot of `contact.html`'s left column (1088x460, 60KB, JPEG q88). Its ground is `#F8F6F2`, the same as the section, so it needs no band or border — see *The left column: four cards under the heading*. It came in at 1088px and displays up to 922 CSS px, so it is soft on retina; a wider export would fix it.
 - `assets/oc-received.png` is the **OC RECEIVED** mark on every collection card (272x262, 21KB, **real alpha channel**). Keyed out of the client's flat red-on-white original by colour-to-alpha against white, which un-composites the anti-aliased edges instead of leaving a halo, then quantised to 128 colours; verified against the source by recompositing over white. Its ratio is declared in the CSS as `aspect-ratio:272/262`, so a re-crop means changing that line.
@@ -3211,7 +3318,11 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
 - `quote-strip.png` (the Vikram Raajlaxmi quote banner) has been **deleted** — Section III's `.sp-quote-img` figure was removed earlier. Recoverable from git if the quote is ever wanted back.
 - The root-level `Generate_*.jpeg` / `download.png` / `Minimalist_*.jpeg` source art has been **deleted** — it was working material, not site assets. `footer.png`, `Services_start.png`, the seals and the sketches are all still referenced and remain.
 - **Favicon**: `favicon.ico` (16/32/48, at the repo root so browsers find it unprompted) plus `assets/favicon-32.png`, `assets/favicon-192.png` and `assets/apple-touch-icon.png` (180). All twelve pages link them from `<head>`, right after `</title>`. Cut from the logo's building glyph with its dark ground **keyed out to transparency** (unmatted, so no dark fringe survives onto a light tab bar), squared up and centred with ~12% margin — the mark has to survive being read at 16px, so it sits deliberately large in frame.
-- The logo ships as **two external PNGs**, `assets/logo.png` (brown/charcoal ink, for ivory grounds) and `assets/logo-light.png` (gold/cream ink, for the dark navbar **and the footer** — `.ft-mark`, which used to be the word RAAJLAXMI set in Cinzel with a tagline span under it; the artwork already carries both, so the text version was removed), both ~17KB with a transparent ground. The nav carries both stacked inside `.brand`; `.nav-wrap.on-light` crossfades between them via opacity, replacing the old `filter:` hack. Regenerating either from a new master means keying out its flat background and re-cutting both variants — edit them as a pair or the two states drift.
+- The logo ships as **two external PNGs**, `assets/logo.png` (brown/charcoal ink, for ivory grounds) and `assets/logo-light.png` (gold/cream ink, for the dark navbar **and the footer** — `.ft-mark`, which used to be the word RAAJLAXMI set in Cinzel with a tagline span under it; the artwork already carries both, so the text version was removed), ~14KB each with a transparent ground.
+  - **Both were re-cut on 12 Nov from the client's `main-loggo.png`** (1157x291, at the repo root, untracked working art). That file is the LIGHT-ink version only — gold `#C89747` wordmark with a near-white `#FEFEFE` tagline — so it is `logo-light.png` as supplied, and `logo.png` is the same artwork recoloured: the wordmark to `#A96431` and the tagline to `#171312`, which are the inks the previous over-ivory logo used, so nothing else on the page had to move. The building glyph (everything left of x=292, the gap between glyph and wordmark running 263–321) is untouched in both.
+  - **The recolour works because the artwork is alpha-antialiased**, not blended against a background: the wordmark is one exact RGB over varying alpha, so mapping that colour and keeping the alpha re-inks it with no halo. Re-cutting from a future master means checking that still holds.
+  - **The `width`/`height` attributes had to change with the files** — 966x240 to **1157x291**, four occurrences per page (three on `project.html`, which has no footer), all twelve files. Every logo is sized by `height` with `width:auto`, so the attributes only reserve space; left stale they would have reserved the wrong box.
+  - **The favicons were NOT re-cut.** They are the building glyph, which is unchanged in the new artwork, so they still match. The nav carries both stacked inside `.brand`; `.nav-wrap.on-light` crossfades between them via opacity, replacing the old `filter:` hack. Regenerating either from a new master means keying out its flat background and re-cutting both variants — edit them as a pair or the two states drift.
 
 ## Known content placeholders
 
@@ -3232,8 +3343,10 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
   resolves, but it is the only slug in the dataset like that and it should be corrected to
   `raajlaxmi-tower` in the Studio. Nothing in the code needs changing when it is: both the
   cards and the banner hotspots read the slug live.
-- **`Midas Heights` is painted on the Western line banner but has no `project` document**,
-  so its hotspot is inert. Publishing it is all that is needed.
+- ~~**`Midas Heights` is painted on the Western line banner but has no `project` document**~~
+  — moot since 12 Nov: the mark is covered by `.cor-mask` and its hotspot is
+  gone. Publishing the project would NOT bring the logo back; the patch would
+  have to be removed first.
 - ~~**No project is filed as Redevelopment yet**~~ — **four are, since 7 Nov**, so that page's three placeholder cards (`[Society name]`, `[Locality]`, `[n] BHK`) are never shown to a visitor again. The markup and the `if(!result.some(inStatus)) return;` guard are both still in the file and still correct: with Sanity unreachable the placeholders are what shows, which is the same fallback every other page makes.
 - **`Shanti Niwas` is fixed** (4 Nov). Its "View Project" button was missing
   because its project document existed only as an unpublished **draft** — see
@@ -3301,11 +3414,11 @@ changed.
 
 ### Still to do
 
-1. **`seal-bottom.png` is 716KB for a 620×620 mark** — now that `seal-top.png`
-   is no longer requested by any page, this one is the heaviest thing on the
-   home page after the hero on its own. It is flat gold line-work on
-   transparency, so a re-export should be a fraction of that. This is an asset
-   swap, not a code change.
+1. ~~**`seal-bottom.png` is 716KB for a 620×620 mark**~~ — **moot since
+   12 Nov.** The medallion was removed from Section IV at the client's
+   request, so no page requests this file any more and the home page is 716KB
+   lighter on a cold load. The file still ships with the repo; `git rm` on it
+   and `seal-top.png` saves another ~975KB per deploy.
 2. ~~`index.html` carries ~665KB of base64 (the hero JPEG)~~ — **done, 5 Nov.**
    The blob is gone and the file is **220KB**, down from 884KB; the still is
    `assets/hero-still.jpg`, a frame of the film, set from CSS. See *The still
