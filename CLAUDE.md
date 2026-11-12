@@ -978,16 +978,52 @@ building render**, and the paragraph is gone.
   **211–229px at four across against the live CMS text**, which is
   considerably longer than the markup fallback. Measure against the live
   document, not the file.
-- **`<wbr>` after the `@`, in the markup and in the painter.**
-  `info@raajlaxmigroup.com` is 23 unbroken characters, wider than a 148px
-  card. `overflow-wrap:anywhere` is the safety net that stops it pushing the
-  track out of alignment, but left alone it breaks at the last character that
-  fits — `…raajlaxmigroup.co` / `m`, which reads as a typo. The painter adds
-  the same `<wbr>` after escaping, so the only markup it ever injects is that
-  tag and `<br>`.
+- **THE EMAIL CARD SIZES ITS OWN TRACK, so the address sits on one line**
+  (12 Nov, the client's request). `info@raajlaxmigroup.com` measures **148px**
+  at `.78rem`, and an equal quarter of this column is only 118–145px at four
+  across, so it used to break after the `@` at every desktop size.
+
+  The fix is three declarations, and two of them are not obvious:
+
+  ```css
+  .ct-grid{grid-template-columns:repeat(4,minmax(min-content,1fr));}
+  @media (min-width:360px){
+    .ct-item:has(a[href^="mailto:"]) a{white-space:nowrap;overflow-wrap:normal;}
+    .ct-item:has(a[href^="mailto:"]) a wbr{display:none;}
+  }
+  ```
+
+  - **`min-content` rather than 0 as the track floor** is what lets that one
+    card claim the width it needs while the other three share what is left.
+  - **`wbr{display:none}` is required**, because **Chrome honours a `<wbr>` as
+    a break opportunity even under `white-space:nowrap`** — with nowrap alone
+    the address still broke and the track never grew. Measured, not guessed:
+    the track stayed at 148px until the `<wbr>` was taken out of the flow.
+  - **`overflow-wrap:normal` is required too**, because `anywhere` is counted
+    when the browser computes min-content, which pinned the track's floor at
+    about one character.
+  - **Keyed off `a[href^="mailto:"]`, never `:nth-child(2)`.** The four boxes
+    are CMS content and the client can reorder them, so the rule has to find
+    the email wherever it is. Only that box gets a `mailto:` from the painter;
+    Call Us gets `tel:` and Business Hours is a `<p>`.
+  - **The `<wbr>` stays in the markup and in the painter.** Below 360px it is
+    live again and the address breaks where a reader expects it to, because
+    two across at 280px leaves 113px of card and giving one of them 175px
+    would squeeze the other to ~84px. The painter still injects it after
+    escaping, so the only markup it ever writes is that tag and `<br>`.
+
+  Measured at 1920 → 280: one line at every width from **360px up**, the email
+  track taking 176–184px while the others take 118–177px; 280px is unchanged
+  at three lines. No page overflow and no card spill anywhere. The cost is
+  that the other three cards are **8px narrower at 1440**, which puts "10:00
+  AM – 7:00 PM" onto a third line in Business Hours — that is the trade for
+  widening one card in a fixed row, and it was the client's call.
 - **Three column counts, and the middle one is the surprising part.** Four
   across at ≥1366px, **two between 1081 and 1365**, four again below 1081, two
-  below 620. The left column is at its NARROWEST at 1081 — 494px, because the
+  below 620. (Verified 12 Nov by measuring the rendered grid at fifteen
+  widths — it is easy to misread the stylesheet here, because the only two
+  `.ct-grid` overrides both say `repeat(2,…)` and the four-across bands are
+  the base rule showing through between them.) The left column is at its NARROWEST at 1081 — 494px, because the
   section is still two columns there — and gets wider again the moment it
   stacks and takes the full page. So four across is right on either side of
   that band and wrong inside it.

@@ -1383,7 +1383,19 @@
      five or six lines and the grid stretches the other three to match. That
      is the trade for four-across and it is why the body type is a step
      smaller than the old quadrants'. */
-  .ct-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  /* THE EMAIL CARD SIZES ITS OWN TRACK. `info@raajlaxmigroup.com` is 148px
+     set at .78rem, and an equal quarter of this column is only 118-145px at
+     four across, so the address was breaking after the @ on every desktop
+     size. The track floor is `min-content` rather than 0, and the address is
+     `white-space:nowrap` above 620px — so THAT card's min-content becomes the
+     whole address and the track grows to hold it, while the other three share
+     what is left. Every other card keeps `overflow-wrap:anywhere`, so their
+     min-content is about one character and they shrink as before.
+
+     Keyed off `a[href^="mailto:"]`, not `:nth-child(2)`: the four boxes are
+     CMS content and the client can reorder them, so the rule has to find the
+     email wherever it is rather than assume it is second. */
+  .ct-grid{display:grid;grid-template-columns:repeat(4,minmax(min-content,1fr));
     gap:clamp(.6rem,.9vw,.9rem);
     margin-top:clamp(1.8rem,3vw,2.6rem);}
   .ct-item{display:flex;flex-direction:column;align-items:flex-start;gap:.7rem;
@@ -1421,6 +1433,24 @@
   .ct-item p,.ct-item a{display:block;font-family:"Inter",sans-serif;font-size:.78rem;
     font-weight:300;line-height:1.6;color:var(--say);overflow-wrap:anywhere;}
   .ct-item a:hover{color:var(--au-deep);}
+  /* Down to 360px, which covers every common phone. Two across at 360 leaves
+     the email about 175px and the other card about 131px — tight but legible.
+     Below that (the 280px folded Galaxy) the other card would be squeezed to
+     ~84px, so there it goes back to breaking at the <wbr> after the @, which
+     is the point of that <wbr> and reads as deliberate. */
+  @media (min-width:360px){
+    /* All three declarations are needed, and the two extra ones are the
+       non-obvious part:
+       - `wbr{display:none}` because Chrome honours a <wbr> as a break
+         opportunity EVEN under white-space:nowrap, so the address kept
+         breaking after the @ with nowrap set and the track never grew;
+       - `overflow-wrap:normal` because `anywhere` is counted when the
+         browser works out min-content, which would have held the track's
+         floor at about one character.
+       The <wbr> stays in the DOM so it is there again below 621px. */
+    .ct-item:has(a[href^="mailto:"]) a{white-space:nowrap;overflow-wrap:normal;}
+    .ct-item:has(a[href^="mailto:"]) a wbr{display:none;}
+  }
 
   /* ---- the render, pinned to the bottom-left of the screen ----
      `left:50%` + `margin-left:-50vw` is the centred full-bleed idiom, and it
@@ -1669,7 +1699,10 @@
      1081, where the section stacks and it takes the full page, so four across
      is right on either side of this band and wrong inside it. */
   @media (min-width:1081px) and (max-width:1365px){
-    .ct-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+    /* min-content here too: two across is wide enough for today's address
+       with room to spare, but the track must still grow rather than overflow
+       if the client ever puts a longer one in the Studio. */
+    .ct-grid{grid-template-columns:repeat(2,minmax(min-content,1fr));}
   }
 
   @media(max-width:1080px){
@@ -1692,6 +1725,12 @@
        things to read. The old rules that stripped the quadrant hairlines here
        went with the hairlines themselves. */
     .ct-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  }
+  /* Two across still, but with the email able to claim the width it needs.
+     Floored at 360px so the 280px case keeps the equal halves it has always
+     had — there is not enough room there to give one card 175px. */
+  @media (min-width:360px) and (max-width:620px){
+    .ct-grid{grid-template-columns:repeat(2,minmax(min-content,1fr));}
   }
 
   @media (prefers-reduced-motion:reduce){
