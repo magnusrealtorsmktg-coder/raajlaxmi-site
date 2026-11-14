@@ -149,6 +149,43 @@ export default {
       description: 'e.g. "850 – 1800 Sq. Ft."',
     },
     {
+      /* The per-configuration breakdown the card prints when it has one:
+         "315 \u2013 373 Sq. Ft. for 1 BHK", one row each. It REPLACES the
+         Configuration and Area pair on the card when filled, and those two
+         stay as they are \u2014 they still feed the detail page's fact bar and
+         its heading line, and they are what the card falls back to. So a
+         project with nothing here looks exactly as it did. */
+      name: 'sizes',
+      title: 'Sizes by configuration',
+      type: 'array',
+      description:
+        'One row per flat type. Fill this in and the card lists them \u2014 ' +
+        '"315 \u2013 373 Sq. Ft. for 1 BHK" \u2014 instead of the single ' +
+        'Configuration and Area line above. Leave it empty and nothing changes.',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            {
+              name: 'config',
+              title: 'Configuration',
+              type: 'string',
+              description: 'e.g. "1 BHK", "2 BHK", "Shop".',
+              validation: (R) => R.required(),
+            },
+            {
+              name: 'area',
+              title: 'Area',
+              type: 'string',
+              description: 'e.g. "315 \u2013 373 Sq. Ft.". Written exactly as it should read.',
+              validation: (R) => R.required(),
+            },
+          ],
+          preview: {select: {title: 'area', subtitle: 'config'}},
+        },
+      ],
+    },
+    {
       name: 'price',
       title: 'Price',
       type: 'string',

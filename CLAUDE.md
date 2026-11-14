@@ -670,6 +670,32 @@ that measures in the same tick as its own `scrollIntoView` reports
 `naturalWidth === 0`** — that is the harness, not the badge; wait a beat and
 all four read loaded.
 
+### The card can list a size per configuration
+
+Asked for on 14 Nov. The meta row used to be one pair — `config` beside
+`area`, "1 & 2 BHK" and "5000+ Sq. Ft." — which cannot say which area belongs
+to which flat. A new `sizes` array on `project` holds one `{config, area}` per
+row and the card prints them as **"315 – 373 Sq. Ft. for 1 BHK"**, with the
+area mark on the measurement and the bed mark on the configuration.
+
+- **IT REPLACES THE PAIR ONLY WHEN IT IS FILLED.** `config` and `area` are
+  untouched and still required reading: they feed the detail page's fact-bar
+  fallback and its heading line, and they are what the card falls back to.
+  **A project with no `sizes` looks exactly as it did** — measured, 13 of the
+  15 still render the old pair.
+- **A column, not the side-by-side pair.** Each row is a sentence; two of them
+  abreast stop being readable at a card's width. `flex-wrap` on the row lets a
+  long one break after the area rather than pushing the card out of its track.
+- **The card grows with the list**, and the grid stretches its neighbours to
+  match. Three rows is about 34px more than the old single row, which is why
+  this is opt-in per project rather than a shape every card takes.
+- CSS in all twelve files, markup and GROQ in the three collection pages — the
+  usual split for `.col-*`.
+
+Measured at 1440, 1200, 900, 620, 390, 360 and 280 with two- and three-row
+projects: no card spilling its box, no horizontal page overflow, no console
+errors.
+
 ### SOLD OUT returns, in the card's footer
 
 Asked for on 14 Nov. **It is not the feature that was removed on 9 Nov**, and
