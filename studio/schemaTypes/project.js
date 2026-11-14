@@ -156,12 +156,13 @@ export default {
          its heading line, and they are what the card falls back to. So a
          project with nothing here looks exactly as it did. */
       name: 'sizes',
-      title: 'Sizes by configuration',
+      title: 'Configurations \u2014 size and price',
       type: 'array',
       description:
-        'One row per flat type. Fill this in and the card lists them \u2014 ' +
-        '"315 \u2013 373 Sq. Ft. for 1 BHK" \u2014 instead of the single ' +
-        'Configuration and Area line above. Leave it empty and nothing changes.',
+        'One row per flat type: the size and the price for THAT flat. Fill it ' +
+        'in and the card lists them \u2014 "315 \u2013 373 Sq. Ft. for 1 BHK", ' +
+        'with the price under each \u2014 instead of the single Configuration, ' +
+        'Area and Price lines above. Leave it empty and nothing changes.',
       of: [
         {
           type: 'object',
@@ -177,20 +178,52 @@ export default {
               name: 'area',
               title: 'Area',
               type: 'string',
-              description: 'e.g. "315 \u2013 373 Sq. Ft.". Written exactly as it should read.',
-              validation: (R) => R.required(),
+              description:
+                'e.g. "315 \u2013 373 Sq. Ft.". Written exactly as it should read. ' +
+                'Optional \u2014 leave it empty to price a configuration without ' +
+                'quoting a size.',
+            },
+            {
+              /* THE PRICE OF THIS FLAT, AND NOTHING ELSE IN IT.
+                 This field exists because the single free-text Price above it
+                 could not be filtered on: written as "42 Lacs Onwards for 1
+                 BHK & 60 Lacs Onwards for 2 BHK", the budget search read the
+                 "1" of "1 BHK" as one rupee, the range started at zero and
+                 every band matched every project. Keeping the configuration
+                 out of the price string is the whole point \u2014 so do NOT
+                 write "for 1 BHK" in here, that is the Configuration field
+                 beside it. */
+              name: 'price',
+              title: 'Price',
+              type: 'string',
+              description:
+                'This flat\'s price ONLY \u2014 e.g. "\u20B942 Lacs Onwards". Do not ' +
+                'write the configuration in here; that is the field beside ' +
+                'this one. Written exactly as it should appear, symbol and ' +
+                'all. This is what the budget search reads.',
             },
           ],
-          preview: {select: {title: 'area', subtitle: 'config'}},
+          preview: {
+            select: {title: 'config', subtitle: 'area', description: 'price'},
+            prepare: ({title, subtitle, description}) => ({
+              title: title,
+              subtitle: [subtitle, description].filter(Boolean).join('  \u00B7  '),
+            }),
+          },
         },
       ],
     },
     {
       name: 'price',
-      title: 'Price',
+      title: 'Price (one line, all configurations)',
       type: 'string',
       description:
-        'Printed on the project\'s card and again on its detail page — e.g. "₹1.8 Cr*" or "Price on request". Write it exactly as it should appear, symbol and all. Leave it empty and no price is shown anywhere.',
+        'The fallback, for a project with ONE price — e.g. "₹1.8 Cr*" or "Price on request". ' +
+        'Write it exactly as it should appear, symbol and all. ' +
+        'IF A FLAT TYPE HAS ITS OWN PRICE, PUT IT IN "Configurations" ABOVE INSTEAD: ' +
+        'a price written here as "42 Lacs Onwards for 1 BHK & 60 Lacs Onwards for 2 BHK" ' +
+        'cannot be filtered on reliably, because the budget search has to guess which ' +
+        'numbers are money. Filled in above, this line is not printed at all.',
     },
     {
       name: 'detailUrl',

@@ -27,11 +27,12 @@ brochure label), `fa0f56c` (a size per configuration, SOLD OUT under the
 blurb). **`235d30f` — the Why Raajlaxmi timeline — is COMMITTED BUT NOT
 PUSHED**; see *The timeline shows headings and opens sideways*.
 
-**READ THIS FIRST IF YOU ARE PICKING UP ON 14 NOV OR LATER:** the client put
-prices back on six projects during the day and **that has broken the budget
-filter in a way that is worse than the empty results it replaced** — see
-*Six projects carry a price now, and the budget bands are wrong*. It is the
-one live defect known on the site.
+**No live defect is known on the site.** The one found on 14 Nov — six new
+free-text prices breaking the budget filter, so that "Under ₹25 Lacs" returned
+₹42-Lac projects — was fixed the same day, with a `price` per configuration
+and a parser that no longer reads "1 BHK" as one rupee. See *A price per
+configuration, and the budget bands that it fixed*; one hand-over step is
+left there (`split-prices.mjs`, unrun).
 
 **Three untracked files sit at the repo root and are deliberately not
 committed**: `EMI-image.png` and `main-loggo.png` (working art — the logo was
@@ -58,7 +59,7 @@ and are not. The ones that will cost you an afternoon if you do not know them:
 | a video of any kind | *Hero, About and Why can each take a video* and the encode tables under it; every client upload so far has been a 60–265 MB master |
 | a headless check | *Verifying locally — and one headless trap* — and measure with CDP device metrics, never `--window-size --screenshot` |
 | any of the three moving strips | *The owners strip gives way and comes back* — the owners, the reviews and the photo gallery all run **one** implementation now; verify the drift by driving Chrome over CDP in real time, NOT with `--virtual-time-budget`, which reports zero for a working strip and a dead one alike — see *It shipped dead, and the harness is what hid it* |
-| a price, a budget band or the EMI link | *Six projects carry a price now, and the budget bands are wrong* — the prices are free text and the parser reads "1 BHK" as one rupee |
+| a price, a budget band or the EMI link | *A price per configuration, and the budget bands that it fixed* — `sizes[].price` is read first, and a configuration must never reach `money()` |
 | the Why Raajlaxmi timeline | *The timeline shows headings and opens sideways* — the rail is a year and a name, and `data-detail` is the one source the panel and the rail label both come from |
 
 **Deploys:** `git push origin main` publishes the site. The Studio is separate
@@ -215,7 +216,7 @@ two queries in the same session.
 | Sizes by configuration | **3 of 15**, two rows each: Raajlaxmi Tower, Raajlaxmi Apartment (both `1 BHK 380-400 Sq. Ft.` / `2 BHK 360-550 Sq.ft`) and Nakshatra Auris (`315 – 373 Sq. Ft.` / `461-501 Sq. Ft.`). The other twelve still print the old `config` + `area` pair, which is the designed fallback |
 | 3D walkthrough | **NONE.** The field exists on `project` and the button is wired, but no project carries a video, so the button renders nowhere. Untested against a real file |
 | Detail-page content | **6 of 15 have a gallery** (Rajlaxxmi Park 4, Priti Pearrl 3, and 2 each on Krishna Niwas, Raajlaxmi Avenue, Raajlaxmi Meenakshi, Shanti Niwas), **6 a price**, 7 a configuration. The gallery count was 0 on 8 Nov |
-| Prices | **SIX, and they are free text, and the budget filter is now WRONG because of it.** Priti Darpan `26 Lacs Onwards`; Priti Pearrl, Priti Chaaya, Raajlaxmi Tower, Raajlaxmi Apartment and Shakun Solitaire all in the form `42 Lacs Onwards for 1 BHK & 60 Lacs Onwards for 2 BHK`. See *Six projects carry a price now, and the budget bands are wrong* |
+| Prices | **SIX, all still in the one-line free-text field.** Priti Darpan `26 Lacs Onwards`; Priti Pearrl, Priti Chaaya, Raajlaxmi Tower, Raajlaxmi Apartment and Shakun Solitaire all in the form `42 Lacs Onwards for 1 BHK & 60 Lacs Onwards for 2 BHK`. **Nothing uses `sizes[].price` yet** — `split-prices.mjs` moves them and has not been run. See *A price per configuration, and the budget bands that it fixed* |
 | Amenity icons in use | `play`, `gazebo`, `indoor`, `landscape`, `security`, `gym`, `garden`, `planning`, `parking`, `lift`, `power`, `pool` — and one project has an amenity with **no icon set at all**. `green` (Common Green Space) is in the schema and used by nobody |
 | Brochures | **3 on published projects** (Nakshatra Auris 18.0 MB, Shanti Niwas 7.7 MB, Rajlaxxmi Park 5.0 MB). A fourth, 0.4 MB, is on the unpublished Aarvi Apartment draft |
 | Reviews | **6 real Google reviews** (`testimonial` documents), all with Google links |
@@ -288,10 +289,9 @@ property that is not sold out in its place on the home page. Both halves are
 
 **Added 9 Nov, all content rather than code:**
 
-- ~~**No project has a price**~~ — six do since 14 Nov, and **the budget
-  bands now return the wrong projects rather than none**. See *Six projects
-  carry a price now, and the budget bands are wrong*; it is the one live
-  defect on the site.
+- ~~**No project has a price**~~ — six do since 14 Nov. They briefly broke the
+  budget bands; fixed the same day. See *A price per configuration, and the
+  budget bands that it fixed*.
 - **`Jodi Flats`, `Office` and `Shops` match no project.** They are offered in
   the hero's PROPERTY dropdown but no project's `config` names them, so each
   returns an empty collection. The matcher folds plurals and spacing, so typing
@@ -2354,10 +2354,13 @@ each of them a real case from this dataset:
 - Text with **no number in it** ("Price on request") returns `null`, which keeps
   such a project out of every specific band while leaving it in "Any budget".
 
-### Six projects carry a price now, and the budget bands are wrong
+### A price per configuration, and the budget bands that it fixed
 
-**This is the one live defect known on the site**, it appeared on 14 Nov
-without a line of code changing, and it is worse than the problem it replaced.
+**FIXED ON 14 NOV, in the same session that found it.** The section below
+describes a defect that was live for part of that day; it is kept because the
+cause is worth knowing and because the free-text field it came from still
+exists. The fix has two halves: a `price` field **per configuration**, and a
+parser that no longer mistakes a configuration for an amount.
 
 Until 13 Nov no project had a `price` at all, so every budget band returned an
 empty collection — inert, but honest. The client then priced six projects, and
@@ -2372,33 +2375,69 @@ empty collection — inert, but honest. The client then priced six projects, and
 | Raajlaxmi Apartment | `42 Lacs Onwards for 1 BHK & 60 Lacs Onwards for 2 BHK` | **₹1 – ∞** |
 | Shakun Solitaire | `35 Lacs Onwards for 1 BHK & 50 Lacs Onwards for 2 BHK` | **₹1 – ∞** |
 
-**`money()` reads the "1" of "1 BHK" as one rupee.** Its regex takes every
+**`money()` read the "1" of "1 BHK" as one rupee.** Its regex takes every
 number in the string, and a number with no unit after it inherits the unit of
-the LAST number in the string — which here is the "2" of "2 BHK", also
-unitless, so the multiplier is 1. The configuration digits become rupee
-amounts, the range floor collapses to ₹1, and `onwards` opens the ceiling to
-infinity. A range of ₹1 to infinity intersects every band.
+the LAST number — which here was the "2" of "2 BHK", itself unitless, so the
+multiplier was 1. The configuration digits became rupee amounts, the range
+floor collapsed to ₹1, and `onwards` opened the ceiling to infinity. A range of
+₹1 to infinity intersects every band, so the Budget dropdown returned:
 
-Measured against the live prices, the hero's Budget dropdown now returns:
+| band | before | after |
+|---|---|---|
+| Under ₹25 Lacs | **5**, incl. two ₹42-Lac projects | **2**, both priced from ₹19 Lacs |
+| ₹25 – ₹45 Lacs | 6 | 6 |
+| ₹1 Cr + | all 6 | 6 — see the note on *onwards* below |
 
-| band | returns |
-|---|---|
-| Under ₹25 Lacs | **5** — including two ₹42-Lac projects and one at ₹35 Lacs |
-| ₹25 – ₹45 Lacs | all 6 |
-| ₹45 – ₹65 Lacs | all 6 |
-| ₹65 Lacs – ₹1 Cr | all 6 |
-| ₹1 Cr + | all 6 — **not one of them is ₹1 Cr** |
+A buyer filtering for a home under ₹25 Lacs was shown homes at ₹42 Lacs.
+Returning nothing was a dead end; that was a wrong answer presented as a right
+one.
 
-So a buyer filtering for a home under ₹25 Lacs is shown homes at ₹42 Lacs.
-Returning nothing was a dead end; this is a wrong answer presented as a right
-one, and it is the reason this moved to the top of the handover.
+**THE REAL FIX IS `sizes[].price` — A PRICE THAT IS ONLY A PRICE.** The array
+that already held a size per configuration now holds that configuration's price
+too, so the amount and the flat type are never in the same string and nothing
+has to guess which digits are money. It is also the answer to "how do we show
+two prices for two flat types", which is the same question from the other end.
 
-**The fix is in `money()`, in all three collection pages** (it is duplicated,
-like everything `.col-*`). The shape of it: drop any number immediately
-followed by `bhk`/`rk` before the hits are gathered, and do not let a unitless
-number inherit a unit from a later one. **It has not been done** — the client
-may also simply want a cleaner price field, and which of the two is right is
-their call, not a decision to take inside the parser.
+- **`priceRange()` prefers the rows and falls back to the one-line field.** A
+  project priced per flat type spans from its cheapest configuration to its
+  dearest, which is what a buyer filtering by budget means. A row with no
+  price, or an unparseable one, is **skipped rather than dragging the floor to
+  zero** — that was the original bug's shape and it is not being reintroduced.
+- **The free-text line is not printed as well as the rows**, on the card or on
+  the detail page. A project carrying both would otherwise state its prices
+  twice.
+- **`area` is optional now**, so a configuration can be priced without a size
+  being quoted. The card drops the "for" sentence and prints the flat type
+  alone in that case.
+- **The detail page gained `.pdp-row`** — price leading, configuration beside
+  it and quieter — and its **EMI link now takes the CHEAPEST** configuration,
+  because the calculator should open on the entry price.
+- **`project.html`'s own price parse had the same latent bug.** It survived
+  only because the amount happened to come first in every live string; written
+  "1 BHK – 42 Lacs" it would have handed the calculator one rupee. It drops
+  the configuration digits now too.
+- **`money()` is still fixed for free text**, because twelve projects may keep
+  using that field: any `<digits> bhk|rk|bed(s)` is dropped before anything is
+  counted. All six live strings parse correctly through it.
+- **"Onwards" still means no upper bound**, which is why five projects appear
+  in ₹1 Cr + although none is priced at ₹1 Cr. That is the original design and
+  it is defensible — "42 Lacs onwards" genuinely does not state a ceiling — but
+  it is the next thing to question if the bands look generous.
+- **`scripts/split-prices.mjs` migrates the six existing strings** into the
+  rows. **It has not been run**: it writes to live content, so it is the
+  client's call. It is non-destructive (the free-text `price` is left unless
+  `--clear-price`), idempotent, takes `--dry`, and skips a string that names no
+  configuration — "26 Lacs Onwards" has nothing to split and the one-line field
+  already says it correctly.
+- **Both halves need the Studio redeployed** before the client can fill the new
+  field in. The parser fix does not.
+
+Verified by driving the real pages against the real dataset, and — for the rows
+no project carries yet — against an intercepted Sanity response, at ten
+viewports from 1920x1080 to 280x653: the rows render, the price stacks under
+its size, the standalone line is suppressed, no card or page overflow, the
+detail page lists both prices and links the calculator to the cheaper, and the
+bands return the right projects. No console errors.
 
 Two things that still hold from before, and are not bugs:
 

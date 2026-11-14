@@ -80,6 +80,7 @@
     /* the whole of one property: copy, fact bar, gallery, amenities */
     project: wanted && ('*[_type=="project" && slug.current==$p][0]{\n' +
       '  name,status,category,location,config,price,overview,address,\n' +
+      '  sizes[]{config,area,price},\n' +
       '  heroEyebrow,heroHeading,heroText,highlightsTitle,phone,\n' +
       '  "brochure":brochure.asset->{url,size,originalFilename},\n' +
       '  "walkthrough":walkthrough.asset->{url,size,mimeType},\n' +
@@ -1214,7 +1215,15 @@
      being readable at a card's width. `flex-wrap` lets a long row break
      after the area rather than pushing the card out of its track. */
   .col-meta.col-sizes{flex-direction:column;align-items:flex-start;gap:.5rem;}
-  .col-meta.col-sizes > div{gap:.42rem;flex-wrap:wrap;}
+  /* A ROW IS NOW TWO LINES: the size, and under it that configuration's own
+     price. Stacked rather than run together, because "315 – 373 Sq. Ft. for
+     1 BHK ₹42 Lacs Onwards" reads as one sentence and is not one — and at a
+     311px card the two would wrap into each other anyway. `.zl` carries the
+     flex row the icons need; the parent cannot, now that it is a column. */
+  .col-meta.col-sizes > div{flex-direction:column;align-items:flex-start;gap:.22rem;}
+  .col-meta.col-sizes .zl{display:flex;align-items:center;gap:.42rem;flex-wrap:wrap;}
+  .col-meta.col-sizes .zp{font-weight:600;font-size:.8rem;letter-spacing:.01em;
+    color:var(--gold-deep);}
   .col-meta.col-sizes b{font-weight:600;}
   .col-meta .for{color:var(--body);font-weight:300;}
   .col-details{display:inline-flex;align-items:center;gap:.6rem;margin-top:1.1rem;
@@ -1463,6 +1472,13 @@
     font-weight:600;font-size:clamp(1.15rem,2vw,1.5rem);letter-spacing:.01em;
     color:var(--gold-deep);}
   .pd-price[hidden]{display:none;}
+  /* PRICED PER CONFIGURATION: one row a flat type. The price leads and the
+     configuration sits beside it, quieter — the price is what the eye has
+     come for, the flat type is which one it belongs to. */
+  .pd-price .pdp-row{display:flex;align-items:baseline;gap:.6rem;flex-wrap:wrap;}
+  .pd-price .pdp-row + .pdp-row{margin-top:.4rem;}
+  .pd-price .pdp-row .c{font-weight:500;font-size:.62em;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--body);}
 
   /* The route to the EMI calculator. This page has no footer by design, so
      without it a property page is the one place on the site with no way of
@@ -2302,9 +2318,32 @@
       if(heroP) heroP.textContent = DOC.heroText || [DOC.config, DOC.location]
         .filter(Boolean).join(' in ') || (DOC.status || '');
 
+      /* A PRICE PER CONFIGURATION WHEN THERE IS ONE, the one-line field
+         otherwise — the same precedence the collection cards use. The
+         free-text field is not printed as well as the rows: a project
+         carrying both would otherwise state its prices twice. */
       const price = document.getElementById('pdPrice');
+      const priced = (Array.isArray(DOC.sizes) ? DOC.sizes : []).filter(z => z && z.price);
       if(price){
-        if(DOC.price){ price.textContent = DOC.price; price.hidden = false; }
+        if(priced.length){
+          price.textContent = '';
+          priced.forEach(z => {
+            const row = document.createElement('div');
+            row.className = 'pdp-row';
+            const v = document.createElement('span');
+            v.className = 'v';
+            v.textContent = z.price;          /* textContent: the CMS is never markup */
+            row.appendChild(v);
+            if(z.config){
+              const c = document.createElement('span');
+              c.className = 'c';
+              c.textContent = z.config;
+              row.appendChild(c);
+            }
+            price.appendChild(row);
+          });
+          price.hidden = false;
+        } else if(DOC.price){ price.textContent = DOC.price; price.hidden = false; }
         else price.hidden = true;
       }
 
@@ -2316,11 +2355,25 @@
          alone and the link stays generic rather than guessing. */
       const emiLink = document.getElementById('pdEmi');
       if(emiLink){
-        const t = String(DOC.price || '').toLowerCase();
-        const n = parseFloat((t.replace(/,/g, '').match(/\d+(\.\d+)?/) || [])[0]);
-        const unit = /\bcr|crore/.test(t) ? 1e7 : /lac|lakh/.test(t) ? 1e5 : /\bk\b/.test(t) ? 1e3 : 1;
-        const rupees = isFinite(n) ? Math.round(n * unit) : 0;
-        emiLink.setAttribute('href', rupees > 0 ? 'emi.html?price=' + rupees : 'emi.html');
+        /* `\d+ BHK` IS DROPPED BEFORE THE FIRST FIGURE IS TAKEN. A price
+           written "42 Lacs Onwards for 1 BHK" still reads correctly here by
+           luck, because the amount happens to come first — but "1 BHK – 42
+           Lacs" would have handed the calculator one rupee. The collection
+           pages' budget filter had exactly this bug and it was live. */
+        const rupees = raw => {
+          const t = String(raw || '').toLowerCase().replace(/,/g, '')
+            .replace(/\b\d+(?:\.\d+)?\s*(?:bhk|rk|bedrooms?|beds?)\b/g, ' ');
+          const n = parseFloat((t.match(/\d+(\.\d+)?/) || [])[0]);
+          const unit = /\bcr|crore/.test(t) ? 1e7 : /lac|lakh/.test(t) ? 1e5 : /\bk\b/.test(t) ? 1e3 : 1;
+          return isFinite(n) ? Math.round(n * unit) : 0;
+        };
+        /* the CHEAPEST configuration when they are priced apart: the
+           calculator opens on the entry price, which is what someone
+           reaching it from this page is working out */
+        const all = (priced.length ? priced.map(z => z.price) : [DOC.price])
+          .map(rupees).filter(v => v > 0);
+        const v = all.length ? Math.min(...all) : 0;
+        emiLink.setAttribute('href', v > 0 ? 'emi.html?price=' + v : 'emi.html');
       }
 
       txt(sec.querySelector('.pd-h'), DOC.highlightsTitle);

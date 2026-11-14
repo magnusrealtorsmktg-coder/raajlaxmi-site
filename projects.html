@@ -82,7 +82,7 @@
        hotspots are all built from this one answer */
     projects: '*[_type=="project"]|order(order asc,_createdAt asc){\n' +
       '  name,stage,stages,status,category,location,blurb,config,area,price,detailUrl,soldOut,\n' +
-      '  sizes[]{config,area},\n' +
+      '  sizes[]{config,area,price},\n' +
       '  "slug":slug.current,"imageUrl":image.asset->url\n' +
       '}',
 
@@ -1253,7 +1253,15 @@
      being readable at a card's width. `flex-wrap` lets a long row break
      after the area rather than pushing the card out of its track. */
   .col-meta.col-sizes{flex-direction:column;align-items:flex-start;gap:.5rem;}
-  .col-meta.col-sizes > div{gap:.42rem;flex-wrap:wrap;}
+  /* A ROW IS NOW TWO LINES: the size, and under it that configuration's own
+     price. Stacked rather than run together, because "315 – 373 Sq. Ft. for
+     1 BHK ₹42 Lacs Onwards" reads as one sentence and is not one — and at a
+     311px card the two would wrap into each other anyway. `.zl` carries the
+     flex row the icons need; the parent cannot, now that it is a column. */
+  .col-meta.col-sizes > div{flex-direction:column;align-items:flex-start;gap:.22rem;}
+  .col-meta.col-sizes .zl{display:flex;align-items:center;gap:.42rem;flex-wrap:wrap;}
+  .col-meta.col-sizes .zp{font-weight:600;font-size:.8rem;letter-spacing:.01em;
+    color:var(--gold-deep);}
   .col-meta.col-sizes b{font-weight:600;}
   .col-meta .for{color:var(--body);font-weight:300;}
   /* the price, when the project carries one — the card simply omits the line
@@ -2151,8 +2159,21 @@
        out of every specific band while leaving it in "Any budget". */
     function money(raw){
       /* commas are STRIPPED, not spaced: "1,25,00,000" is one number, and
-         spacing them made it four, the smallest of which won */
-      const s = (raw || '').toLowerCase().replace(/,/g, '').replace(/[\u20b9*]/g, ' ');
+         spacing them made it four, the smallest of which won.
+
+         A CONFIGURATION IS NOT A PRICE, and this line is the whole reason the
+         budget search was wrong for a day. The client priced six projects as
+         "42 Lacs Onwards for 1 BHK & 60 Lacs Onwards for 2 BHK". Every number
+         in the string was taken as money, and a number with no unit after it
+         inherits the unit of the LAST figure — which was the "2" of "2 BHK",
+         itself unitless, so the multiplier was 1. The "1" of "1 BHK" became
+         one rupee, the range ran ₹1 to infinity, and every band matched every
+         project: "Under ₹25 Lacs" returned two ₹42-Lac projects. Dropping the
+         configuration digits before anything is counted fixes all five of
+         those strings; the real answer is a price per configuration, which is
+         what `sizes[].price` is for and what `priceRange()` prefers. */
+      const s = (raw || '').toLowerCase().replace(/,/g, '').replace(/[\u20b9*]/g, ' ')
+        .replace(/\b\d+(?:\.\d+)?\s*(?:bhk|rk|bedrooms?|beds?)\b/g, ' ');
       const mul = u => u.startsWith('cr') ? 1e7
                      : (u.startsWith('lac') || u.startsWith('lakh')) ? 1e5
                      : u.startsWith('k') ? 1e3 : 1;
@@ -2165,10 +2186,23 @@
       const open = /\+|onwards|above|plus/.test(s);
       return [Math.min(...vals), open ? Infinity : Math.max(...vals)];
     }
+    /* THE PER-CONFIGURATION PRICES FIRST, the one-line field only as a
+       fallback. A project priced per flat type spans from its cheapest
+       configuration to its dearest, so a 1 BHK at 42 Lacs and a 2 BHK at 60
+       puts the project in every band between the two — which is what a buyer
+       filtering by budget means. A row with no price, or an unparseable one,
+       is skipped rather than dragging the floor to zero. */
+    const rowPrices = p => (Array.isArray(p.sizes) ? p.sizes : [])
+      .map(z => money(z && z.price)).filter(Boolean);
+    function priceRange(p){
+      const rows = rowPrices(p);
+      if(!rows.length) return money(p.price);
+      return [Math.min(...rows.map(r => r[0])), Math.max(...rows.map(r => r[1]))];
+    }
     const WANT_BUDGET_RANGE = money(WANT_BUDGET);
     const inBudget = p => {
       if(!WANT_BUDGET || !WANT_BUDGET_RANGE) return true;
-      const have = money(p.price);
+      const have = priceRange(p);
       if(!have) return false;
       return have[0] <= WANT_BUDGET_RANGE[1] && have[1] >= WANT_BUDGET_RANGE[0];
     };
@@ -2222,11 +2256,18 @@
               <p class="col-desc">${p.blurb || ''}</p>
               ${p.soldOut ? `<img class="col-sold" src="assets/sold-out.png" alt="Sold out" loading="lazy" decoding="async">` : ''}
               ${(p.sizes && p.sizes.length)
-                ? `<div class="col-meta col-sizes">${p.sizes.map(z =>
-                    `<div>${AREA}<b>${z.area || ''}</b><span class="for">for</span>${BED}<b>${z.config || ''}</b></div>`
-                  ).join('')}</div>`
+                ? `<div class="col-meta col-sizes">${p.sizes.map(z => {
+                    /* the area is optional now — a configuration can be
+                       priced without a size being quoted, and then the row is
+                       just the flat type rather than an empty "for" sentence */
+                    const line = z.area
+                      ? `${AREA}<b>${z.area}</b><span class="for">for</span>${BED}<b>${z.config || ''}</b>`
+                      : `${BED}<b>${z.config || ''}</b>`;
+                    return `<div><span class="zl">${line}</span>${
+                      z.price ? `<span class="zp">${z.price}</span>` : ''}</div>`;
+                  }).join('')}</div>`
                 : `<div class="col-meta"><div>${BED}${p.config || ''}</div><div>${AREA}${p.area || ''}</div></div>`}
-              ${p.price ? `<div class="col-price">${p.price}</div>` : ''}
+              ${(p.price && !rowPrices(p).length) ? `<div class="col-price">${p.price}</div>` : ''}
               <a class="col-details" href="${detailHref(p)}" data-hover>View Details<i class="arw"></i></a>
             </div>
           </article>`).join('');

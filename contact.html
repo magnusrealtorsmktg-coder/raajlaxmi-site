@@ -1229,7 +1229,15 @@
      being readable at a card's width. `flex-wrap` lets a long row break
      after the area rather than pushing the card out of its track. */
   .col-meta.col-sizes{flex-direction:column;align-items:flex-start;gap:.5rem;}
-  .col-meta.col-sizes > div{gap:.42rem;flex-wrap:wrap;}
+  /* A ROW IS NOW TWO LINES: the size, and under it that configuration's own
+     price. Stacked rather than run together, because "315 – 373 Sq. Ft. for
+     1 BHK ₹42 Lacs Onwards" reads as one sentence and is not one — and at a
+     311px card the two would wrap into each other anyway. `.zl` carries the
+     flex row the icons need; the parent cannot, now that it is a column. */
+  .col-meta.col-sizes > div{flex-direction:column;align-items:flex-start;gap:.22rem;}
+  .col-meta.col-sizes .zl{display:flex;align-items:center;gap:.42rem;flex-wrap:wrap;}
+  .col-meta.col-sizes .zp{font-weight:600;font-size:.8rem;letter-spacing:.01em;
+    color:var(--gold-deep);}
   .col-meta.col-sizes b{font-weight:600;}
   .col-meta .for{color:var(--body);font-weight:300;}
   .col-details{display:inline-flex;align-items:center;gap:.6rem;margin-top:1.1rem;
