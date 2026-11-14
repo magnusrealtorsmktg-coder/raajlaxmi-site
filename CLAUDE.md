@@ -223,8 +223,8 @@ two queries in the same session.
 | Client photo slider | **8 photographs** — the block is live now, no longer hidden |
 | Owners | **5 real people, each with a portrait and a role; no bios.** The card runs name + role and the panel is where a bio would show |
 | Social handles | **YouTube, WhatsApp, Instagram.** Facebook, LinkedIn and X are unset, so they do not render |
-| Hero background | the desktop film; `heroVideoMobile` is **still empty**, so phones use the committed `assets/hero-mobile.mp4` fallback |
-| Hero dropdowns | `heroButton` **Discover Your Space**; `heroPropertyOptions` 1 BHK / 2 BHK / 3 BHK / Jodi Flats / Office / Shops (the last three match nothing); `heroBudgetOptions` five bands (all match nothing — no project has a price); `heroLocationOptions` the four towns, **now painted on the page** — the derivation that was overwriting them was removed on 9 Nov |
+| Hero background | the desktop film. `heroVideoMobile` is **empty on the published document**, so phones still use the committed `assets/hero-mobile.mp4` fallback — **but a portrait film is sitting in `drafts.homepage`, unpublished**, along with a swapped About video. See *The homepage has an unpublished draft, and it is holding two videos* |
+| Hero dropdowns | `heroButton` **Discover Your Space**; `heroPropertyOptions` 1 BHK / 2 BHK / 3 BHK / Jodi Flats / Office / Shops (the last three match nothing); `heroBudgetOptions` **six bands since 14 Nov** — ₹18–25, ₹25–35, ₹35–45, ₹45–65, ₹65–80, ₹80 Lacs + — the second added to close a gap, and the top two match nothing because nothing is priced above ₹60 Lacs; `heroLocationOptions` the four towns, **now painted on the page** — the derivation that was overwriting them was removed on 9 Nov |
 
 **THE BROCHURES ARE NOT LINEARISED — none of the four.** Checked by reading the
 first 2KB of each: no `/Linearized`. The asset CDN answers range requests, so a
@@ -235,6 +235,39 @@ filename, so the client did act on the size advice; Nakshatra Auris did not.
 Re-saving with Fast Web View, or `qpdf --linearize`, fixes this without
 touching the content. They serve `content-type: application/pdf` and
 `content-disposition: inline`, so they do open in the browser as intended.
+
+### The homepage has an unpublished draft, and it is holding two videos
+
+Found on 14 Nov while adding the budget band, and **it is the reason that
+write went to the wrong document first**. `drafts.homepage` exists, was last
+touched at 14:37 that day, and differs from the published document in three
+fields — one of which was the band, which is now on both.
+
+**THE OTHER TWO ARE THE CLIENT'S, AND THEY ARE NOT LIVE:**
+
+| field | published | draft |
+|---|---|---|
+| `heroVideoMobile` | **unset** | `file-672c74bc…-mp4` |
+| `aboutVideo` | `file-b733e6e3…-mp4` | `file-49023557…-mp4` (a different file) |
+
+- **`heroVideoMobile` has been uploaded and never published.** Every note in
+  here saying it is "still empty" is describing the *published* document and
+  is correct about what the site serves — phones are still falling back to the
+  committed `assets/hero-mobile.mp4` — but it is wrong to conclude nobody has
+  supplied one. Somebody did. One press of **Publish** puts it live.
+- **The About video has been swapped in the draft too**, so publishing the
+  mobile hero publishes that as well. They go together, which is why this was
+  left for the client rather than published from a script.
+
+**THE TRAP THIS REVEALED, AND IT WILL BITE AGAIN.** A token-authenticated
+`*[_type=="homepage"][0]` returns the DRAFT when one exists. The first cut of
+`add-budget-band.mjs` did exactly that, patched `drafts.homepage`, and printed
+"written to drafts.homepage" — a success message for a change the live site
+could not see. **Any script that writes a singleton must address it by `_id`**,
+and should patch `drafts.<id>` as well so the change survives the next Publish.
+That is what the script does now. The public API cannot see drafts at all, so
+a `curl` check of the published value is the honest confirmation — this is the
+third time drafts have shadowed the live site on this project.
 
 ### Aarvi Apartment was taken off the site
 
@@ -2437,14 +2470,25 @@ two prices for two flat types", which is the same question from the other end.
   | ₹65 – 80 Lacs | none (nothing is priced there) |
   | ₹80 Lacs + | none |
 
-- **PRITI DARPAN NOW MATCHES NO BAND AT ALL, and that is the band list's
-  fault, not the parser's.** It is "26 Lacs Onwards" — one price, no
-  configurations — so its range is a point at ₹26L, and **`heroBudgetOptions`
-  jumps from `₹18 – 25 Lacs` to `₹35 – 45 Lacs`**. Nothing covers ₹25–35 Lacs,
-  so a project priced in that gap is unreachable by budget. Adding a
-  `₹25 – 35 Lacs` option in the Studio fixes it with no code change; pricing
-  Darpan per configuration would too. **Check this whenever the bands are
-  edited** — they are free text and nothing makes them contiguous.
+- ~~**PRITI DARPAN MATCHES NO BAND AT ALL**~~ — **fixed the same day by adding
+  the missing band**, not by touching code. It is "26 Lacs Onwards" with no
+  configurations, so its range is a point at ₹26L, and `heroBudgetOptions`
+  jumped straight from `₹18 – 25 Lacs` to `₹35 – 45 Lacs`: nothing covered
+  ₹25–35 Lacs and anything priced in that gap was unreachable by budget.
+  `scripts/add-budget-band.mjs` inserted `₹25 – 35 Lacs` in place. **All six
+  priced projects are now reachable by at least one band**, measured live:
+
+  | band | returns |
+  |---|---|
+  | ₹18 – 25 Lacs | Priti Chaaya, Priti Pearrl |
+  | ₹25 – 35 Lacs | Priti Darpan, Priti Pearrl, Shakun Solitaire |
+  | ₹35 – 45 Lacs | Tower, Apartment, Shakun Solitaire |
+  | ₹45 – 65 Lacs | Tower, Apartment, Shakun Solitaire |
+  | ₹65 – 80 Lacs, ₹80 Lacs + | none — nothing is priced above ₹60 Lacs |
+
+  **THE BANDS ARE FREE TEXT AND NOTHING MAKES THEM CONTIGUOUS.** Re-check for
+  a gap whenever they are edited; a project priced into one simply vanishes
+  from the filter, silently and with no error.
 - **`scripts/split-prices.mjs` migrates the six existing strings** into the
   rows. **It has not been run**: it writes to live content, so it is the
   client's call. It is non-destructive (the free-text `price` is left unless
