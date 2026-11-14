@@ -82,6 +82,7 @@
       '  name,status,category,location,config,price,overview,address,\n' +
       '  heroEyebrow,heroHeading,heroText,highlightsTitle,phone,\n' +
       '  "brochure":brochure.asset->{url,size,originalFilename},\n' +
+      '  "walkthrough":walkthrough.asset->{url,size,mimeType},\n' +
       '  "slug":slug.current,\n' +
       '  specs[]{label,value},\n' +
       '  amenities[]{icon,label},\n' +
@@ -1216,6 +1217,24 @@
     border-top:1px solid currentColor;border-right:1px solid currentColor;transform:rotate(45deg);}
   .col-card:hover .col-details .arw{transform:translateX(5px);}
 
+  /* The footer row: View Details on the left, the SOLD OUT stamp on the
+     right when the project carries one. A flex row rather than the link on
+     its own, so the stamp has somewhere to sit without being positioned out
+     of the flow — the card's height is content-driven and an absolute stamp
+     would overlap whatever the CMS put above it.
+
+     `margin-top` moves from .col-details to this row, or a card with no
+     stamp would lose its gap. */
+  .col-cfoot{display:flex;align-items:center;justify-content:space-between;
+    gap:.8rem;margin-top:1.1rem;}
+  .col-cfoot .col-details{margin-top:0;}
+  /* 32% of the card, which is the proportion the client marked on their
+     screenshot (209px of a 656px card). Floored so it stays legible on a
+     one-column phone and capped so it does not become a placard on a wide
+     card; the ratio is the artwork's own, so a re-crop means changing it. */
+  .col-sold{flex:none;width:clamp(84px,32%,132px);height:auto;
+    aspect-ratio:753/242;object-fit:contain;}
+
   /* ---- pagination ---- */
   .col-page{display:flex;justify-content:center;align-items:center;gap:.6rem;
     margin-top:clamp(2.5rem,4vw,3.5rem);
@@ -1487,11 +1506,55 @@
     transition:background-color .45s var(--lux),color .45s var(--lux),
                border-color .45s var(--lux),transform .45s var(--lux);}
   .pd-btn:hover{transform:translateY(-2px);}
+  /* THE LABEL MAY WRAP; THE ARROW MAY NOT. `.pd-btn` is nowrap so the arrow
+     never drops to its own line, but that also pinned the label, and
+     "Download Brochure (48 MB)" needs 228px in a 188px button at 1440 — the
+     text was clipped and the arrow pushed outside the button from 1280px up.
+     (Measured; it appeared when the label grew from "View Brochure" on
+     12 Nov.) The label wraps to a second line instead, and `min-width:0`
+     is what lets a flex item shrink below its content at all. */
+  .pd-btn > span{white-space:normal;min-width:0;}
   .pd-btn.gold{background:var(--gold);color:#fff;border:1px solid var(--gold);}
   .pd-btn.gold:hover{background:var(--gold-deep);border-color:var(--gold-deep);}
   .pd-btn.ghost{background:#fff;color:var(--charcoal);
     border:1px solid rgba(28,28,28,.16);}
   .pd-btn.ghost:hover{border-color:var(--gold);color:var(--gold-deep);}
+  /* The walkthrough spans the row rather than making a third column: at the
+     rail's width three buttons leave about 90px each, and "3D Walkthrough"
+     does not fit in that. Charcoal rather than gold so it does not compete
+     with the brochure, which is the button that collects a lead. */
+  .pd-btn.walk{grid-column:1/-1;background:var(--charcoal);color:#fff;
+    border:1px solid var(--charcoal);}
+  .pd-btn.walk:hover{background:#000;border-color:#000;}
+  .pd-btn.walk[hidden]{display:none;}
+
+  /* ---- the walkthrough player ----
+     z-index 950 puts it above the lead popup's 900. The popup also stands
+     down while this is open (it re-arms instead of being spent), so the two
+     should never meet — this is the belt to that braces. */
+  .pdw{position:fixed;inset:0;z-index:950;display:grid;place-items:center;
+    padding:clamp(1rem,3vw,2.5rem);}
+  .pdw[hidden]{display:none;}
+  .pdw-scrim{position:absolute;inset:0;background:rgba(10,14,22,.82);
+    backdrop-filter:blur(10px);}
+  @supports not ((backdrop-filter:blur(2px)) or (-webkit-backdrop-filter:blur(2px))){
+    .pdw-scrim{background:rgba(10,14,22,.95);}
+  }
+  .pdw-card{position:relative;width:min(1100px,100%);max-height:100%;
+    display:flex;flex-direction:column;}
+  .pdw-vid{width:100%;max-height:calc(100vh - 7rem);background:#000;
+    border-radius:14px;display:block;}
+  .pdw-x{position:absolute;right:-.2rem;top:-2.6rem;width:2.2rem;height:2.2rem;
+    display:grid;place-items:center;border:0;border-radius:50%;cursor:pointer;
+    background:rgba(255,255,255,.14);color:#fff;font-size:1.4rem;line-height:1;
+    transition:background .35s var(--lux);}
+  .pdw-x:hover{background:rgba(255,255,255,.28);}
+  html.pdw-open{overflow:hidden;}
+  @media (max-width:620px){
+    .pdw{padding:.8rem;}
+    .pdw-x{top:-2.3rem;right:0;}
+    .pdw-vid{max-height:calc(100vh - 6rem);}
+  }
   .pd-btn .arw{flex:none;opacity:.8;}
 
   .pd-contact{margin-top:clamp(1.6rem,2.4vw,2rem);padding-top:clamp(1.4rem,2vw,1.7rem);
@@ -1860,6 +1923,18 @@
         <div class="pd-am-grid" id="pdAmen"></div>
 
         <div class="pd-ctas">
+          <!-- Shown only when the project carries a walkthrough video; the
+               markup ships hidden and paint() reveals it. A button that is
+               always there and sometimes does nothing is worse than no
+               button, which is the same rule the direct line follows. -->
+          <button type="button" class="pd-btn walk" id="pdWalkBtn" hidden data-hover data-magnetic>
+            <span>3D Walkthrough</span>
+            <svg class="arw" width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="9.2" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M10.2 8.6l6 3.4-6 3.4z" stroke="currentColor" stroke-width="1.4"
+                    stroke-linejoin="round"/>
+            </svg>
+          </button>
           <!-- Clicking this opens the lead popup, which asks for a name, a
                phone number and an email before the brochure is handed over;
                see "THE BROCHURE ASKS FOR DETAILS FIRST" in the Section VI
@@ -1902,6 +1977,19 @@
      parity with the other five pages — drop the <footer class="ft"> markup
      back in to re-enable it. -->
 
+
+<!-- The 3D walkthrough player. Empty until the button is pressed: the
+     <video> carries no src, so a 50MB file is never fetched by a visitor who
+     does not ask for it, and clearing the src on close stops the download as
+     well as the playback. -->
+<div class="pdw" id="pdWalk" role="dialog" aria-modal="true" aria-label="3D walkthrough" hidden>
+  <div class="pdw-scrim" data-walk-close></div>
+  <div class="pdw-card">
+    <button type="button" class="pdw-x" data-walk-close aria-label="Close" data-hover>&times;</button>
+    <video id="pdWalkVid" class="pdw-vid" controls playsinline preload="none"
+           controlslist="nodownload"></video>
+  </div>
+</div>
 
 <!-- Lead popup. Opens 30s into a visit; see the LEAD POPUP IIFE at the end of
      the trailing script. This markup sits *before* that script so the shared
@@ -2036,6 +2124,7 @@
        falls through to the markup href if the popup is not on the page
        for any reason, so the button can never become inert. */
     let BROCHURE = null;                       // {url,size} once the CMS answers
+    let WALKTHROUGH = null;                    // {url,size,mimeType} likewise
     const brochBtn = sec.querySelector('.pd-btn.gold');
     if(brochBtn) brochBtn.addEventListener('click', e => {
       if(!(window.RL && RL.lead && RL.lead.open)) return;
@@ -2063,6 +2152,50 @@
       });
     });
 
+    /* --- the 3D walkthrough player ---------------------------------------
+       The <video> has NO src until the button is pressed, and the src is
+       cleared again on close. That is the whole design: a walkthrough can be
+       50MB+, and `preload="none"` alone still leaves the browser free to
+       start fetching the moment a src exists. Clearing it on close also
+       stops an in-flight download, which merely pausing does not. */
+    (function(){
+      const modal = document.getElementById('pdWalk'),
+            btn   = document.getElementById('pdWalkBtn'),
+            vid   = document.getElementById('pdWalkVid');
+      if(!modal || !btn || !vid) return;
+      const root = document.documentElement;
+      const slow = matchMedia('(prefers-reduced-motion: reduce)');
+      let lastFocus = null;
+
+      function onKey(e){ if(e.key === 'Escape'){ e.preventDefault(); close(); } }
+
+      function open(){
+        if(!WALKTHROUGH || !WALKTHROUGH.url) return;
+        lastFocus = document.activeElement;
+        vid.src = WALKTHROUGH.url;
+        modal.hidden = false;
+        root.classList.add('pdw-open');
+        addEventListener('keydown', onKey, true);
+        /* An overlay the visitor just asked for should start playing. Under
+           prefers-reduced-motion it waits for the play button instead, and a
+           refused autoplay is not an error worth surfacing. */
+        if(!slow.matches){ const go = vid.play(); if(go && go.catch) go.catch(() => {}); }
+        setTimeout(() => { try{ modal.querySelector('.pdw-x').focus({preventScroll:true}); }catch(err){} }, 40);
+      }
+      function close(){
+        if(modal.hidden) return;
+        try{ vid.pause(); }catch(err){}
+        vid.removeAttribute('src');
+        vid.load();                       // drops the buffer and any in-flight fetch
+        modal.hidden = true;
+        root.classList.remove('pdw-open');
+        removeEventListener('keydown', onKey, true);
+        try{ lastFocus?.focus({preventScroll:true}); }catch(err){}
+      }
+      btn.addEventListener('click', open);
+      modal.querySelectorAll('[data-walk-close]').forEach(el => el.addEventListener('click', close));
+    })();
+
     /* --- marks ----------------------------------------------------------- */
     const S = (d,vb='0 0 24 24') =>
       `<svg width="22" height="22" viewBox="${vb}" fill="none" aria-hidden="true">
@@ -2078,7 +2211,17 @@
       parking:  S('<path d="M4 17V9l2-4h12l2 4v8M4 17h3M17 17h3M7 13h10M7.5 9.5h9"/>'),
       security: S('<path d="M12 3l8 3v6c0 4.4-3.2 7.6-8 9-4.8-1.4-8-4.6-8-9V6z"/><path d="M9 12l2 2 4-4"/>'),
       lift:     S('<path d="M5 3h14v18H5zM12 3v18M9 8l-1.5 2h3zM15 16l1.5-2h-3z"/>'),
-      power:    S('<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>')
+      power:    S('<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>'),
+      /* Added 14 Nov with the four new amenity options in the Studio. Keys
+         MUST match studio/schemaTypes/project.js exactly: the filter below
+         drops any amenity whose icon this map does not know, silently. */
+      gazebo:   S('<path d="M12 3L3.5 9.5h17zM6 9.5V20M18 9.5V20M4.5 20h15M9 13.5h6"/>'),
+      indoor:   S('<path d="M4 4h16v16H4zM4 9.33h16M4 14.67h16M9.33 4v16M14.67 4v16"/>' +
+                  '<circle cx="6.7" cy="6.7" r="1"/><circle cx="17.3" cy="17.3" r="1"/>'),
+      landscape:S('<path d="M3 20h18M8.5 20v-4.5"/><circle cx="8.5" cy="12" r="3.5"/>' +
+                  '<path d="M13.5 20c0-2.4 1.9-4.3 4.2-4.3s4.2 1.9 4.2 4.3"/>'),
+      green:    S('<path d="M5 19c0-8 5.5-14 15-14 0 9.5-6 15-15 14z"/>' +
+                  '<path d="M5.5 19.5C8 15 12 11 16.5 8.5"/>')
     };
     /* the fact bar's four marks, keyed by position rather than by label so a
        Sanity spec list of any wording still gets sensible iconography */
@@ -2192,6 +2335,15 @@
          CDN also answers range requests, which is what lets a viewer show
          page one of a large PDF without fetching the whole thing first —
          provided the PDF was saved linearised. */
+      /* The 3D walkthrough. The button is revealed only when there is a
+         file to play; WALKTHROUGH is read at click time by the player wired
+         further up, so nothing here has to know how it opens. */
+      if(DOC.walkthrough && DOC.walkthrough.url){
+        WALKTHROUGH = DOC.walkthrough;
+        const wb = document.getElementById('pdWalkBtn');
+        if(wb) wb.hidden = false;
+      }
+
       const broch = sec.querySelector('.pd-btn.gold'),
             pdf   = DOC.brochure;
       if(broch && pdf && pdf.url){
@@ -2619,7 +2771,17 @@
         });
     });
 
-    if(autoOK) setTimeout(open, wait);
+    /* Not on top of something the visitor deliberately opened. The 3D
+       walkthrough player on project.html marks the document `pdw-open`;
+       the class never appears on the other pages, which costs nothing and
+       keeps this block identical across them. Nothing is marked seen while
+       it waits, so the popup is deferred rather than spent. */
+    if(autoOK) (function arm(ms){
+      setTimeout(() => {
+        if(document.documentElement.classList.contains('pdw-open')) return arm(4000);
+        open();
+      }, ms);
+    })(wait);
   })();
 
   /* ============ SITE SETTINGS (Sanity) ============ */

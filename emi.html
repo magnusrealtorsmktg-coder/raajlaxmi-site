@@ -1196,6 +1196,24 @@
     border-top:1px solid currentColor;border-right:1px solid currentColor;transform:rotate(45deg);}
   .col-card:hover .col-details .arw{transform:translateX(5px);}
 
+  /* The footer row: View Details on the left, the SOLD OUT stamp on the
+     right when the project carries one. A flex row rather than the link on
+     its own, so the stamp has somewhere to sit without being positioned out
+     of the flow — the card's height is content-driven and an absolute stamp
+     would overlap whatever the CMS put above it.
+
+     `margin-top` moves from .col-details to this row, or a card with no
+     stamp would lose its gap. */
+  .col-cfoot{display:flex;align-items:center;justify-content:space-between;
+    gap:.8rem;margin-top:1.1rem;}
+  .col-cfoot .col-details{margin-top:0;}
+  /* 32% of the card, which is the proportion the client marked on their
+     screenshot (209px of a 656px card). Floored so it stays legible on a
+     one-column phone and capped so it does not become a placard on a wide
+     card; the ratio is the artwork's own, so a re-crop means changing it. */
+  .col-sold{flex:none;width:clamp(84px,32%,132px);height:auto;
+    aspect-ratio:753/242;object-fit:contain;}
+
   /* ---- pagination ---- */
   .col-page{display:flex;justify-content:center;align-items:center;gap:.6rem;
     margin-top:clamp(2.5rem,4vw,3.5rem);
@@ -2514,7 +2532,17 @@
         });
     });
 
-    if(autoOK) setTimeout(open, wait);
+    /* Not on top of something the visitor deliberately opened. The 3D
+       walkthrough player on project.html marks the document `pdw-open`;
+       the class never appears on the other pages, which costs nothing and
+       keeps this block identical across them. Nothing is marked seen while
+       it waits, so the popup is deferred rather than spent. */
+    if(autoOK) (function arm(ms){
+      setTimeout(() => {
+        if(document.documentElement.classList.contains('pdw-open')) return arm(4000);
+        open();
+      }, ms);
+    })(wait);
   })();
 
   /* ============ SITE SETTINGS (Sanity) ============ */

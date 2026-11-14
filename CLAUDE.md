@@ -641,9 +641,11 @@ that card.
   of all three files, and the field itself from `studio/schemaTypes/project.js`.
   `studio/scripts/mark-sold-out.mjs` was deleted — it set a field that no
   longer exists.
-- **`assets/sold-out.png` (506x294, 24KB) is now referenced by nothing** and
-  still ships. It is the client's artwork, so it was left rather than deleted,
-  the same call as `seal-top.png`; `git rm` is all it takes.
+- ~~**`assets/sold-out.png` is referenced by nothing**~~ — **it is back, and
+  it is a different file** (14 Nov). See *SOLD OUT returns, in the card's
+  footer*. The old tilted stamp was replaced by the client's new horizontal
+  one, keyed out of its white ground the same way `oc-received.png` was;
+  `git show HEAD~1:assets/sold-out.png` recovers the tilted one.
 - **REMOVING THE FIELD FROM THE SCHEMA DOES NOT REMOVE IT FROM THE DOCUMENTS.**
   Seven projects still carry `soldOut: true`, and a value with no field behind
   it shows as an "unknown field" warning on every edit in the Studio.
@@ -667,6 +669,77 @@ overflow and no console exception anywhere. **`loading="lazy"` means a probe
 that measures in the same tick as its own `scrollIntoView` reports
 `naturalWidth === 0`** — that is the harness, not the badge; wait a beat and
 all four read loaded.
+
+### SOLD OUT returns, in the card's footer
+
+Asked for on 14 Nov. **It is not the feature that was removed on 9 Nov**, and
+the difference matters:
+
+| | the old one | this one |
+|---|---|---|
+| where | over the photograph | in the card footer, beside View Details |
+| ordering | pushed the card to the foot of the list | **no effect on order at all** |
+| artwork | tilted stamp, 506x294 | the client's horizontal stamp, 753x242 |
+
+- **`soldOut` is a plain boolean on `project` again**, `initialValue:false`.
+  It had been removed from the schema AND `retire-sold-out.mjs` has since been
+  run, so **no document carried a stale `true`** — nothing lit up on its own
+  when the field came back. Verified against the live dataset before writing
+  the field: zero documents with `soldOut` defined.
+- **The stamp lives in `.col-cfoot`**, a flex row that now holds View Details
+  and the stamp. The link's `margin-top` moved onto that row, or a card with
+  no stamp would lose its gap. In the flow rather than positioned, because
+  card height is content-driven and an absolute stamp would land on whatever
+  the CMS put above it.
+- **`clamp(84px,32%,132px)`** — 32% is the proportion the client marked on
+  their screenshot (209px of a 656px card). Measured after: 27.6–32.4% of the
+  card from 1440 down to 360, no card spilling its box at any width.
+- **The artwork was keyed out, not thresholded.** The supplied file is opaque
+  red-on-white; colour-to-alpha against white un-composites the anti-aliased
+  edges instead of leaving a halo. Same treatment, and the same verification,
+  as `assets/oc-received.png`.
+- **CSS in all twelve files, markup and GROQ in the three collection pages**,
+  the usual split for `.col-*`.
+
+### The 3D walkthrough
+
+A `walkthrough` video on a `project` puts a **3D Walkthrough** button on its
+detail page, which plays the file in an overlay. No video, no button — the
+same rule the direct line follows, because a button that is sometimes inert
+is worse than no button.
+
+- **THE `<video>` HAS NO `src` UNTIL THE BUTTON IS PRESSED**, and the src is
+  cleared again on close. This is the whole design. A walkthrough can be 50MB+
+  and `preload="none"` alone still lets the browser fetch once a src exists.
+  Measured: **zero requests for the file until the click**, one after it.
+  Clearing the src on close also stops an in-flight download, which pausing
+  does not.
+- **It autoplays, except under `prefers-reduced-motion`**, where it waits for
+  the play button. A refused autoplay is caught and ignored — there is nothing
+  to tell the visitor.
+- **The button spans the CTA row** (`grid-column:1/-1`). Three buttons across
+  that rail leave about 90px each and "3D Walkthrough" does not fit. Charcoal,
+  not gold, so it does not compete with the brochure, which is the button that
+  collects a lead.
+- **The lead popup stands down while the player is open.** It marks the
+  document `pdw-open` and the popup's timer re-arms every 4s instead of
+  firing, spending nothing — the same handshake `index.html` already had for
+  the owner panel. **That re-arm went into all twelve files**, so the block
+  stays identical across the eleven; the class simply never appears on the
+  other ten. Verified: held back while open, `rl-lead-seen` still unset,
+  popup arrives once the player closes.
+- **The size rule is a warning above 150MB**, never a block, and is a copy of
+  the brochure's rule for the same reason: the size is not in the asset
+  reference, so it has to be fetched, and a slow lookup must not stop a
+  publish.
+
+**`.pd-btn > span` may now wrap.** `.pd-btn` is `white-space:nowrap` so the
+arrow never drops to its own line — but that pinned the label too, and
+**"Download Brochure (18 MB)" needed 228px in a 188px button at 1440**, so the
+text was clipped and the arrow pushed outside the button from 1280px up. That
+was introduced on 12 Nov when the label grew from "View Brochure", and it was
+live. The label wraps to a second line now; `min-width:0` is what lets a flex
+item shrink below its content at all. Measured clean at 1920 → 390.
 
 **The town filter is a capsule of four towns, not a chip per sub-locality.**
 It used to key off the part of `location` BEFORE the first comma, which is a

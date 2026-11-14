@@ -93,17 +93,25 @@ export default {
         'Set it when the badge should read something the listing does not, e.g. a ' +
         'Completed project whose badge should say "Ready Possession".',
     },
-    /* THE `soldOut` TICK-BOX IS GONE (9 Nov, the client's request). It was a
-       boolean that dropped a card to the foot of the collection under a SOLD
-       OUT stamp; the stamp has been replaced on every card by the OC RECEIVED
-       mark, which is not a per-project flag, so the field had nothing left to
-       drive.
+    /* `soldOut` IS BACK (14 Nov, the client's request), but it is not what it
+       was. The old one hung a stamp over the photograph and pushed the card to
+       the foot of the collection; this one only puts the stamp in the card's
+       footer, beside View Details. THE ORDER OF THE COLLECTION IS UNCHANGED —
+       a sold-out project stays exactly where `order` puts it.
 
-       REMOVING IT FROM THE SCHEMA DOES NOT REMOVE IT FROM THE DOCUMENTS. Seven
-       projects still carry `soldOut: true` and the Studio shows an "unknown
-       field" warning on each of them until it is unset.
-       `scripts/retire-sold-out.mjs` does that; it is idempotent and takes
-       `--dry`. Run it, then redeploy the Studio. */
+       It was removed on 9 Nov and `scripts/retire-sold-out.mjs` has since been
+       run, so every document starts clean: no project carries a stale `true`
+       and nothing lights up on its own. */
+    {
+      name: 'soldOut',
+      title: 'Sold out',
+      type: 'boolean',
+      initialValue: false,
+      description:
+        'Puts the SOLD OUT stamp in the corner of this project\u2019s card, next to ' +
+        'View Details. It changes nothing else \u2014 the card keeps its place in the ' +
+        'list and its OC RECEIVED mark.',
+    },
     {
       name: 'category',
       title: 'Category',
@@ -232,6 +240,41 @@ export default {
          opens the PDF in the browser's own viewer rather than downloading a
          file nobody asked for. Add `?dl=name.pdf` to the URL if a forced
          download is ever wanted instead. */
+      name: 'walkthrough',
+      title: '3D walkthrough (video)',
+      type: 'file',
+      options: {accept: 'video/mp4,video/webm,video/quicktime'},
+      description:
+        'An MP4 walkthrough of the property. Attach one and a "3D Walkthrough" button ' +
+        'appears on the detail page, which plays it in an overlay; leave it empty and no ' +
+        'button is shown at all. Aim for 1080p and under 50MB \u2014 the file is streamed, ' +
+        'but every megabyte is counted against the monthly bandwidth allowance.',
+      fieldset: 'detail',
+      /* Same shape as the brochure's rule below, and the same reasoning: a
+         WARNING, never a block. The asset reference does not carry the size,
+         so this goes and asks for it, which is exactly why a slow or failed
+         lookup has to let the publish through. */
+      validation: (Rule) =>
+        Rule.custom(async (value, context) => {
+          const ref = value && value.asset && value.asset._ref;
+          if (!ref) return true;
+          let size = 0;
+          try {
+            size = await context
+              .getClient({apiVersion: '2024-01-01'})
+              .fetch('*[_id==$id][0].size', {id: ref});
+          } catch (e) {
+            return true;
+          }
+          const mb = size / 1048576;
+          return mb > 150
+            ? `This walkthrough is ${mb.toFixed(0)}MB. It will still play, but it is a long ` +
+              `wait on mobile data and a large slice of the monthly bandwidth \u2014 try to ` +
+              `get it under 50MB.`
+            : true;
+        }).warning(),
+    },
+    {
       name: 'brochure',
       title: 'Brochure (PDF)',
       type: 'file',
@@ -295,6 +338,10 @@ export default {
       type: 'array',
       description:
         'Shown with a line icon each. The first six appear on the detail page.',
+      // EVERY VALUE IN THE ICON LIST BELOW MUST ALSO EXIST IN `ICON` IN
+      // project.html. That page does `.filter(a => ICON[a.icon])`, so an
+      // amenity whose icon key it does not know is dropped silently — it
+      // never appears and nothing errors. Add to both lists or to neither.
       fieldset: 'detail',
       of: [
         {
@@ -316,6 +363,10 @@ export default {
                   {title: 'Security', value: 'security'},
                   {title: 'Lift', value: 'lift'},
                   {title: 'Power backup', value: 'power'},
+                  {title: 'Gazebo', value: 'gazebo'},
+                  {title: 'Indoor games', value: 'indoor'},
+                  {title: 'Landscaped garden', value: 'landscape'},
+                  {title: 'Common green space', value: 'green'},
                 ],
               },
               validation: (R) => R.required(),

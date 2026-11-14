@@ -81,7 +81,7 @@
     /* every published property -- the cards, the city chips and the banner
        hotspots are all built from this one answer */
     projects: '*[_type=="project"]|order(order asc,_createdAt asc){\n' +
-      '  name,stage,stages,status,category,location,blurb,config,area,price,detailUrl,\n' +
+      '  name,stage,stages,status,category,location,blurb,config,area,price,detailUrl,soldOut,\n' +
       '  "slug":slug.current,"imageUrl":image.asset->url\n' +
       '}',
 
@@ -1260,6 +1260,24 @@
     border-top:1px solid currentColor;border-right:1px solid currentColor;transform:rotate(45deg);}
   .col-card:hover .col-details .arw{transform:translateX(5px);}
 
+  /* The footer row: View Details on the left, the SOLD OUT stamp on the
+     right when the project carries one. A flex row rather than the link on
+     its own, so the stamp has somewhere to sit without being positioned out
+     of the flow — the card's height is content-driven and an absolute stamp
+     would overlap whatever the CMS put above it.
+
+     `margin-top` moves from .col-details to this row, or a card with no
+     stamp would lose its gap. */
+  .col-cfoot{display:flex;align-items:center;justify-content:space-between;
+    gap:.8rem;margin-top:1.1rem;}
+  .col-cfoot .col-details{margin-top:0;}
+  /* 32% of the card, which is the proportion the client marked on their
+     screenshot (209px of a 656px card). Floored so it stays legible on a
+     one-column phone and capped so it does not become a placard on a wide
+     card; the ratio is the artwork's own, so a re-crop means changing it. */
+  .col-sold{flex:none;width:clamp(84px,32%,132px);height:auto;
+    aspect-ratio:753/242;object-fit:contain;}
+
   /* ---- consultation strip ---- */
   .col-cta{display:grid;grid-template-columns:auto 1fr auto;align-items:center;
     gap:clamp(1.5rem,3.5vw,3.5rem);margin-top:clamp(3.5rem,6vw,5.5rem);
@@ -2064,7 +2082,10 @@
               <p class="col-desc">${p.blurb || ''}</p>
               <div class="col-meta"><div>${BED}${p.config || ''}</div><div>${AREA}${p.area || ''}</div></div>
               ${p.price ? `<div class="col-price">${p.price}</div>` : ''}
-              <a class="col-details" href="${detailHref(p)}" data-hover>View Details<i class="arw"></i></a>
+              <div class="col-cfoot">
+                <a class="col-details" href="${detailHref(p)}" data-hover>View Details<i class="arw"></i></a>
+                ${p.soldOut ? `<img class="col-sold" src="assets/sold-out.png" alt="Sold out" loading="lazy" decoding="async">` : ''}
+              </div>
             </div>
           </article>`).join('');
         /* re-trigger card reveal if section already in view */
@@ -2418,7 +2439,17 @@
         });
     });
 
-    if(autoOK) setTimeout(open, wait);
+    /* Not on top of something the visitor deliberately opened. The 3D
+       walkthrough player on project.html marks the document `pdw-open`;
+       the class never appears on the other pages, which costs nothing and
+       keeps this block identical across them. Nothing is marked seen while
+       it waits, so the popup is deferred rather than spent. */
+    if(autoOK) (function arm(ms){
+      setTimeout(() => {
+        if(document.documentElement.classList.contains('pdw-open')) return arm(4000);
+        open();
+      }, ms);
+    })(wait);
   })();
 
   /* ============ LISTING PAGE CONTENT (Sanity) ============ */
