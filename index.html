@@ -1263,9 +1263,40 @@
   .why-ev::before{content:"";position:absolute;left:calc(-2.4rem + 5.75px);top:.5rem;
     width:11px;height:11px;border-radius:50%;background:var(--gold);
     box-shadow:0 0 0 4px #F4F1EA;transform:translateX(-50%);}
+  /* THE RAIL PRINTS A YEAR AND A NAME, NOT THE ACCOUNT (14 Nov, the client's
+     request). The copy in the CMS runs 55-115 words an entry and there are
+     five of them, so down this 35fr column the timeline WAS the right-hand
+     half of the section. Measured at 1440x900: the rail stood 1845px against
+     the 721px editorial list beside it and so set the whole grid's height,
+     315 words of it. It is 552px and 10 words now, the grid is the list's
+     721px, and Section IV lost 1,125px of scroll (3167 -> 2042). The prose
+     moved into `.wtl`, the landscape panel, and each entry became the button
+     that opens it. */
+  .why-ev .why-evb{display:block;width:100%;padding:0;border:0;background:none;
+    font:inherit;color:inherit;text-align:left;cursor:pointer;
+    transition:transform .5s var(--lux);}
+  .why-ev .why-evb:hover,.why-ev .why-evb:focus-visible{transform:translateX(4px);}
+  .why-ev .why-evb:focus-visible{outline:2px solid var(--gold);outline-offset:7px;
+    border-radius:5px;}
   .why-ev .yr{font-family:"Inter",sans-serif;font-weight:700;font-size:1.35rem;
     letter-spacing:.005em;color:var(--gold);line-height:1;margin-bottom:.7rem;}
-  .why-ev .tt{font-size:.98rem;line-height:1.55;color:var(--ink);font-weight:400;}
+  .why-ev .tt{display:flex;align-items:baseline;gap:.5rem;
+    font-size:.98rem;line-height:1.55;color:var(--ink);font-weight:400;}
+  /* THE ARROW IS VISIBLE AT REST, not only on hover: a phone has no hover
+     state, so an affordance that waits for one does not exist there at all. */
+  .why-ev .tt .go{flex:none;font-family:"Inter",sans-serif;font-weight:400;
+    font-size:1.08rem;line-height:1;color:var(--gold);opacity:.5;
+    transition:opacity .4s var(--lux),transform .4s var(--lux);}
+  .why-ev .why-evb:hover .go,.why-ev .why-evb:focus-visible .go{opacity:1;transform:translateX(3px);}
+  .why-ev:hover::before{transform:translateX(-50%) scale(1.22);}
+  .why-ev::before{transition:transform .4s var(--lux);}
+  /* An entry the CMS left with nothing behind it is a line of text, not a
+     button that opens an empty panel - the same rule an unmatched banner
+     hotspot and a project with no walkthrough video already follow. */
+  .why-ev.bare .why-evb{cursor:default;}
+  .why-ev.bare .why-evb:hover{transform:none;}
+  .why-ev.bare:hover::before{transform:translateX(-50%);}
+  .why-ev.bare .tt .go{display:none;}
   /* the real pencil sketch, blended into the paper via multiply so only the
      drawn lines show — edges feathered so no rectangle is visible */
   .why-tower{position:absolute;right:-10%;bottom:0;width:72%;height:90%;
@@ -1341,6 +1372,180 @@
     .why-label::after,.why-time::before{transform:none !important;}
     .why-row .rline{transform:scaleY(1) !important;}
   }
+  /* ---- THE JOURNEY PANEL (.wtl) — the timeline turned on its side ---- */
+  /* What the client asked for: the rail shows the heading only, and clicking a
+     year opens "the landscape timeline with complete details". So this is the
+     same five milestones laid out ACROSS rather than down — the orientation is
+     the point, not decoration. A 60-115 word paragraph wants roughly 65
+     characters a line to read well, which is ~620px; the rail column is 332px
+     at 1440. Landscape is the only way the detail fits at a readable measure,
+     and it also puts the other four years in sight, so the panel is a way
+     through the story rather than a dead end per year.
+
+     `.wtl-*` IS INDEX-ONLY, like Section X's `.br-*` — Section IV's markup
+     exists nowhere else, so there is nothing to sync to the other eleven
+     files. (The `.why-*` rules above ARE in all twelve, inertly, because the
+     whole <head> block was copied once; do not read that as a reason to copy
+     these too.) */
+  html.wtl-open{overflow:hidden;}
+  /* same tier as the owner panel: above the nav (100), below the lead popup
+     (900) — which stands down while this is open rather than landing on it */
+  .wtl{position:fixed;inset:0;z-index:880;display:grid;place-items:center;
+    padding:clamp(.75rem,3.5vw,2.5rem);}
+  .wtl[hidden]{display:none;}
+  .wtl-scrim{position:absolute;inset:0;background:rgba(10,14,22,.52);
+    -webkit-backdrop-filter:blur(14px) saturate(.9);backdrop-filter:blur(14px) saturate(.9);
+    opacity:0;transition:opacity .45s var(--lux);}
+  @supports not ((backdrop-filter:blur(2px)) or (-webkit-backdrop-filter:blur(2px))){
+    .wtl-scrim{background:rgba(10,14,22,.94);}
+  }
+  .wtl.on .wtl-scrim{opacity:1;}
+
+  .wtl-card{position:relative;z-index:1;overflow:hidden;
+    display:flex;flex-direction:column;
+    width:min(1120px,95vw);background:#FBF8F3;border-radius:26px;
+    padding:clamp(1.3rem,2.6vw,2.4rem);
+    border:1px solid rgba(203,169,107,.34);
+    box-shadow:0 60px 120px -50px rgba(14,18,26,.72);
+    opacity:0;transform:translateY(20px) scale(.965);
+    transition:opacity .5s var(--lux) .08s,transform .6s var(--lux) .08s;}
+  .wtl.on .wtl-card{opacity:1;transform:none;}
+
+  /* the blossom corner, dropped in with multiply because the file has no alpha
+     channel — the same idiom as `.owd-art` and `.col-decor` */
+  .wtl-art{position:absolute;top:0;right:0;z-index:0;pointer-events:none;
+    width:clamp(150px,26%,280px);aspect-ratio:760/424;
+    background:url('assets/project-floral-right.png') no-repeat right top/contain;
+    opacity:.42;mix-blend-mode:multiply;
+    -webkit-mask-image:radial-gradient(78% 88% at 84% 18%,#000 36%,transparent 82%);
+            mask-image:radial-gradient(78% 88% at 84% 18%,#000 36%,transparent 82%);}
+
+  .wtl-label{position:relative;z-index:1;font-family:"Inter",sans-serif;
+    font-weight:600;font-size:clamp(.62rem,.74vw,.72rem);letter-spacing:.2em;
+    text-transform:uppercase;color:var(--gold);padding-right:3rem;}
+
+  /* ---- the landscape rail ---- */
+  .wtl-years{position:relative;z-index:1;display:flex;gap:0;
+    margin-top:clamp(1.1rem,2.2vw,1.7rem);
+    overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;}
+  .wtl-years::-webkit-scrollbar{display:none;}
+  /* EQUAL WIDTHS ARE LOAD-BEARING, not tidiness. The gold line is drawn as a
+     segment per year (`::before`, from -50% to 50%), which lands on the
+     previous dot's centre only while every year is the same width — with
+     `flex-basis:auto` the segments miss by half the difference in the two
+     names' lengths and the rail reads as a broken line. The segments are what
+     let the line scroll with the years and stop at the first and last dot;
+     one line on the scroll container could do neither. */
+  .wtl-yr{position:relative;flex:1 0 clamp(96px,14%,154px);
+    display:grid;gap:.55rem;justify-items:center;align-content:start;
+    text-align:center;padding:.9rem .5rem 1rem;border:0;background:none;
+    font:inherit;color:inherit;cursor:pointer;border-radius:14px;
+    transition:background .35s var(--lux);}
+  .wtl-yr::before{content:"";position:absolute;top:calc(.9rem + 5px);
+    left:-50%;right:50%;height:1.5px;background:rgba(201,161,90,.45);}
+  .wtl-yr:first-child::before{display:none;}
+  .wtl-yr .dot{position:relative;z-index:1;width:11px;height:11px;
+    border-radius:50%;background:#FBF8F3;border:1.5px solid var(--gold);
+    transition:background .35s var(--lux),transform .35s var(--lux),box-shadow .35s var(--lux);}
+  .wtl-yr .y{font-family:"Inter",sans-serif;font-weight:700;
+    font-size:clamp(.94rem,1.1vw,1.08rem);letter-spacing:.01em;
+    line-height:1;color:var(--gold);}
+  .wtl-yr .n{font-family:"Inter",sans-serif;font-weight:400;
+    font-size:clamp(.7rem,.78vw,.78rem);line-height:1.4;color:var(--body);
+    opacity:.7;transition:opacity .35s var(--lux),color .35s var(--lux);}
+  .wtl-yr:hover{background:rgba(201,161,90,.09);}
+  .wtl-yr:hover .dot{background:rgba(201,161,90,.5);}
+  .wtl-yr:focus-visible{outline:2px solid var(--gold);outline-offset:-2px;}
+  .wtl-yr.on{background:rgba(201,161,90,.14);}
+  .wtl-yr.on .dot{background:var(--gold);transform:scale(1.3);
+    box-shadow:0 0 0 4px rgba(201,161,90,.18);}
+  .wtl-yr.on .n{opacity:1;color:var(--charcoal);font-weight:500;}
+
+  /* ---- the detail ---- */
+  /* THE DETAIL SCROLLS, NOT THE PANEL. The rail is how you move between
+     years, so it has to stay on screen while the longest entry (115 words) is
+     read — otherwise reaching the next year means scrolling back up first. */
+  .wtl-scroll{position:relative;z-index:1;margin-top:clamp(1.1rem,2.2vw,1.7rem);
+    padding:clamp(1.1rem,2.2vw,1.6rem) .7rem 0 0;
+    border-top:1px solid rgba(201,161,90,.26);
+    max-height:min(42vh,400px);overflow-y:auto;overscroll-behavior:contain;}
+  .wtl-yrbig{font-family:"Inter",sans-serif;font-weight:700;
+    font-size:clamp(.66rem,.8vw,.76rem);letter-spacing:.18em;
+    text-transform:uppercase;color:var(--gold);}
+  .wtl-title{font-family:"Playfair Display",serif;font-weight:700;
+    font-size:clamp(1.4rem,2.5vw,2.15rem);line-height:1.14;letter-spacing:-.015em;
+    color:var(--charcoal);margin-top:.5rem;}
+  .wtl-sub{font-family:"Cormorant Garamond",serif;font-style:italic;font-weight:400;
+    font-size:clamp(1.02rem,1.5vw,1.3rem);line-height:1.4;color:var(--gold);
+    margin-top:.45rem;}
+  .wtl-sub[hidden]{display:none;}
+  .wtl-text{margin-top:clamp(.9rem,1.6vw,1.3rem);}
+  .wtl-text[hidden]{display:none;}
+  /* justified with hyphenation, the same treatment `.owd-bio` gets and for the
+     same reason: at this measure justification opens rivers without it */
+  .wtl-text p{font-family:"Inter",sans-serif;font-weight:300;
+    font-size:clamp(.9rem,1vw,1.02rem);line-height:1.8;color:var(--body);
+    text-align:justify;-webkit-hyphens:auto;hyphens:auto;}
+  .wtl-text p + p{margin-top:.95rem;}
+
+  /* ---- prev / next ---- */
+  .wtl-nav{position:relative;z-index:1;display:flex;justify-content:space-between;
+    gap:1rem;margin-top:clamp(1.1rem,2.2vw,1.6rem);
+    padding-top:clamp(.9rem,1.8vw,1.3rem);
+    border-top:1px solid rgba(201,161,90,.26);}
+  .wtl-arrow{display:inline-flex;align-items:center;gap:.6rem;
+    font-family:"Inter",sans-serif;font-weight:600;
+    font-size:clamp(.64rem,.76vw,.72rem);letter-spacing:.14em;
+    text-transform:uppercase;color:var(--charcoal);
+    background:none;border:1px solid rgba(20,24,34,.16);border-radius:999px;
+    padding:.72rem 1.15rem;cursor:pointer;
+    transition:background .3s var(--lux),border-color .3s var(--lux),color .3s var(--lux);}
+  .wtl-arrow:hover:not(:disabled){background:rgba(201,161,90,.12);
+    border-color:rgba(201,169,107,.5);color:var(--gold);}
+  .wtl-arrow:disabled{opacity:.3;cursor:default;}
+  .wtl-arrow .ar{font-size:1rem;line-height:1;color:var(--gold);}
+
+  .wtl-x{position:absolute;top:.7rem;right:.7rem;z-index:2;
+    width:38px;height:38px;border-radius:50%;cursor:pointer;
+    display:grid;place-items:center;
+    background:rgba(20,24,34,.06);border:1px solid rgba(20,24,34,.12);
+    color:var(--charcoal);transition:background .3s var(--lux),transform .3s var(--lux);}
+  .wtl-x:hover{background:rgba(20,24,34,.12);transform:rotate(90deg);}
+  .wtl-x svg{width:14px;height:14px;}
+
+  /* A phone cannot show five years at a readable size, so the rail PANS — the
+     same answer, and the same reason, as the town filter capsule: a timeline
+     broken over two rows stops reading as one line, and the half-cut year at
+     the edge is the affordance. The card scrolls as a whole here instead of
+     the detail scrolling inside it, because 42vh of a 844px window is 354px
+     and splitting that again leaves nothing.
+
+     THE SECOND CLAUSE CATCHES A HANDSET IN LANDSCAPE, and it is not optional:
+     at 844x390 the card stood 424px in a 390px window with no way to scroll,
+     because a width-only query sails straight past that shape. It is the same
+     clause, for the same reason, as the brands tier's. */
+  @media(max-width:760px),(max-height:560px){
+    .wtl-card{max-height:90vh;overflow-y:auto;border-radius:20px;}
+    .wtl-scroll{max-height:none;overflow:visible;padding-right:0;}
+    .wtl-text p{text-align:left;-webkit-hyphens:manual;hyphens:manual;}
+    .wtl-art{width:clamp(120px,38%,180px);opacity:.34;}
+    .wtl-nav{gap:.6rem;}
+    .wtl-arrow{padding:.68rem .9rem;letter-spacing:.1em;}
+  }
+  @media(max-width:420px){
+    .wtl-yr{flex:1 0 92px;}
+    .wtl-arrow .lb{display:none;}
+    .wtl-arrow{padding:.68rem 1rem;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .wtl-scrim,.wtl-card,.wtl-yr,.wtl-yr .dot,.wtl-yr .n,
+    .why-ev::before,.why-ev .why-evb,.why-ev .tt .go{transition:none !important;}
+    .wtl-card{transform:none !important;}
+    .wtl-x:hover{transform:none;}
+    .why-ev .why-evb:hover,.why-ev .why-evb:focus-visible{transform:none !important;}
+    .why-ev:hover::before{transform:translateX(-50%) !important;}
+  }
+
   /* ============ SECTION V — OUR COLLECTION (browse all) ============ */
   /* A curated catalogue, not a marketplace: floating filter panel, a calm
      4-up grid, quiet pagination and a consultation strip. overflow-x:clip
@@ -2538,11 +2743,50 @@
           </div>
         </div>
 
+        <!-- THE RAIL IS YEAR + MILESTONE NAME ONLY; the account behind each
+             one opens in `.wtl` below. `data-detail` is the whole entry as the
+             CMS holds it — a heading line, then the prose — and the journey
+             panel is the one thing that parses it, which is why the CMS paint
+             writes that attribute and never touches `.tt`.
+
+             These five are the fallback, for a window where Sanity is
+             unreachable. They are the client's REAL years and milestone names
+             with the opening sentence of each, not invented copy: the four
+             that used to stand here said 2004 and "Founded on trust", which is
+             not a recognisable placeholder, it is the wrong founding date
+             stated plainly. The full paragraphs live in the CMS and are not
+             duplicated here — one copy to keep current. -->
         <div class="why-time">
-          <div class="why-ev"><div class="yr">2004</div><div class="tt">Founded on trust<br>Built on values</div></div>
-          <div class="why-ev"><div class="yr">2008</div><div class="tt">First luxury project<br>delivered</div></div>
-          <div class="why-ev"><div class="yr">2016</div><div class="tt">50+ projects<br>completed</div></div>
-          <div class="why-ev"><div class="yr">2026</div><div class="tt">Continuing the legacy<br>Building for generations</div></div>
+          <div class="why-ev" data-detail="The Beginning &ndash; Where Our Vision Took Shape&#10;Every remarkable journey begins with a vision. Raajlaxmi Group embarked on its journey in 2012 with its first four-storey residential tower in Nallasopara East.">
+            <button class="why-evb" type="button" aria-haspopup="dialog">
+              <span class="yr">2012</span>
+              <span class="tt"><span class="nm">The Beginning</span><span class="go" aria-hidden="true">&rsaquo;</span></span>
+            </button>
+          </div>
+          <div class="why-ev" data-detail="The Foundation &ndash; Expanding Our Horizons&#10;With growing experience and a stronger foundation, we expanded our presence across Vasai and its neighbouring regions, extending our footprint towards Virar.">
+            <button class="why-evb" type="button" aria-haspopup="dialog">
+              <span class="yr">2016</span>
+              <span class="tt"><span class="nm">The Foundation</span><span class="go" aria-hidden="true">&rsaquo;</span></span>
+            </button>
+          </div>
+          <div class="why-ev" data-detail="The Transformation &ndash; One Brand, One Vision&#10;A defining chapter in our journey, 2021 marked our ambition to move beyond conventional developments and to unify our identity under one brand.">
+            <button class="why-evb" type="button" aria-haspopup="dialog">
+              <span class="yr">2021</span>
+              <span class="tt"><span class="nm">The Transformation</span><span class="go" aria-hidden="true">&rsaquo;</span></span>
+            </button>
+          </div>
+          <div class="why-ev" data-detail="The Evolution &ndash; Diversifying Our Vision&#10;Never limiting ourselves to familiar territories, we ventured into the emerging real estate destination of Saphale with one of our signature township developments.">
+            <button class="why-evb" type="button" aria-haspopup="dialog">
+              <span class="yr">2024</span>
+              <span class="tt"><span class="nm">The Evolution</span><span class="go" aria-hidden="true">&rsaquo;</span></span>
+            </button>
+          </div>
+          <div class="why-ev" data-detail="The Future &ndash; Growing Stronger, Building Bigger&#10;From a team of just three individuals in 2012 to a workforce of 75 professionals in 2026, our growth reflects the strength of our people.">
+            <button class="why-evb" type="button" aria-haspopup="dialog">
+              <span class="yr">2026</span>
+              <span class="tt"><span class="nm">The Future</span><span class="go" aria-hidden="true">&rsaquo;</span></span>
+            </button>
+          </div>
           <div class="why-tower" aria-hidden="true"></div>
         </div>
       </div>
@@ -2557,6 +2801,51 @@
       </div>
     </div>
   </section>
+
+  <!-- ============ THE JOURNEY PANEL ============
+       A sibling of the section, not a child of it: `position:fixed` inside a
+       transformed ancestor resolves against that ancestor, and Section IV is
+       full of parallax transforms. The rail is built by script from whatever
+       is on the gold line, so there is one source for the content and no
+       second list to keep in step. -->
+  <div class="wtl" id="whyTl" role="dialog" aria-modal="true" aria-labelledby="wtlTitle" hidden>
+    <div class="wtl-scrim" id="wtlScrim"></div>
+    <div class="wtl-card">
+      <div class="wtl-art" aria-hidden="true"></div>
+      <button class="wtl-x" id="wtlClose" type="button" aria-label="Close" data-hover>
+        <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+      </button>
+
+      <p class="wtl-label">Our Journey</p>
+
+      <!-- a tablist is literally what this is: a row of years selecting one
+           panel, so the arrow-key behaviour a screen-reader user expects is
+           the behaviour the pattern already specifies -->
+      <div class="wtl-years" id="wtlYears" role="tablist"
+           aria-label="Milestones" aria-orientation="horizontal"></div>
+
+      <div class="wtl-scroll" id="wtlPanel" role="tabpanel" tabindex="0">
+        <p class="wtl-yrbig" id="wtlYear"></p>
+        <h3 class="wtl-title" id="wtlTitle"></h3>
+        <p class="wtl-sub" id="wtlSub" hidden></p>
+        <div class="wtl-text" id="wtlText" hidden></div>
+      </div>
+
+      <div class="wtl-nav">
+        <!-- the labels are the accessible name because `.lb` is hidden below
+             420px, where the buttons are the arrow alone and would otherwise
+             have no name at all -->
+        <button class="wtl-arrow" id="wtlPrev" type="button" aria-label="Previous milestone">
+          <span class="ar" aria-hidden="true">&larr;</span><span class="lb">Previous</span>
+        </button>
+        <button class="wtl-arrow" id="wtlNext" type="button" aria-label="Next milestone">
+          <span class="lb">Next</span><span class="ar" aria-hidden="true">&rarr;</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- ============ SECTION XI — MEET OUR OWNERS ============ -->
   <!-- PLACEHOLDER: the six cards below are bracketed stand-ins. They are
@@ -3341,7 +3630,8 @@
     }
 
     const paused = () => !seen || hover || focus || dragging || held
-      || document.documentElement.classList.contains('owd-open');
+      || document.documentElement.classList.contains('owd-open')
+      || document.documentElement.classList.contains('wtl-open');
 
     /* What the move to scrollLeft costs, and why each cost is survivable:
        this runs on the main thread rather than the compositor, so it is one
@@ -3592,6 +3882,203 @@
     /* the strip is rebuilt from scratch when the CMS lands; the card this was
        opened from no longer exists by then */
     addEventListener('rl:owners', close);
+  })();
+
+  /* ============ SECTION IV — THE JOURNEY PANEL ============
+     The gold rail prints a year and the name of a milestone; the account
+     behind it opens here as the same timeline turned on its side.
+
+     IT READS THE RAIL, IT DOES NOT HOLD A COPY OF THE CONTENT. Every entry
+     carries the whole CMS field on `data-detail`, this parses it, and the rail
+     label is written from the same parse — so the hand-written fallback and
+     the CMS paint cannot disagree about where a heading ends and the prose
+     starts. It is the arrangement the owner panel already uses (it fills
+     itself from the card that was clicked) and the reason this needed no
+     second query. */
+  (function(){
+    const rail = document.querySelector('.why-time'),
+          dlg  = document.getElementById('whyTl');
+    if(!rail || !dlg) return;
+
+    const years = document.getElementById('wtlYears'),
+          yrBig = document.getElementById('wtlYear'),
+          ttl   = document.getElementById('wtlTitle'),
+          sub   = document.getElementById('wtlSub'),
+          body  = document.getElementById('wtlText'),
+          panel = document.getElementById('wtlPanel'),
+          prevB = document.getElementById('wtlPrev'),
+          nextB = document.getElementById('wtlNext'),
+          xBtn  = document.getElementById('wtlClose'),
+          scrim = document.getElementById('wtlScrim'),
+          root  = document.documentElement;
+
+    let evs = [], at = 0, lastFocus = null;
+
+    /* The client writes an entry as a heading line and then the prose:
+
+         The Beginning – Where Our Vision Took Shape
+         Every remarkable journey begins with a vision. …
+
+       so line one names the milestone and everything after it is the account.
+       The dash splits the name from its strapline, and all three dashes are
+       matched because all three get typed into a text field — but only when
+       SPACED, so "Virar-Nallasopara Link Road" is never cut in half. */
+    function parse(raw){
+      const lines = String(raw || '').replace(/\r/g, '').split('\n');
+      const head = (lines.shift() || '').trim();
+      const cut = head.search(/\s+[\u2013\u2014-]\s+/);
+      return {
+        name:  cut > -1 ? head.slice(0, cut).trim() : head,
+        strap: cut > -1 ? head.slice(cut).replace(/^\s+[\u2013\u2014-]\s+/, '').trim() : '',
+        paras: lines.join('\n').split(/\n\s*\n+/).map(t => t.trim()).filter(Boolean)
+      };
+    }
+
+    function collect(){
+      evs = [...rail.querySelectorAll('.why-ev')].map(ev => {
+        const d = parse(ev.dataset.detail);
+        const yr = ev.querySelector('.yr');
+        /* nothing behind it, nothing to open */
+        const live = !!(d.paras.length || d.strap);
+        ev.classList.toggle('bare', !live);
+        const btn = ev.querySelector('.why-evb');
+        if(btn) btn.disabled = !live;
+        /* the rail's own label, rewritten from the same parse — the CMS paint
+           deliberately leaves `.tt` alone so this stays the only writer */
+        const nm = ev.querySelector('.tt .nm');
+        if(nm && d.name) nm.textContent = d.name;
+        return Object.assign(d, {ev: ev, live: live,
+          year: yr ? yr.textContent.trim() : ''});
+      });
+      return evs;
+    }
+
+    function show(i){
+      if(!evs.length) return;
+      at = Math.max(0, Math.min(evs.length - 1, i));
+      const e = evs[at];
+
+      yrBig.textContent = e.year;
+      ttl.textContent = e.name || e.year;
+      sub.textContent = e.strap;
+      sub.hidden = !e.strap;
+
+      /* textContent per paragraph: nothing an editor types is ever markup */
+      body.textContent = '';
+      e.paras.forEach(t => {
+        const p = document.createElement('p');
+        p.textContent = t;
+        body.appendChild(p);
+      });
+      body.hidden = !e.paras.length;
+
+      [...years.children].forEach((b, n) => {
+        const on = n === at;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+        b.tabIndex = on ? 0 : -1;
+      });
+      panel.setAttribute('aria-labelledby', 'wtlTab' + at);
+
+      /* five years do not fit a phone, so the rail pans — put the one being
+         read inside the window, centred where there is room for that */
+      const b = years.children[at];
+      if(b && years.scrollWidth > years.clientWidth + 1){
+        const want = b.offsetLeft - (years.clientWidth - b.offsetWidth) / 2;
+        years.scrollTo({left: Math.max(0, want), behavior: reduce ? 'auto' : 'smooth'});
+      }
+      /* a new entry starts at its own top, not where the last one was left */
+      panel.scrollTop = 0;
+
+      prevB.disabled = at === 0;
+      nextB.disabled = at === evs.length - 1;
+    }
+
+    function build(){
+      years.textContent = '';
+      evs.forEach((e, i) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'wtl-yr';
+        b.id = 'wtlTab' + i;
+        b.setAttribute('role', 'tab');
+        b.setAttribute('aria-controls', 'wtlPanel');
+        b.setAttribute('aria-selected', 'false');
+        b.tabIndex = -1;
+        const dot = document.createElement('span');
+        dot.className = 'dot';
+        dot.setAttribute('aria-hidden', 'true');
+        const y = document.createElement('span');
+        y.className = 'y';
+        y.textContent = e.year;
+        const n = document.createElement('span');
+        n.className = 'n';
+        n.textContent = e.name;
+        b.append(dot, y, n);
+        b.addEventListener('click', () => show(i));
+        years.appendChild(b);
+      });
+    }
+
+    function open(i){
+      if(!evs.length) return;
+      build();
+      show(i);
+      lastFocus = document.activeElement;
+      dlg.hidden = false;
+      root.classList.add('wtl-open');
+      /* one frame, so the transition has a state to move away from */
+      requestAnimationFrame(() => dlg.classList.add('on'));
+      xBtn.focus({preventScroll: true});
+    }
+
+    function close(){
+      if(dlg.hidden) return;
+      dlg.classList.remove('on');
+      root.classList.remove('wtl-open');
+      const done = () => { dlg.hidden = true; };
+      if(reduce) done();
+      else setTimeout(done, 480);
+      if(lastFocus && lastFocus.focus) lastFocus.focus({preventScroll: true});
+      lastFocus = null;
+    }
+
+    /* delegated, because the CMS paint replaces these nodes wholesale */
+    rail.addEventListener('click', e => {
+      const ev = e.target.closest('.why-ev');
+      if(!ev) return;
+      collect();
+      const i = evs.findIndex(x => x.ev === ev);
+      if(i < 0 || !evs[i].live) return;
+      open(i);
+    });
+
+    xBtn.addEventListener('click', close);
+    scrim.addEventListener('click', close);
+    prevB.addEventListener('click', () => show(at - 1));
+    nextB.addEventListener('click', () => show(at + 1));
+
+    addEventListener('keydown', e => {
+      if(dlg.hidden) return;
+      if(e.key === 'Escape'){ close(); return; }
+      /* ARROWS ONLY WHILE A YEAR HAS FOCUS. Hijacked globally they would stop
+         the detail scrolling with the keyboard, which is the one thing a long
+         entry needs them for; Previous / Next covers every other case. */
+      if(document.activeElement && document.activeElement.classList.contains('wtl-yr')){
+        const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if(!d) return;
+        e.preventDefault();
+        show(at + d);
+        const b = years.children[at];
+        if(b) b.focus({preventScroll: true});
+      }
+    });
+
+    /* the rail is rebuilt from scratch when the CMS lands, so the entry this
+       was opened from no longer exists by then */
+    addEventListener('rl:why-timeline', () => { close(); collect(); });
+
+    collect();
   })();
   /* ============ SECTION X — BRANDS WE USE ============ */
   (function(){
@@ -4013,7 +4500,8 @@
     if(autoOK) (function arm(ms){
       setTimeout(() => {
         const root = document.documentElement;
-        if(root.classList.contains('owd-open') || root.classList.contains('pdw-open')) return arm(4000);
+        if(root.classList.contains('owd-open') || root.classList.contains('pdw-open')
+           || root.classList.contains('wtl-open')) return arm(4000);
         open();
       }, ms);
     })(wait);
@@ -4392,13 +4880,20 @@
         fit(host ? host.querySelectorAll('.why-ev') : [], evs.length, host)
           .forEach((ev, i) => {
             setText(ev.querySelector('.yr'), evs[i].year);
-            const tt = ev.querySelector('.tt');
-            if(tt && txt(evs[i].text))
-              tt.innerHTML = esc(evs[i].text).replace(/\r?\n/g, '<br>');
+            /* NOTHING HERE TOUCHES `.tt`. The rail prints a name and the panel
+               prints the account, and both come out of this one field — so the
+               whole field is handed over and the journey panel splits it. Until
+               14 Nov this set `.tt` to the raw text, which put all 55-115 words
+               back on the rail and would now also destroy the spans the panel
+               writes the label through. */
+            ev.dataset.detail = txt(evs[i].text);
           });
         /* keep the tower last so the gold rail still runs behind the events */
         const tower = host && host.querySelector('.why-tower');
         if(tower) host.appendChild(tower);
+        /* re-label the rail and rebuild the landscape panel from what was
+           just painted — the same handshake `rl:owners` does for the strip */
+        dispatchEvent(new Event('rl:why-timeline'));
       }
 
       setText(document.querySelector('.why-quote-in blockquote'), d.whyQuote);
