@@ -2191,12 +2191,27 @@
        configuration to its dearest, so a 1 BHK at 42 Lacs and a 2 BHK at 60
        puts the project in every band between the two — which is what a buyer
        filtering by budget means. A row with no price, or an unparseable one,
-       is skipped rather than dragging the floor to zero. */
+       is skipped rather than dragging the floor to zero.
+
+       AN OPEN-ENDED PRICE IS NOT AN OPEN-ENDED PROJECT, and `closeTop` is
+       where the two part company. `money()` reads "42 Lacs Onwards" as
+       [42L, Infinity], which is right for a BUDGET BAND — "80 Lacs +" really
+       does mean everything above it — and wrong for a project, which is
+       stating one fact: where that flat starts. Every price on this site is
+       written "Onwards", so with the ceiling left open each project matched
+       every band above its floor: four of the five bands returned all six
+       priced projects, and the dearest band returned six projects none of
+       which was priced at it. A project's ceiling is therefore the dearest
+       figure it actually STATES — the dearest row where it is priced per
+       configuration, which is a real spread (Raajlaxmi Tower is 42 to 60
+       Lacs), and the figure itself where there is only one. A row naming a
+       closed range keeps its own ceiling, and the band side is untouched. */
+    const closeTop = r => (r && r[1] === Infinity) ? [r[0], r[0]] : r;
     const rowPrices = p => (Array.isArray(p.sizes) ? p.sizes : [])
-      .map(z => money(z && z.price)).filter(Boolean);
+      .map(z => closeTop(money(z && z.price))).filter(Boolean);
     function priceRange(p){
       const rows = rowPrices(p);
-      if(!rows.length) return money(p.price);
+      if(!rows.length) return closeTop(money(p.price));
       return [Math.min(...rows.map(r => r[0])), Math.max(...rows.map(r => r[1]))];
     }
     const WANT_BUDGET_RANGE = money(WANT_BUDGET);

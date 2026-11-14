@@ -2419,10 +2419,32 @@ two prices for two flat types", which is the same question from the other end.
 - **`money()` is still fixed for free text**, because twelve projects may keep
   using that field: any `<digits> bhk|rk|bed(s)` is dropped before anything is
   counted. All six live strings parse correctly through it.
-- **"Onwards" still means no upper bound**, which is why five projects appear
-  in ₹1 Cr + although none is priced at ₹1 Cr. That is the original design and
-  it is defensible — "42 Lacs onwards" genuinely does not state a ceiling — but
-  it is the next thing to question if the bands look generous.
+- **"Onwards" no longer means an open-ended PROJECT** (fixed the same day,
+  once the migrated data made it visible). `money()` still reads "42 Lacs
+  Onwards" as [42L, ∞] because that is right for a **band** — "₹80 Lacs +"
+  does mean everything above — but `closeTop()` shuts a **project's** ceiling
+  to the dearest figure it actually states. Every price on the site is written
+  "Onwards", so with the ceiling open each project matched every band above its
+  floor: four of the five bands returned all six priced projects. Priced per
+  configuration the rows give a real spread, and Raajlaxmi Tower is 42–60 Lacs,
+  not 42 Lacs to infinity. Measured after, against the client's own bands:
+
+  | band | returns |
+  |---|---|
+  | ₹18 – 25 Lacs | Priti Pearrl, Priti Chaaya |
+  | ₹35 – 45 Lacs | Tower, Apartment, Shakun Solitaire |
+  | ₹45 – 65 Lacs | Tower, Apartment, Shakun Solitaire |
+  | ₹65 – 80 Lacs | none (nothing is priced there) |
+  | ₹80 Lacs + | none |
+
+- **PRITI DARPAN NOW MATCHES NO BAND AT ALL, and that is the band list's
+  fault, not the parser's.** It is "26 Lacs Onwards" — one price, no
+  configurations — so its range is a point at ₹26L, and **`heroBudgetOptions`
+  jumps from `₹18 – 25 Lacs` to `₹35 – 45 Lacs`**. Nothing covers ₹25–35 Lacs,
+  so a project priced in that gap is unreachable by budget. Adding a
+  `₹25 – 35 Lacs` option in the Studio fixes it with no code change; pricing
+  Darpan per configuration would too. **Check this whenever the bands are
+  edited** — they are free text and nothing makes them contiguous.
 - **`scripts/split-prices.mjs` migrates the six existing strings** into the
   rows. **It has not been run**: it writes to live content, so it is the
   client's call. It is non-destructive (the free-text `price` is left unless
