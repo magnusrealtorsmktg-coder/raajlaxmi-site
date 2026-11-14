@@ -10,17 +10,34 @@ Deployed to Netlify from the CLI. There is no build step — but **do not publis
 
 `README.md` was rewritten on 26 Sep and now describes this build accurately (it previously documented a seven-section, single-file version that no longer exists). It is the public GitHub landing page; **CLAUDE.md is the detailed reference** — keep architecture notes here, not there.
 
-## Where this stands (handover, 9 Nov 2026)
+## Where this stands (handover, 14 Nov 2026)
 
 The site is **built, deployed and live** at
 <https://raajlaxmi-site.netlify.app> (Netlify team `magnus realtorsmktg`,
 deployed from `magnusrealtorsmktg-coder/raajlaxmi-site` on GitHub), and **almost
 every page is now driven by Sanity** — see *Content management*. Construction is
-essentially done and `main` is pushed and clean; the last code change is
-`a3647e7`. **The client commits to this repo themselves** — ten commits on
-9 Nov were theirs (the EMI page, the testimonials running order, the hero
-search). Run `git log` before assuming the working tree is only yours, and
-`git fetch` before pushing.
+essentially done. **The client commits to this repo themselves** — ten
+commits on 9 Nov were theirs (the EMI page, the testimonials running order,
+the hero search). Run `git log` before assuming the working tree is only
+yours, and `git fetch` before pushing.
+
+**Pushed and live as of 14 Nov:** `136d537` (the contact email on one line),
+`1dbc630` (sold-out per property, the 3D walkthrough video field, the clipped
+brochure label), `fa0f56c` (a size per configuration, SOLD OUT under the
+blurb). **`235d30f` — the Why Raajlaxmi timeline — is COMMITTED BUT NOT
+PUSHED**; see *The timeline shows headings and opens sideways*.
+
+**READ THIS FIRST IF YOU ARE PICKING UP ON 14 NOV OR LATER:** the client put
+prices back on six projects during the day and **that has broken the budget
+filter in a way that is worse than the empty results it replaced** — see
+*Six projects carry a price now, and the budget bands are wrong*. It is the
+one live defect known on the site.
+
+**Three untracked files sit at the repo root and are deliberately not
+committed**: `EMI-image.png` and `main-loggo.png` (working art — the logo was
+already re-cut from the second into `assets/`), and
+`brands_we_build_with_3d_prototype/`, which is a separate deliverable, not
+part of this site. See *The 3D walkthrough prototype is a separate thing*.
 
 **THE ONE THING BLOCKING LAUNCH IS THE DOMAIN**, and it is not a code job — see
 *The domain cutover*. Everything else below is content the client owes or a
@@ -41,7 +58,8 @@ and are not. The ones that will cost you an afternoon if you do not know them:
 | a video of any kind | *Hero, About and Why can each take a video* and the encode tables under it; every client upload so far has been a 60–265 MB master |
 | a headless check | *Verifying locally — and one headless trap* — and measure with CDP device metrics, never `--window-size --screenshot` |
 | any of the three moving strips | *The owners strip gives way and comes back* — the owners, the reviews and the photo gallery all run **one** implementation now; verify the drift by driving Chrome over CDP in real time, NOT with `--virtual-time-budget`, which reports zero for a working strip and a dead one alike — see *It shipped dead, and the harness is what hid it* |
-| a price, a budget band or the EMI link | *No project carries a price* — the field is empty on all fifteen projects, so three features are silently inert |
+| a price, a budget band or the EMI link | *Six projects carry a price now, and the budget bands are wrong* — the prices are free text and the parser reads "1 BHK" as one rupee |
+| the Why Raajlaxmi timeline | *The timeline shows headings and opens sideways* — the rail is a year and a name, and `data-detail` is the one source the panel and the rail label both come from |
 
 **Deploys:** `git push origin main` publishes the site. The Studio is separate
 and **Claude Code cannot run either** — the classifier blocks both. Hand the
@@ -49,22 +67,42 @@ command over.
 
 **FOUR THINGS ARE WAITING ON SOMEONE DOING THEM BY HAND:**
 
-1. **The Studio needs redeploying.** `cd studio && npm run build && npx sanity
-   deploy --no-build -y`. The `stages` tick-boxes shipped in the code on 7 Nov
-   but the deployed Studio still serves the old single-choice **Listing**
-   radio, so the client cannot put a project on two pages themselves. The data
-   is already correct either way. Verified 8 Nov: the live schema carries
-   `soldOut` and `Brochure (PDF)` but not `Listings`. Claude Code cannot run
-   this — the classifier blocks `sanity deploy`.
+1. **The Studio needs redeploying — PROBABLY. Check before acting.**
+   `cd studio && npm run build && npx sanity deploy --no-build -y`. Claude Code
+   cannot run this; the classifier blocks `sanity deploy`.
+
+   Four schema changes are in the repo and may or may not be in the deployed
+   Studio: the `stages` tick-boxes (7 Nov), and `soldOut` / `sizes` /
+   `walkthrough` plus four amenity icons (14 Nov). **The evidence is
+   contradictory and this could not be settled from a terminal**, so do not
+   repeat either claim without looking:
+
+   - *For* it being deployed: Krishna Niwas carries the amenity icons
+     `gazebo`, `indoor` and `landscape`, and three projects carry a populated
+     `sizes` array. Those values have no way into a document except the Studio
+     — or the API, which validates nothing.
+   - *Against*: the amenity write is timestamped three minutes BEFORE the
+     commit that added those options to the schema file.
+   - **`raajlaxmi.sanity.studio` now 302s to the authenticated Sanity
+     dashboard** (`www.sanity.io/@oRickwjyo/studio/…`), so the deployed schema
+     can no longer be inspected without signing in. That is new.
+
+   **The decisive check takes ten seconds**: open any project in the Studio and
+   look for **Sizes by configuration** and **3D walkthrough**. If they are
+   there, this item is done and the only thing missing is the `green` amenity
+   (Common Green Space), which is in the schema but used by no project.
 2. **Gmail forwarding** from `rajjlaxmi20@gmail.com` to whoever on the client's
    side should read enquiries. Until it is set up **an enquiry exists in
    exactly one inbox and nowhere else** — see *The forms post to Web3Forms*.
-3. **`soldOut` needs clearing off the documents.**
-   `cd studio && npx sanity exec scripts/retire-sold-out.mjs --with-user-token`
-   (add `-- --dry` first). The field is out of the schema, but seven projects
-   still hold the value and the Studio flags an "unknown field" on each until
-   it is unset. **Then redeploy the Studio** — which is item 1 above, and is
-   now also needed for this.
+3. ~~**`soldOut` needs clearing off the documents.**~~ **Done, and then
+   reversed.** The script was run, and on 14 Nov the client asked for sold-out
+   back — so `soldOut` is a field again and three projects (Raajlaxmi Tower,
+   Raajlaxmi Apartment, Nakshatra Auris) carry `true`. Because the retirement
+   had actually run, nothing lit up on its own when the field returned; that
+   was verified against the live dataset before the field was re-added.
+   `scripts/retire-sold-out.mjs` is still in the tree and **must not be run
+   again** — it would now clear live content. See *SOLD OUT sits under the
+   blurb*.
 4. **The Google sign-in app needs publishing.** It is in *Testing*, so the
    contact page's Continue with Google button works only for accounts added by
    hand as test users. Publishing needs a homepage and privacy-policy URL on
@@ -164,7 +202,7 @@ compositions. `--window-size` is honored for `--screenshot` but **not** for
 `--dump-dom`, where `innerWidth` reports 756 regardless — size an iframe
 instead of trusting that number.
 
-### What the CMS holds, measured 9 Nov
+### What the CMS holds, measured 14 Nov
 
 **Re-run these counts rather than trusting them.** The client edits daily, and
 often while you are working — twice now a document has changed shape between
@@ -173,11 +211,14 @@ two queries in the same session.
 | | state |
 |---|---|
 | Projects | **15.** Completed 9, Ongoing 4, Redevelopment 3 — Krishna Niwas is in two listings, which is what `stages` exists for. Aarvi Apartment was unpublished on 8 Nov, see *Aarvi Apartment was taken off the site* |
-| Sold out | **Not a thing any more.** The field is out of the schema and the stamp is off the cards (9 Nov). Seven documents still carry a stale `soldOut: true` until `retire-sold-out.mjs` is run |
-| Detail-page content | **6 of 15 now have a gallery** (Rajlaxxmi Park 4, Priti Pearrl 3, and 2 each on Krishna Niwas, Raajlaxmi Avenue, Raajlaxmi Meenakshi, Shanti Niwas), 2 an overview, 3 specs, **0 a price**, 7 a configuration. The client is filling these in; the gallery count was 0 on 8 Nov |
-| Prices | **NONE.** Not one project carries a `price` any more — `Raajlaxmi Apartment`'s ₹1.8 Cr was cleared on 9 Nov. See *No project carries a price* for the three things that silently depend on this |
+| Sold out | **Back, per property, since 14 Nov** — a boolean again, and the stamp sits under the blurb. **Three carry `true`**: Raajlaxmi Tower, Raajlaxmi Apartment, Nakshatra Auris. See *SOLD OUT sits under the blurb* |
+| Sizes by configuration | **3 of 15**, two rows each: Raajlaxmi Tower, Raajlaxmi Apartment (both `1 BHK 380-400 Sq. Ft.` / `2 BHK 360-550 Sq.ft`) and Nakshatra Auris (`315 – 373 Sq. Ft.` / `461-501 Sq. Ft.`). The other twelve still print the old `config` + `area` pair, which is the designed fallback |
+| 3D walkthrough | **NONE.** The field exists on `project` and the button is wired, but no project carries a video, so the button renders nowhere. Untested against a real file |
+| Detail-page content | **6 of 15 have a gallery** (Rajlaxxmi Park 4, Priti Pearrl 3, and 2 each on Krishna Niwas, Raajlaxmi Avenue, Raajlaxmi Meenakshi, Shanti Niwas), **6 a price**, 7 a configuration. The gallery count was 0 on 8 Nov |
+| Prices | **SIX, and they are free text, and the budget filter is now WRONG because of it.** Priti Darpan `26 Lacs Onwards`; Priti Pearrl, Priti Chaaya, Raajlaxmi Tower, Raajlaxmi Apartment and Shakun Solitaire all in the form `42 Lacs Onwards for 1 BHK & 60 Lacs Onwards for 2 BHK`. See *Six projects carry a price now, and the budget bands are wrong* |
+| Amenity icons in use | `play`, `gazebo`, `indoor`, `landscape`, `security`, `gym`, `garden`, `planning`, `parking`, `lift`, `power`, `pool` — and one project has an amenity with **no icon set at all**. `green` (Common Green Space) is in the schema and used by nobody |
 | Brochures | **3 on published projects** (Nakshatra Auris 18.0 MB, Shanti Niwas 7.7 MB, Rajlaxxmi Park 5.0 MB). A fourth, 0.4 MB, is on the unpublished Aarvi Apartment draft |
-| Reviews | **6 real Google reviews**, all with Google links |
+| Reviews | **6 real Google reviews** (`testimonial` documents), all with Google links |
 | Client photo slider | **8 photographs** — the block is live now, no longer hidden |
 | Owners | **5 real people, each with a portrait and a role; no bios.** The card runs name + role and the panel is where a bio would show |
 | Social handles | **YouTube, WhatsApp, Instagram.** Facebook, LinkedIn and X are unset, so they do not render |
@@ -247,8 +288,10 @@ property that is not sold out in its place on the home page. Both halves are
 
 **Added 9 Nov, all content rather than code:**
 
-- **No project has a price** — see *No project carries a price*. Every budget
-  band returns nothing until one does.
+- ~~**No project has a price**~~ — six do since 14 Nov, and **the budget
+  bands now return the wrong projects rather than none**. See *Six projects
+  carry a price now, and the budget bands are wrong*; it is the one live
+  defect on the site.
 - **`Jodi Flats`, `Office` and `Shops` match no project.** They are offered in
   the hero's PROPERTY dropdown but no project's `config` names them, so each
   returns an empty collection. The matcher folds plurals and spacing, so typing
@@ -304,6 +347,40 @@ property that is not sold out in its place on the home page. Both halves are
 - ~~**The services philosophy plate has a typo painted into it**~~ — fixed on
   5 Nov by deleting the plate; the band is film with no copy over it at all.
 
+### The 3D walkthrough prototype is a separate thing
+
+`brands_we_build_with_3d_prototype/` sits at the repo root and is **untracked
+on purpose** — the client asked for it to be kept out of this repository
+("dont push the 3d model that is different"). It is a first-person walkthrough
+of an apartment interior, built so the brands the group builds with can be
+pointed at in place rather than listed on a wall of logos. Do not `git add` it
+without being asked.
+
+What a future session needs to know about it:
+
+- **One file, `index.html`**, Three.js r160 over an importmap, with
+  PointerLockControls, GLTFLoader and raycast hotspots. No build step, in
+  keeping with the rest of this repo.
+- **The model's scale is 551.9 units per metre**, measured from four objects —
+  not millimetres, which is what the first cut assumed and why the camera
+  spawned above the roof. `UNITS_PER_METRE` is the constant; eye height 1.62m.
+- **Ground-finding must start INSIDE the room** (`from = 1.7`). A ray dropped
+  from above hits the roof slab at 3.4m and reports it as the floor.
+- **Four hotspots** — switchboard, wall finish, kitchen tiles, plumbing — each
+  opening a right-hand panel of brand logos and closing back into the
+  walkthrough.
+- **There is a drag-look fallback** for contexts where Pointer Lock is refused
+  (an iframe, most notably), chosen by `dragLook` with a `pointerlockerror`
+  listener and a 1200ms timeout. Both paths must never drive the camera at once.
+- **The body state class is `authoring`, NOT `author`** — the base stylesheet
+  carries `.author{display:none}`, which matched `<body>` and blanked the page.
+- **Two things are unresolved and belong to the client**: the GLB is **10MB**
+  and wants decimating, and it is **CC BY 4.0 (Sketchfab, Katydid)**, so
+  attribution has to be settled before it goes in front of anyone.
+- **Ten of the thirty site brands cannot be placed** in it: the model has no
+  bathroom and no lift. Two more are filed oddly on the site itself — Polycab
+  and Havells are under Wire rather than Switches.
+
 ### History worth knowing
 
 On 26 Sep a regex matched a CSS comment instead of the JS block it was aimed at
@@ -347,7 +424,9 @@ Check at 1440×900, 1024×800 and 420×860; scroll the full page; confirm no con
 | I | Hero | `hero` | Night skyline (inline base64 JPEG) under the CMS film, mouse parallax, property-selector form. **The headline and its sub-paragraph are gone** — markup, CSS, the line-mask entrance and `fitHeadline()` with them, so the page carries no `<h1>`; see *The hero headline and its sub-paragraph are GONE*. **Its remaining copy, and the three dropdown lists, come from the `homepage` singleton** — the four localities hard-coded in the markup (Gomti Nagar, Hazratganj, Sushant Golf City, Vibhuti Khand) are in **Lucknow**, not this developer's corridor; the seeded CMS values replace them with Vasai / Nallasopara / Virar / Saphale. |
 | II | About | `about` | Ivory. Plate showing **the CMS's About video** (`assets/about-plate.jpg` is only the fallback underneath it), four counting stats, then a full-width RERA / CREDAI-MCHI trust strip (`.ab-creds`, a sibling of `.ab-inner`, not inside the content column). **It holds exactly one screen** — see *The About section holds one screen*. The ghost word "Legacy" that used to sit behind the copy is gone, markup, CSS, parallax and schema field alike. |
 | III | Signature Projects | `signature` | Four project cards and corner blueprint decor with slow parallax. **It holds one screen above 1080px** — see *Signature Projects holds one screen*. The rotating `seal-top.png` that used to float in its top-right corner is **gone** (9 Nov, client's request); the same file still draws Section IV's seal, so it is not orphaned. |
-| IV | Why Raajlaxmi | `why` | Team photograph as the feature plate, **sized so the heading and the photograph share one screen** (see *The Why heading and photograph share one screen*), four numbered rows, a year timeline (2004→2026), and a closing quote. **The Est. 2004 medallion beside that quote is gone** (12 Nov, client's request) — see *No seal is drawn anywhere now*. The auto-scrolling brand marquee (`.why-carousel`) that used to sit before the quote is gone — Section X replaced it. |
+| IV | Why Raajlaxmi | `why` | Team photograph as the feature plate, **sized so the heading and the photograph share one screen** (see *The Why heading and photograph share one screen*), four numbered rows, **a year timeline that prints a year and the name of a milestone and opens
+the full account sideways** (see *The timeline shows headings and opens
+sideways*), and a closing quote. **The Est. 2004 medallion beside that quote is gone** (12 Nov, client's request) — see *No seal is drawn anywhere now*. The auto-scrolling brand marquee (`.why-carousel`) that used to sit before the quote is gone — Section X replaced it. |
 | XI | Meet Our Owners | `owners` | **Sits between Why and Brands in scroll order**, despite the number. Portrait cards running as a **continuous right-to-left marquee that the visitor can take hold of** — see *The owners strip gives way and comes back*. `SPEED` is 30 px/s, the slowest of the three strips because a tall portrait going past at speed is harder to read than a line of text. `.ow-stage` is the scroll container and carries the edge-fade mask. The copy sits over the foot of the photograph behind a gradient scrim, so the card *is* the picture rather than a picture with a caption under it. **Hovering one card pauses the strip and blurs and dims the others** — the blur is pure CSS (`.ow-grid:hover .ow-card:not(:hover)`), the pause is now JS, with `:focus-within` / `focusin` carrying both for a keyboard, and the blur dropped below 620px where `:hover` sticks after a tap. **Clicking a card opens the detail panel** — hover is the invitation, the click is the choice; see *The owner detail panel*. **Copies are computed, not fixed**, exactly as the client photo strip does it: `build()` measures a card, renders `max(3, ceil(stageWidth / setWidth) + 2)` sets and re-measures, so two published owners loop as cleanly as six. (The photo strip uses `+ 1`; this one needs `+ 2` because it can be pushed backwards.) **The CMS fills the cards from a later block**, so that block fires **`rl:owners`** and this one rebuilds the strip from whatever it left — the same handshake the About counters use with `rl:home-stats`. Reduced motion renders a single set, puts scroll-snap back and drops the mask, so no card is stranded off a stage that no longer moves. **Driven by the `ownersPage` singleton, not the home-page document** — see *The owners live on their own document*. **Its six cards are bracketed placeholders and it is the one section on the home page that removes itself**: an empty `owners` list deletes the section rather than printing "[Owner name]" six times to the public, and it returns the moment anyone is published. With Sanity unreachable the placeholders stay, so a failed fetch never costs the design. **The card prints the name and the role only** — "About them" is the detail panel's content and never appears here; it rides on the card as `data-bio` so the panel can read it off whichever card was opened. The card carries the person, the panel carries what there is to say about them. |
 | X | Brands We Use | `brands` | Follows Why in scroll order. `OUR PARTNERS` header, six category tabs (All / Structure / Interiors / Electrical / Fittings / Utilities) and a card grid, all rendered from the `BRANDS` array in the Section X IIFE — adding a supplier is one line of data, no markup. Each row is `[name, logo file, trade, tab]`: `trade` is the line from the client's sheet and prints on the card, `tab` is the coarser bucket the tabs filter by. Johnson and Hindware appear twice on purpose, under two different trades. Its header (`.br-head` / `.br-label` / `.br-title` / `.br-intro`) is a **copy of Section IV's** rather than a shared rule — change one and the other will not follow. **On a phone the All view is clipped to the first six cards behind a "Show all 30 brands" pill** — see *Brands are clipped on a phone*. |
 
@@ -469,6 +548,94 @@ Measured at 390x844, 360x640, 844x390, 280x653 and 1440x900, in every state
 `--force-prefers-reduced-motion`: no horizontal overflow, no console errors, the
 pill one line at 46px even at 280px wide. **Section X is `index.html`-only**, so
 unlike the shared chrome there is nothing to sync to the other ten files.
+
+### The timeline shows headings and opens sideways
+
+Asked for on 14 Nov: show only the heading on the timeline — "2012 The
+Beginning", "2016 The Foundation" — and open a div with "the landscape
+timeline with complete details" when a year is clicked. `235d30f`.
+**Committed and verified locally, NOT YET PUSHED.**
+
+The rail was printing the whole account of each milestone. The client's copy
+runs 55–115 words an entry and there are five entries, so measured at
+1440x900 the rail stood **1845px against the 721px editorial list beside it**
+and therefore set the height of the whole `.why-grid`. It is **552px and ten
+words** now, the grid takes the list's 721px, and Section IV lost **1,125px of
+scroll** (3167 → 2042).
+
+- **LANDSCAPE IS THE POINT, NOT DECORATION.** A 55–115 word paragraph wants
+  roughly 65 characters a line to read, which is ~620px; the rail column is
+  332px at 1440. Turning the timeline on its side is the only way the detail
+  gets a readable measure — and it keeps the other four years in sight, so the
+  panel is a way through the story rather than a dead end per year.
+- **`data-detail` IS THE ONE SOURCE, AND THE CMS PAINT NO LONGER TOUCHES
+  `.tt`.** Each `.why-ev` carries the whole CMS field; the panel parses it, and
+  **the rail's own label is written from that same parse**. Before this, the
+  paint set `.tt` to the raw text — which would now both put all 115 words back
+  on the rail and destroy the spans the label is written through. This is the
+  arrangement the owner panel already uses (it fills itself from the card that
+  was clicked), and it is why the change needed no second query and no second
+  schema field.
+- **The entry format is a heading line, then the prose**, and the dash splits
+  the name from its strapline: `The Beginning – Where Our Vision Took Shape`
+  becomes `The Beginning` on the rail, with the strapline as the panel's gold
+  subtitle. En dash, em dash and hyphen are all matched **but only when
+  spaced**, so "Virar-Nallasopara Link Road" is never cut in half.
+- **An entry with nothing behind it is not a button.** No strapline and no
+  paragraphs means `.bare`: the arrow goes, the cursor goes, and the button is
+  `disabled`. The same rule an unmatched banner hotspot and a project with no
+  walkthrough already follow.
+- **`rl:why-timeline` is the handshake**, exactly like `rl:owners`: the paint
+  fires it, the panel closes itself and re-reads the rail. Necessary because
+  `fit()` replaces those nodes wholesale.
+- **A tablist, because that is literally what it is** — a row of years
+  selecting one panel. Arrow keys move between years **only while a year has
+  focus**; hijacked globally they would stop the keyboard scrolling a long
+  entry, which is the one thing they are needed for there. Previous/Next covers
+  every other case and **clamps rather than wrapping**: a timeline has a
+  beginning and an end, and the disabled button says which one you are at.
+- **The equal year widths are load-bearing.** The gold line is drawn as a
+  segment per year (`::before`, `left:-50%` to `right:50%`), which lands on the
+  previous dot's centre only while every year is the same width. With
+  `flex-basis:auto` the segments miss by half the difference in two names'
+  lengths and the rail reads as a broken line. Segments rather than one line on
+  the scroll container, because only segments scroll with the years and stop at
+  the first and last dot.
+- **THE PHONE TIER CARRIES `(max-height:560px)` AS WELL AS A WIDTH.** At
+  844x390 — a handset in landscape — a width-only query sailed straight past
+  and left a 424px card in a 390px window with no way to scroll it. Caught by
+  measurement, not by eye. Same clause, same reason, as the brands tier's.
+- **The rail pans on a phone rather than wrapping**, and scrolls the year being
+  read into view; the half-cut year at the edge is the affordance. The same
+  answer as the town filter capsule.
+- **The arrows keep an `aria-label`** because `.lb` is `display:none` below
+  420px, where the buttons are an arrow glyph that is itself `aria-hidden` —
+  without the label they would have no accessible name at all.
+- **The lead popup and the owners strip both stand down** while it is open
+  (`html.wtl-open`), joining `owd-open` and `pdw-open`.
+- **The four fallback entries were rewritten.** They said 2004 and "Founded on
+  trust", which is not a recognisable placeholder — it is the wrong founding
+  date stated plainly, and it contradicted the CMS, which says 2012. They are
+  the client's five real years and milestone names now, with the opening
+  sentence of each. The full paragraphs are **not** duplicated into the markup:
+  one copy to keep current, in Sanity.
+- **`.wtl-*` IS INDEX-ONLY**, like Section X's `.br-*`. Section IV's markup
+  exists in no other file, so there is nothing to sync to the other eleven.
+  Note that the `.why-*` rules **are** in all twelve, inertly, because the whole
+  `<head>` block was copied once — that is an accident of copying, not a reason
+  to copy these too.
+- **The tower sketch still overlaps the rail text, and far less than it did.**
+  Measured at 390x844 the overlap went from **228px on every row to 1–67px**;
+  at 1440 three of the five rows are now completely clear. It is a `multiply`
+  wash at 0.34 behind text and always has been.
+
+Measured at 1920x1080, 1440x900, 1280x800, 1024x768, 900x500, 844x390,
+820x1180, 760x900, 430x932, 412x915, 390x844, 360x640, 280x653 and 653x280:
+the panel is reachable at every one, no nav, card or page overflow anywhere,
+the rail pans and keeps the active year in view, focus returns to the entry
+that opened it, Esc and the scrim close it, reduced motion takes its branch and
+closes without the delay, and **with `*sanity.io*` blocked the fallback rail
+still labels and still opens**. No console errors or exceptions.
 
 ### The owners strip gives way and comes back
 
@@ -642,8 +809,7 @@ that card.
   `studio/scripts/mark-sold-out.mjs` was deleted — it set a field that no
   longer exists.
 - ~~**`assets/sold-out.png` is referenced by nothing**~~ — **it is back, and
-  it is a different file** (14 Nov). See *SOLD OUT returns, in the card's
-  footer*. The old tilted stamp was replaced by the client's new horizontal
+  it is a different file** (14 Nov). See *SOLD OUT sits under the blurb*. The old tilted stamp was replaced by the client's new horizontal
   one, keyed out of its white ground the same way `oc-received.png` was;
   `git show HEAD~1:assets/sold-out.png` recovers the tilted one.
 - **REMOVING THE FIELD FROM THE SCHEMA DOES NOT REMOVE IT FROM THE DOCUMENTS.**
@@ -696,30 +862,38 @@ Measured at 1440, 1200, 900, 620, 390, 360 and 280 with two- and three-row
 projects: no card spilling its box, no horizontal page overflow, no console
 errors.
 
-### SOLD OUT returns, in the card's footer
+### SOLD OUT sits under the blurb
 
 Asked for on 14 Nov. **It is not the feature that was removed on 9 Nov**, and
 the difference matters:
 
 | | the old one | this one |
 |---|---|---|
-| where | over the photograph | in the card footer, beside View Details |
+| where | over the photograph | in the card body, under the blurb and above the meta row |
 | ordering | pushed the card to the foot of the list | **no effect on order at all** |
 | artwork | tilted stamp, 506x294 | the client's horizontal stamp, 753x242 |
+
+**IT MOVED ONCE, WITHIN THE SAME DAY, AND THE FIRST POSITION IS GONE.** It
+shipped in the card's footer beside View Details; the client marked a different
+spot on a screenshot before that was pushed, and it is now a plain block
+element in the flow between `.col-desc` and the meta row. **`.col-cfoot` — the
+flex row built to hold it down there — was removed entirely**, and View Details
+took its own `margin-top` back. If you are reading a comment or a commit
+message that puts the stamp in a footer, that is the first cut of the same day's
+work, not the current state.
 
 - **`soldOut` is a plain boolean on `project` again**, `initialValue:false`.
   It had been removed from the schema AND `retire-sold-out.mjs` has since been
   run, so **no document carried a stale `true`** — nothing lit up on its own
   when the field came back. Verified against the live dataset before writing
   the field: zero documents with `soldOut` defined.
-- **The stamp lives in `.col-cfoot`**, a flex row that now holds View Details
-  and the stamp. The link's `margin-top` moved onto that row, or a card with
-  no stamp would lose its gap. In the flow rather than positioned, because
-  card height is content-driven and an absolute stamp would land on whatever
-  the CMS put above it.
-- **`clamp(84px,32%,132px)`** — 32% is the proportion the client marked on
-  their screenshot (209px of a 656px card). Measured after: 27.6–32.4% of the
-  card from 1440 down to 360, no card spilling its box at any width.
+- **It is a block in the flow, not positioned.** Card height is content-driven
+  and the blurb above it is CMS text of unknown length, so an absolutely
+  positioned stamp would land on whatever the client happened to write.
+- **`clamp(84px,33%,132px)`** — 33% is the proportion the client marked on the
+  second screenshot (211px of a 640px card). Floored so it stays legible on a
+  one-column phone, capped so it never becomes a placard. The ratio is the
+  artwork's own (753/242), so a re-crop means changing it.
 - **The artwork was keyed out, not thresholded.** The supplied file is opaque
   red-on-white; colour-to-alpha against white un-composites the anti-aliased
   edges instead of leaving a halo. Same treatment, and the same verification,
@@ -2180,26 +2354,59 @@ each of them a real case from this dataset:
 - Text with **no number in it** ("Price on request") returns `null`, which keeps
   such a project out of every specific band while leaving it in "Any budget".
 
-### No project carries a price
+### Six projects carry a price now, and the budget bands are wrong
 
-**On 9 Nov the last `price` was cleared**, so the field is empty on all fifteen
-projects. Nothing is broken by it, but three things quietly stop doing
-anything, and all three will look like bugs to whoever meets them next:
+**This is the one live defect known on the site**, it appeared on 14 Nov
+without a line of code changing, and it is worse than the problem it replaced.
 
-- **Every budget band returns "nothing matches".** `money()` reads `null` for a
-  project with no price and keeps it out of every specific band, so the hero's
-  Budget dropdown can now only ever produce an empty collection — except
-  "Any budget", which is unfiltered. It was verified working on 8 Nov against
-  the one priced project (₹80 Lacs + → that project; ₹45–65 Lacs → none); that
-  test cannot be re-run until a price exists again.
-- **No price line renders**, on a collection card or on a detail page. Both
-  remove themselves rather than printing an empty row, which is correct and is
-  why this is invisible.
-- **`project.html` always links to a bare `emi.html`.** The price handover
-  (`emi.html?price=<rupees>`) needs a number to pass, so the calculator always
-  opens on its own default. The link is shown regardless, which is deliberate.
+Until 13 Nov no project had a `price` at all, so every budget band returned an
+empty collection — inert, but honest. The client then priced six projects, and
+**five of the six are written as free text that the parser mis-reads**:
 
-Put a price on one project and all three come back with no code change.
+| project | `price` | `money()` reads |
+|---|---|---|
+| Priti Darpan | `26 Lacs Onwards` | ₹26L – ∞ ✓ |
+| Priti Pearrl | `19 Lacs Onwards for 1 BHK & 26 Lacs Onwards for 2 BHK` | **₹1 – ∞** |
+| Priti Chaaya | `19 Lacs Onwards for 1 BHK ` | **₹1 – ∞** |
+| Raajlaxmi Tower | `42 Lacs Onwards for 1 BHK & 60 Lacs Onwards for 2 BHK` | **₹1 – ∞** |
+| Raajlaxmi Apartment | `42 Lacs Onwards for 1 BHK & 60 Lacs Onwards for 2 BHK` | **₹1 – ∞** |
+| Shakun Solitaire | `35 Lacs Onwards for 1 BHK & 50 Lacs Onwards for 2 BHK` | **₹1 – ∞** |
+
+**`money()` reads the "1" of "1 BHK" as one rupee.** Its regex takes every
+number in the string, and a number with no unit after it inherits the unit of
+the LAST number in the string — which here is the "2" of "2 BHK", also
+unitless, so the multiplier is 1. The configuration digits become rupee
+amounts, the range floor collapses to ₹1, and `onwards` opens the ceiling to
+infinity. A range of ₹1 to infinity intersects every band.
+
+Measured against the live prices, the hero's Budget dropdown now returns:
+
+| band | returns |
+|---|---|
+| Under ₹25 Lacs | **5** — including two ₹42-Lac projects and one at ₹35 Lacs |
+| ₹25 – ₹45 Lacs | all 6 |
+| ₹45 – ₹65 Lacs | all 6 |
+| ₹65 Lacs – ₹1 Cr | all 6 |
+| ₹1 Cr + | all 6 — **not one of them is ₹1 Cr** |
+
+So a buyer filtering for a home under ₹25 Lacs is shown homes at ₹42 Lacs.
+Returning nothing was a dead end; this is a wrong answer presented as a right
+one, and it is the reason this moved to the top of the handover.
+
+**The fix is in `money()`, in all three collection pages** (it is duplicated,
+like everything `.col-*`). The shape of it: drop any number immediately
+followed by `bhk`/`rk` before the hits are gathered, and do not let a unitless
+number inherit a unit from a later one. **It has not been done** — the client
+may also simply want a cleaner price field, and which of the two is right is
+their call, not a decision to take inside the parser.
+
+Two things that still hold from before, and are not bugs:
+
+- **No price line renders where there is no price.** Card and detail page both
+  remove the row rather than printing an empty one.
+- **`project.html` links to a bare `emi.html` unless the price parses.** The
+  handover is `emi.html?price=<rupees>`, so it needs a number. The link is
+  shown regardless, which is deliberate.
 
 **The navbar's `Book Consultation` went nowhere on six of eight pages.** It was
 `href="#ctForm"` — a same-page anchor, and `#ctForm` is the enquiry card on
