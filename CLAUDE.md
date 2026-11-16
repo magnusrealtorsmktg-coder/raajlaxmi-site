@@ -212,7 +212,7 @@ two queries in the same session.
 | | state |
 |---|---|
 | Projects | **15.** Completed 9, Ongoing 4, Redevelopment 3 — Krishna Niwas is in two listings, which is what `stages` exists for. Aarvi Apartment was unpublished on 8 Nov, see *Aarvi Apartment was taken off the site* |
-| Sold out | **Back, per property, since 14 Nov**; the stamp is the photograph's corner badge since 16 Nov and REPLACES the status pill. **Eight carry `true`** on 16 Nov: Priti Pearrl, Priti Chaaya, Raajlaxmi Tower, Raajlaxmi Apartment, Shakun Solitaire, Midas Enclave, Midas Glory, Nakshatra Auris — so eight cards print no status. See *SOLD OUT is the photograph's corner badge* |
+| Sold out | **Back, per property, since 14 Nov**; since 16 Nov the card prints the WORDS `SOLD OUT` in the status pill and the artwork is unused. **Eight carry `true`** on 16 Nov: Priti Pearrl, Priti Chaaya, Raajlaxmi Tower, Raajlaxmi Apartment, Shakun Solitaire, Midas Enclave, Midas Glory, Nakshatra Auris — so eight cards print no status. See *SOLD OUT is the status badge's text* |
 | Sizes by configuration | **3 of 15**, two rows each: Raajlaxmi Tower, Raajlaxmi Apartment (both `1 BHK 380-400 Sq. Ft.` / `2 BHK 360-550 Sq.ft`) and Nakshatra Auris (`315 – 373 Sq. Ft.` / `461-501 Sq. Ft.`). The other twelve still print the old `config` + `area` pair, which is the designed fallback |
 | 3D walkthrough | **NONE.** The field exists on `project` and the button is wired, but no project carries a video, so the button renders nowhere. Untested against a real file |
 | Detail-page content | **6 of 15 have a gallery** (Rajlaxxmi Park 4, Priti Pearrl 3, and 2 each on Krishna Niwas, Raajlaxmi Avenue, Raajlaxmi Meenakshi, Shanti Niwas), **6 a price**, 7 a configuration. The gallery count was 0 on 8 Nov |
@@ -842,7 +842,7 @@ that card.
   `studio/scripts/mark-sold-out.mjs` was deleted — it set a field that no
   longer exists.
 - ~~**`assets/sold-out.png` is referenced by nothing**~~ — **it is back, and
-  it is a different file** (14 Nov). See *SOLD OUT is the photograph’s corner badge*. The old tilted stamp was replaced by the client's new horizontal
+  it is a different file** (14 Nov). See *SOLD OUT is the status badge's text*. The old tilted stamp was replaced by the client's new horizontal
   one, keyed out of its white ground the same way `oc-received.png` was;
   `git show HEAD~1:assets/sold-out.png` recovers the tilted one.
 - **REMOVING THE FIELD FROM THE SCHEMA DOES NOT REMOVE IT FROM THE DOCUMENTS.**
@@ -895,60 +895,60 @@ Measured at 1440, 1200, 900, 620, 390, 360 and 280 with two- and three-row
 projects: no card spilling its box, no horizontal page overflow, no console
 errors.
 
-### SOLD OUT is the photograph's corner badge
+### SOLD OUT is the status badge's text
 
-**IT HAS MOVED THREE TIMES AND THIS IS THE THIRD POSITION.** Asked for on
-14 Nov, moved twice that day, moved again on 16 Nov. Read the table before
-trusting any comment or commit message about it:
+**THE ARTWORK IS NOT USED ON A CARD AT ALL ANY MORE.** It had four homes in
+three days. Read this table before trusting any comment or commit message
+about it — including the commit immediately before this one, which shipped the
+fourth:
 
-| | 9 Nov (removed) | 14 Nov, first cut | 14 Nov, shipped | 16 Nov, now |
-|---|---|---|---|---|
-| where | over the photograph | the card's footer, beside View Details | the card body, under the blurb | **the photograph's top-left corner** |
-| with the status pill | alongside | alongside | alongside | **instead of it** |
-| ordering | pushed the card to the foot of the list | no effect | no effect | no effect |
-| artwork | tilted stamp, 506x294 | the client's horizontal stamp, 753x242 | same | same |
+| | 9 Nov (removed) | 14 Nov, first cut | 14 Nov, shipped | 16 Nov, first cut | 16 Nov, now |
+|---|---|---|---|---|---|
+| what | the artwork | the artwork | the artwork | the artwork | **the words, in the status pill** |
+| where | over the photograph | the card footer | under the blurb | the photograph's corner | **the photograph's corner** |
+| with the status | alongside | alongside | alongside | instead of it | **instead of it** |
+| ordering | pushed the card to the foot | no effect | no effect | no effect | no effect |
 
-**THE STAMP AND THE STATUS PILL ARE NOW MUTUALLY EXCLUSIVE**, which is the
-part with a consequence. The client asked for SOLD OUT in the top-left corner
-"instead of completed", "written, not text" — so a sold-out card shows the
-artwork where every other card shows `status`, and **the badge it displaces is
-not shown anywhere else**. Eight of the fifteen projects are sold out today, so
-eight cards no longer print a status at all — including **Shakun Solitaire,
-whose `Ready Possession` was the one badge that said something the listing
-could not**. If that label matters, the two have to share the corner again.
+The client tried the stamp in the corner and asked for plain text the same
+day: *"dont want the sold out image to be shown but the text in completed must
+be SOLD OUT"*. So `.col-badge` prints `Sold Out` where it would otherwise print
+`status`, in the identical brown pill, and **`.col-sold` is deleted from all
+twelve files**. `assets/sold-out.png` (753x242) is unreferenced and still
+ships — client artwork, left alone; `git rm` is all it takes.
 
-- **`.col-sold` carries `.col-badge` as well**, for position only, and then
-  undoes the pill: `background:none;padding:0;border-radius:0;
-  backdrop-filter:none`. Sharing the position rather than repeating it is what
-  keeps the stamp and the pill on the same corner if either ever moves.
-- **The white double drop-shadow is back.** The artwork is red line-work on
-  transparency over whatever photograph the client uploaded; over a dark
-  facade the ink disappears. This is the same halo the 9 Nov stamp carried for
-  the same reason, and it was not needed in the body where the ground is white.
-- **`clamp(88px,30%,124px)`.** Measured 29.8% of the card at every width from
-  1920 down to 360, widening to 37% only at 280px where the floor binds. It is
-  sized to sit beside the heart, not to be a placard: 84–186px of clear space
-  between the two at every width tested.
-- **`.col-cfoot` — the flex row built for the first cut — was removed
+**THE BADGE AND THE STATUS ARE MUTUALLY EXCLUSIVE, and that has a
+consequence.** Eight of the fifteen projects are sold out today, so eight cards
+print no status — including **Shakun Solitaire, whose `Ready Possession` was
+the one badge saying something its listing could not**. If that label matters,
+the two have to share the corner.
+
+- **The markup writes `Sold Out` in Title Case** and `.col-badge` carries
+  `text-transform:uppercase`, the convention this codebase follows for badge
+  and button copy. Do not "fix" the source to caps thinking the rendering
+  depends on it.
+- **DO NOT PUT A BACKTICK IN A COMMENT INSIDE THAT CARD TEMPLATE.** The whole
+  card is one JS template literal, so a backtick in an HTML comment nested in
+  it ends the string: the first attempt at the comment above used them for
+  code names and took all three collection pages down with
+  `SyntaxError: missing ) after argument list`. The `node --check` sweep over
+  every inline `<script>` is what caught it.
+- **`soldOut` is a plain boolean on `project`**, `initialValue:false`.
+- **`.col-cfoot` — the flex row built for the 14 Nov first cut — was removed
   entirely** and View Details took its own `margin-top` back. That container no
   longer exists.
 
-- **`soldOut` is a plain boolean on `project` again**, `initialValue:false`.
-  It had been removed from the schema AND `retire-sold-out.mjs` has since been
-  run, so **no document carried a stale `true`** — nothing lit up on its own
-  when the field came back. Verified against the live dataset before writing
-  the field: zero documents with `soldOut` defined.
-- **It is a block in the flow, not positioned.** Card height is content-driven
-  and the blurb above it is CMS text of unknown length, so an absolutely
-  positioned stamp would land on whatever the client happened to write.
-- **The ratio is the artwork's own (753/242)**, declared so the box is the
-  right shape before a lazy image arrives; a re-crop means changing it.
-- **The artwork was keyed out, not thresholded.** The supplied file is opaque
-  red-on-white; colour-to-alpha against white un-composites the anti-aliased
-  edges instead of leaving a halo. Same treatment, and the same verification,
-  as `assets/oc-received.png`.
-- **CSS in all twelve files, markup and GROQ in the three collection pages**,
-  the usual split for `.col-*`.
+- **`soldOut` was removed from the schema on 9 Nov and brought back on
+  14 Nov**, `initialValue:false`. `retire-sold-out.mjs` had been run in
+  between, so no document carried a stale `true` and nothing lit up on its own
+  when the field returned — verified against the live dataset at the time.
+- **If the artwork is ever wanted again**: `assets/sold-out.png` is the
+  client's horizontal stamp, 753x242, and it was **keyed out, not
+  thresholded** — colour-to-alpha against white, which un-composites the
+  anti-aliased edges instead of leaving a halo. Same treatment, and the same
+  verification, as `assets/oc-received.png`. Over a photograph it needs the
+  white double drop-shadow; over the white card body it does not.
+- **Markup and GROQ in the three collection pages**, the usual split for
+  `.col-*`. There is no `.col-sold` CSS left to keep in step.
 
 ### The 3D walkthrough
 

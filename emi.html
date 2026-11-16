@@ -1213,29 +1213,13 @@
     border-top:1px solid currentColor;border-right:1px solid currentColor;transform:rotate(45deg);}
   .col-card:hover .col-details .arw{transform:translateX(5px);}
 
-  /* THE SOLD OUT STAMP IS THE PHOTOGRAPH'S CORNER BADGE NOW (16 Nov). It
-     spent two days under the blurb; the client asked for it to take the top
-     left corner and for the status pill — COMPLETED — to give way to it,
-     "written, not text". So a sold-out card shows the artwork where every
-     other card shows its status, and the two never appear together.
-
-     IT REUSES `.col-badge` FOR POSITION ONLY and then undoes the pill: the
-     background, padding and radius belong to a text chip and would frame the
-     artwork in a brown box. Sharing the position rather than repeating it is
-     what keeps the stamp and the pill on the same corner when either moves.
-
-     THE WHITE DOUBLE DROP-SHADOW IS NOT DECORATION. The artwork is red
-     line-work on transparency and the photograph behind it is whatever the
-     client uploaded — over a dark facade the ink disappears. This is the
-     same halo the stamp carried the first time it lived on the photograph.
-
-     `aspect-ratio` is the artwork's own, so the box is the right shape
-     before a lazy image arrives; a re-crop means changing it. */
-  .col-sold{background:none;padding:0;border-radius:0;backdrop-filter:none;
-    display:block;width:clamp(88px,30%,124px);height:auto;
-    aspect-ratio:753/242;object-fit:contain;
-    filter:drop-shadow(0 0 6px rgba(255,255,255,.95))
-           drop-shadow(0 1px 2px rgba(255,255,255,.9));}
+  /* `.col-sold` IS GONE. The SOLD OUT artwork had three homes in three days
+     — over the photograph, in the card footer, under the blurb — and on
+     16 Nov the client asked for the words in the status badge instead and for
+     the image not to appear at all. `assets/sold-out.png` is still on disk and
+     still ships, unreferenced, because it is the client's artwork; `git rm` is
+     all it takes. A sold-out card now reads SOLD OUT in the same pill every
+     other card shows its status in, which is `.col-badge` above. */
 
   /* ---- pagination ---- */
   .col-page{display:flex;justify-content:center;align-items:center;gap:.6rem;
