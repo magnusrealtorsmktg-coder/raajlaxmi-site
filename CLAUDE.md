@@ -3540,6 +3540,40 @@ would read as a different thing.
   corner of a navy-and-gold page. That was the instruction; if it ever
   wants softening, the mark is one file.
 
+**IT ANSWERS SMALL TALK, AND THAT IS NOT DECORATION (16 Nov).** The first
+thing many people type into a chat window is not about property —
+*how are you*, *are you a bot*, *what can you do* — and answering those with
+"that one is beyond me, here is a telephone number" is a cold start that makes
+the rest of the conversation less likely to happen. Thirteen conversational
+intents now sit between `greet` and `projects`: `howareyou`, `identity`,
+`bot`, `capabilities`, `ack`, `present`, `joke`, `maker`, `language`,
+`callme`, `browsing`, `complaint` and `rude`.
+
+- **Every one of them still ends by offering something useful.** They are one
+  civil exchange, not a personality, and **none of them invents a fact about
+  the company** — where a question has a real answer the bot does not have, it
+  still hands it over.
+- **`bot` answers honestly**: a simple matcher, and not the authority on
+  price, availability or paperwork. That is the one piece of small talk worth
+  getting right on a property site.
+- **`who are you` moved from `about` to `identity`.** In a chat window that is
+  a question about the bot, not about the developer; `about raajlaxmi` and the
+  company words stayed behind.
+
+**AN `exact` LIST MATCHES THE WHOLE MESSAGE, BEFORE ANY SCORING.** It is the
+only way to answer "no" without also answering "no parking": a one-word reply
+is an acknowledgement, the same word inside a sentence is not. Keyword scoring
+cannot tell those apart, and marking such words strong makes it worse. `ack`
+is built entirely from it and carries no keywords at all — which is why the
+compile step tolerates a missing `k`.
+
+**THE TEST ASSERTS THE INTENT, NOT "DID THE FALLBACK FIRE".** 51 cases:
+the small talk, every property intent as a regression, and four that must
+still reach the fallback. It is what caught `bye` — **three letters, scoring 1
+against a floor of 2, so a bare "bye" had ALWAYS fallen through to "that one
+is beyond me"**, the worst possible answer to someone leaving. That was
+pre-existing and no earlier test had asked.
+
 **TIES GO TO THE EARLIER INTENT, AND THAT IS LOAD-BEARING.** `match()` keeps
 the first intent to reach the top score, so the array's order is a priority
 list. Two cases were decided by it: `price` sits before `config`, so "2 bhk

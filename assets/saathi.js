@@ -44,9 +44,124 @@
   var FAQ = [
     { id: 'greet',
       k: ['hi', 'hii', 'hey', 'hello', 'helo', 'namaste', 'namaskar', 'good morning',
-          'good afternoon', 'good evening', 'kaise ho'],
+          'good afternoon', 'good evening'],
       a: 'Namaste. I am Saathi, and I can answer the usual questions about Raajlaxmi Group — where we build, what we offer, how a booking works.\n\nWhat would you like to know?',
-      chips: ['Where do you build?', 'Book a site visit', 'Home loan / EMI', 'Talk to someone'] },
+      chips: ['What can you do?', 'Where do you build?', 'Book a site visit', 'Talk to someone'] },
+
+    /* ------------------------------------------------------------------
+       SMALL TALK, AND WHY A PROPERTY BOT NEEDS IT. The first thing a lot of
+       people type into a chat window is not about property at all - "how are
+       you", "are you a bot", "what can you do" - and answering those with
+       "that one is beyond me, here is a telephone number" is a cold start
+       that makes the rest of the conversation less likely to happen.
+
+       EVERY ONE OF THESE STILL ENDS BY OFFERING SOMETHING USEFUL. They are
+       one civil exchange, not a personality; the bot gets back to what it is
+       for in the same breath. None of them invents a fact about the company.
+       ------------------------------------------------------------------ */
+    { id: 'howareyou',
+      k: ['how are you', 'how are u', 'how r u', 'how do you do', 'hows it going',
+          'how is it going', 'how have you been', 'how you doing', 'you doing well',
+          'kaise ho', 'kaise hain', 'kya haal', 'kya haal hai', 'whats up',
+          'what is up', 'wassup'],
+      exact: ['sup'],
+      a: 'Very well, thank you for asking — and ready when you are.\n\nI know the usual questions about Raajlaxmi Group: where we build, what we offer, and how a booking works. What can I find for you?',
+      chips: ['What can you do?', 'Where do you build?', 'Book a site visit'] },
+
+    { id: 'identity',
+      k: ['who are you', 'about you', 'what is your name', 'whats your name',
+          'your name', 'who am i talking to', 'who is this', 'what are you called',
+          'saathi', 'naam kya hai', 'tumhara naam', 'introduce yourself'],
+      a: 'I am Saathi — साथी, which means companion. I am the assistant on Raajlaxmi Group\'s website, here to answer the straightforward questions so nothing has to wait for office hours.\n\nFor anything I cannot answer, our team is one call away.',
+      chips: ['What can you do?', 'About Raajlaxmi', 'Talk to someone'] },
+
+    { id: 'bot',
+      k: ['are you a bot', 'are you bot', 'is this a bot', 'are you human',
+          'are you real', 'are you a robot', 'are you a person', 'you a real person',
+          'are you a real', 'r u a bot', 'r u human',
+          'are you ai', 'artificial intelligence', 'chatgpt', 'automated', 'machine',
+          'robot', 'am i talking to a human', 'bot'],
+      a: 'A bot, and a simple one — I match what you type against a list of questions I have been taught, and that is the whole of it. There is no cleverness behind the curtain.\n\nSo please do not take my word for anything that matters. On price, availability and paperwork, our team is the authority and I am not.',
+      chips: ['Talk to someone', 'What can you do?', 'Book a site visit'] },
+
+    { id: 'capabilities',
+      k: ['what can you do', 'what can u do', 'what do you know', 'what can you help',
+          'how can you help', 'how can u help', 'what can i ask', 'what should i ask',
+          'what all can you', 'your options', 'show options', 'menu', 'capabilities',
+          'help me'],
+      a: 'A fair number of the ordinary ones. I can tell you about:\n\n•  where we build, and what sizes we offer\n•  how a site visit or a booking works\n•  what to expect on price, and the EMI calculator\n•  our office address and opening hours\n•  RERA, possession and redevelopment\n•  amenities, brochures and client reviews\n\nAnything past that I hand straight to our team rather than guess at it.',
+      chips: ['Where do you build?', 'Price range?', 'Book a site visit', 'Talk to someone'] },
+
+    /* MATCHED ONLY AS A WHOLE MESSAGE, never as keywords - see `exact` in
+       match(). "no" on its own is an answer; "no parking" is a question about
+       parking, and a keyword list cannot tell those apart. */
+    { id: 'ack',
+      k: [],
+      exact: ['ok', 'okay', 'k', 'kk', 'yes', 'yeah', 'yep', 'yup', 'no', 'nope',
+              'hmm', 'hmmm', 'hm', 'achha', 'acha', 'theek hai', 'thik hai', 'sure',
+              'fine', 'alright', 'all right', 'got it', 'understood', 'right',
+              'cool', 'nice', 'great', 'done'],
+      a: 'Right. Anything else I can look up for you?',
+      chips: ['Where do you build?', 'Book a site visit', 'Talk to someone'] },
+
+    { id: 'present',
+      k: ['are you there', 'are u there', 'you there', 'anyone there', 'still there',
+          'are you online', 'are you available', 'hello hello'],
+      a: 'Still here. Ask away.',
+      chips: ['What can you do?', 'Where do you build?', 'Book a site visit'] },
+
+    { id: 'joke',
+      k: ['!joke', '!jokes', '!funny', 'make me laugh', 'entertain me',
+          'something funny', 'tell me a joke', 'crack a joke'],
+      exact: ['lol', 'haha', 'hehe', 'hahaha', 'lmao', 'rofl'],
+      a: 'I would make a poor comedian — I only know houses.\n\nThough we are rather good at the part where you get the keys.',
+      chips: ['Where do you build?', 'Book a site visit'] },
+
+    { id: 'maker',
+      k: ['who made you', 'who built you', 'who created you', 'who developed you',
+          'who made this', 'who built this', 'who designed', 'your developer',
+          'your creator'],
+      a: 'I was built for Raajlaxmi Group, to sit on this site and answer the questions that come up most often.\n\nIf something I say here is wrong or out of date, telling the team is the quickest way to get it put right.',
+      chips: ['Talk to someone', 'What can you do?'] },
+
+    { id: 'language',
+      k: ['do you speak', 'speak hindi', 'speak marathi', 'speak english', 'in hindi',
+          'hindi me', 'marathi', 'which language', 'language', 'samajhte',
+          'samajh aata'],
+      a: 'I read English, and Hinglish along with it — type "ghar", "kitna" or "kahan" and I will usually follow.\n\nOur team speaks Hindi, Marathi and English, so a call is easy in whichever suits you.',
+      chips: ['Talk to someone', 'Book a site visit'] },
+
+    { id: 'callme',
+      k: ['call me', 'call me back', 'callback', 'call back', 'can you call',
+          'ring me', 'phone me', 'give me a call', 'reach out to me', 'contact me',
+          'get in touch with me'],
+      a: 'Gladly. Leave your name and number on the enquiry form and the team will ring you back.\n\nIf you would rather not wait, the number below reaches them directly.',
+      act: [['Request a call back', 'contact.html#ctForm'],
+            ['Call ' + PHONE, telHref(PHONE), 'tel']],
+      chips: ['Book a site visit', 'Where do you build?'] },
+
+    { id: 'browsing',
+      k: ['just looking', 'just browsing', 'only looking', 'just checking',
+          'nothing for now', 'maybe later', 'not now', 'no thanks', 'not interested'],
+      a: 'Of course — look as long as you like, there is nobody waiting to pounce.\n\nI will be here if a question comes up.',
+      chips: ['Browse properties', 'Where do you build?'] },
+
+    { id: 'complaint',
+      k: ['complaint', 'complain', 'grievance', 'problem with', 'issue with',
+          'unhappy', 'disappointed', 'poor service', 'bad service', 'not happy',
+          'cheated', 'fraud', 'delay in possession'],
+      a: 'I am sorry to hear it, and I am the wrong one to fix it — this wants a person who can actually act on it.\n\nPlease call ' + PHONE + ', or send the details through the enquiry form so there is a written record of them.',
+      act: [['Call ' + PHONE, telHref(PHONE), 'tel'],
+            ['Put it in writing', 'contact.html#ctForm']],
+      chips: ['Where is your office?'] },
+
+    { id: 'rude',
+      k: ['stupid', 'useless', 'rubbish', 'nonsense', 'idiot', 'shut up', 'worst',
+          'terrible', 'hate you', 'you suck', 'waste of time'],
+      a: 'That is fair enough — I am limited, and I would rather hand you to someone who is not.\n\nOur team is on ' + PHONE + ' and will do better than I can.',
+      act: [['Call ' + PHONE, telHref(PHONE), 'tel'],
+            ['Request a call back', 'contact.html#ctForm']],
+      chips: ['Talk to someone'] },
 
     { id: 'projects',
       k: ['project', 'projects', 'property', 'properties', 'flat', 'flats', 'home',
@@ -130,7 +245,10 @@
       chips: ['Book a site visit', 'Where do you build?'] },
 
     { id: 'about',
-      k: ['about', 'about you', 'who are you', 'who is', 'company', 'group', 'builder',
+      /* `who are you` and `about you` went to the `identity` intent on
+         16 Nov: in a chat window those are questions about the bot, not about
+         the developer. `about raajlaxmi` and the company words stay here. */
+      k: ['about', 'who is', 'company', 'group', 'builder',
           'developer', 'experience', 'history', 'background', 'trust', 'reliable',
           'kaun', 'raajlaxmi', 'rajlaxmi'],
       a: 'Raajlaxmi Group builds homes along the Vasai-Virar belt — residential projects, and society redevelopment.\n\nThe about section on the home page covers the work and the track record better than I can in a chat bubble.',
@@ -196,9 +314,13 @@
       chips: ['Book a site visit', 'Home loan / EMI'] },
 
     { id: 'human',
+      /* `bot` is gone from this list - the intent of that name answers it
+         honestly now, and still offers a person. `real person` stays, because
+         "talk to a real person" belongs here while "are you a real person"
+         is matched by a phrase on `bot`, which sits earlier and takes ties. */
       k: ['human', 'person', 'agent', 'executive', 'someone', 'somebody', 'real person',
           'talk to someone', 'talk to a human', 'customer care', 'support team',
-          'sales', 'manager', 'advisor', 'advisor', 'bot'],
+          'sales', 'manager', 'advisor'],
       a: 'Of course — I am only a simple assistant, and a person will serve you better.\n\nCall ' + PHONE + ' and the team will pick up, or leave your details and they will ring you back.',
       act: [['Call ' + PHONE, telHref(PHONE), 'tel'],
             ['Request a call back', 'contact.html#ctForm']],
@@ -211,8 +333,9 @@
       chips: ['Book a site visit', 'Browse properties'] },
 
     { id: 'bye',
-      k: ['bye', 'goodbye', 'good bye', 'see you', 'later', 'alvida', 'chalta hu',
+      k: ['!bye', 'goodbye', 'good bye', 'see you', 'later', 'alvida', 'chalta hu',
           'that is all', 'nothing else'],
+      exact: ['bye', 'byee', 'ok bye', 'bye bye', 'tata'],
       a: 'Thank you for visiting. Do call ' + PHONE + ' whenever you are ready — we would be glad to show you around.',
       chips: ['Book a site visit'] }
   ];
@@ -239,7 +362,8 @@
     'Download a brochure': 'brochure',
     'About Raajlaxmi': 'about',
     'Is it RERA registered?': 'rera',
-    'Browse properties': 'projects'
+    'Browse properties': 'projects',
+    'What can you do?': 'capabilities'
   };
 
   function byId(id) {
@@ -269,7 +393,7 @@
   var rxEsc = function (s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); };
 
   FAQ.forEach(function (it) {
-    it._rx = it.k.map(function (w) {
+    it._rx = (it.k || []).map(function (w) {
       /* A LEADING "!" MARKS A KEYWORD THAT IS STRONG ON ITS OWN. Length is
          a poor proxy for how much a word tells you: "emi", "bhk", "oc" and
          "rera" are three or four letters and are the most specific things
@@ -289,6 +413,15 @@
     var t = ' ' + String(raw).toLowerCase().replace(/[^a-z0-9\s]/g, ' ')
                              .replace(/\s+/g, ' ').trim() + ' ';
     if (!t.trim()) return null;
+    /* AN EXACT WHOLE-MESSAGE MATCH WINS OUTRIGHT, before any scoring. It is
+       the only way to answer "no" without also answering "no parking": a
+       one-word reply is an acknowledgement, the same word inside a sentence
+       is not. Keyword scoring could never tell those apart, and marking such
+       words strong would have made it worse. */
+    var whole = t.trim();
+    for (var e = 0; e < FAQ.length; e++) {
+      if (FAQ[e].exact && FAQ[e].exact.indexOf(whole) > -1) return FAQ[e];
+    }
     var best = null, bestScore = 0;
     FAQ.forEach(function (it) {
       var s = 0;
