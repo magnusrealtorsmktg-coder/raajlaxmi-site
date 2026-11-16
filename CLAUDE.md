@@ -488,7 +488,7 @@ Check at 1440×900, 1024×800 and 420×860; scroll the full page; confirm no con
 | # | Section | id | What it does |
 |---|---------|-----|--------------|
 | I | Hero | `hero` | Night skyline (inline base64 JPEG) under the CMS film, mouse parallax, property-selector form. **The headline and its sub-paragraph are gone** — markup, CSS, the line-mask entrance and `fitHeadline()` with them, so the page carries no `<h1>`; see *The hero headline and its sub-paragraph are GONE*. **Its remaining copy, and the three dropdown lists, come from the `homepage` singleton** — the four localities hard-coded in the markup (Gomti Nagar, Hazratganj, Sushant Golf City, Vibhuti Khand) are in **Lucknow**, not this developer's corridor; the seeded CMS values replace them with Vasai / Nallasopara / Virar / Saphale. |
-| II | About | `about` | Ivory. Plate showing **the CMS's About video** (`assets/about-plate.jpg` is only the fallback underneath it), four counting stats, then a full-width RERA / CREDAI-MCHI trust strip (`.ab-creds`, a sibling of `.ab-inner`, not inside the content column). **It holds exactly one screen** — see *The About section holds one screen*. The ghost word "Legacy" that used to sit behind the copy is gone, markup, CSS, parallax and schema field alike. |
+| II | About | `about` | Ivory. Plate showing **the CMS's About video** (`assets/about-plate.jpg`, the client's gold wireframe elevation, is only the fallback underneath it), four counting stats, then a full-width RERA / CREDAI-MCHI trust strip (`.ab-creds`, a sibling of `.ab-inner`, not inside the content column). **It holds exactly one screen** — see *The About section holds one screen*. The ghost word "Legacy" that used to sit behind the copy is gone, markup, CSS, parallax and schema field alike. |
 | III | Signature Projects | `signature` | Four project cards and corner blueprint decor with slow parallax. **It holds one screen above 1080px** — see *Signature Projects holds one screen*. The rotating `seal-top.png` that used to float in its top-right corner is **gone** (9 Nov, client's request); the same file still draws Section IV's seal, so it is not orphaned. |
 | IV | Why Raajlaxmi | `why` | Team photograph as the feature plate, **sized so the heading and the photograph share one screen** (see *The Why heading and photograph share one screen*), four numbered rows, **a year timeline that prints a year and the name of a milestone and opens
 the full account sideways** (see *The timeline shows headings and opens
@@ -4331,7 +4331,24 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
 - Section X fits every mark into an identical box with `object-fit:contain` rather than capping height alone — capping height left a 3x spread in optical weight between a wide lockup and a square roundel.
 - `assets/why-team.jpg` is the Section IV feature plate's **fallback** (the group photograph, 2000×1332, 3:2); the `homepage` document carries its own 3508×2340 copy of the same shot. The plate crops it to **2:1**, which removes ceiling rather than people — the group sits at y 43%–89% of the frame. Do not re-crop the source file: the CSS crop is what lets the heading and the photograph share one screen, and it is tuned to those percentages. See *The Why heading and photograph share one screen*.
 - Still placeholders: four `picsum.photos/seed/rl-*` URLs in `index.html` — the Signature Projects cards (Heights / Villa / Crest / Essence) — plus the seeded card art in the `projects.html` fallback list (real card images now come from Sanity). Replace by swapping the URL in the inline `background-image` (or the Sanity document) for the real asset. Earlier notes here claiming ten placeholders were stale.
-- The About plate is `assets/about-plate.jpg` (excavator on site, 810×1212), set as `background-image` on `.ab-photo` in CSS. It used to be copied off the hero by the About IIFE; that JS is gone, so **don't reintroduce an inline `style.backgroundImage` there** — it would override the stylesheet. The one deliberate exception is the home-page content block, which sets an inline background **only when the `homepage` document actually carries a photograph**; with the field empty the stylesheet keeps this file. It is now only the **fallback under the CMS video** — the `homepage`
+- The About plate is `assets/about-plate.jpg` — **the client's gold wireframe
+  elevation on black since 16 Nov** (805×1062). It was an excavator on a blue
+  site (810×1212), which is what a visitor saw for the second or two before
+  the CMS video arrived, and the two had nothing to do with each other. The
+  old file is `git show 4c31db8:assets/about-plate.jpg`. It is set as
+  `background-image` on `.ab-photo` in CSS.
+  - **IT IS PADDED TO THE PLATE'S RATIO, NOT CROPPED TO IT**, and that is the
+    one thing to preserve if it is ever replaced. `.ab-photo` is `5/6.6`
+    (0.7576) with `background-size:cover`, and the artwork came in at 0.6685 —
+    `cover` would have taken roughly 12% off the top and bottom, which on a
+    building is the roof and the car park. Its ground is pure `#000`, so 47px
+    of its own black was added down each side to bring it to 805×1062 (0.7580,
+    a sub-pixel difference) and the artwork itself was never resampled.
+    **A replacement at any other ratio will crop** — pad it the same way.
+  - It is 1062px tall against a plate that displays at up to 600 CSS px, so it
+    is **slightly under 2x on a retina screen**. Upscaling would have added no
+    detail; a taller export from the client would. Same note as
+    `contact-render.jpg` and the associates plate. It used to be copied off the hero by the About IIFE; that JS is gone, so **don't reintroduce an inline `style.backgroundImage` there** — it would override the stylesheet. The one deliberate exception is the home-page content block, which sets an inline background **only when the `homepage` document actually carries a photograph**; with the field empty the stylesheet keeps this file. It is now only the **fallback under the CMS video** — the `homepage`
   document carries a 630x830 `aboutVideo` and no `aboutImage`, so this file shows
   only while the video is loading, on phones, on data-saver, under
   `prefers-reduced-motion`, or if the file fails. The plate keeps the `5/6.6`
