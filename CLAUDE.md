@@ -493,7 +493,7 @@ Check at 1440×900, 1024×800 and 420×860; scroll the full page; confirm no con
 | IV | Why Raajlaxmi | `why` | Team photograph as the feature plate, **sized so the heading and the photograph share one screen** (see *The Why heading and photograph share one screen*), four numbered rows, **a year timeline that prints a year and the name of a milestone and opens
 the full account sideways** (see *The timeline shows headings and opens
 sideways*), and a closing quote. **The Est. 2004 medallion beside that quote is gone** (12 Nov, client's request) — see *No seal is drawn anywhere now*. The auto-scrolling brand marquee (`.why-carousel`) that used to sit before the quote is gone — Section X replaced it. |
-| XI | Meet Our Owners | `owners` | **Sits between Why and Brands in scroll order**, despite the number. Portrait cards running as a **continuous right-to-left marquee that the visitor can take hold of** — see *The owners strip gives way and comes back*. `SPEED` is 30 px/s, the slowest of the three strips because a tall portrait going past at speed is harder to read than a line of text. `.ow-stage` is the scroll container and carries the edge-fade mask. The copy sits over the foot of the photograph behind a gradient scrim, so the card *is* the picture rather than a picture with a caption under it. **Hovering one card pauses the strip and blurs and dims the others** — the blur is pure CSS (`.ow-grid:hover .ow-card:not(:hover)`), the pause is now JS, with `:focus-within` / `focusin` carrying both for a keyboard, and the blur dropped below 620px where `:hover` sticks after a tap. **Clicking a card opens the detail panel** — hover is the invitation, the click is the choice; see *The owner detail panel*. **Copies are computed, not fixed**, exactly as the client photo strip does it: `build()` measures a card, renders `max(3, ceil(stageWidth / setWidth) + 2)` sets and re-measures, so two published owners loop as cleanly as six. (The photo strip uses `+ 1`; this one needs `+ 2` because it can be pushed backwards.) **The CMS fills the cards from a later block**, so that block fires **`rl:owners`** and this one rebuilds the strip from whatever it left — the same handshake the About counters use with `rl:home-stats`. Reduced motion renders a single set, puts scroll-snap back and drops the mask, so no card is stranded off a stage that no longer moves. **Driven by the `ownersPage` singleton, not the home-page document** — see *The owners live on their own document*. **Its six cards are bracketed placeholders and it is the one section on the home page that removes itself**: an empty `owners` list deletes the section rather than printing "[Owner name]" six times to the public, and it returns the moment anyone is published. With Sanity unreachable the placeholders stay, so a failed fetch never costs the design. **The card prints the name and the role only** — "About them" is the detail panel's content and never appears here; it rides on the card as `data-bio` so the panel can read it off whichever card was opened. The card carries the person, the panel carries what there is to say about them. |
+| XI | Meet Our Owners | `owners` | **Sits between Why and Brands in scroll order**, despite the number. Portrait cards running as a **continuous right-to-left marquee that the visitor can take hold of** — see *The owners strip gives way and comes back*. `SPEED` is 30 px/s, the slowest of the three strips because a tall portrait going past at speed is harder to read than a line of text. `.ow-stage` is the scroll container and carries the edge-fade mask. The copy sits over the foot of the photograph behind a gradient scrim, so the card *is* the picture rather than a picture with a caption under it. **THE NAME AND THE ROLE EACH SIT IN A RESERVED BOX** (`min-height` 2.5em and 4.8em), and that is what makes the row line up: `.ow-text` is pinned to the FOOT of the card, so the block grows upward, and a one-line role left its name 1.6em lower than a card whose role ran to three — across five portraits the names stepped up and down the row. Reserved, **not clamped**, so nothing is ever truncated: the live roles run one to three lines and the names one to two, so 3 and 2 cover the data with the alignment exact. A fourth line of role would step that one card's name up again; raise the reserve or shorten the role in the Studio. Measured 0px of spread on both. **Hovering one card pauses the strip and blurs and dims the others** — the blur is pure CSS (`.ow-grid:hover .ow-card:not(:hover)`), the pause is now JS, with `:focus-within` / `focusin` carrying both for a keyboard, and the blur dropped below 620px where `:hover` sticks after a tap. **Clicking a card opens the detail panel** — hover is the invitation, the click is the choice; see *The owner detail panel*. **Copies are computed, not fixed**, exactly as the client photo strip does it: `build()` measures a card, renders `max(3, ceil(stageWidth / setWidth) + 2)` sets and re-measures, so two published owners loop as cleanly as six. (The photo strip uses `+ 1`; this one needs `+ 2` because it can be pushed backwards.) **The CMS fills the cards from a later block**, so that block fires **`rl:owners`** and this one rebuilds the strip from whatever it left — the same handshake the About counters use with `rl:home-stats`. Reduced motion renders a single set, puts scroll-snap back and drops the mask, so no card is stranded off a stage that no longer moves. **Driven by the `ownersPage` singleton, not the home-page document** — see *The owners live on their own document*. **Its six cards are bracketed placeholders and it is the one section on the home page that removes itself**: an empty `owners` list deletes the section rather than printing "[Owner name]" six times to the public, and it returns the moment anyone is published. With Sanity unreachable the placeholders stay, so a failed fetch never costs the design. **The card prints the name and the role only** — "About them" is the detail panel's content and never appears here; it rides on the card as `data-bio` so the panel can read it off whichever card was opened. The card carries the person, the panel carries what there is to say about them. |
 | X | Brands We Use | `brands` | Follows Why in scroll order. `OUR PARTNERS` header, six category tabs (All / Structure / Interiors / Electrical / Fittings / Utilities) and a card grid, all rendered from the `BRANDS` array in the Section X IIFE — adding a supplier is one line of data, no markup. Each row is `[name, logo file, trade, tab]`: `trade` is the line from the client's sheet and prints on the card, `tab` is the coarser bucket the tabs filter by. Johnson and Hindware appear twice on purpose, under two different trades. Its header (`.br-head` / `.br-label` / `.br-title` / `.br-intro`) is a **copy of Section IV's** rather than a shared rule — change one and the other will not follow. **On a phone the All view is clipped to the first six cards behind a "Show all 30 brands" pill** — see *Brands are clipped on a phone*. |
 
 ### Signature Projects holds one screen
@@ -834,14 +834,33 @@ every desktop size, and the label still clears the navbar by 9–12px. There is
 room, but it is the budget to check against if anything else is ever added to
 that card.
 
-- **IT IS UNCONDITIONAL. Every card gets it, Ongoing and Redevelopment
-  included.** That is what was asked for and it is the one thing here worth
+- ~~**IT IS UNCONDITIONAL. Every card gets it.**~~ **NOT SINCE 16 NOV**, and
+  the thing this file kept saying was worth querying turned out to be worth
   querying: an Occupancy Certificate is issued when a building is finished, so
-  the four Ongoing projects are claiming something that cannot be true of them
-  yet. Making it a per-project tick-box is a `boolean` on `project`, one
-  conditional in the card template of the three collection files plus the
-  signature-card paint in `index.html`, and a Studio redeploy — the same shape
-  the `soldOut` field had. Raise it with the client.
+  the Ongoing cards were claiming one that cannot exist yet. The client gave
+  the **nine** properties that hold one — Nakshatra Auris, Raajlaxmi Tower,
+  Raajlaxmi Avenue, Shakun Solitaire, Priti Darpan, Priti Chaaya, Priti
+  Pearrl, Midas Glory, Midas Enclave — so six of the fifteen now carry no mark.
+  - **`ocReceived` ON THE DOCUMENT IS THE SOURCE OF TRUTH**, and the nine
+    names written into the card block are only what answers until the field is
+    filled in. A boolean that is set — **either way** — wins outright; the
+    names are consulted only where it is `undefined`. So ticking or clearing
+    the box takes effect immediately and per project. **ONCE EVERY PROJECT
+    CARRIES THE FIELD THOSE LISTS ARE DEAD and should be deleted.**
+  - **The list lives in FIVE places** — the four collection files and
+    `index.html` — and they must agree. That is the usual duplication here,
+    and it is also the reason to retire it in favour of the field.
+  - **Matched on the folded key**, case and punctuation dropped and doubled
+    letters collapsed, because the client spells Raajlaxmi and Rajlaxxmi both
+    ways and this must not depend on which they typed.
+  - **The home page's four signature cards needed it too.** They are
+    hand-written markup, so without the same rule the home page went on
+    claiming a certificate for three properties that have none. `hidden`
+    rather than `remove()`: `.sp-oc` sets no `display`, so the attribute does
+    the work and the node survives a repaint.
+  - **The Studio must be redeployed** before the tick-box appears in the form.
+    `npm run build` passes.
+
 - **The signature cards are HAND-WRITTEN MARKUP, four copies**, not a template
   — the home-page content block hydrates the nodes that are already there. So
   the badge is written into each of the four `.sp-card`s. The hydration

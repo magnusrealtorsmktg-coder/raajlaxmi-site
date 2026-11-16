@@ -115,6 +115,25 @@ export default {
         'list and its OC RECEIVED mark.',
     },
     {
+      /* THE OC MARK WAS UNCONDITIONAL UNTIL 16 NOV, on every card including
+         the Ongoing ones, which cannot hold a certificate yet. The client
+         supplied the nine properties that actually have one; this is the
+         field that says so per project.
+
+         UNTIL IT IS FILLED IN, the pages fall back to a list of those nine
+         names written into the card block of index.html and the four
+         collection files. A value here - ticked OR cleared - wins over that
+         list outright, so it takes effect the moment it is set. Once every
+         project carries the field those lists are dead and should go. */
+      name: 'ocReceived',
+      title: 'OC received',
+      type: 'boolean',
+      description:
+        'Shows the OC RECEIVED stamp on the corner of this project\u2019s ' +
+        'photograph. Tick it only where an Occupancy Certificate has actually ' +
+        'been issued - a project still under construction cannot have one.',
+    },
+    {
       name: 'category',
       title: 'Category',
       type: 'string',

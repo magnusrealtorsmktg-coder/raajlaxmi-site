@@ -94,7 +94,7 @@
       '  signatureCards[]{name,category,location,description,link,"imageUrl":image.asset->url,\n' +
       '    "ref":project->{name,category,location,blurb,detailUrl,"slug":slug.current,\n' +
       '                    "imageUrl":image.asset->url}},\n' +
-      '  "projects":*[_type=="project" && defined(slug.current)]{name,detailUrl,"slug":slug.current},\n' +
+      '  "projects":*[_type=="project" && defined(slug.current)]{name,detailUrl,ocReceived,"slug":slug.current},\n' +
       '  "ownersPage":*[_id=="owners-page"][0]{label,intro,\n' +
       '    owners[]{name,role,bio,"photoUrl":photo.asset->url}}\n' +
       '}',
@@ -1957,12 +1957,24 @@
 
   .ow-text{position:absolute;left:0;right:0;bottom:0;z-index:2;
     padding:clamp(1.1rem,1.7vw,1.6rem) clamp(1.1rem,1.7vw,1.6rem) clamp(1.3rem,2vw,1.8rem);}
+  /* THE NAME AND THE ROLE EACH SIT IN A RESERVED BOX, and that is what makes
+     the row line up. `.ow-text` is pinned to the FOOT of the card, so the
+     block grows upward: a one-line role left its name 1.6em lower than a card
+     whose role ran to three, and across five portraits the names stepped up
+     and down the row. The client asked for them level.
+
+     Reserved, not clamped: `min-height` holds the floor and nothing is ever
+     truncated. The live roles run one to three lines (the longest is
+     Technology | Marketing | Architecture | Planning | Creative Head) and the
+     names one to two, so 3 and 2 cover the data with the alignment exact. A
+     FOURTH LINE OF ROLE WOULD STEP THAT ONE CARD'S NAME UP AGAIN - raise the
+     reserve, or shorten the role in the Studio. */
   .ow-name{font-family:"Playfair Display",serif;font-weight:600;
     font-size:clamp(1.1rem,1.5vw,1.45rem);line-height:1.25;color:#fff;
-    letter-spacing:-.005em;}
+    letter-spacing:-.005em;min-height:2.5em;}
   .ow-role{margin-top:.55rem;font-family:"Inter",sans-serif;font-weight:600;
     font-size:clamp(.64rem,.76vw,.74rem);letter-spacing:.13em;line-height:1.6;
-    text-transform:uppercase;color:#CBA96B;}
+    text-transform:uppercase;color:#CBA96B;min-height:4.8em;}
   /* NO BIOGRAPHY ON THE CARD. It used to print here, over the foot of the
      portrait, clamped to three lines because the slot was drawn for one. It is
      the detail panel's content now: the card carries the person, the panel
@@ -5055,6 +5067,19 @@
         .replace(/[^a-z0-9]+/g, '')
         .replace(/(.)\1+/g, '$1');
 
+      /* WHICH SIGNATURE CARDS CARRY THE OC MARK. The same rule the collection
+         pages use, and it has to be here too: these four are hand-written
+         markup, so without this the home page would keep claiming an
+         Occupancy Certificate for three projects that do not hold one.
+         `ocReceived` on the document wins; the names answer until it is set.
+         See the OC block in the collection files - the two lists must agree,
+         and both go the moment every project carries the field. */
+      const ocKey = v => txt(v).toLowerCase()
+        .replace(/[^a-z0-9]+/g, '').replace(/(.)\1+/g, '$1');
+      const OC_SEED = new Set(['Nakshatra Auris', 'Raajlaxmi Tower', 'Raajlaxmi Avenue',
+        'Shakun Solitaire', 'Priti Darpan', 'Priti Chaaya', 'Priti Pearrl',
+        'Midas Glory', 'Midas Enclave'].map(ocKey));
+
       const spByName = new Map();
       pubs.forEach(p => {
         const k = spKey(p.name);
@@ -5086,6 +5111,13 @@
             description: txt(c.description) || txt(r.blurb),
             imageUrl:    txt(c.imageUrl)    || txt(r.imageUrl),
             href:        spHref(c, r),
+            oc:          (function(){
+                           const nm = txt(c.name) || txt(r.name);
+                           const hit = spByName.get(ocKey(nm));
+                           return hit && typeof hit.ocReceived === 'boolean'
+                             ? hit.ocReceived
+                             : OC_SEED.has(ocKey(nm));
+                         })(),
           };
           return row.name ? row : null;
         })
@@ -5106,6 +5138,18 @@
               loc.appendChild(document.createTextNode(c.location));
             }
             setText(card.querySelector('.sp-desc'), c.description);
+
+            /* THE OC MARK IS NOT UNCONDITIONAL ANY MORE. It is written into
+               all four of these cards by hand, so it has to be taken off the
+               ones whose project does not hold a certificate - otherwise the
+               home page keeps claiming one for three properties that have
+               none. `hidden` rather than remove(): .sp-oc sets no `display`,
+               so the attribute does the work, and the node survives a repaint.
+               With Sanity unreachable paint() never runs and all four keep the
+               mark, which is the same design fallback the rest of this block
+               makes. */
+            const ocImg = card.querySelector('.sp-oc');
+            if(ocImg) ocImg.hidden = !c.oc;
 
             const img = card.querySelector('.sp-img');
             if(img && c.imageUrl) img.style.backgroundImage = `url('${c.imageUrl}')`;

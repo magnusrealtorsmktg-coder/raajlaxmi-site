@@ -89,7 +89,7 @@
     /* every published property -- the cards, the city chips and the banner
        hotspots are all built from this one answer */
     projects: '*[_type=="project"]|order(order asc,_createdAt asc){\n' +
-      '  name,stage,stages,status,category,location,blurb,config,area,price,detailUrl,soldOut,\n' +
+      '  name,stage,stages,status,category,location,blurb,config,area,price,detailUrl,soldOut,ocReceived,\n' +
       '  sizes[]{config,area,price},\n' +
       '  "slug":slug.current,"imageUrl":image.asset->url\n' +
       '}',
@@ -2442,6 +2442,36 @@
       ? `<img class="col-sold" src="assets/sold-out.png" alt="Sold out" loading="lazy" decoding="async">`
       : '';
 
+    /* ---- WHICH PROPERTIES CARRY THE OC MARK ----
+       It used to be every card, unconditionally, which this file warned about
+       for a week: an Occupancy Certificate is issued when a building is
+       finished, so an Ongoing project claiming one is saying something that
+       cannot be true of it. The client supplied the nine that actually hold
+       one on 16 Nov.
+
+       `ocReceived` ON THE DOCUMENT IS THE SOURCE OF TRUTH, and the list below
+       is only what answers until the field is filled in. A boolean that is
+       set - either way - wins outright; the names are consulted only where it
+       is undefined. So ticking or clearing the box in the Studio takes effect
+       immediately and per project, and nothing has to be edited here again.
+       ONCE EVERY PROJECT CARRIES THE FIELD THIS LIST IS DEAD and can go.
+
+       Matched on the same folded key the banner hotspots use - case and
+       punctuation dropped, doubled letters collapsed - because the client
+       spells Raajlaxmi and Rajlaxxmi both ways and this must not depend on
+       which one they typed. */
+    const ocKey = v => String(v || '').toLowerCase()
+      .replace(/[^a-z0-9]+/g, '').replace(/(.)\1+/g, '$1');
+    const OC_SEED = new Set(['Nakshatra Auris', 'Raajlaxmi Tower', 'Raajlaxmi Avenue',
+      'Shakun Solitaire', 'Priti Darpan', 'Priti Chaaya', 'Priti Pearrl',
+      'Midas Glory', 'Midas Enclave'].map(ocKey));
+    const ocOf = p => typeof p.ocReceived === 'boolean'
+      ? p.ocReceived
+      : OC_SEED.has(ocKey(p.name));
+    const ocMark = p => ocOf(p)
+      ? `<img class="col-oc" src="assets/oc-received.png" alt="OC received" loading="lazy" decoding="async">`
+      : '';
+
     /* render cards */
     function renderCards(city){
       const filtered = P.filter(p => (city === 'all' || townOf(p) === city) && wanted(p))
@@ -2474,7 +2504,7 @@
               ${badgeLine(p)}
               <span class="col-heart" role="button" aria-label="Save">${HEART}</span>
               <div class="col-cimg" style="background-image:${imgCss(p)}"></div>
-              <img class="col-oc" src="assets/oc-received.png" alt="OC received" loading="lazy" decoding="async">
+              ${ocMark(p)}
             </div>
             <div class="col-cbody">
               <div class="col-chead">
