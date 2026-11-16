@@ -2458,6 +2458,28 @@
         }
       }
 
+      /* --- the collection strip's telephone and email --- */
+      /* "Can't Find What You're Looking For?" printed +91 22 4123 4567 and
+         connect@raajlaxmi.com - both invented for the build, both live for
+         months, and neither matching the footer directly below them. They
+         are read off the same document the footer reads now, so one edit in
+         the Studio moves all of them and this cannot drift again.
+
+         The markup still carries the real pair as the offline fallback. The
+         selectors are data attributes rather than :nth-child so that
+         reordering the two in the markup cannot swap them.
+
+         This lives in all twelve files although only the three collection
+         pages have a .col-contact, which keeps this block identical across
+         them - the same arrangement the rest of the shared chrome has. */
+      const strip = document.querySelector('.col-contact');
+      if(strip){
+        const ph = strip.querySelector('[data-cc="phone"]');
+        const em = strip.querySelector('[data-cc="email"]');
+        if(ph && txt(d.phone)) ph.textContent = txt(d.phone);
+        if(em && txt(d.email)) em.textContent = txt(d.email);
+      }
+
       /* --- the Get In Touch column --- */
       const cx = foot.querySelector('.ft-cx');
       if(cx){

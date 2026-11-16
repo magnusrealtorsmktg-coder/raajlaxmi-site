@@ -1751,8 +1751,8 @@
         <div class="col-cta-end">
           <a class='col-cta-btn' data-hover data-magnetic href="contact.html">Schedule a Consultation<i class="arw"></i></a>
           <div class="col-contact">
-            <span><span class="ic"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 3c0 6 3 9 9 9 1 0 1.5-.5 1.5-1.5L10 9l-2 1C6 9 5 8 4 6l1-2L3.5 1.5C2.5 1.5 2 2 2 3z" stroke="currentColor" stroke-width="1.2"/></svg></span>+91 22 4123 4567</span>
-            <span><span class="ic"><svg width="14" height="12" viewBox="0 0 14 12" fill="none"><rect x="1" y="1" width="12" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M1.5 2l5.5 4 5.5-4" stroke="currentColor" stroke-width="1.2"/></svg></span>connect@raajlaxmi.com</span>
+            <span><span class="ic"><svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 3c0 6 3 9 9 9 1 0 1.5-.5 1.5-1.5L10 9l-2 1C6 9 5 8 4 6l1-2L3.5 1.5C2.5 1.5 2 2 2 3z" stroke="currentColor" stroke-width="1.2"/></svg></span><span class="v" data-cc="phone">+91 77740 00939</span></span>
+            <span><span class="ic"><svg width="14" height="12" viewBox="0 0 14 12" fill="none"><rect x="1" y="1" width="12" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M1.5 2l5.5 4 5.5-4" stroke="currentColor" stroke-width="1.2"/></svg></span><span class="v" data-cc="email">info@raajlaxmigroup.com</span></span>
           </div>
         </div>
       </div>
@@ -2034,7 +2034,6 @@
        document history, and then to the badge text for documents written
        before even that field existed. Nothing vanishes from a listing because
        a migration missed it. */
-    const STAGE_LABEL = {completed:'Completed', ongoing:'Ongoing', redevelopment:'Redevelopment'};
     const stagesOf  = p => (Array.isArray(p.stages) && p.stages.length
                               ? p.stages
                               : [p.stage || p.status || ''])
@@ -2253,13 +2252,26 @@
           : filtered.map(p=>`
           <article class="col-card">
             <div class="col-media">
-              <!-- SOLD OUT replaces the status, as TEXT. Title Case because the
-                   badge is uppercased in CSS; see the .col-badge rule.
+              <!-- THE BADGE IS SOLD OUT OR IT IS NOTHING (16 Nov). It used to fall
+                   back to the project status, so every card carried a pill:
+                   COMPLETED, ONGOING, READY POSSESSION. The client asked for
+                   the eight sold-out properties to say so and for every other
+                   card to carry no pill at all.
+
+                   THE ELEMENT IS OMITTED, NOT LEFT EMPTY. .col-badge is an
+                   absolutely positioned pill with its own brown ground and
+                   padding, so an empty span is not invisible - it paints a
+                   small blob in the corner of the photograph.
+
+                   This is what retired STAGE_LABEL, which existed only to
+                   name a listing when a project carried no status of its own.
+                   The status field is now read by nothing on this page; it is
+                   still on the schema and still drives nothing but the detail
+                   page's fact-bar fallback.
+
                    NO BACKTICKS IN THIS COMMENT: it lives inside the template
                    literal below, and one would end the string. -->
-              <span class="col-badge">${p.soldOut
-                ? 'Sold Out'
-                : (p.status || STAGE_LABEL[stagesOf(p)[0]] || '')}</span>
+              ${p.soldOut ? '<span class="col-badge">Sold Out</span>' : ''}
               <span class="col-heart" role="button" aria-label="Save">${HEART}</span>
               <div class="col-cimg" style="background-image:${imgCss(p)}"></div>
             </div>
@@ -2866,6 +2878,28 @@
         }else{
           row.remove();       // nothing to link to
         }
+      }
+
+      /* --- the collection strip's telephone and email --- */
+      /* "Can't Find What You're Looking For?" printed +91 22 4123 4567 and
+         connect@raajlaxmi.com - both invented for the build, both live for
+         months, and neither matching the footer directly below them. They
+         are read off the same document the footer reads now, so one edit in
+         the Studio moves all of them and this cannot drift again.
+
+         The markup still carries the real pair as the offline fallback. The
+         selectors are data attributes rather than :nth-child so that
+         reordering the two in the markup cannot swap them.
+
+         This lives in all twelve files although only the three collection
+         pages have a .col-contact, which keeps this block identical across
+         them - the same arrangement the rest of the shared chrome has. */
+      const strip = document.querySelector('.col-contact');
+      if(strip){
+        const ph = strip.querySelector('[data-cc="phone"]');
+        const em = strip.querySelector('[data-cc="email"]');
+        if(ph && txt(d.phone)) ph.textContent = txt(d.phone);
+        if(em && txt(d.email)) em.textContent = txt(d.email);
       }
 
       /* --- the Get In Touch column --- */
