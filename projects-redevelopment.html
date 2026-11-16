@@ -9,6 +9,13 @@
 <link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 
+<!-- Saathi, the rule-based assistant. The one piece of shared chrome on
+     this site that is NOT duplicated into all twelve documents: its FAQ
+     prose is editable content, and prose copied twelve times is what put
+     an invented telephone number on three pages for months. No build step
+     and no dependencies either way. See assets/saathi.js. -->
+<link rel="stylesheet" href="assets/saathi.css">
+
 <!-- The CMS lives on another origin and every page needs it on first paint, so
      the handshake is opened before the browser has read a byte of the stylesheet.
      cdn.sanity.io serves the photographs the queries point at. -->
@@ -1545,10 +1552,21 @@
      It is pulled above the fold's safe area on a phone (`env(safe-area-inset-*)`),
      and it steps down a size below 620px so it does not crowd the hero search
      capsule, which sits at the foot of the hero on exactly those screens. */
-  .wa-fab{position:fixed;z-index:860;--wa-lift:0px;
-    right:calc(clamp(1rem,2.2vw,1.5rem) + env(safe-area-inset-right,0px));
-    bottom:calc(clamp(1rem,2.2vh,1.5rem) + env(safe-area-inset-bottom,0px));
-    width:clamp(48px,3.6vw,56px);height:clamp(48px,3.6vw,56px);
+  /* THE GEOMETRY IS PUBLISHED AS CUSTOM PROPERTIES, and that is not
+     tidiness. Saathi's launcher stacks directly on top of this button and
+     its panel above that, so both have to know how big this is and how far
+     off the floor it sits - see assets/saathi.css, which reads these three
+     and carries the same values as its own fallbacks. Change a number here
+     and the column above it follows; hard-code one there and the two drift
+     until something lands on top of something else. */
+  :root{--wa-size:clamp(48px,3.6vw,56px);
+        --wa-bottom:clamp(1rem,2.2vh,1.5rem);
+        --wa-bottom-r:clamp(1rem,2.2vw,1.5rem);
+        --wa-lift:0px;}
+  .wa-fab{position:fixed;z-index:860;
+    right:calc(var(--wa-bottom-r) + env(safe-area-inset-right,0px));
+    bottom:calc(var(--wa-bottom) + env(safe-area-inset-bottom,0px));
+    width:var(--wa-size);height:var(--wa-size);
     display:grid;place-items:center;border-radius:50%;
     background:#25D366;color:#fff;transform:translateY(var(--wa-lift));
     box-shadow:0 6px 18px rgba(12,20,36,.26),0 1px 3px rgba(12,20,36,.2);
@@ -1583,10 +1601,14 @@
      inertly, which is the arrangement `.hs-field > label` and the phone tier's
      `.sv-slot` already have — a selector matching nothing costs nothing, and
      the block stays byte-identical across the twelve. */
-  html.wa-lift .wa-fab{--wa-lift:-5rem;}
+  /* ON THE ROOT, NOT ON .wa-fab. Saathi's launcher stacks on this button
+     and rises with it; declared on .wa-fab the property would not reach a
+     sibling, and the first cut of that had the launcher sitting still while
+     the button rose 80px straight through it. */
+  html.wa-lift{--wa-lift:-5rem;}
 
   @media (max-width:620px),(max-height:560px){
-    .wa-fab{width:46px;height:46px;}
+    :root{--wa-size:46px;}       /* the button and Saathi both follow it */
   }
   @media (prefers-reduced-motion:reduce){
     .wa-fab{transition:none;}
@@ -2930,5 +2952,6 @@
   })();
 
 </script>
+<script defer src="assets/saathi.js"></script>
 </body>
 </html>

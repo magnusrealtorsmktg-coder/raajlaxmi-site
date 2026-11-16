@@ -1,0 +1,222 @@
+/* =====================================================================
+   SAATHI — the rule-based assistant
+   =====================================================================
+   Saathi (साथी, "companion") answers the questions the site already has
+   answers to, and hands anything else to a human with the telephone
+   number and a link to book a visit.
+
+   WHY THIS IS A FILE AND NOT TWELVE COPIES OF A <style> BLOCK. Every other
+   piece of shared chrome on this site is duplicated into all twelve HTML
+   documents, and that is a deliberate convention — see CLAUDE.md. This one
+   is not, for one reason: the thing most likely to be edited here is the
+   FAQ prose in saathi.js, and prose copied twelve times is exactly what
+   produced the invented telephone number that sat on the collection pages
+   for months. The two rules that matter are kept: no build step and no
+   dependencies. The cost is two same-origin requests, both cacheable and
+   neither blocking.
+
+   It reads the site's own tokens (--lux, --champagne, --navy) where they
+   exist and carries a fallback for each, so a page that failed to load its
+   inline stylesheet still renders this correctly rather than unstyled.
+   ===================================================================== */
+
+:root{
+  --sa-navy:#14243C;
+  --sa-gold:#C6A15B;
+  --sa-ink:#1B1A18;
+  --sa-paper:#FFFFFF;
+  --sa-cream:#F8F6F2;
+  --sa-line:rgba(20,36,60,.12);
+  --sa-ease:cubic-bezier(.16,1,.3,1);
+}
+
+/* ---------------------------------------------------------------- launcher
+   IT IS PINNED ABOVE THE WHATSAPP BUTTON, AND IT READS THAT BUTTON'S OWN
+   GEOMETRY to do it. --wa-size and --wa-bottom are declared beside .wa-fab
+   in each page's inline stylesheet; the fallbacks here are the same values
+   written out, so if that block ever changes without this one the launcher
+   lands in a sensible place rather than on top of the thing it sits above.
+   --wa-lift is the hero-capsule lift: both buttons rise together or the
+   column comes apart. */
+.sa-launch{
+  position:fixed; z-index:860;
+  right:calc(var(--wa-bottom-r, clamp(1rem,2.2vw,1.5rem)) + env(safe-area-inset-right,0px));
+  bottom:calc(var(--wa-bottom, clamp(1rem,2.2vh,1.5rem))
+              + env(safe-area-inset-bottom,0px)
+              + var(--wa-size, clamp(48px,3.6vw,56px))
+              + .7rem);
+  width:var(--wa-size, clamp(48px,3.6vw,56px));
+  height:var(--wa-size, clamp(48px,3.6vw,56px));
+  display:grid; place-items:center; border-radius:50%;
+  border:0; padding:0; cursor:pointer;
+  background:var(--sa-navy); color:var(--sa-gold);
+  transform:translateY(var(--wa-lift,0px));
+  box-shadow:0 6px 18px rgba(12,20,36,.26),0 1px 3px rgba(12,20,36,.2);
+  transition:transform .35s var(--lux,var(--sa-ease)),
+             box-shadow .35s var(--lux,var(--sa-ease)),
+             opacity .25s var(--lux,var(--sa-ease)), visibility 0s;
+}
+/* The robot mark is a finished circular button, so it FILLS the launcher
+   rather than sitting inside it at glyph size. The navy ground beneath is
+   only ever seen in the open state, behind the cross. */
+.sa-launch .sa-chat{display:block;width:100%;height:100%;}
+.sa-launch .sa-chat img{width:100%;height:100%;display:block;border-radius:50%;}
+.sa-launch svg{width:54%;height:54%;display:block;}
+.sa-launch:hover,.sa-launch:focus-visible{
+  transform:translateY(calc(var(--wa-lift,0px) - 2px)) scale(1.04);
+  box-shadow:0 10px 24px rgba(12,20,36,.3),0 2px 5px rgba(12,20,36,.22);
+}
+.sa-launch:focus-visible{outline:2px solid var(--sa-gold);outline-offset:3px;}
+
+/* The glyph swaps to a cross while the panel is open, so the one control
+   both opens and closes it — a second close button in the corner of a
+   panel this small reads as clutter. */
+.sa-launch .sa-x{display:none;}
+html.sa-open .sa-launch .sa-chat{display:none;}
+html.sa-open .sa-launch .sa-x{display:block;}
+
+/* A single unread pip, shown until the panel has been opened once. It is
+   the only thing on this site that asks for attention unprompted, so it is
+   a 9px dot and never a number or a word. */
+/* POSITIONED FOR A CIRCLE, NOT A SQUARE. At top/right 2px the pip sits on
+   the corner of the button's BOX, which on a round button is outside the
+   disc — it read as a blemish stuck to the edge rather than a badge on the
+   mark. 11% puts its centre inside the circumference at 45 degrees, and it
+   is a percentage so it holds when the button steps down to 46px. The ring
+   is white because the mark it sits on is blue; it was navy, from when the
+   launcher itself was navy. */
+.sa-dot{position:absolute;top:11%;right:11%;width:9px;height:9px;border-radius:50%;
+  background:var(--sa-gold);border:2px solid #fff;box-shadow:0 1px 2px rgba(12,20,36,.3);}
+html.sa-seen .sa-dot{display:none;}
+
+/* --------------------------------------------------------------- the panel */
+.sa-panel{
+  position:fixed; z-index:870;
+  right:calc(var(--wa-bottom-r, clamp(1rem,2.2vw,1.5rem)) + env(safe-area-inset-right,0px));
+  bottom:calc(var(--wa-bottom, clamp(1rem,2.2vh,1.5rem))
+              + env(safe-area-inset-bottom,0px)
+              + var(--wa-size, clamp(48px,3.6vw,56px)) * 2
+              + 1.4rem);
+  width:min(360px, calc(100vw - 2rem));
+  max-height:min(520px, calc(100vh - var(--wa-size, 56px) * 2 - 6rem));
+  display:flex; flex-direction:column;
+  background:var(--sa-paper); border-radius:18px; overflow:hidden;
+  box-shadow:0 24px 60px rgba(12,20,36,.26),0 2px 8px rgba(12,20,36,.14);
+  /* visibility rather than display:none keeps it out of the accessibility
+     tree while still allowing the fade — the same idiom .lead uses. */
+  visibility:hidden; opacity:0; transform:translateY(10px) scale(.98);
+  transform-origin:bottom right;
+  transition:opacity .3s var(--lux,var(--sa-ease)),
+             transform .3s var(--lux,var(--sa-ease)),
+             visibility 0s linear .3s;
+}
+html.sa-open .sa-panel{
+  visibility:visible; opacity:1; transform:none;
+  transition:opacity .32s var(--lux,var(--sa-ease)),
+             transform .32s var(--lux,var(--sa-ease));
+}
+
+.sa-head{display:flex;align-items:center;gap:.7rem;padding:.95rem 1.1rem;
+  background:var(--sa-navy);color:#fff;flex:none;}
+/* The same mark again in the panel header — it is the bot's face, and a
+   different glyph there would read as a different thing. It carries its own
+   ground, so no tinted circle behind it. */
+.sa-head .sa-av{width:34px;height:34px;border-radius:50%;flex:none;overflow:hidden;
+  display:grid;place-items:center;}
+.sa-head .sa-av img{width:100%;height:100%;display:block;}
+.sa-name{font-family:"Playfair Display",Georgia,serif;font-size:1.02rem;
+  font-weight:600;line-height:1.1;letter-spacing:.01em;}
+.sa-sub{font-family:"Inter",system-ui,sans-serif;font-size:.64rem;
+  letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.62);
+  margin-top:.18rem;display:flex;align-items:center;gap:.35rem;}
+.sa-sub i{width:5px;height:5px;border-radius:50%;background:#49C170;display:block;}
+
+/* ----------------------------------------------------------- the transcript */
+.sa-log{flex:1 1 auto;overflow-y:auto;padding:1rem;display:flex;
+  flex-direction:column;gap:.6rem;background:var(--sa-cream);
+  overscroll-behavior:contain;}
+.sa-msg{font-family:"Inter",system-ui,sans-serif;font-size:.82rem;line-height:1.6;
+  padding:.62rem .82rem;border-radius:13px;max-width:84%;white-space:pre-wrap;
+  animation:sa-in .32s var(--sa-ease) both;}
+.sa-msg a{color:inherit;text-decoration:underline;text-underline-offset:2px;}
+.sa-bot{align-self:flex-start;background:var(--sa-paper);color:var(--sa-ink);
+  border:1px solid var(--sa-line);border-bottom-left-radius:4px;}
+.sa-me{align-self:flex-end;background:var(--sa-navy);color:#fff;
+  border-bottom-right-radius:4px;}
+@keyframes sa-in{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+/* The three dots. A rule-based bot answers instantly, which reads as a
+   canned response; a short pause before the reply is what makes it read as
+   an answer. It is 420ms and it is the only reason this element exists. */
+.sa-typing{align-self:flex-start;display:flex;gap:3px;padding:.7rem .8rem;
+  background:var(--sa-paper);border:1px solid var(--sa-line);border-radius:13px;
+  border-bottom-left-radius:4px;}
+.sa-typing span{width:5px;height:5px;border-radius:50%;background:#9AA3B0;
+  animation:sa-blink 1.1s infinite;}
+.sa-typing span:nth-child(2){animation-delay:.18s;}
+.sa-typing span:nth-child(3){animation-delay:.36s;}
+@keyframes sa-blink{0%,60%,100%{opacity:.28;}30%{opacity:1;}}
+
+/* ------------------------------------------------------------- quick replies
+   LOAD-BEARING, NOT DECORATION. A rule-based matcher only answers what it
+   has been taught, so the chips are how a visitor is shown what it knows
+   before they type something it will miss. */
+.sa-chips{display:flex;flex-wrap:wrap;gap:.4rem;padding:0 1rem .2rem;flex:none;}
+.sa-chip{font-family:"Inter",system-ui,sans-serif;font-size:.7rem;line-height:1;
+  padding:.46rem .68rem;border-radius:999px;cursor:pointer;
+  background:var(--sa-paper);color:var(--sa-navy);
+  border:1px solid rgba(20,36,60,.2);transition:background .2s,border-color .2s;}
+.sa-chip:hover{background:var(--sa-navy);color:#fff;border-color:var(--sa-navy);}
+.sa-chip:focus-visible{outline:2px solid var(--sa-gold);outline-offset:2px;}
+
+/* ------------------------------------------------------------------- input */
+.sa-form{display:flex;align-items:center;gap:.5rem;padding:.7rem 1rem .85rem;
+  background:var(--sa-paper);border-top:1px solid var(--sa-line);flex:none;}
+.sa-in{flex:1 1 auto;min-width:0;font-family:"Inter",system-ui,sans-serif;
+  font-size:.82rem;color:var(--sa-ink);background:var(--sa-cream);
+  border:1px solid transparent;border-radius:999px;padding:.6rem .9rem;}
+.sa-in::placeholder{color:#9AA3B0;}
+.sa-in:focus{outline:none;border-color:var(--sa-gold);background:var(--sa-paper);}
+.sa-send{flex:none;width:34px;height:34px;border-radius:50%;border:0;cursor:pointer;
+  display:grid;place-items:center;background:var(--sa-navy);color:#fff;
+  transition:background .2s,opacity .2s;}
+.sa-send:hover{background:var(--sa-gold);color:var(--sa-navy);}
+.sa-send:focus-visible{outline:2px solid var(--sa-gold);outline-offset:2px;}
+.sa-send svg{width:15px;height:15px;display:block;}
+
+/* --------------------------------------------------------------- standing down
+   The same two cases the WhatsApp button answers to, for the same reasons:
+   the mobile sheet is a full-screen overlay at z-index 90 and would other-
+   wise be covered, and the owner panel and lead popup are things a visitor
+   deliberately opened. */
+html:has(.sheet.open) .sa-launch,
+html:has(.sheet.open) .sa-panel{opacity:0;visibility:hidden;pointer-events:none;}
+
+/* On a phone the open panel is most of the screen, so the WhatsApp button
+   beneath it is noise — it comes back the moment the panel closes. */
+@media (max-width:620px),(max-height:560px){
+  html.sa-open .wa-fab{opacity:0;visibility:hidden;pointer-events:none;}
+  /* IT STILL HAS TO CLEAR ITS OWN LAUNCHER. The first cut of this tier
+     stopped one button-height off the floor, which put the panel's lower
+     edge across the launcher — and the launcher is the close button, so on
+     a phone the panel covered the only way out of it (Esc and a tap
+     outside still worked, neither of which is discoverable). The geometry
+     is the same as the desktop rule: two buttons plus a gap. Caught in a
+     screenshot, not by the fits-in-viewport measurement, which it passed. */
+  .sa-panel{
+    right:.75rem; left:.75rem; width:auto;
+    max-height:min(70vh, calc(100vh - var(--wa-size,46px) * 2 - 5rem));
+    bottom:calc(var(--wa-bottom, clamp(1rem,2.2vh,1.5rem))
+                + env(safe-area-inset-bottom,0px)
+                + var(--wa-size, 46px) * 2 + 1.2rem);
+  }
+  .sa-msg{font-size:.84rem;max-width:88%;}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .sa-launch,.sa-panel{transition:none;}
+  .sa-launch:hover,.sa-launch:focus-visible{transform:translateY(var(--wa-lift,0px));}
+  .sa-msg{animation:none;}
+  .sa-typing span{animation:none;opacity:.5;}
+  html.sa-open .sa-panel{transform:none;}
+}
