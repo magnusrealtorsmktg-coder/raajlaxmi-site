@@ -103,7 +103,7 @@ await client.createOrReplace({
     {
       _key: 'i3',
       title: 'Visit Us',
-      text: 'Shanti Niwas Opp Saraswati School\nStation Road, Virar West',
+      text: 'Building No. 1, Kala Kutir, Office 1 & 2, Dongarpada Rd, Y. K. Nagar,\nVirar (West), Vasai-Virar, Maharashtra-401303.',
     },
     {_key: 'i4', title: 'Business Hours', text: 'Monday – Saturday\n10:00 AM – 7:00 PM'},
   ],
@@ -132,7 +132,7 @@ await client.createOrReplace({
   social: [],
   phone: '+91 77740 00939',
   email: 'info@raajlaxmigroup.com',
-  address: 'Shanti Niwas, Opp. Saraswati School,\nStation Road, Virar West',
+  address: 'Building No. 1, Kala Kutir, Office 1 & 2, Dongarpada Rd, Y. K. Nagar,\nVirar (West), Vasai-Virar, Maharashtra-401303.',
   copyright: '© 2026 Raajlaxmi Group. All rights reserved.',
 })
 console.log('seeded site-settings (social handles left empty — add the real ones)')

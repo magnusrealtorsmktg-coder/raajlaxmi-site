@@ -271,7 +271,8 @@
     pointer-events:none;z-index:9999;transform:translate(-50%,-50%);will-change:transform;
   }
   .cursor-ring.hover{width:56px;height:56px;border-color:var(--champagne);background:rgba(203,169,107,.06);}
-  @media(hover:none),(max-width:760px){ .cursor-ring,.cursor-dot{display:none;} }
+  /* custom ring cursor retired — the normal arrow is used everywhere */
+  .cursor-ring,.cursor-dot{display:none !important;}
 
   /* ---------- NAV (no capsule — sits directly on the image) ---------- */
   .nav-wrap{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:center;

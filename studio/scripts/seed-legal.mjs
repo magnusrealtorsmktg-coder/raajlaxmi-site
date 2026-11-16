@@ -69,7 +69,7 @@ const PAGES = [
       },
       {
         "heading": "Grievance Officer",
-        "body": "If you are unhappy with how we have handled your information, you may contact our Grievance Officer, appointed under the Digital Personal Data Protection Act, 2023 and the Information Technology Act, 2000:\n\n[Grievance Officer name]\nRaajlaxmi Group, Shanti Niwas, Opp. Saraswati School, Station Road, Virar West\nEmail: [grievance officer email]\nTelephone: +91 77740 00939\n\nWe will acknowledge your complaint and respond within the period prescribed by law. If you remain dissatisfied you may approach the Data Protection Board of India."
+        "body": "If you are unhappy with how we have handled your information, you may contact our Grievance Officer, appointed under the Digital Personal Data Protection Act, 2023 and the Information Technology Act, 2000:\n\n[Grievance Officer name]\nRaajlaxmi Group, Building No. 1, Kala Kutir, Office 1 & 2, Dongarpada Rd, Y. K. Nagar, Virar (West), Vasai-Virar, Maharashtra-401303\nEmail: [grievance officer email]\nTelephone: +91 77740 00939\n\nWe will acknowledge your complaint and respond within the period prescribed by law. If you remain dissatisfied you may approach the Data Protection Board of India."
       }
     ],
     "noteTitle": "Questions about your information",
@@ -124,7 +124,7 @@ const PAGES = [
       },
       {
         "heading": "Contact",
-        "body": "Questions about these terms can be sent to info@raajlaxmigroup.com, or to Raajlaxmi Group, Shanti Niwas, Opp. Saraswati School, Station Road, Virar West."
+        "body": "Questions about these terms can be sent to info@raajlaxmigroup.com, or to Raajlaxmi Group, Building No. 1, Kala Kutir, Office 1 & 2, Dongarpada Rd, Y. K. Nagar, Virar (West), Vasai-Virar, Maharashtra-401303."
       }
     ],
     "noteTitle": "The documents that actually bind us",
