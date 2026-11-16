@@ -1538,6 +1538,74 @@
     .lead-card,.lead.on .lead-card{transition:none;transform:none;}
   }
 
+  /* ===== WHATSAPP BUTTON =====
+     A fixed call-to-chat in the bottom-right corner of every page. Shared
+     chrome, so this block is byte-identical in all twelve files.
+
+     IT SITS BELOW BOTH MODALS ON PURPOSE. The owner detail panel is z-index
+     880 and the lead popup 900, and each covers the viewport with its own
+     scrim; at 860 this goes under them, so a visitor who has deliberately
+     opened one is not offered a second thing on top of it. It is above the
+     navbar (100) only nominally — the two never share the screen, one being
+     pinned to the top and this to the foot.
+
+     WHATSAPP GREEN RATHER THAN THE SITE'S GOLD. This is a utility control,
+     and the colour is the half of it people recognise without reading; a
+     champagne circle in the corner of a property page reads as ornament. The
+     glyph is FILLED, not the footer's stroked line-icon, because at ~30px a
+     hairline outline of this shape closes up into a blob.
+
+     It is pulled above the fold's safe area on a phone (`env(safe-area-inset-*)`),
+     and it steps down a size below 620px so it does not crowd the hero search
+     capsule, which sits at the foot of the hero on exactly those screens. */
+  .wa-fab{position:fixed;z-index:860;--wa-lift:0px;
+    right:calc(clamp(1rem,2.2vw,1.5rem) + env(safe-area-inset-right,0px));
+    bottom:calc(clamp(1rem,2.2vh,1.5rem) + env(safe-area-inset-bottom,0px));
+    width:clamp(48px,3.6vw,56px);height:clamp(48px,3.6vw,56px);
+    display:grid;place-items:center;border-radius:50%;
+    background:#25D366;color:#fff;transform:translateY(var(--wa-lift));
+    box-shadow:0 6px 18px rgba(12,20,36,.26),0 1px 3px rgba(12,20,36,.2);
+    transition:transform .35s var(--lux),box-shadow .35s var(--lux),
+               opacity .25s var(--lux),visibility 0s;}
+  .wa-fab svg{width:56%;height:56%;display:block;}
+  /* THE HOVER LIFT COMPOSES WITH --wa-lift RATHER THAN REPLACING IT. Written
+     as a bare translateY(-2px) it would drop the button back onto whatever it
+     had stepped above, at the exact moment a pointer was over it. */
+  .wa-fab:hover,.wa-fab:focus-visible{
+    transform:translateY(calc(var(--wa-lift) - 2px)) scale(1.04);
+    box-shadow:0 10px 24px rgba(12,20,36,.3),0 2px 5px rgba(12,20,36,.22);}
+  .wa-fab:focus-visible{outline:2px solid var(--champagne);outline-offset:3px;}
+
+  /* IT STANDS DOWN WHILE THE MOBILE SHEET IS OPEN. The sheet is a full-screen
+     overlay at z-index 90 and this sits at 860, so without this rule the
+     button floats over the menu a visitor has just opened — measured, it was
+     the top element at its own centre with the sheet open. Same reasoning as
+     the lead popup standing down for the owner panel, and the same shape of
+     fix; `:has()` is already an idiom in this codebase (see .ct-item:has). */
+  html:has(.sheet.open) .wa-fab{opacity:0;visibility:hidden;pointer-events:none;
+    transition:opacity .25s var(--lux),visibility 0s linear .25s;}
+
+  /* IT STEPS ABOVE THE HERO'S PHONE SEARCH CAPSULE. On a phone that capsule is
+     pinned to the foot of the hero and this button lands on its chevron —
+     measured 16-19px of overlap at 390x844, 360x640, 412x915 and 280x653, the
+     chevron being the right-most thing in it. While the capsule is on screen
+     the button steps above it and slides back down once it has scrolled away.
+
+     INDEX-ONLY IN PRACTICE: the class is set by the HERO SEARCH block, and no
+     other page has a capsule to set it. The other eleven files carry this rule
+     inertly, which is the arrangement `.hs-field > label` and the phone tier's
+     `.sv-slot` already have — a selector matching nothing costs nothing, and
+     the block stays byte-identical across the twelve. */
+  html.wa-lift .wa-fab{--wa-lift:-5rem;}
+
+  @media (max-width:620px),(max-height:560px){
+    .wa-fab{width:46px;height:46px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .wa-fab{transition:none;}
+    .wa-fab:hover,.wa-fab:focus-visible{transform:translateY(var(--wa-lift));}
+  }
+
 
   /* ===== PHONE: A READABLE FLOOR FOR THE LABEL TYPE =====
      Present in all eleven files and IDENTICAL in each, like the rest of the
@@ -1782,6 +1850,20 @@
 <!-- Lead popup. Opens 30s into a visit; see the LEAD POPUP IIFE at the end of
      the trailing script. This markup sits *before* that script so the shared
      [data-hover] / [data-magnetic] pass picks up its button. -->
+<!-- WhatsApp. Fixed to the bottom-right of every page; the WHATSAPP BUTTON
+     block in the stylesheet above carries the reasoning.
+
+     THE href HERE IS THE FALLBACK, NOT THE SOURCE OF TRUTH. It is the number
+     printed in the footer, written out so the button works with Sanity
+     unreachable and before the settings query lands — but the SITE SETTINGS
+     block re-points it at the CMS handle on every page, so one edit in the
+     Studio moves this and the footer's WhatsApp icon together. -->
+<a class="wa-fab" id="waFab"
+   href="https://wa.me/917774000939?text=Hi%20Raajlaxmi%20Group%2C%20I%20would%20like%20to%20know%20more%20about%20your%20projects."
+   target="_blank" rel="noopener noreferrer" aria-label="Chat with us on WhatsApp">
+  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
 <div class="lead" id="leadModal" role="dialog" aria-modal="true" aria-labelledby="leadTitle">
   <div class="lead-scrim" data-lead-close></div>
   <div class="lead-card" id="leadCard">
@@ -2260,7 +2342,13 @@
     if(!window.RL) return;
 
     const foot = document.querySelector('.ft');
-    if(!foot) return;
+    /* project.html has no footer by design, but it DOES carry the WhatsApp
+       button, and that button's number comes from this same document — so
+       the block may no longer bail on a missing footer alone, or the one page
+       without one would be the one page whose number could not be changed
+       from the Studio. */
+    const waFab = document.getElementById('waFab');
+    if(!foot && !waFab) return;
 
     const txt = v => (typeof v === 'string' ? v.trim() : '');
     const esc = v => txt(v).replace(/[&<>"]/g, c =>
@@ -2323,6 +2411,19 @@
       .catch(err => console.warn('site settings: keeping the built-in footer —', err));
 
     function paint(d){
+      /* --- the floating WhatsApp button --- */
+      /* It is not part of the footer, but it dials the same handle, so it is
+         repointed from the same field. waHref() is what makes that safe: the
+         client types the number as it is printed ("+91 77740 00939") and
+         wa.me takes bare digits. A document with no WhatsApp handle leaves
+         the markup's own href alone rather than breaking the button. */
+      if(waFab){
+        const wa = (Array.isArray(d.social) ? d.social : [])
+          .find(x => x && txt(x.platform) === 'whatsapp' && txt(x.url));
+        if(wa) waFab.setAttribute('href', waHref(wa.url));
+      }
+      if(!foot) return;
+
       /* --- social handles --- */
       const row = foot.querySelector('.ft-soc');
       if(row){
