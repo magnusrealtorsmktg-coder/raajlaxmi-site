@@ -29,9 +29,12 @@ true when written and is not any more; it went out with the commits after it.
 client commits here too, and a sentence about what is pushed goes stale the
 moment either of you pushes.
 
-**Not committed yet:** the rupee sign on every rendered price, and the
-WhatsApp button on all twelve pages — see *The rupee sign is added at render*
-and *The WhatsApp button is on every page*.
+**Live since 16 Nov:** the rupee sign on every rendered price and the WhatsApp
+button on all twelve pages (`223e4e6`, `3c943f1`), then the badge reduced to
+SOLD OUT-or-nothing and the collection strip's invented telephone and email
+replaced with the real pair off `site-settings`. See *The rupee sign is added
+at render*, *The WhatsApp button is on every page* and *SOLD OUT is the only
+badge there is*.
 
 **No live defect is known on the site.** The one found on 14 Nov — six new
 free-text prices breaking the budget filter, so that "Under ₹25 Lacs" returned
@@ -222,7 +225,7 @@ two queries in the same session.
 | | state |
 |---|---|
 | Projects | **15.** Completed 9, Ongoing 4, Redevelopment 3 — Krishna Niwas is in two listings, which is what `stages` exists for. Aarvi Apartment was unpublished on 8 Nov, see *Aarvi Apartment was taken off the site* |
-| Sold out | **Back, per property, since 14 Nov**; since 16 Nov the card prints the WORDS `SOLD OUT` in the status pill and the artwork is unused. **Eight carry `true`** on 16 Nov: Priti Pearrl, Priti Chaaya, Raajlaxmi Tower, Raajlaxmi Apartment, Shakun Solitaire, Midas Enclave, Midas Glory, Nakshatra Auris — so eight cards print no status. See *SOLD OUT is the status badge's text* |
+| Sold out | **Back, per property, since 14 Nov**; since 16 Nov the card prints the WORDS `SOLD OUT` and the artwork is unused. **Eight carry `true`**, verified live on 16 Nov: Priti Pearrl, Priti Chaaya, Raajlaxmi Tower, Raajlaxmi Apartment, Shakun Solitaire, Midas Enclave, Midas Glory, Nakshatra Auris. **The other seven now print NO badge at all** — the status fallback is gone. See *SOLD OUT is the only badge there is* |
 | Sizes by configuration | **3 of 15**, two rows each: Raajlaxmi Tower, Raajlaxmi Apartment (both `1 BHK 380-400 Sq. Ft.` / `2 BHK 360-550 Sq.ft`) and Nakshatra Auris (`315 – 373 Sq. Ft.` / `461-501 Sq. Ft.`). The other twelve still print the old `config` + `area` pair, which is the designed fallback |
 | 3D walkthrough | **NONE.** The field exists on `project` and the button is wired, but no project carries a video, so the button renders nowhere. Untested against a real file |
 | Detail-page content | **6 of 15 have a gallery** (Rajlaxxmi Park 4, Priti Pearrl 3, and 2 each on Krishna Niwas, Raajlaxmi Avenue, Raajlaxmi Meenakshi, Shanti Niwas), **6 a price**, 7 a configuration. The gallery count was 0 on 8 Nov |
@@ -369,7 +372,12 @@ property that is not sold out in its place on the home page. Both halves are
   it**, and the map pin may not have moved with the office. See *The office
   address changed on 16 Nov* under *Content management → Contact page*.
 - **The footer prints `info@raajlaxmigroup.com`, which does not exist.** It is
-  not one of the 21 Hostinger mailboxes; `info@raajlaxmi.com` is.
+  not one of the 21 Hostinger mailboxes; `info@raajlaxmi.com` is. **Since
+  16 Nov the collection pages' "Can't Find What You're Looking For?" strip
+  prints it too**, both reading the one `site-settings` document — so this is
+  now wrong in two places at once and right in neither, and one Studio edit
+  fixes both. Worth settling before launch: it is the address the client's
+  own site invites people to write to.
 - **Two badges disagree with their listing.** Shanti Niwas is filed
   Redevelopment and Raajlaxmi Avenue is Redevelopment-and-sold-out, but both
   print a **Completed** badge. That is `status` (free text) overriding the
@@ -858,7 +866,7 @@ that card.
   `studio/scripts/mark-sold-out.mjs` was deleted — it set a field that no
   longer exists.
 - ~~**`assets/sold-out.png` is referenced by nothing**~~ — **it is back, and
-  it is a different file** (14 Nov). See *SOLD OUT is the status badge's text*. The old tilted stamp was replaced by the client's new horizontal
+  it is a different file** (14 Nov). See *SOLD OUT is the only badge there is*. The old tilted stamp was replaced by the client's new horizontal
   one, keyed out of its white ground the same way `oc-received.png` was;
   `git show HEAD~1:assets/sold-out.png` recovers the tilted one.
 - **REMOVING THE FIELD FROM THE SCHEMA DOES NOT REMOVE IT FROM THE DOCUMENTS.**
@@ -911,12 +919,44 @@ Measured at 1440, 1200, 900, 620, 390, 360 and 280 with two- and three-row
 projects: no card spilling its box, no horizontal page overflow, no console
 errors.
 
-### SOLD OUT is the status badge's text
+### SOLD OUT is the only badge there is
+
+**THE BADGE IS `SOLD OUT` OR IT IS ABSENT — there is no status pill on a
+collection card any more (16 Nov, the client's request).** It used to fall
+back to `p.status`, then to the listing's own label, so every one of the
+fifteen cards carried a pill. The client asked for the eight sold-out
+properties to say so and for **every other card to show nothing at all**, and
+that is what the template does now:
+
+```js
+${p.soldOut ? '<span class="col-badge">Sold Out</span>' : ''}
+```
+
+- **THE ELEMENT IS OMITTED, NOT LEFT EMPTY.** `.col-badge` is an absolutely
+  positioned pill with its own brown ground and padding, so an empty `<span>`
+  is not invisible — it paints a small blob in the corner of the photograph.
+  Measured: 80x25 where it renders, no element at all where it does not.
+- **`STAGE_LABEL` went with it**, in all three files. It existed only to name
+  a listing for a project carrying no `status`, and nothing else ever read it.
+- **`status` is now read by NOTHING on the collection pages.** It is still on
+  the schema and still feeds the detail page's fact-bar fallback, so it is not
+  dead data — but editing it no longer changes a card. That is the same quiet
+  trap `heroHeadline` and `cardText` set, and it is worth saying out loud
+  because `status` reads like the field that would control this.
+- **The consequence the client accepted:** Shakun Solitaire's
+  `Ready Possession` no longer appears anywhere. It was the one badge saying
+  something its listing could not — and that project is sold out, so its card
+  now reads `SOLD OUT` instead. If a status ever needs to show again
+  alongside, the two have to share the corner.
+- **Eight projects carry `soldOut: true`**, verified against the live dataset
+  on 16 Nov and matching the client's list exactly: Priti Chaaya, Priti
+  Pearrl, Nakshatra Auris, Raajlaxmi Tower, Raajlaxmi Apartment, Shakun
+  Solitaire, Midas Enclave, Midas Glory. **This was already correct in the
+  CMS** — the 16 Nov request changed the code, not a single document.
 
 **THE ARTWORK IS NOT USED ON A CARD AT ALL ANY MORE.** It had four homes in
 three days. Read this table before trusting any comment or commit message
-about it — including the commit immediately before this one, which shipped the
-fourth:
+about it:
 
 | | 9 Nov (removed) | 14 Nov, first cut | 14 Nov, shipped | 16 Nov, first cut | 16 Nov, now |
 |---|---|---|---|---|---|
@@ -3274,6 +3314,29 @@ hard-coded with `href="#"`; they are now drawn from the CMS — the SVG paths li
 in an `ICON` map in that block, so adding a network is one entry there plus one
 option in the schema — and **the row removes itself when no handles are set**,
 because four buttons that go nowhere are worse than none.
+
+**The collection strip reads its telephone and email off this document too
+(16 Nov).** "Can't Find What You're Looking For?" printed
+`+91 22 4123 4567` and `connect@raajlaxmi.com` — **both invented for the
+build, both live for months, and neither matching the footer a few hundred
+pixels below them.** Nothing was watching them because they were plain text in
+the markup of three files, so nobody noticed when the real numbers were filled
+in everywhere else.
+
+- The markup now carries the real pair as the offline fallback, and `paint()`
+  overwrites it from `phone` / `email` on `site-settings`.
+- **The text sits in its own `<span class="v" data-cc="…">`** rather than as a
+  bare text node beside the icon, because there has to be an element to set
+  `textContent` on. Keyed on `data-cc`, never `:nth-child`, so reordering the
+  two in the markup cannot swap them.
+- **The block stays identical in all twelve files** although only the three
+  collection pages have a `.col-contact` — the usual arrangement.
+- **`project.html` still carries the invented pair** at its `.pd-cline`,
+  marked `<!-- PLACEHOLDER: direct line and agent are invented -->`. That one
+  is a different component and is effectively unreachable: with a `?p=` the
+  line is either the project's own `phone` or removed outright, and the bare
+  `project.html` fallback is the Romal Kirti mock that nothing links to. It is
+  left because the whole of that mock is stale, not just the number.
 
 **Contact page.** A singleton (`contact-page`) covering the label, heading (plus
 its gold phrase), intro, the four info boxes, the enquiry card's wording, the
