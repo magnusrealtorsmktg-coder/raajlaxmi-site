@@ -60,14 +60,14 @@
     { id: 'location',
       k: ['where', 'where do you build', 'where do you', 'location', 'locations', 'area',
           'areas', 'which area', 'which areas', 'kahan', 'kaha', 'town', 'towns',
-          'city', 'vasai', 'virar', 'nallasopara', 'nalasopara', 'saphale', 'western line',
+          'city', '!vasai', '!virar', 'nallasopara', 'nalasopara', 'saphale', 'western line',
           'which place', 'locality', 'build', 'building in', 'operate', 'based'],
       a: 'Four towns along the Western line: Vasai, Nallasopara, Virar and Saphale.\n\nYou can filter the collection by any one of them.',
       act: [['See properties by town', 'projects.html']],
       chips: ['What sizes do you offer?', 'Book a site visit', 'Where is your office?'] },
 
     { id: 'price',
-      k: ['price', 'prices', 'cost', 'costs', 'rate', 'rates', 'budget', 'kitna', 'kitne',
+      k: ['!price', '!prices', '!cost', '!costs', '!rate', '!rates', 'budget', 'kitna', 'kitne',
           'kimat', 'keemat', 'paisa', 'expensive', 'cheap', 'affordable', 'crore', 'cr',
           'lacs', 'lakh', 'lakhs', 'how much', 'quotation', 'quote'],
       a: 'Prices differ by project and by configuration, and they move — so I would rather not quote you a figure that has gone stale.\n\nEvery listing shows its own starting price, and you can filter the collection by budget band. For a firm number on a particular flat, our team is the right place to ask.',
@@ -76,8 +76,8 @@
       chips: ['Talk to someone', 'Book a site visit', 'Home loan / EMI'] },
 
     { id: 'config',
-      k: ['bhk', '1 bhk', '2 bhk', '3 bhk', 'one bhk', 'two bhk', 'three bhk', 'carpet',
-          'carpet area', 'size', 'sizes', 'sq ft', 'sqft', 'square feet', 'configuration',
+      k: ['!bhk', 'one bhk', 'two bhk', 'three bhk', 'carpet',
+          'carpet area', '!size', '!sizes', 'sq ft', 'sqft', 'square feet', 'configuration',
           'layout', 'rooms', 'bedroom', 'bedrooms', 'kamra', 'jodi', 'shop', 'shops',
           'office space'],
       a: 'Mostly 1, 2 and 3 BHK homes, and a few projects also carry shops and office units.\n\nEach listing prints the carpet area against each configuration, so you can see exactly what a 1 BHK measures in that particular building.',
@@ -85,7 +85,7 @@
       chips: ['Price range?', 'Book a site visit', 'Download a brochure'] },
 
     { id: 'visit',
-      k: ['visit', 'site visit', 'viewing', 'appointment', 'schedule', 'book', 'booking',
+      k: ['!visit', 'site visit', 'viewing', 'appointment', 'schedule', 'book', 'booking',
           'meet', 'meeting', 'tour', 'see the flat', 'see the property', 'come', 'dekhna',
           'consultation', 'site'],
       a: 'Gladly — a site visit is the best way to judge a home.\n\nLeave your details on the enquiry form and our team will call to fix a time that suits you. You can also ring us directly.',
@@ -94,7 +94,7 @@
       chips: ['Where do you build?', 'Where is your office?'] },
 
     { id: 'brochure',
-      k: ['brochure', 'brochures', 'pdf', 'catalogue', 'catalog', 'floor plan', 'floorplan',
+      k: ['!brochure', 'brochures', '!pdf', 'catalogue', 'catalog', 'floor plan', 'floorplan',
           'plan', 'plans', 'drawing', 'layout plan', 'details', 'specification',
           'specifications'],
       a: 'Each property page carries its own brochure. Open the project you are interested in and use the brochure button — we ask for a name and a number first so the team knows who to follow up with.',
@@ -102,16 +102,17 @@
       chips: ['Book a site visit', 'Talk to someone'] },
 
     { id: 'emi',
-      k: ['emi', 'loan', 'loans', 'home loan', 'finance', 'financing', 'bank', 'banks',
+      k: ['!emi', '!loan', 'loans', 'home loan', 'finance', 'financing', 'bank', 'banks',
           'instalment', 'installment', 'interest', 'interest rate', 'mortgage',
-          'down payment', 'downpayment', 'tenure', 'monthly payment', 'kist'],
+          'down payment', 'downpayment', 'tenure', 'monthly payment', 'kist',
+          'calculator', 'calculate', 'repayment'],
       a: 'There is an EMI calculator on the site — put in a price, a deposit, a rate and a tenure and it gives you the monthly instalment.\n\nIt is an estimate only: it leaves out stamp duty, registration, GST and bank charges. For what a bank will actually sanction, our team can point you at the lenders we work with.',
       act: [['Open the EMI calculator', 'emi.html'],
             ['Talk to the team', 'contact.html#ctForm']],
       chips: ['Price range?', 'Book a site visit'] },
 
     { id: 'contact',
-      k: ['contact', 'phone', 'number', 'mobile', 'call', 'calling', 'email', 'mail',
+      k: ['contact', '!phone', 'number', 'mobile', '!call', 'calling', 'email', 'mail',
           'reach', 'reach you', 'talk', 'speak', 'whatsapp', 'enquiry', 'inquiry',
           'get in touch'],
       a: 'You can reach us on ' + PHONE + ', or write to ' + EMAIL + '.\n\nIf it is easier, leave your details on the enquiry form and we will call you back.',
@@ -120,7 +121,7 @@
       chips: ['Where is your office?', 'Book a site visit'] },
 
     { id: 'office',
-      k: ['office', 'address', 'head office', 'timing', 'timings', 'hours', 'open',
+      k: ['office', 'address', 'head office', '!timing', '!timings', '!hours', 'open',
           'opening', 'closed', 'closing', 'when are you open', 'working hours', 'sunday',
           'monday', 'saturday', 'directions', 'reach office'],
       a: 'Our office is at Building No. 1, Kala Kutir, Office 1 & 2, Dongarpada Road, Y. K. Nagar, Virar (West), Vasai-Virar, Maharashtra 401303.\n\nMonday to Saturday, 10:00 AM to 7:00 PM. Visitors are welcome — an appointment simply means we can give you our full attention.',
@@ -138,7 +139,7 @@
       chips: ['Where do you build?', 'Is it RERA registered?'] },
 
     { id: 'rera',
-      k: ['rera', 'maharera', 'legal', 'legality', 'approval', 'approved', 'approvals',
+      k: ['!rera', 'maharera', 'legal', 'legality', 'approval', 'approved', 'approvals',
           'registration', 'registered', 'document', 'documents', 'documentation',
           'paperwork', 'credai', 'clearance', 'title', 'genuine'],
       a: 'Our projects are MahaRERA registered and we are a CREDAI-MCHI member.\n\nThe RERA number for any particular project, and the title and approval papers behind it, are things our team will give you in writing — please ask them directly rather than taking it from me.',
@@ -148,7 +149,7 @@
 
     { id: 'possession',
       k: ['possession', 'ready', 'ready to move', 'move in', 'handover', 'hand over',
-          'oc', 'occupancy', 'occupancy certificate', 'completion', 'when ready',
+          '!oc', 'occupancy', 'occupancy certificate', 'completion', 'when ready',
           'delivery', 'kab milega', 'timeline'],
       a: 'It depends on the project: the completed ones are ready to move into, and the ongoing ones each have their own schedule.\n\nEach listing is filed under completed, ongoing or redevelopment so you can see at a glance. For a date on a particular building, our team will give you the current position.',
       act: [['Completed projects', 'projects.html?status=completed'],
@@ -156,7 +157,7 @@
       chips: ['Book a site visit', 'Talk to someone'] },
 
     { id: 'soldout',
-      k: ['sold', 'sold out', 'available', 'availability', 'left', 'remaining', 'vacant',
+      k: ['!sold', 'sold out', 'available', 'availability', 'left', 'remaining', 'vacant',
           'booked', 'in stock', 'khali', 'bacha'],
       a: 'Some of our completed projects are sold out, and the cards on the collection page say so.\n\nAvailability changes quickly though, so for what is genuinely free in a particular building today, please ask the team — I would rather you heard it from them than from me.',
       act: [['See the collection', 'projects.html'],
@@ -172,8 +173,8 @@
       chips: ['About Raajlaxmi', 'Talk to someone'] },
 
     { id: 'amenities',
-      k: ['amenity', 'amenities', 'facility', 'facilities', 'parking', 'lift', 'elevator',
-          'gym', 'garden', 'security', 'playground', 'play area', 'pool', 'clubhouse',
+      k: ['amenity', 'amenities', 'facility', 'facilities', '!parking', '!lift', 'elevator',
+          '!gym', '!garden', 'security', 'playground', 'play area', '!pool', 'clubhouse',
           'power backup', 'water', 'cctv'],
       a: 'Amenities differ from building to building — parking, lifts, power backup, landscaped space, security and play areas are the usual ones.\n\nEach property page lists what that particular project has, which is more reliable than a general answer.',
       act: [['See a property', 'projects.html']],
@@ -269,9 +270,17 @@
 
   FAQ.forEach(function (it) {
     it._rx = it.k.map(function (w) {
+      /* A LEADING "!" MARKS A KEYWORD THAT IS STRONG ON ITS OWN. Length is
+         a poor proxy for how much a word tells you: "emi", "bhk", "oc" and
+         "rera" are three or four letters and are the most specific things
+         a visitor can type, while plenty of six-letter words are vague.
+         Scored by length alone, "emi calculator" and "what sizes do you
+         have" both fell through to the fallback on the live site. */
+      var strong = w.charAt(0) === '!';
+      if (strong) w = w.slice(1);
       return {
         re: new RegExp('(^|[^a-z0-9])' + rxEsc(w) + '([^a-z0-9]|$)', 'i'),
-        w: w.indexOf(' ') > -1 ? 4 : (w.length >= 6 ? 2 : 1)
+        w: strong ? 3 : (w.indexOf(' ') > -1 ? 4 : (w.length >= 6 ? 2 : 1))
       };
     });
   });

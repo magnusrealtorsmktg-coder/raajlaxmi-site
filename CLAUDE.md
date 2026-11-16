@@ -1333,7 +1333,7 @@ of slack**. The practical floor is about **600px of window height**, where it
 is level to within a few pixels. Phones are deliberately excluded and scroll as
 before. No horizontal overflow anywhere.
 
-### The left column: four cards under the heading, and a render under them
+### The left column: three landscape cards, and a render under them
 
 Reworked 9 Nov from a client sketch. The column was label → heading → rule →
 invitation paragraph → a 2x2 grid of plain text quadrants separated by
@@ -1349,14 +1349,38 @@ building render**, and the paragraph is gone.
   holds `.ct-ic` and a `div` of `h4` + `a`/`p`, because the CMS block fills
   exactly that shape and `fit()` reuses these nodes rather than rebuilding
   them. Only the CSS changed, plus the `<wbr>` below.
-- **THE CARD IS A COLUMN, NOT A ROW.** Four across leaves each card about
-  148–179px on a desktop; the icon and the text cannot sit side by side in
-  that, so the icon goes above.
-- **The address decides the height.** Three cards hold a line or two and the
-  fourth holds the office address, so the grid stretches all four to match it:
-  **211–229px at four across against the live CMS text**, which is
-  considerably longer than the markup fallback. Measure against the live
-  document, not the file.
+- **THE CARD IS A ROW SINCE 16 NOV, AND IT COULD NOT HAVE BEEN BEFORE.** The
+  note here used to say the opposite — four across left each card 148–179px,
+  which cannot hold a disc beside a line of text, so the icon went above it.
+  At **three** across each card takes about 206–230px at 1440, and the icon
+  sits beside the text. The card's height is now one disc rather than a disc
+  stacked on two lines.
+- **`grid-auto-rows:1fr` IS WHAT HOLDS THE THREE TO ONE HEIGHT WHEN THEY
+  STACK.** Across a row they already match, because a grid stretches its
+  items; one per row they are three separate rows and each took its own
+  content, so Business Hours stood 84px against the other two at 64. Measured
+  equal at all twelve widths after.
+- **`min-width:0` on the text column** is what lets it shrink inside the row.
+  A flex item's floor is its content, so without it a long email widens the
+  card past its grid track instead of wrapping inside it.
+- ~~**The address decides the height.**~~ **THE ADDRESS CARD IS GONE (16 Nov,
+  the client's request)** and it was exactly that: five or six lines against
+  one or two, with `stretch` pulling the other three to match, so Call Us and
+  Email Us each stood two-thirds empty. The grid was **211–229px**; it is
+  **84–90px** across a row now.
+  - **The item is NOT deleted from the CMS.** It, its address and its Google
+    Maps link are untouched on `contact-page`, and the address is still on
+    this page — the location card below carries it with the map and the Get
+    Directions button, and so does the footer. Same call as `cardText`,
+    `introText` and `heroHeadline`: leave the content, stop painting it. **The
+    usual trap follows: a `Visit Us` item edited in the Studio changes
+    nothing here.**
+  - **It is matched on its title or a map link, NEVER on its position.** The
+    client can reorder these in the Studio and an index would then drop
+    whichever card had moved into third — the same reasoning as the `mailto:`
+    rule below. Renaming it in the Studio brings a card back, which is right:
+    that is a new card, not this one.
+  - **Measure against the live document, not the file.**
 - **THE EMAIL CARD SIZES ITS OWN TRACK, so the address sits on one line**
   (12 Nov, the client's request). `info@raajlaxmigroup.com` measures **148px**
   at `.78rem`, and an equal quarter of this column is only 118–145px at four
@@ -1397,15 +1421,22 @@ building render**, and the paragraph is gone.
   that the other three cards are **8px narrower at 1440**, which puts "10:00
   AM – 7:00 PM" onto a third line in Business Hours — that is the trade for
   widening one card in a fixed row, and it was the client's call.
-- **Three column counts, and the middle one is the surprising part.** Four
-  across at ≥1366px, **two between 1081 and 1365**, four again below 1081, two
-  below 620. (Verified 12 Nov by measuring the rendered grid at fifteen
-  widths — it is easy to misread the stylesheet here, because the only two
-  `.ct-grid` overrides both say `repeat(2,…)` and the four-across bands are
-  the base rule showing through between them.) The left column is at its NARROWEST at 1081 — 494px, because the
-  section is still two columns there — and gets wider again the moment it
-  stacks and takes the full page. So four across is right on either side of
-  that band and wrong inside it.
+- **Three column counts, and the middle one is still the surprising part.**
+  Three across at ≥1440px, **ONE between 1081 and 1439**, three again below
+  1081, one below 760. The left column is at its NARROWEST at 1081 — 494px,
+  because the section is still two columns there — and gets wider again the
+  moment it stacks and takes the full page. So three across is right on
+  either side of that band and wrong inside it.
+  - **The band runs to 1439, not to 1365**, and that boundary was measured
+    rather than inherited. Three across gives each card about 120px of text
+    at 1366 and 135px at 1400, which is where `10:00 AM – 7:00 PM` wraps to a
+    third line — and because the three are held to one height, that single
+    wrap put 62px and then 42px of empty space into each of the other two. At
+    1440 they sit at 88px with 22px of slack. The old 1365 edge belonged to
+    the four-card layout.
+  - **22px of slack in two of the three is the price of equal heights**, and
+    is not a defect to chase: Business Hours is two lines and the other two
+    are one.
 - **`assets/contact-render.jpg`** (1088x460, 60KB) is a **background layer
   pinned to the bottom-left of the screen**, not a block at the foot of the
   column. Its own ground samples `#F8F6F2`, exactly this section's background,
@@ -3356,12 +3387,18 @@ Four things are load-bearing:
   the panel stacks above that. `saathi.css` reads all three and carries the
   same values as fallbacks, so a page that failed to load its inline
   stylesheet still puts them somewhere sensible.
-- **Keywords are matched on word boundaries and scored by length**, so `oc`
-  cannot match "location" and "home loan" is not answered by the projects
-  intent merely because it contains "home". A phrase scores 4, a word of six
-  letters or more 2, anything shorter 1, and **2 is the floor** — one short
-  word is not evidence of intent. Hinglish spellings sit beside the English
-  ones because this is Vasai-Virar and people type "kitna" and "ghar".
+- **Keywords are matched on word boundaries**, so `oc` cannot match
+  "location" and "home loan" is not answered by the projects intent merely
+  because it contains "home". A phrase scores 4, a word of six letters or
+  more 2, anything shorter 1, and **2 is the floor** — one short word is not
+  evidence of intent. Hinglish spellings sit beside the English ones because
+  this is Vasai-Virar and people type "kitna" and "ghar".
+- **A LEADING `!` MARKS A KEYWORD THAT IS STRONG ON ITS OWN (worth 3).**
+  Length turned out to be a poor proxy for how much a word tells you: `emi`,
+  `bhk`, `oc` and `rera` are three or four letters and are the most specific
+  things a visitor can type. Scored by length alone, **"emi calculator" and
+  "what sizes do you have" both fell through to the fallback on the live
+  site** — caught by testing the deployed page, not the local one.
 
 **The panel has to clear its own launcher, and the measurement said it did.**
 The phone tier originally stopped one button-height off the floor, which laid
@@ -3412,6 +3449,16 @@ would read as a different thing.
   above a WhatsApp green one is two borrowed brand colours stacked in the
   corner of a navy-and-gold page. That was the instruction; if it ever
   wants softening, the mark is one file.
+
+**TIES GO TO THE EARLIER INTENT, AND THAT IS LOAD-BEARING.** `match()` keeps
+the first intent to reach the top score, so the array's order is a priority
+list. Two cases were decided by it: `price` sits before `config`, so "2 bhk
+price" answers with the price rather than the sizes — which needed the
+`1 bhk` / `2 bhk` *phrases* dropping from `config`, since a phrase scores 4
+and was winning outright. And `soldout` sits before `amenities`, so
+"parking available" was answered with sold-out copy until the amenity words
+were marked strong. **Both read as passes in a test that only checks for the
+fallback**; assert the intent itself.
 
 **To add an answer**: one entry in the `FAQ` array in `assets/saathi.js` —
 `{id, k:[keywords], a:'answer', act:[[label, href]], chips:[…]}` — plus an

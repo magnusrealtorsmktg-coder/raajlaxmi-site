@@ -1427,33 +1427,56 @@
      Keyed off `a[href^="mailto:"]`, not `:nth-child(2)`: the four boxes are
      CMS content and the client can reorder them, so the rule has to find the
      email wherever it is rather than assume it is second. */
-  .ct-grid{display:grid;grid-template-columns:repeat(4,minmax(min-content,1fr));
+  /* THREE CARDS, AND THEY LIE ON THEIR SIDE (16 Nov, the client's request).
+     The address card was removed — see the CMS block at the foot of this
+     file for where the address went and why the document still carries it —
+     and it was the address that made this grid tall: five or six lines
+     against one or two, with `stretch` pulling every other card to match, so
+     Call Us and Email Us each stood two-thirds empty.
+
+     LANDSCAPE IS NOW AFFORDABLE, AND IT WAS NOT BEFORE. The note that used
+     to stand here said the icon could not sit beside the text because four
+     across left each card 148-179px. At three across each card takes about
+     210px at 1440, which is enough for a 40px disc, a gap and a line of
+     text — so the card is a row now and its height is one icon rather than
+     an icon stacked on two lines. */
+  /* `grid-auto-rows:1fr` IS WHAT KEEPS THE THREE THE SAME HEIGHT WHEN THEY
+     STACK. Across a single row they already match, because a grid stretches
+     its items; one per row they are three separate rows and each took its
+     own content's height, so Business Hours stood 84px against the other
+     two at 64. `1fr` on the auto rows makes every row as tall as the
+     tallest, which is the stacked case of the same rule. */
+  .ct-grid{display:grid;grid-template-columns:repeat(3,minmax(min-content,1fr));
+    grid-auto-rows:1fr;
     gap:clamp(.6rem,.9vw,.9rem);
     margin-top:clamp(1.8rem,3vw,2.6rem);}
-  .ct-item{display:flex;flex-direction:column;align-items:flex-start;gap:.7rem;
-    padding:clamp(.9rem,1.2vw,1.15rem) clamp(.8rem,1.1vw,1.05rem) clamp(1rem,1.3vw,1.25rem);
+  .ct-item{display:flex;flex-direction:row;align-items:center;gap:.8rem;
+    padding:clamp(.75rem,1vw,.95rem) clamp(.8rem,1.1vw,1.05rem);
     background:#fff;border:1px solid rgba(198,161,91,.24);border-radius:16px;
     box-shadow:0 26px 54px -46px rgba(60,48,28,.4),0 6px 16px -14px rgba(60,48,28,.12);
     opacity:0;transform:translateY(22px);
     transition:opacity .9s var(--lux),transform .9s var(--lux),
                box-shadow .45s var(--lux);}
+  /* `min-width:0` on the text column is what lets it shrink inside the row.
+     A flex item's floor is its content, so without this a long email widens
+     the card past its grid track rather than wrapping inside it. */
+  .ct-item > div{min-width:0;}
   .ct-item:hover{box-shadow:0 38px 72px -46px rgba(60,48,28,.46),
                             0 10px 22px -16px rgba(60,48,28,.17);}
   .ct.in .ct-item{opacity:1;transform:none;}
   .ct.in .ct-item:nth-child(1){transition-delay:.5s;}
   .ct.in .ct-item:nth-child(2){transition-delay:.58s;}
   .ct.in .ct-item:nth-child(3){transition-delay:.66s;}
-  .ct.in .ct-item:nth-child(4){transition-delay:.74s;}
   /* the ring is tinted now rather than white-on-white: the card it sits on
      is white, so a white disc with a hairline read as a smudge */
-  .ct-ic{flex:none;width:2.5rem;height:2.5rem;border-radius:50%;display:grid;place-items:center;
+  .ct-ic{flex:none;width:2.2rem;height:2.2rem;border-radius:50%;display:grid;place-items:center;
     background:#FBF9F5;color:var(--au-deep);border:1px solid rgba(198,161,91,.3);
     box-shadow:0 10px 22px -16px rgba(60,48,28,.4);
     transition:transform .45s var(--lux),box-shadow .45s var(--lux);}
   .ct-item:hover .ct-ic{transform:translateY(-3px);
     box-shadow:0 16px 28px -18px rgba(60,48,28,.5);}
   .ct-item h4{font-family:"Inter",sans-serif;font-size:.82rem;font-weight:600;
-    color:var(--ink);margin-bottom:.25rem;}
+    color:var(--ink);margin-bottom:.1rem;}
   /* `overflow-wrap:anywhere` is load-bearing at four across:
      `info@raajlaxmigroup.com` is 23 unbroken characters and would otherwise
      push its card wider than its track and the row out of alignment.
@@ -1730,11 +1753,21 @@
      use. Two up there instead. Note the left column gets WIDER again below
      1081, where the section stacks and it takes the full page, so four across
      is right on either side of this band and wrong inside it. */
-  @media (min-width:1081px) and (max-width:1365px){
-    /* min-content here too: two across is wide enough for today's address
-       with room to spare, but the track must still grow rather than overflow
-       if the client ever puts a longer one in the Studio. */
-    .ct-grid{grid-template-columns:repeat(2,minmax(min-content,1fr));}
+  /* ONE COLUMN IN THIS BAND, NOT THREE. The left column is at its NARROWEST
+     at 1081 — 494px, because the section is still two columns there — and
+     three landscape cards across that leaves about 70px of text each once
+     the disc and the padding are taken out. A full-width row per card reads
+     properly and costs two card-heights of scroll.
+
+     IT RUNS TO 1439, NOT TO 1365. Measured across the band: three across
+     gives each card about 120px of text at 1366 and 135px at 1400, and
+     "10:00 AM - 7:00 PM" wraps to a third line in both - and because the
+     three are held to one height, that single wrap put 62px and then 42px
+     of empty space into each of the other two. At 1440 there is room and
+     they sit at 88px with 22px of slack. The 1365 boundary was inherited
+     from the four-card layout and is not where this one breaks. */
+  @media (min-width:1081px) and (max-width:1439px){
+    .ct-grid{grid-template-columns:minmax(0,1fr);}
   }
 
   @media(max-width:1080px){
@@ -1750,19 +1783,13 @@
     .ct-card{margin-left:0;max-width:none;}
     .ct-loc{grid-template-columns:minmax(0,1fr);}
   }
-  @media(max-width:620px){
+  /* ONE COLUMN FROM 760px DOWN. Two of these side by side is about 150px of
+     card each at 390, and a landscape card needs its width — the disc alone
+     takes 35px of it. Stacked they are three short rows, which is less
+     scroll than the four portrait cards this replaced, not more. */
+  @media(max-width:760px){
     .ct-row{grid-template-columns:minmax(0,1fr);}
-    /* TWO UP, NOT ONE. Four full-width cards is four screens of scroll before
-       the enquiry form, and these are four short facts rather than four
-       things to read. The old rules that stripped the quadrant hairlines here
-       went with the hairlines themselves. */
-    .ct-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
-  }
-  /* Two across still, but with the email able to claim the width it needs.
-     Floored at 360px so the 280px case keeps the equal halves it has always
-     had — there is not enough room there to give one card 175px. */
-  @media (min-width:360px) and (max-width:620px){
-    .ct-grid{grid-template-columns:repeat(2,minmax(min-content,1fr));}
+    .ct-grid{grid-template-columns:minmax(0,1fr);}
   }
 
   @media (prefers-reduced-motion:reduce){
@@ -2127,12 +2154,12 @@
                trap `cardText` and `heroHeadline` set, and the same reason:
                clearing it would destroy the client's copy to tidy a form. -->
 
-          <!-- FOUR CARDS, not the 2x2 quadrant grid they were: the client
-               drew four white boxes in a row immediately under the heading.
-               The inner structure is untouched on purpose — `.ct-item`
-               holding `.ct-ic` and a `div` of `h4` + `a`/`p` — because the
-               CMS block clones and fills exactly that shape, and `fit()`
-               reuses these nodes rather than rebuilding them. -->
+          <!-- THREE CARDS, lying on their side. It was four portrait ones;
+               the address card went on 16 Nov and took the grid's height
+               with it. The inner structure is untouched on purpose —
+               `.ct-item` holding `.ct-ic` and a `div` of `h4` + `a`/`p` —
+               because the CMS block clones and fills exactly that shape, and
+               `fit()` reuses these nodes rather than rebuilding them. -->
           <div class="ct-grid">
             <div class="ct-item">
               <span class="ct-ic"><svg width="17" height="17" viewBox="0 0 20 20" fill="none"><path d="M3 4.5c0 8 4.5 12.5 12.5 12.5 1.4 0 2-.7 2-2.1v-1.6l-3.7-1.6-1.6 2.1c-2.3-1-4-2.7-5-5l2.1-1.6L7.7 3.5H6.1C4.7 3.5 3 4.1 3 4.5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></span>
@@ -2146,13 +2173,6 @@
               <div>
                 <h4>Email Us</h4>
                 <a href="mailto:info@raajlaxmigroup.com">info@<wbr>raajlaxmigroup.com</a>
-              </div>
-            </div>
-            <div class="ct-item">
-              <span class="ct-ic"><svg width="17" height="17" viewBox="0 0 20 20" fill="none"><g stroke="currentColor" stroke-width="1.2"><path d="M10 1.8c-3 0-5.4 2.4-5.4 5.4 0 4 5.4 11 5.4 11s5.4-7 5.4-11c0-3-2.4-5.4-5.4-5.4z"/><circle cx="10" cy="7.2" r="2"/></g></svg></span>
-              <div>
-                <h4>Visit Us</h4>
-                <p>Building No. 1, Kala Kutir, Office 1 &amp; 2, Dongarpada Rd, Y. K. Nagar,<br>Virar (West), Vasai-Virar, Maharashtra-401303.</p>
               </div>
             </div>
             <div class="ct-item">
@@ -3341,9 +3361,32 @@
         });
       }
 
-      /* --- the four boxes --- */
+      /* --- the contact boxes --- */
+      /* THE ADDRESS CARD IS NOT DRAWN HERE ANY MORE (16 Nov, the client's
+         request). It held the full office address — five or six lines
+         against one or two in the others — and `stretch` pulled every other
+         card to that height, which is the white space they asked to lose.
+
+         NOTHING OF THE CLIENT'S IS DESTROYED. The item, its address and its
+         Google Maps link are untouched on the `contact-page` document, and
+         the address is still on this page: the location card below carries
+         it with the map and the Get Directions button, and so does the
+         footer. This is the same call `cardText`, `introText` and
+         `heroHeadline` got — leave the content, stop painting it.
+
+         THE CONSEQUENCE IS THE USUAL TRAP AND IS WORTH SAYING OUT LOUD: a
+         `Visit Us` item edited in the Studio now changes nothing here.
+
+         IT IS MATCHED ON THE TITLE OR A MAP LINK, NEVER ON POSITION. The
+         client can reorder these in the Studio, and an index would then drop
+         whichever card had moved into third — the same reasoning as the
+         `mailto:` rule in the stylesheet. Renaming it in the Studio brings a
+         card back, which is right: that is a new card, not this one. */
+      const isAddress = x =>
+        /^\s*visit\s*us\s*$/i.test(txt(x.title)) ||
+        /(google\.[a-z.]+\/maps|maps\.app\.goo\.gl)/i.test(txt(x.link));
       const items = (Array.isArray(d.items) ? d.items : [])
-        .filter(x => x && txt(x.title) && txt(x.text));
+        .filter(x => x && txt(x.title) && txt(x.text) && !isAddress(x));
       if(items.length){
         const grid = sec.querySelector('.ct-grid');
         fit(grid ? grid.querySelectorAll('.ct-item') : [], items.length, grid)
