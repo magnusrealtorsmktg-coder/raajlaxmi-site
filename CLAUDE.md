@@ -10,7 +10,7 @@ Deployed to Netlify from the CLI. There is no build step — but **do not publis
 
 `README.md` was rewritten on 26 Sep and now describes this build accurately (it previously documented a seven-section, single-file version that no longer exists). It is the public GitHub landing page; **CLAUDE.md is the detailed reference** — keep architecture notes here, not there.
 
-## Where this stands (handover, 14 Nov 2026)
+## Where this stands (handover, 16 Nov 2026)
 
 The site is **built, deployed and live** at
 <https://raajlaxmi-site.netlify.app> (Netlify team `magnus realtorsmktg`,
@@ -21,11 +21,17 @@ commits on 9 Nov were theirs (the EMI page, the testimonials running order,
 the hero search). Run `git log` before assuming the working tree is only
 yours, and `git fetch` before pushing.
 
-**Pushed and live as of 14 Nov:** `136d537` (the contact email on one line),
-`1dbc630` (sold-out per property, the 3D walkthrough video field, the clipped
-brochure label), `fa0f56c` (a size per configuration, SOLD OUT under the
-blurb). **`235d30f` — the Why Raajlaxmi timeline — is COMMITTED BUT NOT
-PUSHED**; see *The timeline shows headings and opens sideways*.
+**NOTHING IS UNPUSHED. `main` is level with `origin/main`** through `e48751c`
+(SOLD OUT as the badge's text). The line that stood here until 16 Nov saying
+`235d30f` — the Why Raajlaxmi timeline — was "COMMITTED BUT NOT PUSHED" was
+true when written and is not any more; it went out with the commits after it.
+**Check `git log origin/main..HEAD` rather than trusting this paragraph**: the
+client commits here too, and a sentence about what is pushed goes stale the
+moment either of you pushes.
+
+**Not committed yet:** the rupee sign on every rendered price, and the
+WhatsApp button on all twelve pages — see *The rupee sign is added at render*
+and *The WhatsApp button is on every page*.
 
 **No live defect is known on the site.** The one found on 14 Nov — six new
 free-text prices breaking the budget filter, so that "Under ₹25 Lacs" returned
@@ -51,7 +57,9 @@ and are not. The ones that will cost you an afternoon if you do not know them:
 
 | before you touch… | read |
 |---|---|
-| anything in the shared chrome | *The `<head>` CSS is duplicated across all twelve files* — nav, cursor, footer, loader and the `:root` tokens live in twelve copies |
+| anything in the shared chrome | *The `<head>` CSS is duplicated across all twelve files* — nav, footer, loader, the WhatsApp button and the `:root` tokens live in twelve copies |
+| the WhatsApp button | *The WhatsApp button is on every page* — it stands aside for two things, and both were found by measuring rather than by eye |
+| a price anywhere on screen | *The rupee sign is added at render* — the CMS holds the figure without one, so `₹` is never in the stored string |
 | any Sanity query | *Every query starts in the document `<head>`* — the query text lives in one place per file and `get` memoises on the string |
 | a collection page | the three files are clones; a fix goes in all three |
 | a `project` document in a script | *Drafts shadow the live site* — a token-authenticated query sees drafts, the public API does not, and this has bitten twice |
@@ -138,8 +146,10 @@ command over.
 
 The site is a Netlify project connected to this GitHub repository, so **`git
 push origin main` publishes it** — there is no build command and no deploy
-command to run. Netlify clones only the tracked files (87 of them, ~8.5MB),
-which is why this is the safe arrangement: `studio/node_modules` is 562MB
+command to run. Netlify clones only the tracked files (**116 of them**, counted
+16 Nov — the 87 recorded here before that was long stale, and the size figure
+beside it was dropped rather than guessed at; `git ls-files | wc -l` settles
+it), which is why this is the safe arrangement: `studio/node_modules` is 562MB
 across 46,000 files and lives in the working directory, not the repository.
 
 `netlify.toml` at the repo root carries the whole configuration (`publish = "."`,
@@ -153,7 +163,7 @@ the commit first:
 ```bash
 rm -rf /tmp/rl-deploy && mkdir -p /tmp/rl-deploy
 git archive HEAD | tar -x -C /tmp/rl-deploy
-netlify deploy --prod --dir=/tmp/rl-deploy        # ~87 files, 8.6MB
+netlify deploy --prod --dir=/tmp/rl-deploy        # 116 files as of 16 Nov
 ```
 
 **The Studio deploys separately** (`cd studio && npm run deploy`) — it
@@ -216,7 +226,7 @@ two queries in the same session.
 | Sizes by configuration | **3 of 15**, two rows each: Raajlaxmi Tower, Raajlaxmi Apartment (both `1 BHK 380-400 Sq. Ft.` / `2 BHK 360-550 Sq.ft`) and Nakshatra Auris (`315 – 373 Sq. Ft.` / `461-501 Sq. Ft.`). The other twelve still print the old `config` + `area` pair, which is the designed fallback |
 | 3D walkthrough | **NONE.** The field exists on `project` and the button is wired, but no project carries a video, so the button renders nowhere. Untested against a real file |
 | Detail-page content | **6 of 15 have a gallery** (Rajlaxxmi Park 4, Priti Pearrl 3, and 2 each on Krishna Niwas, Raajlaxmi Avenue, Raajlaxmi Meenakshi, Shanti Niwas), **6 a price**, 7 a configuration. The gallery count was 0 on 8 Nov |
-| Prices | **SIX, all still in the one-line free-text field.** Priti Darpan `26 Lacs Onwards`; Priti Pearrl, Priti Chaaya, Raajlaxmi Tower, Raajlaxmi Apartment and Shakun Solitaire all in the form `42 Lacs Onwards for 1 BHK & 60 Lacs Onwards for 2 BHK`. **Nothing uses `sizes[].price` yet** — `split-prices.mjs` moves them and has not been run. See *A price per configuration, and the budget bands that it fixed* |
+| Prices | **SIX, all still in the one-line free-text field.** Priti Darpan `26 Lacs Onwards`; Priti Pearrl, Priti Chaaya, Raajlaxmi Tower, Raajlaxmi Apartment and Shakun Solitaire all in the form `42 Lacs Onwards for 1 BHK & 60 Lacs Onwards for 2 BHK`. **Nothing uses `sizes[].price` yet** — `split-prices.mjs` moves them and has not been run. See *A price per configuration, and the budget bands that it fixed*. **None of the six carries a `₹` and none should** — the symbol is added at render, see *The rupee sign is added at render* |
 | Amenity icons in use | `play`, `gazebo`, `indoor`, `landscape`, `security`, `gym`, `garden`, `planning`, `parking`, `lift`, `power`, `pool` — and one project has an amenity with **no icon set at all**. `green` (Common Green Space) is in the schema and used by nobody |
 | Brochures | **3 on published projects** (Nakshatra Auris 18.0 MB, Shanti Niwas 7.7 MB, Rajlaxxmi Park 5.0 MB). A fourth, 0.4 MB, is on the unpublished Aarvi Apartment draft |
 | Reviews | **6 real Google reviews** (`testimonial` documents), all with Google links |
@@ -351,7 +361,13 @@ property that is not sold out in its place on the home page. Both halves are
 - **Which phone number is right.** The contact page prints `+91 9890823288`
   and the footer `+91 77740 00939`. This stopped being cosmetic when the
   footer's number started receiving WhatsApp messages — see *The WhatsApp
-  handle is rebuilt, not trusted*.
+  handle is rebuilt, not trusted* — and **since 16 Nov the footer's number is
+  also what the floating WhatsApp button on all twelve pages dials**, so it is
+  now the number a visitor is most likely to use. See *The WhatsApp button is
+  on every page*.
+- **The location card describes a different street from the address above
+  it**, and the map pin may not have moved with the office. See *The office
+  address changed on 16 Nov* under *Content management → Contact page*.
 - **The footer prints `info@raajlaxmigroup.com`, which does not exist.** It is
   not one of the 21 Hostinger mailboxes; `info@raajlaxmi.com` is.
 - **Two badges disagree with their listing.** Shanti Niwas is filed
@@ -1994,7 +2010,7 @@ access key itself cannot.
 
 ## Architecture
 
-**The `<head>` CSS is duplicated across all twelve files.** Lines ~1–978 of `index.html`, `projects.html`, `projects-ongoing.html`, `projects-redevelopment.html`, `project.html`, `testimonials.html`, `services.html`, `contact.html`, `emi.html`, `privacy.html`, `terms.html` and `disclaimer.html` are the same stylesheet — base tokens, cursor, nav, mobile sheet, and the CSS for sections I–V — differing in only ~100 lines (title, nav/logo sizing on the inner pages). Each page then renders only its own sections. **Any edit to shared chrome (nav, `.nav-wrap.on-light`, cursor, burger/sheet, `:root` tokens, the hidden page scrollbar) must be applied to all twelve files or the pages drift.** The page scrollbar is hidden by request (`html{scrollbar-width:none}` + `html::-webkit-scrollbar{display:none}`); it is scoped to `html`, **not** `*`, on purpose — the scrollbar on `.cor-figure` is the only cue that the line-map banner pans sideways on a phone, so a blanket rule would break that.
+**The `<head>` CSS is duplicated across all twelve files.** Lines ~1–978 of `index.html`, `projects.html`, `projects-ongoing.html`, `projects-redevelopment.html`, `project.html`, `testimonials.html`, `services.html`, `contact.html`, `emi.html`, `privacy.html`, `terms.html` and `disclaimer.html` are the same stylesheet — base tokens, cursor, nav, mobile sheet, and the CSS for sections I–V — differing in only ~100 lines (title, nav/logo sizing on the inner pages). Each page then renders only its own sections. **Any edit to shared chrome (nav, `.nav-wrap.on-light`, burger/sheet, the WhatsApp button, `:root` tokens, the hidden page scrollbar) must be applied to all twelve files or the pages drift.** The cursor rules are in all twelve too and must stay in step, but the cursor itself no longer paints — see *The custom ring cursor is retired, not removed*. The page scrollbar is hidden by request (`html{scrollbar-width:none}` + `html::-webkit-scrollbar{display:none}`); it is scoped to `html`, **not** `*`, on purpose — the scrollbar on `.cor-figure` is the only cue that the line-map banner pans sideways on a phone, so a blanket rule would break that.
 
 **The About section holds one screen.** The client's complaint was that the
 counting stats were cut off at the fold. `.about` is now
@@ -2208,12 +2224,43 @@ Anything that should animate in after the cover lifts registers with **`window.o
 
 **Markup conventions** (wired up by the shared script, so they work on every page):
 
-- `data-hover` — element grows the custom cursor ring
-- `data-magnetic` — button pulls toward the pointer
-- `data-cursor-gold` — cursor softens to a gold circle over imagery
+- `data-hover` — **INERT since 16 Nov.** It grew the custom cursor ring, and
+  that ring is retired; see *The custom ring cursor is retired, not removed*.
+  43 elements on `index.html` alone still carry the attribute
+- `data-magnetic` — button pulls toward the pointer. Still live: this one is
+  the element moving, not the cursor, so it survived the retirement
+- `data-cursor-gold` — **INERT, same reason.** It softened the cursor to a gold
+  circle over imagery
 - `data-anim` — entrance-choreography participant
 - `data-to` + `data-suffix` — counter target; counts once when its section arrives
 - `.in` on a wrapper — the reveal class every section's observer adds
+
+### The custom ring cursor is retired, not removed
+
+`c853a54` (16 Nov) turned it off in all twelve files, and **the way it was
+turned off is why this note exists**. The phone-tier rule that used to hide it,
+
+```css
+@media(hover:none),(max-width:760px){ .cursor-ring,.cursor-dot{display:none;} }
+```
+
+became an unconditional `.cursor-ring,.cursor-dot{display:none!important}`.
+So:
+
+- **The markup, the JS and the attributes are all still there.** `.cursor-ring`
+  and `.cursor-dot` are still in every `<body>`, the shared script still tracks
+  the pointer and still adds `.hover`, and 43 elements on `index.html` still
+  carry `data-hover`. None of it paints.
+- **`data-hover` and `data-cursor-gold` are therefore dead markup**, and adding
+  either to a new element does nothing. `data-magnetic` is unaffected — it
+  moves the button, not the cursor.
+- **Putting it back is deleting one declaration**, which is presumably why it
+  was done this way. Deleting the machinery instead would be a twelve-file
+  change and would throw away the thing this leaves recoverable.
+- The earlier version of this file listed "cursor" among the shared chrome to
+  keep in step across twelve copies. That is still literally true — the rules
+  are in all twelve and must stay identical — but it is no longer a *live*
+  part of the design, so do not spend an afternoon reasoning about it.
 
 **Navbar legibility over photography.** The bar's links were `--paper-dim`, a 66%
 cream, and the scrim behind them only appeared once the page had scrolled. With a
@@ -2431,6 +2478,57 @@ beneath it, and again for the 2 BHK. The client asked for those to go and for
   the filter to use `lowestPriceText`.
 - `.col-meta.col-sizes .zp` and the two-line row rule are gone from all twelve
   files; a size row is a single `.zl` sentence again.
+
+### The rupee sign is added at render
+
+Asked for on 16 Nov: a `₹` on the collection card's price and on every price
+on the detail page. **The symbol is NOT stored in the CMS and must not be** —
+`withRupee()` puts it on at render, in the three collection files and in
+`project.html`.
+
+The reason it is a function rather than a `₹` typed into the template is that
+the client writes prices freehand and does not spell them the same way twice.
+The live dataset holds `42 Lacs Onwards` beside `₹1.8 Cr`; a hard-coded prefix
+would print `₹₹1.8 Cr`.
+
+```js
+const withRupee = s => {
+  const t = String(s == null ? '' : s).trim();
+  if(!t || !/\d/.test(t)) return t;
+  return /₹|\brs\.?\b|\binr\b/i.test(t) ? t : '₹' + t;
+};
+```
+
+- **A string already carrying a currency mark is left exactly as written** —
+  `₹`, `Rs`, `Rs.` or `INR`. The client can keep typing whichever they like.
+- **A string with NO DIGIT IN IT passes through untouched**, which is the case
+  worth knowing: `Price on request` must not become `₹Price on request`. That
+  reaches the function because `p.price` / `DOC.price` are returned verbatim
+  as the fallback when a project has no priced `sizes` rows — `lowestPriceText`
+  only `money()`-checks the rows, not the one-line field.
+- **IT IS DISPLAY ONLY, AND NOTHING MAY BE BUILT ON IT.** `money()`,
+  `priceRange()`, `closeTop()`, the budget bands and `project.html`'s `rupees()`
+  all keep parsing the client's own string. Verified after the change: a
+  project priced `42 Lacs Onwards` / `60 Lacs Onwards` per configuration still
+  hands the calculator `emi.html?price=4200000`, the cheaper row, exactly as
+  before. **Do not "tidy" the filter to read the rendered text.**
+- **Four copies, one per file that renders a price** — the three collection
+  pages and `project.html` — which is this codebase's usual arrangement rather
+  than an oversight. The detail page's copy has its own comment naming
+  `rupees()`, because `money()` does not exist on that page.
+- **It is applied at three call sites**: `priceLine()` on the card, and on the
+  detail page both the `.pdp-row` per-configuration values and the one-line
+  `DOC.price` branch.
+- **The card template inserts it unescaped**, as `${withRupee(t)}` inside the
+  one big template literal. That is the pre-existing convention there — `p.name`
+  and `p.category` go in raw too — and was deliberately not changed for one
+  field. The detail page uses `textContent`, so it is escaped there.
+
+Verified by driving the real price strings through both render paths against
+an intercepted Sanity response, at 1440x900 and 390x844: the card prints
+`₹42 Lacs Onwards`, the detail page `₹42 Lacs Onwards 1 BHK` and
+`₹60 Lacs Onwards 2 BHK`, `₹1.8 Cr` is not doubled, `Price on request` is
+untouched, and the EMI hand-off is unchanged. No console errors.
 
 ### A price per configuration, and the budget bands that it fixed
 
@@ -3083,6 +3181,91 @@ page's `+91 9890823288`. Those two have contradicted each other since before
 launch; now that one of them receives WhatsApp messages, the question of which
 is right has teeth.
 
+### The WhatsApp button is on every page
+
+Asked for on 16 Nov: a WhatsApp icon in the bottom-right corner of every page,
+opening a chat with `+91 77740 00939`. `.wa-fab` / `#waFab`, shared chrome, so
+the CSS block and the markup are **byte-identical in all twelve files** — 59
+lines of stylesheet and one `<a>` before the lead popup. Verified by hashing
+both blocks across the twelve.
+
+**ITS NUMBER COMES FROM THE CMS, NOT FROM THE MARKUP.** The `href` written into
+the file is the footer's number and is only the fallback — what works with
+Sanity unreachable and in the moment before the settings query lands. The
+`SITE SETTINGS` block repoints it through the same `waHref()` the footer icon
+uses, so **one edit in the Studio moves this button and the footer icon
+together**. Verified by answering with a different handle: all twelve followed
+it.
+
+- **THE `if(!foot) return;` GUARD HAD TO GO, AND THAT IS THE ONE STRUCTURAL
+  CHANGE HERE.** That block bailed early on any page with no footer, which is
+  `project.html` — so the single page without a footer would have become the
+  single page whose WhatsApp number could not be changed from the Studio, and
+  it would have drifted silently the first time the client edited the handle.
+  The guard is `if(!foot && !waFab) return;` now, and `paint()` does the button
+  first and *then* returns on a missing footer. Nothing between the two touched
+  `foot`, which is what made this safe to split.
+- **`waHref()` is what makes it work at all.** The client types the number as
+  it is printed — `+91 77740 00939` — and `wa.me` takes bare digits. See *The
+  WhatsApp handle is rebuilt, not trusted* above; this button inherits every
+  one of those cases for free, the group-invite passthrough included.
+- **`z-index:860`, deliberately BELOW both modals.** The owner detail panel is
+  880 and the lead popup 900, and each covers the viewport with its own scrim,
+  so a visitor who has opened one is not offered a second thing on top of it.
+
+**TWO COLLISIONS, BOTH FOUND BY MEASURING AND NEITHER VISIBLE IN A
+SCREENSHOT.** They are the reason this section is long:
+
+1. **It floated over the open mobile sheet.** `.sheet` is `position:fixed;
+   inset:0` at **z-index 90**, against this button's 860 — so with the menu
+   open the green circle was the top element at its own centre, measured with
+   `elementFromPoint`. It now stands down entirely:
+   `html:has(.sheet.open) .wa-fab{opacity:0;visibility:hidden;pointer-events:none}`.
+   Same idea as the lead popup standing down for the owner panel, and `:has()`
+   is already an idiom here — see `.ct-item:has(a[href^="mailto:"])`.
+2. **It sat on the hero search capsule's chevron on phones.** That capsule is
+   pinned to the foot of the hero (see *On a phone the hero search is a CAPSULE
+   that opens on tap*) and the chevron is the right-most thing in it, which is
+   exactly where this button lands. Measured overlap **16–19px** at 390x844,
+   360x640, 412x915 and 280x653. The button now **steps above the capsule while
+   the capsule is on screen** and slides back down once it has scrolled away.
+
+Three things about that lift are load-bearing:
+
+- **`--wa-lift` is a custom property, and the hover rule COMPOSES with it**
+  (`translateY(calc(var(--wa-lift) - 2px))`). Written as a bare
+  `translateY(-2px)`, the hover would drop the button back onto the capsule at
+  the exact moment a pointer was over it.
+- **The class is set by an IntersectionObserver in the HERO SEARCH block, and
+  it needs no breakpoint of its own.** `.hs-peek` is `display:none` on a
+  desktop, and an observer never reports a box with no area — so `wa-lift`
+  simply never appears above 620px. Verified: false at 1440x900, true at every
+  phone size, false again once scrolled past the hero.
+- **`html.wa-lift .wa-fab` is index-only in practice and lives in all twelve
+  anyway.** No other page has a capsule to set the class. That is the same
+  arrangement `.hs-field > label` and the phone tier's `.sv-slot` already have:
+  a selector matching nothing costs nothing, and the block stays identical.
+
+**The lift is `-5rem`, and `-4.2rem` was not enough.** At 4.2rem the button
+cleared `.hs-peek` itself but still cut 5px into `.hero-search`, the pill
+around it, at 412x915. Measure against the **pill**, not the button.
+
+**WhatsApp green (`#25D366`) rather than the site's gold**, and the glyph is
+**filled** rather than the footer's stroked line-icon: this is a utility
+control, the colour is the half of it people recognise without reading, and at
+~26px a hairline outline of that shape closes up into a blob. It steps from
+52px to 46px below 620px (or 560px tall), and respects
+`env(safe-area-inset-*)`.
+
+Measured at 1440x900, 412x915, 390x844, 360x640, 844x390 and 280x653 on all
+twelve pages: present everywhere, inside the viewport, hit-testable at its own
+centre, no horizontal page overflow and no console errors; the lift engages and
+releases correctly; the sheet rule hides it; and under
+`--force-prefers-reduced-motion` the lift still applies, without the slide.
+**One overlap is left and is not a defect**: at 280px the button covers a
+collection card's `.col-heart` as you scroll past it. Every fixed button
+eventually covers something.
+
 **Site settings.** A singleton (`site-settings`) holding the **social handles**
 and the footer's telephone, email, address and copyright line. Its block is
 identical in all eleven files that have a footer and reads one document, so the number that used to
@@ -3101,6 +3284,33 @@ that drives both the directions button and the embedded Google frame.
 **The enquiry card's three dropdowns are NOT on this document** — Property,
 Location and Budget read the hero's own lists off `homepage`; see *The enquiry
 card asks the hero's three questions*.
+
+**THE OFFICE ADDRESS CHANGED ON 16 NOV** (`c853a54`) and nothing in this file
+recorded it until now. It is:
+
+> Building No. 1, Kala Kutir, Office 1 & 2, Dongarpada Rd, Y. K. Nagar,
+> Virar (West), Vasai-Virar, Maharashtra-401303.
+
+It went into the footer's `.ft-cx` fallback in the **eleven files that have a
+footer** (`project.html` has none, so it was untouched by that half of the
+commit), into `contact.html`'s *Visit Us* card as well, and into both
+`seed-rest.mjs` and `seed-legal.mjs`. **The markup is only the fallback**: `address` on
+`site-settings` and the `items[]` *Visit Us* box on `contact-page` are what a
+visitor actually reads, so **check those two documents carry the new address
+too**, or the site will keep printing the old one.
+
+Two things the move left behind, both content rather than code:
+
+- **`locationText` still reads "On Station Road, a short walk from Virar
+  station."** The new address is on Dongarpada Rd. The commit changed the
+  address strings and not this sentence, so the location card now describes a
+  different street from the one above it.
+- **The map pin was not moved.** `geo` is still
+  `lat 19.5754841, lng 72.8032063` in the seed, which was the old office. It
+  drives both the Get Directions button and the embedded Google frame, so if
+  that pin is stale the button sends people to the wrong building — the one
+  failure here that actually wastes somebody's afternoon. Verify it against
+  the live `contact-page` document before launch.
 
 **The hero headline and its sub-paragraph are GONE** — markup, CSS, entrance
 animation, `fitHeadline()`, the `paint()` branch and the GROQ fields alike. The
