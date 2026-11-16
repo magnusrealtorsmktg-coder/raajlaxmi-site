@@ -1699,15 +1699,14 @@
      being readable at a card's width. `flex-wrap` lets a long row break
      after the area rather than pushing the card out of its track. */
   .col-meta.col-sizes{flex-direction:column;align-items:flex-start;gap:.5rem;}
-  /* A ROW IS NOW TWO LINES: the size, and under it that configuration's own
-     price. Stacked rather than run together, because "315 – 373 Sq. Ft. for
-     1 BHK ₹42 Lacs Onwards" reads as one sentence and is not one — and at a
-     311px card the two would wrap into each other anyway. `.zl` carries the
-     flex row the icons need; the parent cannot, now that it is a column. */
-  .col-meta.col-sizes > div{flex-direction:column;align-items:flex-start;gap:.22rem;}
+  /* A ROW IS ONE LINE AGAIN (16 Nov). It was two for two days — the size,
+     and that configuration's own price under it — and the client asked for
+     the per-row prices to go and one figure, the lowest, to close the card
+     instead. So `.zp` is gone and the row is back to the single sentence
+     `.zl` carries. `> div` keeps no direction of its own now; the row is
+     `.zl`'s to lay out, and `flex-wrap` is what lets a long one break after
+     the area rather than pushing the card out of its track. */
   .col-meta.col-sizes .zl{display:flex;align-items:center;gap:.42rem;flex-wrap:wrap;}
-  .col-meta.col-sizes .zp{font-weight:600;font-size:.8rem;letter-spacing:.01em;
-    color:var(--gold-deep);}
   .col-meta.col-sizes b{font-weight:600;}
   .col-meta .for{color:var(--body);font-weight:300;}
   .col-details{display:inline-flex;align-items:center;gap:.6rem;margin-top:1.1rem;
@@ -1719,22 +1718,29 @@
     border-top:1px solid currentColor;border-right:1px solid currentColor;transform:rotate(45deg);}
   .col-card:hover .col-details .arw{transform:translateX(5px);}
 
-  /* THE SOLD OUT STAMP SITS UNDER THE BLURB, not in the footer beside View
-     Details — the client moved it there on 14 Nov, marking the spot on a
-     screenshot. It is a block in the normal flow: the card's height is
-     content-driven, so an absolute stamp would land on whatever the CMS put
-     above it.
+  /* THE SOLD OUT STAMP IS THE PHOTOGRAPH'S CORNER BADGE NOW (16 Nov). It
+     spent two days under the blurb; the client asked for it to take the top
+     left corner and for the status pill — COMPLETED — to give way to it,
+     "written, not text". So a sold-out card shows the artwork where every
+     other card shows its status, and the two never appear together.
 
-     `.col-meta` keeps `margin-top:auto`, which is what holds the sizes row
-     on the floor of the card while the stamp stays with the copy — exactly
-     the spacing the client drew.
+     IT REUSES `.col-badge` FOR POSITION ONLY and then undoes the pill: the
+     background, padding and radius belong to a text chip and would frame the
+     artwork in a brown box. Sharing the position rather than repeating it is
+     what keeps the stamp and the pill on the same corner when either moves.
 
-     33% of the card width, the proportion marked on that screenshot (211px
-     of a 640px card). Floored so it stays legible on a one-column phone and
-     capped so it never becomes a placard; the ratio is the artwork's own, so
-     a re-crop means changing it. */
-  .col-sold{display:block;width:clamp(84px,33%,132px);height:auto;
-    aspect-ratio:753/242;object-fit:contain;margin:0 0 .35rem;}
+     THE WHITE DOUBLE DROP-SHADOW IS NOT DECORATION. The artwork is red
+     line-work on transparency and the photograph behind it is whatever the
+     client uploaded — over a dark facade the ink disappears. This is the
+     same halo the stamp carried the first time it lived on the photograph.
+
+     `aspect-ratio` is the artwork's own, so the box is the right shape
+     before a lazy image arrives; a re-crop means changing it. */
+  .col-sold{background:none;padding:0;border-radius:0;backdrop-filter:none;
+    display:block;width:clamp(88px,30%,124px);height:auto;
+    aspect-ratio:753/242;object-fit:contain;
+    filter:drop-shadow(0 0 6px rgba(255,255,255,.95))
+           drop-shadow(0 1px 2px rgba(255,255,255,.9));}
 
   /* ---- pagination ---- */
   .col-page{display:flex;justify-content:center;align-items:center;gap:.6rem;
