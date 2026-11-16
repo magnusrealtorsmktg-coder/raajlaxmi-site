@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A **twelve-page** static marketing site for Raajlaxmi Group: `index.html` (home), `projects.html` (browse-all collection, and the Completed view via `?status=completed`), `projects-ongoing.html` and `projects-redevelopment.html` (the same collection UI locked to one status), `project.html` (one property's detail page), `testimonials.html` (client voices), `services.html`, `contact.html` (enquiry page), `emi.html` (the EMI calculator), and the three legal pages `privacy.html`, `terms.html` and `disclaimer.html`. No build step, no package manager, no dependencies, no test suite. Each page is one self-contained document — `<style>` in `<head>`, markup in `<body>`, one `<script>` at the end — plus a handful of loose image files in the repo root and `assets/`.
+A **twelve-page** static marketing site for Raajlaxmi Group: `index.html` (home), `projects.html` (browse-all collection, and the Completed view via `?status=completed`), `projects-ongoing.html` and `projects-redevelopment.html` (the same collection UI locked to one status), `project.html` (one property's detail page), `testimonials.html` (client voices), `services.html`, `contact.html` (enquiry page), `emi.html` (the EMI calculator), and the three legal pages `privacy.html`, `terms.html` and `disclaimer.html`. No build step, no package manager, no dependencies, no test suite. Each page is one self-contained document — `<style>` in `<head>`, markup in `<body>`, one `<script>` at the end — plus a handful of loose image files in the repo root and `assets/`. **There is exactly one exception to the self-contained rule**: Saathi, the chat assistant, is `assets/saathi.css` and `assets/saathi.js`, linked from all twelve. No build step and no dependencies either way — see *Saathi, the rule-based assistant* for why that one was worth breaking.
 
 Deployed to Netlify from the CLI. There is no build step — but **do not publish the repo root**: `studio/node_modules` lives there now. Publish a `git archive` export instead; see *Where this stands*.
 
@@ -61,7 +61,8 @@ and are not. The ones that will cost you an afternoon if you do not know them:
 | before you touch… | read |
 |---|---|
 | anything in the shared chrome | *The `<head>` CSS is duplicated across all twelve files* — nav, footer, loader, the WhatsApp button and the `:root` tokens live in twelve copies |
-| the WhatsApp button | *The WhatsApp button is on every page* — it stands aside for two things, and both were found by measuring rather than by eye |
+| the WhatsApp button | *The WhatsApp button is on every page* — it stands aside for two things, and both were found by measuring rather than by eye. It also publishes its geometry, because Saathi's launcher stacks on it |
+| the chat assistant, or either file in `assets/saathi.*` | *Saathi, the rule-based assistant* — the ONE piece of shared chrome that is not duplicated twelve times, and the one place a suggested chip can be offered and then not answered |
 | a price anywhere on screen | *The rupee sign is added at render* — the CMS holds the figure without one, so `₹` is never in the stored string |
 | any Sanity query | *Every query starts in the document `<head>`* — the query text lives in one place per file and `get` memoises on the string |
 | a collection page | the three files are clones; a fix goes in all three |
@@ -2050,7 +2051,7 @@ access key itself cannot.
 
 ## Architecture
 
-**The `<head>` CSS is duplicated across all twelve files.** Lines ~1–978 of `index.html`, `projects.html`, `projects-ongoing.html`, `projects-redevelopment.html`, `project.html`, `testimonials.html`, `services.html`, `contact.html`, `emi.html`, `privacy.html`, `terms.html` and `disclaimer.html` are the same stylesheet — base tokens, cursor, nav, mobile sheet, and the CSS for sections I–V — differing in only ~100 lines (title, nav/logo sizing on the inner pages). Each page then renders only its own sections. **Any edit to shared chrome (nav, `.nav-wrap.on-light`, burger/sheet, the WhatsApp button, `:root` tokens, the hidden page scrollbar) must be applied to all twelve files or the pages drift.** The cursor rules are in all twelve too and must stay in step, but the cursor itself no longer paints — see *The custom ring cursor is retired, not removed*. The page scrollbar is hidden by request (`html{scrollbar-width:none}` + `html::-webkit-scrollbar{display:none}`); it is scoped to `html`, **not** `*`, on purpose — the scrollbar on `.cor-figure` is the only cue that the line-map banner pans sideways on a phone, so a blanket rule would break that.
+**The `<head>` CSS is duplicated across all twelve files.** Lines ~1–978 of `index.html`, `projects.html`, `projects-ongoing.html`, `projects-redevelopment.html`, `project.html`, `testimonials.html`, `services.html`, `contact.html`, `emi.html`, `privacy.html`, `terms.html` and `disclaimer.html` are the same stylesheet — base tokens, cursor, nav, mobile sheet, and the CSS for sections I–V — differing in only ~100 lines (title, nav/logo sizing on the inner pages). Each page then renders only its own sections. **Any edit to shared chrome (nav, `.nav-wrap.on-light`, burger/sheet, the WhatsApp button, `:root` tokens, the hidden page scrollbar) must be applied to all twelve files or the pages drift.** The exception is **Saathi**, which is two files in `assets/` and is edited once — see *Saathi, the rule-based assistant*; what each page carries of it is one `<link>` and one `<script defer>`, and those two lines do have to stay in step. The cursor rules are in all twelve too and must stay in step, but the cursor itself no longer paints — see *The custom ring cursor is retired, not removed*. The page scrollbar is hidden by request (`html{scrollbar-width:none}` + `html::-webkit-scrollbar{display:none}`); it is scoped to `html`, **not** `*`, on purpose — the scrollbar on `.cor-figure` is the only cue that the line-map banner pans sideways on a phone, so a blanket rule would break that.
 
 **The About section holds one screen.** The client's complaint was that the
 counting stats were cut off at the fold. `.about` is now
@@ -3306,6 +3307,124 @@ releases correctly; the sheet rule hides it; and under
 collection card's `.col-heart` as you scroll past it. Every fixed button
 eventually covers something.
 
+### Saathi, the rule-based assistant
+
+A chat launcher sits **directly above the WhatsApp button** on all twelve
+pages and opens a small panel. Saathi (साथी, "companion") answers the
+questions the site already has answers to and hands everything else to a
+person. Asked for on 16 Nov.
+
+**IT IS A KEYWORD MATCHER. There is no model, no API, no key and no network
+call of its own** — so it keeps working with Sanity unreachable and with the
+network off once the page has loaded, like the rest of this site.
+
+**IT IS THE ONE PIECE OF SHARED CHROME THAT IS NOT DUPLICATED TWELVE TIMES**,
+and that is a deliberate departure from the convention the rest of this file
+insists on. It lives in `assets/saathi.css` and `assets/saathi.js`, wired in
+with one `<link>` and one `<script defer>` per page. The reason: the thing
+most likely to be edited here is the **FAQ prose**, and prose copied twelve
+times is exactly what put `+91 22 4123 4567` on three pages for months. The
+two rules that actually matter are kept — **no build step and no
+dependencies**. The cost is two same-origin requests, both cacheable.
+
+**THE FALLBACK IS THE MOST IMPORTANT ANSWER IN THE FILE.** A matcher only
+knows what it has been taught, so everything else has to end somewhere
+useful: the telephone number and a link to book a visit. That was the brief.
+
+**What it deliberately will not say:** no prices, no project names, no
+counts, no availability. All four change in the Studio without anyone
+touching `saathi.js`, and a bot confidently quoting last month's price is
+worse than one that says the team will confirm. Those questions are routed
+to a human **on purpose, not by omission** — do not "improve" it by hard-
+coding a figure.
+
+Four things are load-bearing:
+
+- **A CHIP RESOLVES TO ITS INTENT DIRECTLY, NEVER THROUGH THE MATCHER.** The
+  first cut sent a tapped chip back through `match()` like any typed
+  sentence, and **"Where do you build?" — a chip the bot itself offers —
+  scored one point and fell through to "that one is beyond me".** A
+  suggestion the bot makes and then cannot answer is the worst failure this
+  kind of bot has. The `CHIP` map binds each label to an intent id. **Every
+  label used in a `chips` array must appear in that map.**
+- **`--wa-lift` IS DECLARED ON `:root`, NOT ON `.wa-fab`.** Both buttons rise
+  together when the hero capsule is on screen. Declared on the button, the
+  property never reaches a sibling, and the launcher stood still while the
+  WhatsApp button rose 80px straight through it.
+- **The WhatsApp button publishes its geometry** as `--wa-size`,
+  `--wa-bottom` and `--wa-bottom-r`, because the launcher stacks on it and
+  the panel stacks above that. `saathi.css` reads all three and carries the
+  same values as fallbacks, so a page that failed to load its inline
+  stylesheet still puts them somewhere sensible.
+- **Keywords are matched on word boundaries and scored by length**, so `oc`
+  cannot match "location" and "home loan" is not answered by the projects
+  intent merely because it contains "home". A phrase scores 4, a word of six
+  letters or more 2, anything shorter 1, and **2 is the floor** — one short
+  word is not evidence of intent. Hinglish spellings sit beside the English
+  ones because this is Vasai-Virar and people type "kitna" and "ghar".
+
+**The panel has to clear its own launcher, and the measurement said it did.**
+The phone tier originally stopped one button-height off the floor, which laid
+the panel's lower edge across the launcher — **and the launcher is the close
+button**, so on a phone the panel covered the only discoverable way out of
+it. It passed every fits-in-viewport check; it was caught in a screenshot.
+Both tiers now clear two button-heights plus a gap.
+
+**The transcript survives a page change** (`rl-saathi` in `sessionStorage`,
+last 40 messages), because several answers link elsewhere on the site and
+losing the thread on arrival would make it feel broken. It does **not**
+re-open itself — the conversation is there when the launcher is next
+pressed. `rl-saathi-seen` retires the gold pip on the launcher.
+
+**Nothing is ever written as markup.** Message bodies go in through
+`textContent` and the action links are built as elements, so a visitor typing
+a tag sees a tag. The only `innerHTML` in the file is static chrome and the
+inline icons.
+
+**The telephone number and email come from `site-settings`** through the
+page's own memoised `RL.get`, so this shares the footer's request rather than
+making a thirteenth, and cannot drift from it. The constants at the top of
+`saathi.js` are the offline fallback; when the CMS differs, the answers are
+patched by string replacement so the number cannot be missed in one of them.
+
+**THE LAUNCHER'S MARK IS THE CLIENT'S ARTWORK, AND IT IS A WHOLE BUTTON.**
+`assets/saathi-icon.png` (192x192, 24KB) is their robot supplied as a blue
+disc with the robot knocked out of it, so it is sized to **fill** the
+launcher rather than sitting inside it as a glyph; the navy ground beneath
+is seen only in the open state, behind the cross. The same mark is the
+panel header's avatar — it is the bot's face, and a different glyph there
+would read as a different thing.
+
+- **The white ground could NOT simply be keyed out, because the robot
+  itself is white.** The alpha is a geometric disc instead: the artwork was
+  cropped to the circle's own bounding box, squared on its centre, and
+  masked with a 4x-supersampled ellipse. Corners read alpha 0, the centre
+  the artwork's own `#0063FF`.
+- **A re-crop means redoing that mask**, not just swapping the file: a
+  source with a different margin around the disc will not line up.
+- **The unread pip is positioned for a CIRCLE, not a square.** At
+  `top/right:2px` it sat on the corner of the button's *box*, which on a
+  round button is outside the disc — it read as a blemish stuck to the edge.
+  `11%` puts it inside the circumference at 45 degrees and holds when the
+  button steps down to 46px. Its ring is white because the mark is blue; it
+  was navy, from when the launcher itself was.
+- **The blue is the client's, not the site palette.** A bright blue disc
+  above a WhatsApp green one is two borrowed brand colours stacked in the
+  corner of a navy-and-gold page. That was the instruction; if it ever
+  wants softening, the mark is one file.
+
+**To add an answer**: one entry in the `FAQ` array in `assets/saathi.js` —
+`{id, k:[keywords], a:'answer', act:[[label, href]], chips:[…]}` — plus an
+entry in `CHIP` for any new chip label. Nothing else, and no HTML to touch.
+
+Verified at 1440x900, 844x390, 420x880, 390x844, 360x640 and 280x653: the
+launcher stacks 11px above the WhatsApp button and lifts with it, the panel
+fits the viewport and clears the launcher at every size, the launcher is the
+topmost element at its own centre while the panel is open, every chip the bot
+offers is answerable, genuinely unknown questions reach the fallback with the
+number, the mobile sheet hides both, and there is no horizontal overflow and
+no console error anywhere.
+
 **Site settings.** A singleton (`site-settings`) holding the **social handles**
 and the footer's telephone, email, address and copyright line. Its block is
 identical in all eleven files that have a footer and reads one document, so the number that used to
@@ -4061,6 +4180,7 @@ Photography is a mix of committed local files and `picsum.photos` placeholders l
     `.seal-spin.scroll` were dead long before this.
 - Committed and referenced: `seal-bottom.png`, `sketch-tower.jpg`, `house-sketch.jpg`, `floor-plan.jpg`, `floor-plan-l.jpg`, `assets/project-blueprint-left.png`, `assets/project-floral-right.png` (760x424, **no alpha** — every use of it is `mix-blend-mode:multiply` over a cream ground, on the three collection pages, `testimonials.html` and now the owner detail panel on `index.html`).
 - `assets/contact-render.jpg` is the faded tower render at the foot of `contact.html`'s left column (1088x460, 60KB, JPEG q88). Its ground is `#F8F6F2`, the same as the section, so it needs no band or border — see *The left column: four cards under the heading*. It came in at 1088px and displays up to 922 CSS px, so it is soft on retina; a wider export would fix it.
+- `assets/saathi-icon.png` is Saathi's robot mark (192x192, 24KB, **real alpha channel**), cut from the client's 612x612 artwork. Unlike `oc-received.png` its ground was **not** colour-keyed — the robot is white on a blue disc, so keying white would have eaten the robot. The disc was located by its own bounding box and the alpha is a supersampled ellipse. See *Saathi, the rule-based assistant*.
 - `assets/oc-received.png` is the **OC RECEIVED** mark on every collection card (272x262, 21KB, **real alpha channel**). Keyed out of the client's flat red-on-white original by colour-to-alpha against white, which un-composites the anti-aliased edges instead of leaving a halo, then quantised to 128 colours; verified against the source by recompositing over white. Its ratio is declared in the CSS as `aspect-ratio:272/262`, so a re-crop means changing that line.
 - `assets/sold-out.png` (506x294, 24KB) was the SOLD OUT stamp and is **referenced by nothing** since 9 Nov. Client artwork, so it was left on disk and still ships — the same call as `seal-top.png`. `git rm` is all it takes.
 - `assets/cert-maharera.png` and `assets/cert-credai-mchi.png` are the accreditation marks in Section II's `.ab-creds` row, cut out of one flat client sheet and keyed transparent. Their captions are live HTML, not baked into the artwork, so they reflow and stay readable — keep it that way if the marks are ever re-exported.
