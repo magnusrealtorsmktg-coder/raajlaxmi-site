@@ -77,6 +77,7 @@
      the .html, so both spellings land on the same answer. */
   var DOC_ID = (function(){
     var page = (location.pathname.split('/').pop() || 'projects.html').toLowerCase();
+    if(page.indexOf('upcoming') > -1) return 'collection-upcoming';
     if(page.indexOf('ongoing') > -1) return 'collection-ongoing';
     if(page.indexOf('redevelopment') > -1) return 'collection-redevelopment';
     var st = (new URLSearchParams(location.search).get('status') || '').toLowerCase();
@@ -1230,8 +1231,31 @@
      below the fold and the image is lazy. */
   .col-chead{display:flex;align-items:flex-start;justify-content:space-between;gap:.8rem;}
   .col-chead > div{min-width:0;}
-  .col-oc{flex:none;width:clamp(56px,22%,80px);height:auto;aspect-ratio:272/262;
-    margin-top:-.15rem;}
+  /* OC RECEIVED IS ON THE PHOTOGRAPH NOW (16 Nov), bottom-right. It spent a
+     week in the white body beside the name; the client asked for it on the
+     picture, which is where a stamp belongs and which hands its old slot to
+     SOLD OUT.
+
+     THE DOUBLE WHITE DROP-SHADOW IS NOT DECORATION. The mark is red
+     line-work on a real alpha channel, so over a dark or busy photograph the
+     strokes disappear into it. Two stacked shadows - one tight, one soft -
+     give it a halo without the outline reading as a border. It needed none
+     of this over the white card body, which is why the rule has only now
+     appeared. The same treatment the sold-out stamp needed when IT was over
+     a photograph; see CLAUDE.md. */
+  .col-oc{position:absolute;right:.7rem;bottom:.7rem;z-index:2;
+    width:clamp(48px,20%,72px);height:auto;aspect-ratio:272/262;
+    filter:drop-shadow(0 0 1px rgba(255,255,255,.95))
+           drop-shadow(0 0 5px rgba(255,255,255,.8));}
+
+  /* SOLD OUT TAKES THE SLOT OC HAS LEFT - top-right of the white body, beside
+     the name. It is the client's horizontal stamp, keyed out of its white
+     ground the same way the OC mark was. Over the card's own white ground it
+     needs no halo, which is the whole reason it reads cleanly here and could
+     not have gone on the photograph without one. The element is only written
+     when the project is sold out, so there is nothing to hide. */
+  .col-sold{flex:none;width:clamp(58px,24%,86px);height:auto;aspect-ratio:753/242;
+    margin-top:.15rem;}
   .col-badge{position:absolute;top:1rem;left:1rem;z-index:2;font-family:"Inter",sans-serif;
     font-size:.56rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#fff;
     background:rgba(140,104,44,.9);padding:.45rem .75rem;border-radius:6px;
@@ -1684,10 +1708,17 @@
     <div class="nav-links">
       <a href="index.html#about" data-hover>About</a>
       <span class="nav-drop">
-        <a href="projects.html?status=completed" data-hover>Projects</a>
+        <!-- PROJECTS OPENS THE WHOLE COLLECTION (16 Nov). It used to deep-link
+             to ?status=completed, the same place its own Completed sub-item
+             goes, so the bar had no route to "everything" at all and the town
+             filter could only ever offer the towns with a completed property
+             in them - which is why Virar, where all three projects are
+             ongoing or redevelopment, never appeared in the list. -->
+        <a href="projects.html" data-hover>Projects</a>
         <div class="nav-menu">
           <a href="projects.html?status=completed" data-hover>Completed</a>
           <a href="projects-ongoing.html" data-hover>Ongoing</a>
+          <a href="projects-upcoming.html" data-hover>Upcoming</a>
           <a href="projects-redevelopment.html" data-hover>Redevelopment</a>
         </div>
       </span>
@@ -1702,7 +1733,7 @@
 
 <div class="sheet" id="sheet">
   <a href="index.html#about">About</a><a href="projects.html?status=completed">Projects</a>
-  <div class="sheet-sub"><a href="projects.html?status=completed">Completed</a><a href="projects-ongoing.html">Ongoing</a><a href="projects-redevelopment.html">Redevelopment</a></div>
+  <div class="sheet-sub"><a href="projects.html?status=completed">Completed</a><a href="projects-ongoing.html">Ongoing</a><a href="projects-upcoming.html">Upcoming</a><a href="projects-redevelopment.html">Redevelopment</a></div>
   <a href="emi.html">EMI Calculator</a>
   <a href="services.html">Services</a>
   <a href="testimonials.html">Testimonials</a><a href="contact.html">Contact</a>
@@ -2259,6 +2290,27 @@
       return cur;
     }
 
+    /* THE STAGE LABEL IS BACK, and `upcoming` is the fourth of them. It was
+       deleted on 16 Nov when the pill briefly printed SOLD OUT instead; the
+       client asked for the tags, so it returns unchanged. */
+    const STAGE_LABEL = {completed:'Completed', ongoing:'Ongoing',
+                         redevelopment:'Redevelopment', upcoming:'Upcoming'};
+
+    /* The pill: the client's own `status` where they have typed one, the
+       listing's label otherwise. Returned as the whole element or as nothing,
+       because .col-badge has its own ground and padding and an empty span is
+       a small brown blob rather than an invisible one. */
+    const badgeLine = p => {
+      const t = String(p.status || STAGE_LABEL[stagesOf(p)[0]] || '').trim();
+      return t ? `<span class="col-badge">${t}</span>` : '';
+    };
+
+    /* SOLD OUT, in the slot the OC mark used to hold. Written only when the
+       project carries the flag; there is no hidden element. */
+    const soldMark = p => p.soldOut
+      ? `<img class="col-sold" src="assets/sold-out.png" alt="Sold out" loading="lazy" decoding="async">`
+      : '';
+
     /* render cards */
     function renderCards(city){
       const filtered = P.filter(p => (city === 'all' || townOf(p) === city) && wanted(p))
@@ -2274,28 +2326,24 @@
           : filtered.map(p=>`
           <article class="col-card">
             <div class="col-media">
-              <!-- THE BADGE IS SOLD OUT OR IT IS NOTHING (16 Nov). It used to fall
-                   back to the project status, so every card carried a pill:
-                   COMPLETED, ONGOING, READY POSSESSION. The client asked for
-                   the eight sold-out properties to say so and for every other
-                   card to carry no pill at all.
+              <!-- THE PILL IS THE STAGE TAG AGAIN (16 Nov) - COMPLETED, ONGOING,
+                   UPCOMING, REDEVELOPMENT. It spent part of a day printing
+                   SOLD OUT instead, which meant eight of the fifteen cards
+                   said nothing about what stage they were at. SOLD OUT now
+                   has its own mark in the body, so the two no longer compete
+                   for one corner.
 
-                   THE ELEMENT IS OMITTED, NOT LEFT EMPTY. .col-badge is an
-                   absolutely positioned pill with its own brown ground and
-                   padding, so an empty span is not invisible - it paints a
-                   small blob in the corner of the photograph.
-
-                   This is what retired STAGE_LABEL, which existed only to
-                   name a listing when a project carried no status of its own.
-                   The status field is now read by nothing on this page; it is
-                   still on the schema and still drives nothing but the detail
-                   page's fact-bar fallback.
+                   The status field still wins over the listing label where
+                   the client has typed one, which is what lets a completed
+                   project carry READY POSSESSION. That is the arrangement that was here
+                   before and it is deliberately restored whole.
 
                    NO BACKTICKS IN THIS COMMENT: it lives inside the template
                    literal below, and one would end the string. -->
-              ${p.soldOut ? '<span class="col-badge">Sold Out</span>' : ''}
+              ${badgeLine(p)}
               <span class="col-heart" role="button" aria-label="Save">${HEART}</span>
               <div class="col-cimg" style="background-image:${imgCss(p)}"></div>
+              <img class="col-oc" src="assets/oc-received.png" alt="OC received" loading="lazy" decoding="async">
             </div>
             <div class="col-cbody">
               <div class="col-chead">
@@ -2303,7 +2351,7 @@
                   <div class="col-cat">${p.category || ''}</div>
                   <h3 class="col-name">${p.name || ''}</h3>
                 </div>
-                <img class="col-oc" src="assets/oc-received.png" alt="OC received" loading="lazy" decoding="async">
+                ${soldMark(p)}
               </div>
               <div class="col-loc">${PIN}${p.location || ''}</div>
               <p class="col-desc">${p.blurb || ''}</p>
@@ -2706,7 +2754,8 @@
        matches the URL it was opened with. */
     const DOC_ID = (function(){
       const page = (location.pathname.split('/').pop() || 'projects.html').toLowerCase();
-      if(page.indexOf('ongoing') > -1) return 'collection-ongoing';
+      if(page.indexOf('upcoming') > -1) return 'collection-upcoming';
+    if(page.indexOf('ongoing') > -1) return 'collection-ongoing';
       if(page.indexOf('redevelopment') > -1) return 'collection-redevelopment';
       const st = (new URLSearchParams(location.search).get('status') || '').toLowerCase();
       return st === 'completed' ? 'collection-completed' : 'collection-all';

@@ -56,6 +56,7 @@ export default {
       description:
         'Which pages this project is listed on — tick as many as apply. ' +
         'Completed → projects.html?status=completed, Ongoing → projects-ongoing.html, ' +
+        'Upcoming → projects-upcoming.html, ' +
         'Redevelopment → projects-redevelopment.html. It always appears on the full ' +
         'collection as well. A project under construction on a redevelopment plot is ' +
         'both Ongoing and Redevelopment.',
@@ -63,6 +64,7 @@ export default {
         list: [
           {title: 'Completed', value: 'completed'},
           {title: 'Ongoing', value: 'ongoing'},
+          {title: 'Upcoming', value: 'upcoming'},
           {title: 'Redevelopment', value: 'redevelopment'},
         ],
         layout: 'grid',
@@ -520,7 +522,7 @@ export default {
   preview: {
     select: {title: 'name', subtitle: 'location', stage: 'stage', media: 'image'},
     prepare({title, subtitle, stage, media}){
-      const label = {completed: 'Completed', ongoing: 'Ongoing', redevelopment: 'Redevelopment'}[stage]
+      const label = {completed: 'Completed', ongoing: 'Ongoing', upcoming: 'Upcoming', redevelopment: 'Redevelopment'}[stage]
       return {title, subtitle: [label, subtitle].filter(Boolean).join(' · '), media}
     },
   },

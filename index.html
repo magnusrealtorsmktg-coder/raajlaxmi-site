@@ -1489,11 +1489,12 @@
   .wtl-sub[hidden]{display:none;}
   .wtl-text{margin-top:clamp(.9rem,1.6vw,1.3rem);}
   .wtl-text[hidden]{display:none;}
-  /* justified with hyphenation, the same treatment `.owd-bio` gets and for the
-     same reason: at this measure justification opens rivers without it */
+  /* justified and NOT hyphenated, the same treatment `.owd-bio` gets and for
+     the same reason: the client does not want words broken across lines. The
+     rivers that hyphenation was there to close are the accepted cost. */
   .wtl-text p{font-family:"Inter",sans-serif;font-weight:300;
     font-size:clamp(.9rem,1vw,1.02rem);line-height:1.8;color:var(--body);
-    text-align:justify;-webkit-hyphens:auto;hyphens:auto;}
+    text-align:justify;-webkit-hyphens:none;hyphens:none;text-wrap:pretty;}
   .wtl-text p + p{margin-top:.95rem;}
 
   /* ---- prev / next ---- */
@@ -2094,8 +2095,15 @@
     background:var(--gold);margin-top:clamp(1rem,1.8vw,1.4rem);}
   /* justified, so the paragraph ends flush against the plate beside it;
      hyphens stop justification opening word gaps into rivers at this measure */
+  /* JUSTIFIED, BUT NEVER HYPHENATED (16 Nov). `hyphens:auto` was splitting
+     words across lines - "lead-" / "ership" - which the client asked to
+     stop. The justification stays, so the right edge is still flush; what
+     goes is the browser's licence to break a word to get there. The cost is
+     looser word spacing on an unlucky line, which is the trade that was
+     asked for. `text-wrap:pretty` takes the worst of that back where it is
+     supported, and is ignored where it is not. */
   .owd-bio{margin-top:clamp(1rem,1.8vw,1.4rem);white-space:pre-line;
-    text-align:justify;-webkit-hyphens:auto;hyphens:auto;
+    text-align:justify;-webkit-hyphens:none;hyphens:none;text-wrap:pretty;
     font-family:"Inter",sans-serif;font-weight:300;
     font-size:clamp(.9rem,1vw,1.02rem);line-height:1.8;color:var(--body);}
 
@@ -2113,7 +2121,7 @@
     .owd-fig{width:min(100%,220px);margin-inline:auto;}
     .owd-art{width:clamp(130px,42%,190px);opacity:.42;}
     .owd-body{max-height:none;overflow:visible;}
-    .owd-bio{text-align:left;hyphens:manual;}
+    .owd-bio{text-align:left;hyphens:none;}
   }
   @media (prefers-reduced-motion:reduce){
     .owd-scrim,.owd-card{transition:none !important;}
@@ -2508,10 +2516,17 @@
     <div class="nav-links">
       <a href="#about" data-hover>About</a>
       <span class="nav-drop">
-        <a href="projects.html?status=completed" data-hover>Projects</a>
+        <!-- PROJECTS OPENS THE WHOLE COLLECTION (16 Nov). It used to deep-link
+             to ?status=completed, the same place its own Completed sub-item
+             goes, so the bar had no route to "everything" at all and the town
+             filter could only ever offer the towns with a completed property
+             in them - which is why Virar, where all three projects are
+             ongoing or redevelopment, never appeared in the list. -->
+        <a href="projects.html" data-hover>Projects</a>
         <div class="nav-menu">
           <a href="projects.html?status=completed" data-hover>Completed</a>
           <a href="projects-ongoing.html" data-hover>Ongoing</a>
+          <a href="projects-upcoming.html" data-hover>Upcoming</a>
           <a href="projects-redevelopment.html" data-hover>Redevelopment</a>
         </div>
       </span>
@@ -2526,7 +2541,7 @@
 
 <div class="sheet" id="sheet">
   <a href="#about">About</a><a href="projects.html?status=completed">Projects</a>
-  <div class="sheet-sub"><a href="projects.html?status=completed">Completed</a><a href="projects-ongoing.html">Ongoing</a><a href="projects-redevelopment.html">Redevelopment</a></div>
+  <div class="sheet-sub"><a href="projects.html?status=completed">Completed</a><a href="projects-ongoing.html">Ongoing</a><a href="projects-upcoming.html">Upcoming</a><a href="projects-redevelopment.html">Redevelopment</a></div>
   <a href="emi.html">EMI Calculator</a>
   <a href="services.html">Services</a>
   <a href="testimonials.html">Testimonials</a><a href="contact.html">Contact</a>

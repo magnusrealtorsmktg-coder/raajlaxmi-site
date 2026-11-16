@@ -1986,10 +1986,17 @@
     <div class="nav-links">
       <a href="index.html#about" data-hover>About</a>
       <span class="nav-drop">
-        <a href="projects.html?status=completed" data-hover>Projects</a>
+        <!-- PROJECTS OPENS THE WHOLE COLLECTION (16 Nov). It used to deep-link
+             to ?status=completed, the same place its own Completed sub-item
+             goes, so the bar had no route to "everything" at all and the town
+             filter could only ever offer the towns with a completed property
+             in them - which is why Virar, where all three projects are
+             ongoing or redevelopment, never appeared in the list. -->
+        <a href="projects.html" data-hover>Projects</a>
         <div class="nav-menu">
           <a href="projects.html?status=completed" data-hover>Completed</a>
           <a href="projects-ongoing.html" data-hover>Ongoing</a>
+          <a href="projects-upcoming.html" data-hover>Upcoming</a>
           <a href="projects-redevelopment.html" data-hover>Redevelopment</a>
         </div>
       </span>
@@ -2004,7 +2011,7 @@
 
 <div class="sheet" id="sheet">
   <a href="index.html#about">About</a><a href="projects.html?status=completed">Projects</a>
-  <div class="sheet-sub"><a href="projects.html?status=completed">Completed</a><a href="projects-ongoing.html">Ongoing</a><a href="projects-redevelopment.html">Redevelopment</a></div>
+  <div class="sheet-sub"><a href="projects.html?status=completed">Completed</a><a href="projects-ongoing.html">Ongoing</a><a href="projects-upcoming.html">Upcoming</a><a href="projects-redevelopment.html">Redevelopment</a></div>
   <a href="emi.html">EMI Calculator</a>
   <a href="services.html">Services</a>
   <a href="testimonials.html">Testimonials</a><a href="contact.html">Contact</a>

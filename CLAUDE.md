@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A **twelve-page** static marketing site for Raajlaxmi Group: `index.html` (home), `projects.html` (browse-all collection, and the Completed view via `?status=completed`), `projects-ongoing.html` and `projects-redevelopment.html` (the same collection UI locked to one status), `project.html` (one property's detail page), `testimonials.html` (client voices), `services.html`, `contact.html` (enquiry page), `emi.html` (the EMI calculator), and the three legal pages `privacy.html`, `terms.html` and `disclaimer.html`. No build step, no package manager, no dependencies, no test suite. Each page is one self-contained document — `<style>` in `<head>`, markup in `<body>`, one `<script>` at the end — plus a handful of loose image files in the repo root and `assets/`. **There is exactly one exception to the self-contained rule**: Saathi, the chat assistant, is `assets/saathi.css` and `assets/saathi.js`, linked from all twelve. No build step and no dependencies either way — see *Saathi, the rule-based assistant* for why that one was worth breaking.
+A **thirteen-page** static marketing site for Raajlaxmi Group: `index.html` (home), `projects.html` (browse-all collection, and the Completed view via `?status=completed`), `projects-ongoing.html`, `projects-upcoming.html` and `projects-redevelopment.html` (the same collection UI locked to one status), `project.html` (one property's detail page), `testimonials.html` (client voices), `services.html`, `contact.html` (enquiry page), `emi.html` (the EMI calculator), and the three legal pages `privacy.html`, `terms.html` and `disclaimer.html`. No build step, no package manager, no dependencies, no test suite. Each page is one self-contained document — `<style>` in `<head>`, markup in `<body>`, one `<script>` at the end — plus a handful of loose image files in the repo root and `assets/`. **There is exactly one exception to the self-contained rule**: Saathi, the chat assistant, is `assets/saathi.css` and `assets/saathi.js`, linked from all thirteen. No build step and no dependencies either way — see *Saathi, the rule-based assistant* for why that one was worth breaking.
 
 Deployed to Netlify from the CLI. There is no build step — but **do not publish the repo root**: `studio/node_modules` lives there now. Publish a `git archive` export instead; see *Where this stands*.
 
@@ -80,7 +80,15 @@ command over.
 
 **FOUR THINGS ARE WAITING ON SOMEONE DOING THEM BY HAND:**
 
-1. **The Studio needs redeploying — PROBABLY. Check before acting.**
+1. **THE STUDIO NEEDS REDEPLOYING — DEFINITELY, as of 16 Nov.** `upcoming`
+   was added to the `project` schema's `stages` list and to `STAGES` in
+   `sanity.config.js`; `npm run build` passes, but until someone runs the
+   deploy the tick-box does not exist in the form and nothing can be filed
+   onto the new Upcoming page. See *The Upcoming listing*.
+
+   The older, separate question below is still open:
+
+1. **Earlier schema changes — PROBABLY deployed. Check before acting.**
    `cd studio && npm run build && npx sanity deploy --no-build -y`. Claude Code
    cannot run this; the classifier blocks `sanity deploy`.
 
@@ -777,7 +785,7 @@ horizontal page overflow anywhere. The `rl:owners` rebuild was exercised by
 replacing the grid with one card and firing the event — it re-copies to six and
 keeps running.
 
-`projects.html` — one section, `#projects` ("Section V — Our Collection"): cards rendered from the `P` array in JS, a **town filter capsule** (see *The town filter is a capsule of four towns*), a **Western line corridor band** (`.cor`, between the pagination and the consultation strip) showing the delivered portfolio under four stations — Vasai / Nallasopara / Virar / Saphale. It is the client's finished banner used whole (`assets/projects/western-line.jpg`), **by explicit instruction — do not substitute a markup rebuild for it**. **Its twelve painted logos are clickable**: `.cor-hot` boxes inside `.cor-map` lie over the artwork as percentages of it, so they ride the image at every width — including the 900px plate inside the phone scroller, which is why the img is wrapped in `.cor-plate` (`.cor-figure` becomes the narrower scroll container and cannot be the positioning context). The boxes are measured from the ink, so **a recrop or a replacement banner invalidates all twelve**; `paint()` removes the whole layer if the CMS supplies a banner that is a *different* picture. It tells them apart by **SHA-1**: Sanity names an uploaded asset after the hash of its bytes, so the check is exact rather than a guess — and the usual answer is that they are the same file, because `seed-collections.mjs` uploaded this very banner and the live page therefore serves it from the CDN under a different URL. **Replacing `western-line.jpg` means updating `ART` in that guard**, or the boxes vanish the moment the CMS copy is re-uploaded. Each box carries `data-project` — the name *as the artwork paints it* — and `wireBanner()` matches it against the published projects to set the href, so a slug fixed in the Studio is picked up with no code change. `nameKey()` does the matching and is deliberately forgiving: it folds case and punctuation, collapses doubled letters (`Raajlaxmi`/`Rajlaxxmi` → `rajlaxmi`, `Pearrl` → `pearl`) and drops a trailing plural (`Towers` → `tower`), because the banner and the CMS do not spell the names the same way. **A box with no published project stays inert** — no href, no pointer, no hover tint. **`Midas Heights` is no longer one of them: that mark is covered over (12 Nov) and its hotspot was deleted** — see *Midas Heights is painted over, not redrawn out*. So there are **eleven** hotspots now, not twelve. The layer is also inert with Sanity unreachable, which is correct: `project.html?p=` needs Sanity to render anything anyway; a `?status=` filter (exact case-insensitive match on `p.status`, ANDed with the active city chip, read once on load so the chips never clear it, with a `.col-empty` message when nothing matches) — the nav's **Projects** item *and* its **Completed** sub-item both deep-link to `?status=completed`, so the bar reaches the Completed view whether or not the dropdown is used and the browse-everything view is now reached only from the footer and the in-page "See the whole collection" / "Clear filters" links, a "showing N of M" line and a consultation CTA. **The pagination is gone** — the 1/2/3 buttons were decorative markup that never paged anything (every matching card always rendered), so they promised a second page that did not exist. Cross-links back to `index.html#about` / `index.html#signature`.
+`projects.html` — one section, `#projects` ("Section V — Our Collection"): cards rendered from the `P` array in JS, a **town filter capsule** (see *The town filter is a capsule of four towns*), a **Western line corridor band** (`.cor`, between the pagination and the consultation strip) showing the delivered portfolio under four stations — Vasai / Nallasopara / Virar / Saphale. It is the client's finished banner used whole (`assets/projects/western-line.jpg`), **by explicit instruction — do not substitute a markup rebuild for it**. **Its twelve painted logos are clickable**: `.cor-hot` boxes inside `.cor-map` lie over the artwork as percentages of it, so they ride the image at every width — including the 900px plate inside the phone scroller, which is why the img is wrapped in `.cor-plate` (`.cor-figure` becomes the narrower scroll container and cannot be the positioning context). The boxes are measured from the ink, so **a recrop or a replacement banner invalidates all twelve**; `paint()` removes the whole layer if the CMS supplies a banner that is a *different* picture. It tells them apart by **SHA-1**: Sanity names an uploaded asset after the hash of its bytes, so the check is exact rather than a guess — and the usual answer is that they are the same file, because `seed-collections.mjs` uploaded this very banner and the live page therefore serves it from the CDN under a different URL. **Replacing `western-line.jpg` means updating `ART` in that guard**, or the boxes vanish the moment the CMS copy is re-uploaded. Each box carries `data-project` — the name *as the artwork paints it* — and `wireBanner()` matches it against the published projects to set the href, so a slug fixed in the Studio is picked up with no code change. `nameKey()` does the matching and is deliberately forgiving: it folds case and punctuation, collapses doubled letters (`Raajlaxmi`/`Rajlaxxmi` → `rajlaxmi`, `Pearrl` → `pearl`) and drops a trailing plural (`Towers` → `tower`), because the banner and the CMS do not spell the names the same way. **A box with no published project stays inert** — no href, no pointer, no hover tint. **`Midas Heights` is no longer one of them: that mark is covered over (12 Nov) and its hotspot was deleted** — see *Midas Heights is painted over, not redrawn out*. So there are **eleven** hotspots now, not twelve. The layer is also inert with Sanity unreachable, which is correct: `project.html?p=` needs Sanity to render anything anyway; a `?status=` filter (exact case-insensitive match on `p.status`, ANDed with the active city chip, read once on load so the chips never clear it, with a `.col-empty` message when nothing matches) — **the nav's Projects item opens the whole collection since 16 Nov**, and only its Completed sub-item deep-links to `?status=completed`. It used to go to the same place as that sub-item, which left the bar with no route to "everything" at all — and, less obviously, meant the town capsule could only ever offer towns with a *completed* property in them, so **Virar never appeared**, all three of its projects being ongoing or redevelopment. That was reported as a missing town and was really a missing link, a "showing N of M" line and a consultation CTA. **The pagination is gone** — the 1/2/3 buttons were decorative markup that never paged anything (every matching card always rendered), so they promised a second page that did not exist. Cross-links back to `index.html#about` / `index.html#signature`.
 
 ### Midas Heights is painted over, not redrawn out
 
@@ -920,18 +928,31 @@ Measured at 1440, 1200, 900, 620, 390, 360 and 280 with two- and three-row
 projects: no card spilling its box, no horizontal page overflow, no console
 errors.
 
-### SOLD OUT is the only badge there is
+### The pill is the stage tag; SOLD OUT has its own mark
 
-**THE BADGE IS `SOLD OUT` OR IT IS ABSENT — there is no status pill on a
-collection card any more (16 Nov, the client's request).** It used to fall
-back to `p.status`, then to the listing's own label, so every one of the
-fifteen cards carried a pill. The client asked for the eight sold-out
-properties to say so and for **every other card to show nothing at all**, and
-that is what the template does now:
+**REVERSED LATER THE SAME DAY.** For part of 16 Nov the pill printed
+`SOLD OUT` and nothing else, so eight of the fifteen cards said nothing about
+what stage they were at. The client asked for the stage tags back, and for
+sold-out to have a home of its own. **The card now carries three marks and
+they no longer compete for one corner:**
 
-```js
-${p.soldOut ? '<span class="col-badge">Sold Out</span>' : ''}
-```
+| mark | where | when |
+|---|---|---|
+| the stage pill | top-left of the photograph | always, via `badgeLine(p)` |
+| `OC RECEIVED` | bottom-right of the photograph | always |
+| `SOLD OUT` | top-right of the white body, beside the name | only when `soldOut` |
+
+- **`badgeLine(p)` is `status` first, then the listing's label**, which is the
+  arrangement that existed before and was restored whole — it is what lets a
+  completed project carry `READY POSSESSION`. `STAGE_LABEL` came back with it
+  and now has a fourth entry, `upcoming`.
+- **It still returns the whole element or nothing.** `.col-badge` has its own
+  brown ground and padding, so an empty span is a small blob rather than an
+  invisible one.
+- **`SOLD OUT` is the client's horizontal stamp over the white card body, so
+  it needs no halo** — which is exactly why it could not have gone on the
+  photograph without one, and why the OC mark gained a double white
+  drop-shadow when it moved there.
 
 - **THE ELEMENT IS OMITTED, NOT LEFT EMPTY.** `.col-badge` is an absolutely
   positioned pill with its own brown ground and padding, so an empty `<span>`
@@ -944,11 +965,10 @@ ${p.soldOut ? '<span class="col-badge">Sold Out</span>' : ''}
   dead data — but editing it no longer changes a card. That is the same quiet
   trap `heroHeadline` and `cardText` set, and it is worth saying out loud
   because `status` reads like the field that would control this.
-- **The consequence the client accepted:** Shakun Solitaire's
-  `Ready Possession` no longer appears anywhere. It was the one badge saying
-  something its listing could not — and that project is sold out, so its card
-  now reads `SOLD OUT` instead. If a status ever needs to show again
-  alongside, the two have to share the corner.
+- ~~**Shakun Solitaire's `Ready Possession` no longer appears anywhere.**~~
+  Moot: it is back in the pill, and its card carries the sold-out stamp in
+  the body as well. The two no longer share a corner, which is what the
+  16 Nov reversal was for.
 - **Eight projects carry `soldOut: true`**, verified against the live dataset
   on 16 Nov and matching the client's list exactly: Priti Chaaya, Priti
   Pearrl, Nakshatra Auris, Raajlaxmi Tower, Raajlaxmi Apartment, Shakun
@@ -1006,6 +1026,37 @@ the two have to share the corner.
   white double drop-shadow; over the white card body it does not.
 - **Markup and GROQ in the three collection pages**, the usual split for
   `.col-*`. There is no `.col-sold` CSS left to keep in step.
+
+### The Upcoming listing
+
+A fourth collection page, `projects-upcoming.html` (16 Nov). It is a clone of
+`projects-ongoing.html` locked to `STATUS = 'upcoming'`, so **a fix to a
+collection card, chip or query now goes in FOUR files, not three.**
+
+- **`upcoming` is a new `stages` value** on the `project` schema, a new entry
+  in `STAGES` in `sanity.config.js` (which gives it its own Studio folder and
+  the `project-by-stage` template), a fourth `STAGE_LABEL`, and a line in
+  `DOC_ID` in each collection file. **`DOC_ID` appears TWICE per file** — once
+  in the `<head>` data layer and once in the Section V block — and both were
+  changed; they have to agree.
+- **THE STUDIO MUST BE REDEPLOYED before anything can be filed Upcoming.**
+  The schema change is in the repo and `npm run build` passes, but Claude
+  Code cannot run `sanity deploy`. Until it is deployed the tick-box does not
+  exist in the form and the page correctly shows its empty-state message.
+- **`collection-upcoming` does not exist in the dataset.** The page asks for
+  it like the other three ask for theirs, and falls back to the heading and
+  intro written into the markup — which were written to stand on their own
+  for that reason rather than as placeholder text. Creating the document in
+  the Studio takes the page over with no code change.
+- **It carries NO corridor banner.** The other three each hold a piece of the
+  client's artwork in that slot with project names painted into it; there is
+  none drawn for Upcoming, and borrowing one would put the wrong names on the
+  page. The band is absent rather than empty.
+- **It has no `if(!result.some(inStatus)) return;` guard**, unlike
+  `projects-redevelopment.html`. That guard keeps a page's invented fallback
+  cards showing while nothing is filed under its status — which is right for
+  a listing that once had content and wrong for one that has never had any.
+  An empty Upcoming page says so honestly instead.
 
 ### The 3D walkthrough
 
@@ -2285,8 +2336,16 @@ Five things about it are deliberate:
   spilling past it.
 
 The role and the biography are **removed when empty** rather than left as blank
-paragraphs, and the biography is justified with `hyphens:auto` (left-aligned
-below 760px, where there are too few words per line to justify). Checked at
+paragraphs, and the biography is justified but **never hyphenated**
+(left-aligned below 760px, where there are too few words per line to
+justify). `hyphens:auto` was splitting words across lines — "lead-" /
+"ership" — which the client asked to stop on 16 Nov. The justification
+stays, so the right edge is still flush; what goes is the browser's licence
+to break a word to reach it, and looser word spacing on an unlucky line is
+the accepted cost. `text-wrap:pretty` takes back what it can where it is
+supported. **The timeline panel's `.wtl-text p` carries the identical
+treatment and was changed with it** — same page, same defect, and its
+comment used to point at `.owd-bio` as the precedent. Checked at
 1440x900, 1366x768, 820x900 and 420x860, by tap as well as hover, and under
 `prefers-reduced-motion`, which drops every transform.
 

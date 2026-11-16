@@ -13,6 +13,7 @@ import {schemaTypes} from './schemaTypes/index.js'
 const STAGES = [
   ['completed', 'Completed'],
   ['ongoing', 'Ongoing'],
+  ['upcoming', 'Upcoming'],
   ['redevelopment', 'Redevelopment'],
 ]
 
@@ -29,6 +30,7 @@ const PAGE_DOC = {
   all: 'collection-all',
   completed: 'collection-completed',
   ongoing: 'collection-ongoing',
+  upcoming: 'collection-upcoming',
   redevelopment: 'collection-redevelopment',
 }
 
