@@ -1349,10 +1349,29 @@
     min-height:calc(100svh - var(--pd-top));}
 
   /* ---------- left column ---------- */
-  /* A flex column: the hero takes whatever height is left and the thumbnail
-     strip is pushed to the bottom by `margin-top:auto`. The Prime Location
-     block used to fill this space; with it gone the photograph gets it. */
-  .pd-left{position:relative;min-width:0;display:flex;flex-direction:column;}
+  /* A FLEX ROW SINCE 16 NOV: the photograph takes the whole height of the
+     first screen and the thumbnails stand beside it in a rail, the way a
+     product page does it. It was a column with a four-up strip underneath,
+     which spent a band of the first screen on thumbnails; the client asked
+     for the main image to run to the foot of the screen instead.
+
+     THE RAIL IS ON THE RIGHT, NOT THE LEFT AS IN THE REFERENCE, and that is
+     deliberate. `.pd-left` bleeds to the left edge of the viewport - that is
+     the whole gesture of this layout - so a rail there would push the
+     photograph ~80px in and take the bleed with it. On the right it sits in
+     the gutter that already exists between the picture and the facts rail.
+
+     `align-self:start` WITH A DEFINITE HEIGHT is what makes "to the bottom of
+     the screen" exact. The grid row still grows when the facts rail is longer
+     than a screen - that is why `.pd-grid` uses `min-height` and not `height`
+     - but the photograph no longer grows with it, which is what used to drag
+     it to 1340px on a 900px screen. */
+  .pd-left{position:relative;min-width:0;display:flex;flex-direction:row;
+    align-items:stretch;align-self:start;
+    gap:clamp(.45rem,.7vw,.7rem);
+    padding-right:clamp(.45rem,.7vw,.7rem);
+    height:calc(100vh - var(--pd-top));
+    height:calc(100svh - var(--pd-top));}
 
   /* ---- hero ---- */
   /* width:100% is load-bearing — without a definite width, aspect-ratio resolves
@@ -1413,11 +1432,21 @@
      simply follows it and lands on the floor of the column anyway. Pinning it
      instead left a gap between the picture and its own thumbnails on a project
      whose facts rail runs longer than the hero's cap. */
-  .pd-thumbs{flex:none;
-    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
-    gap:clamp(.5rem,.9vw,.9rem);padding:clamp(.5rem,.9vw,.9rem) 0 0
-    clamp(.5rem,.9vw,.9rem);}
-  .pd-thumb{position:relative;aspect-ratio:288/213;border-radius:10px;overflow:hidden;
+  /* A VERTICAL RAIL beside the picture. It scrolls rather than shrinking its
+     tiles when a project carries more shots than the screen is tall: a rail
+     of squares that get smaller as the gallery grows stops reading as a set
+     of buttons. The scrollbar is hidden, as it is everywhere else on this
+     site, and the tile that is showing carries the gold ring. */
+  .pd-thumbs{flex:none;display:flex;flex-direction:column;
+    width:clamp(58px,5.6vw,80px);
+    gap:clamp(.4rem,.6vw,.6rem);
+    padding:clamp(.45rem,.7vw,.7rem) 0;
+    overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;}
+  .pd-thumbs::-webkit-scrollbar{display:none;}
+  /* SQUARE IN THE RAIL. The 288/213 of the old strip came from the width of a
+     quarter-row; in a 58-80px column a landscape tile is 40px tall and the
+     subject is unreadable. The stacked tier puts the original ratio back. */
+  .pd-thumb{position:relative;aspect-ratio:1/1;flex:none;border-radius:10px;overflow:hidden;
     cursor:pointer;border:0;padding:0;background-size:cover;background-position:center;
     background-color:var(--charcoal);
     opacity:0;transform:translateY(16px);
@@ -1430,6 +1459,10 @@
   .pd-thumb::after{content:"";position:absolute;inset:0;
     background:linear-gradient(to top,rgba(9,15,23,.78),rgba(9,15,23,.06) 52%,transparent);}
   .pd-thumb.on{box-shadow:inset 0 0 0 2px var(--gold);}
+  /* NO CAPTION IN THE RAIL - it is 58-80px wide and the words would be two
+     letters a line. The markup still carries it, and the stacked tier below
+     brings it back, so nothing is lost on the layout that has room for it. */
+  .pd-thumbs .pd-thumb .cap{display:none;}
   .pd-thumb .cap{position:absolute;z-index:1;left:.7rem;bottom:.6rem;right:.6rem;
     display:flex;align-items:center;gap:.45rem;color:#fff;
     font-size:.68rem;letter-spacing:.02em;text-align:left;}
@@ -1598,8 +1631,19 @@
        under the facts rail */
     .pd-grid{grid-template-columns:minmax(0,1fr);min-height:0;}
     .pd-right{padding:clamp(2rem,4vw,3rem) clamp(1.4rem,5vw,4rem) clamp(4rem,8vh,6rem);}
-    .pd-left{display:block;}          /* no shared height to divide up */
+    /* STACKED, THE RAIL GOES BACK UNDER THE PICTURE as a four-up strip. The
+       row layout above only makes sense while the photograph owns a column
+       of its own; full width, a rail down one side would be a stripe of
+       thumbnails beside a letterbox. Everything the row changed is reset
+       here, captions included. */
+    .pd-left{display:block;height:auto;padding-right:0;}
     .pd-hero{aspect-ratio:16/9;}
+    .pd-thumbs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+      width:auto;overflow:visible;
+      gap:clamp(.5rem,.9vw,.9rem);
+      padding:clamp(.5rem,.9vw,.9rem) 0 0 clamp(.5rem,.9vw,.9rem);}
+    .pd-thumb{aspect-ratio:288/213;}
+    .pd-thumbs .pd-thumb .cap{display:flex;}
   }
   @media(max-width:760px){
     .pd-thumbs{grid-template-columns:repeat(2,minmax(0,1fr));
@@ -2652,10 +2696,13 @@
 
     const CAM = `<svg width="12" height="11" viewBox="0 0 24 22" fill="none" aria-hidden="true">
         <g stroke="currentColor" stroke-width="1.6"><path d="M2 6h5l2-3h6l2 3h5v14H2z"/><circle cx="12" cy="12" r="4"/></g></svg>`;
-    /* the strip carries the shots AFTER the hero — putting the open slide in it
-       too would show the same picture twice and push the row onto a second line */
-    const STRIP = GAL.length > 1 ? GAL.slice(1) : GAL;
-    const OFF   = GAL.length > 1 ? 1 : 0;
+    /* THE RAIL CARRIES EVERY SHOT, the one on screen included (16 Nov). The
+       strip used to skip it, because a four-up row under the picture would
+       have shown the same photograph twice and wrapped onto a second line.
+       A rail has neither problem, and showing the whole set with the open one
+       ringed is what makes it read as a gallery rather than as "the others". */
+    const STRIP = GAL;
+    const OFF   = 0;
     thumbs.innerHTML = STRIP.map((g,i)=>
       `<button class="pd-thumb${i + OFF === 0 ? ' on' : ''}" data-i="${i + OFF}" data-hover
                aria-label="Show ${g.alt}" style="background-image:${g.img}">

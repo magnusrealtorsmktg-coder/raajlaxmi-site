@@ -1722,14 +1722,46 @@ origins, so the cutover needs no change there.
 
 **Every consultation CTA on the site points here**: the nav/sheet `Book Consultation` on every page, `Schedule a Consultation` (collection), `Book a Private Consultation` (testimonials) and `Schedule a Site Visit` (detail page) — the last three deep-link to `contact.html#ctForm`, which scrolls the card into view.
 
-`project.html` — one section, `#project` ("Section VI — Project Detail"), **rebuilt from the client's mock** and currently written for **Romal Kirti only**. Two columns: the left bleeds to the viewport edge and carries the photography (hero with painted-on copy, crossfading slides, arrows, slide ticks, and a four-up captioned thumb strip under it); the right is a padded rail of facts (breadcrumb, kind, title, location, price, a four-cell fact bar, Project Highlights, six amenity chips, two CTAs and the direct line). Arrow keys still drive the gallery.
+`project.html` — one section, `#project` ("Section VI — Project Detail"), **rebuilt from the client's mock** and currently written for **Romal Kirti only**. Two columns: the left bleeds to the viewport edge and carries the photography (hero with painted-on copy, crossfading slides, arrows, slide ticks, and **a vertical thumbnail rail beside it** — see *The gallery is a rail, not a strip*); the right is a padded rail of facts (breadcrumb, kind, title, location, price, a four-cell fact bar, Project Highlights, six amenity chips, two CTAs and the direct line). Arrow keys still drive the gallery.
 
-**The first screen is a full screen, and that is what sizes the photograph.**
+### The gallery is a rail, not a strip
+
+**THE PHOTOGRAPH RUNS TO THE FOOT OF THE FIRST SCREEN AND THE THUMBNAILS
+STAND BESIDE IT (16 Nov, the client's request)**, the way a product page does
+it. It was a flex column with a four-up captioned strip under the picture,
+which spent a band of the first screen on thumbnails.
+
+- **THE RAIL IS ON THE RIGHT, NOT THE LEFT AS IN THE REFERENCE.** `.pd-left`
+  bleeds to the left edge of the viewport — that is the whole gesture of this
+  layout — so a rail there would push the photograph ~80px in and take the
+  bleed with it. On the right it sits in the gutter that already exists
+  between the picture and the facts rail. The client asked for "left or
+  right".
+- **`align-self:start` PLUS A DEFINITE HEIGHT is what makes "to the bottom of
+  the screen" exact**, measured at 0px of gap to the fold at 1920, 1440 and
+  1280. `.pd-grid` keeps `min-height` rather than `height`, so the row still
+  grows when the facts rail is longer than a screen — but the photograph no
+  longer grows with it, which is what used to drag it to 1340px on a 900px
+  screen.
+- **The tiles are square in the rail** and go back to 288/213 when stacked.
+  That ratio came from the width of a quarter-row; in a 58–80px column a
+  landscape tile is 40px tall and unreadable.
+- **The caption is hidden in the rail, and the rule needs THREE classes to do
+  it.** `.pd-thumbs .cap` is two classes and loses to `.pd-thumb .cap`
+  declared after it, which carries `display:flex` — so the caption kept
+  painting and, at 80px wide, spilled out of the tile onto the page. Caught in
+  a screenshot; every measurement passed.
+- **The rail carries EVERY shot, the one on screen included.** The strip used
+  to skip it (`GAL.slice(1)`), because a four-up row under the picture would
+  have shown the same photograph twice and wrapped onto a second line. A rail
+  has neither problem, and the ringed tile is what says which is open.
+- **Below 1100px it is a strip under the picture again**, captions and all:
+  full width, a rail down one side would be a stripe of thumbnails beside a
+  letterbox.
+
 `.pd-grid` is `align-items:stretch` with
 `min-height:calc(100svh - var(--pd-top))` (`--pd-top` is the section's own top
-padding, the thing that clears the fixed navbar), `.pd-left` is a flex column and
-the hero is `flex:1 1 auto`. So the hero absorbs whatever the facts rail does not
-use, and the thumb strip lands exactly on the bottom of the screen.
+padding, the thing that clears the fixed navbar).
 
 Four parts of that are load-bearing:
 
@@ -1740,10 +1772,9 @@ Four parts of that are load-bearing:
 - **The hero is capped at one screen** (`max-height:calc(100svh - var(--pd-top))`).
   Without it, that same tall rail dragged the photograph to 1340px on a 900px
   screen.
-- **The strip is NOT `margin-top:auto`.** It was, briefly. The hero is the thing
-  that grows, so the strip follows it onto the floor of the column anyway when the
-  rail is short — and pinning it opened a gap between the picture and its own
-  thumbnails once the hero hit its cap.
+- ~~**The strip is NOT `margin-top:auto`.**~~ Moot since 16 Nov: there is no
+  strip under the picture to push anywhere. The note is kept because the trap
+  it describes returns the moment anyone puts one back.
 - **The `aspect-ratio` (`1045/520`) is the floor**, used when the column has no
   definite height: below 1100px, where the layout stacks, `.pd-left` returns to
   `display:block` and the grid's `min-height` is reset to 0.
