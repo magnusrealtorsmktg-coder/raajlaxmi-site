@@ -1604,9 +1604,50 @@
   .pd-copy{margin-top:.9rem;font-size:clamp(.86rem,1vw,.98rem);line-height:1.85;
     font-weight:300;color:var(--body);}
 
-  .pd-am-grid{margin-top:clamp(1.4rem,2.2vw,1.9rem);display:grid;
-    grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(.9rem,1.5vw,1.3rem);}
-  .pd-am{display:flex;align-items:center;gap:.65rem;min-width:0;}
+  /* THE AMENITIES SIT IN THE FACT BAR'S CARD (17 Nov, the client's request:
+     "just like total units no of floors ... make a similar box and
+     segregation"). Same ground, same hairline border, same radius as
+     `.pd-facts`, and the cells are divided the same way.
+
+     NO `gap` ON THE GRID, deliberately. The cells have to TOUCH for the rules
+     to sit between them rather than float in a gutter - that is how the fact
+     bar does it too - so the breathing room is each cell's own padding. It is
+     also what makes `width:300%` below mean exactly three columns. */
+  .pd-am-grid{margin-top:clamp(1.4rem,2.2vw,1.9rem);
+    --am-line:rgba(28,28,28,.08);
+    background:#FBF9F5;border:1px solid rgba(28,28,28,.07);border-radius:14px;
+    display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+    padding:clamp(.3rem,.5vw,.5rem) 0;}
+  .pd-am{position:relative;display:flex;align-items:center;gap:.65rem;min-width:0;
+    padding:clamp(.6rem,.95vw,.85rem) clamp(.7rem,1.1vw,1rem);}
+
+  /* ---- THE DIVIDERS, AND WHY THEY ARE DONE THIS WAY ----
+     The fact bar is ONE row, so it divides itself with `+ ::before` and that
+     is the end of it. This grid is up to SIX cells over TWO rows, which needs
+     a vertical rule between columns AND a horizontal one between rows, and
+     neither can be drawn by an adjacency selector: `+` would put a vertical
+     rule before the first cell of row two, where the row ends, not between
+     anything.
+
+     So both rules exist on every cell and are SWITCHED WITH `opacity`, never
+     with `display`. That matters: the column count changes at two
+     breakpoints, so which cells start a row changes with it, and each tier
+     has to be able to turn a rule back ON that a wider tier turned off.
+     `opacity` lets every tier restate the same selector shapes at the same
+     specificity and win on source order alone - with `display` the
+     `:not()`-shaped overrides outranked the plain ones and the rules fought.
+
+     `nth-child(3n+1)` IS "FIRST IN ITS ROW" and is the only thing to change
+     per tier: 3 columns here, 2n+1 at 760, every cell at 520. */
+  .pd-am::before{content:"";position:absolute;left:0;top:12%;bottom:12%;
+    width:1px;background:var(--am-line);}
+  .pd-am:nth-child(3n+1)::before{opacity:0;}
+  /* run across the whole card, drawn once by the cell that starts the row */
+  .pd-am::after{content:"";position:absolute;left:0;top:0;height:1px;width:300%;
+    background:var(--am-line);opacity:0;}
+  .pd-am:nth-child(3n+1)::after{opacity:1;}
+  .pd-am:first-child::after{opacity:0;}
+
   .pd-am .ic{flex:none;width:2.3rem;height:2.3rem;border-radius:50%;
     background:rgba(201,161,90,.13);color:var(--gold-deep);
     display:grid;place-items:center;}
@@ -1713,13 +1754,28 @@
       padding-right:clamp(.5rem,.9vw,.9rem);}
     .pd-facts{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:1.2rem;}
     .pd-fact:nth-child(3)::before{display:none;}
+    /* TWO COLUMNS: row starts move from 3n+1 to 2n+1, and every rule the
+       wider tier set has to be restated rather than merely added to. */
     .pd-am-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .pd-am::after{width:200%;}
+    .pd-am:nth-child(3n+1)::before{opacity:1;}
+    .pd-am:nth-child(2n+1)::before{opacity:0;}
+    .pd-am:nth-child(3n+1)::after{opacity:0;}
+    .pd-am:nth-child(2n+1)::after{opacity:1;}
+    .pd-am:first-child::after{opacity:0;}
     .pd-hero-copy{max-width:none;right:clamp(1.6rem,4.2vw,4.2rem);}
     .pd-hero::after{background:linear-gradient(to top,rgba(9,15,23,.8),rgba(9,15,23,.35));}
   }
   @media(max-width:520px){
     .pd-ctas{grid-template-columns:minmax(0,1fr);}
+    /* ONE COLUMN: nothing to divide sideways, and every cell but the first
+       starts a row. `:nth-child(n)` is "every cell" written at the same
+       specificity as the tier rules above, so it can switch them all off on
+       source order - a bare `.pd-am::before` is a class short and loses. */
     .pd-am-grid{grid-template-columns:minmax(0,1fr);}
+    .pd-am:nth-child(n)::before{opacity:0;}
+    .pd-am::after{width:100%;}
+    .pd-am:not(:first-child)::after{opacity:1;}
   }
 
   @media (prefers-reduced-motion:reduce){

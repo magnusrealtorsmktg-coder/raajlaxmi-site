@@ -2010,6 +2010,46 @@ the cap means deciding what a third row does to the fold.
 **`check` is also offered in the dropdown** ("Other (plain tick)"), so a client
 who dislikes the guess can force the neutral mark.
 
+**THEY SIT IN THE FACT BAR'S CARD (17 Nov, the client's request).** Same
+ground (`#FBF9F5`), same hairline border, same 14px radius as `.pd-facts`
+directly above them, and the cells are divided the same way. They used to be a
+bare three-column grid with a `gap`, loose on the ivory page.
+
+- **THE GRID HAS NO `gap`, deliberately.** The cells have to touch for the
+  rules to sit *between* them rather than float in a gutter — which is how
+  the fact bar does it — so the breathing room is each cell's own padding. It
+  is also what makes `width:300%` mean exactly three columns.
+- **The fact bar's `+ ::before` trick does NOT carry over.** That is one row
+  of four. This is up to six cells over two rows, which needs a vertical rule
+  between columns **and** a horizontal one between rows, and `+` would put a
+  vertical rule before the first cell of row two — where the row ends, not
+  between anything. So both rules exist on **every** cell and are switched by
+  `nth-child`.
+- **SWITCHED WITH `opacity`, NEVER `display`, and that is load-bearing.** The
+  column count changes at 760px and 520px, so which cells start a row changes
+  with it, and each tier has to turn rules back ON that a wider tier turned
+  off. `opacity` lets every tier restate the same selector shapes at the same
+  specificity and win on source order alone. The first attempt used `display`
+  and the `:not()`-shaped overrides outranked the plain ones — the 520px tier
+  could not reach what the 760px tier had set.
+- **`:nth-child(3n+1)` is "first in its row"** and is the only thing that
+  changes per tier: `3n+1` at desktop, `2n+1` at 760, every cell at 520.
+  `:nth-child(n)` in the 520 block is "every cell" written at the tier
+  selectors' specificity so it can switch them all off — a bare
+  `.pd-am::before` is one class short and loses.
+- **The row rule is drawn once, by the cell that starts the row**, and runs
+  the full width of the card (`width:300%` / `200%` / `100%`). Drawing it per
+  cell would leave a stub above a row that is not full — four amenities in
+  three columns being the common case.
+
+**Verified exhaustively rather than by eye**: 1 to 6 amenities at 1440, 1101,
+760, 700, 521, 520 and 390px — 42 cases — asserting for each cell that the
+vertical rule is present iff it is not first in its row and the horizontal
+rule iff it starts a row below the first. All 42 pass, the row rule measures
+within 2px of the card at every tier (the 2px being the border), and nothing
+overflows. **Re-run that after touching any of it**; the breakpoint
+interactions are not something reading the CSS will tell you.
+
 ### The EMI calculator
 
 `emi.html` — one section, `#emi` ("Section XIII — EMI Calculator"), added
