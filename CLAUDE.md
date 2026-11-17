@@ -1777,6 +1777,26 @@ which spent a band of the first screen on thumbnails.
 - **Below 1100px it is a strip under the picture again**, captions and all:
   full width, a rail down one side would be a stripe of thumbnails beside a
   letterbox.
+- **NOTHING IN THE GALLERY IS CROPPED ANY MORE (17 Nov).** The client reported
+  amenity boards losing their titles, and the picture was being cut **twice**:
+  `IMG()` asked Sanity for `fit=crop` at 1600x1160, which trimmed the file
+  server-side, and then `background-size:cover` trimmed *that* to whatever
+  shape the hero happened to be. A wide board in a nearly square hero lost the
+  top and the right edge.
+  - **`fit=clip` is the request now**, which scales the image to sit inside
+    1600x1160 and never cuts it, so what arrives is the whole picture at its
+    own ratio.
+  - **The slide shows it with `contain`, and the frame is filled by the SAME
+    picture blown up and blurred** — `::before` at `cover` with a blur,
+    `::after` at `contain` over it. Both take `background-image:inherit` from
+    the URL the script set on the slide, so the browser fetches it **once**.
+    The blurred layer is `scale(1.14)` because a blur samples beyond its own
+    box and would otherwise show a soft seam at the frame.
+  - **The rail tiles are `contain` too**, so a thumbnail previews the whole
+    shot rather than a crop of it — which is the point of a thumbnail when
+    the set is mixed boards, elevations and floor plans.
+  - **`IMG()` feeds nothing else**, so this is scoped to the gallery; the
+    collection cards keep their deliberate `cover` crop.
 
 `.pd-grid` is `align-items:stretch` with
 `min-height:calc(100svh - var(--pd-top))` (`--pd-top` is the section's own top
