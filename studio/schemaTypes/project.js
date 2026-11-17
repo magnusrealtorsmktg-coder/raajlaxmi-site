@@ -504,7 +504,22 @@ export default {
               validation: (R) => R.required(),
             },
           ],
-          preview: {select: {title: 'label', subtitle: 'icon'}},
+          // THE ROW SAYS WHAT WILL HAPPEN TO IT. A blank icon used to leave
+          // the row's second line empty, which reads as something missing
+          // rather than something optional — and this field is the one a
+          // client is most likely to meet an invented amenity in. It does NOT
+          // name the icon the site will guess: that table lives in
+          // project.html and a copy here would be a second list to keep in
+          // step, which is the thing the rewrite got rid of.
+          preview: {
+            select: {title: 'label', subtitle: 'icon'},
+            prepare({title, subtitle}){
+              return {
+                title: title || 'Untitled amenity',
+                subtitle: subtitle || 'icon chosen from the name',
+              }
+            },
+          },
         },
       ],
     },

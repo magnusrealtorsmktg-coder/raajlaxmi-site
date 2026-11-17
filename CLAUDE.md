@@ -93,8 +93,19 @@ command over.
    - the **rewritten amenity field** (17 Nov) — `icon` is no longer required,
      the list is 29 options instead of 14, and `label` is retitled *Name*.
      See *Amenities are the client's to invent*. **The site half of this is
-     already live and works without the deploy**; what is waiting is only the
-     nicer form.
+     already live and works without the deploy** — checked against the
+     deployed `project.html` on 17 Nov by running its own shipped resolver
+     over twenty invented names: every one renders, the worst case being a
+     plain tick.
+
+     **BUT THE FORM IS WHERE THE CLIENT IS STOPPED, so this is not cosmetic.**
+     The Studio they are using still has `icon` **required** from a closed
+     list of fourteen, so an invented amenity cannot be saved without
+     attaching an icon that was never meant for it. They can type any Name
+     today; they cannot leave the icon alone. The deploy is the whole of what
+     stands between them and inventing one. The row's preview now also says
+     *icon chosen from the name* where the icon is blank, so the form explains
+     itself rather than looking unfinished.
 
    The older, separate question below is still open:
 
@@ -194,10 +205,11 @@ republishes the editing interface and does nothing to the website.
 `sanity deploy` the same way it blocks a Netlify production deploy, so a schema
 change always needs the client-facing command run by hand. `npm run build` is
 *not* blocked and is the way to prove a schema change compiles before handing
-the deploy over; `npx sanity deploy --dry-run --no-build -y` is not blocked
-either and prints which studio URL it would publish to, which is worth checking
-because `sanity.cli.js` pins no `studioHost` — the CLI resolves
-`https://raajlaxmi.sanity.studio` from the project rather than from the repo.
+the deploy over. **`--dry-run` IS BLOCKED TOO, as of 17 Nov** — it was not on
+16 Nov, so the classifier reads the whole `sanity deploy` command now and not
+its flags. Do not spend a turn on it. `sanity.cli.js` still pins no
+`studioHost`, so the CLI resolves `https://raajlaxmi.sanity.studio` from the
+project rather than from the repo, and only the real deploy will print it.
 
 **Every origin the site is served from must be listed in Sanity's CORS
 allowlist** (manage.sanity.io → project `lc9w15ba` → API → CORS origins,
