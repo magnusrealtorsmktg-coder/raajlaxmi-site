@@ -1566,7 +1566,14 @@
      adjusts one of them. */
   .pd-emi,
   .pd-price .pdp-q{font-family:"Inter",sans-serif;font-size:.68rem;font-weight:600;
-    letter-spacing:.12em;text-transform:uppercase;color:var(--gold-deep);}
+    letter-spacing:.12em;color:var(--gold-deep);}
+  /* THE CASE IS THE ONE THING THEY DO NOT SHARE. The link is a label and takes
+     caps; "Onwards" is a word in a sentence about money and the client asked
+     for it as Onwards - capital O, the rest lower. So the transform lives on
+     the link alone, and the span is left to print the text it is given. That
+     text is NORMALISED in priceInto(), not here, because a CSS capitalize
+     could not fix an all-caps ONWARDS typed into the CMS. */
+  .pd-emi{text-transform:uppercase;}
   /* The route to the EMI calculator. This page has no footer by design, so
      without it a property page is the one place on the site with no way of
      reaching the calculator at all — and it is the place someone is most
@@ -2645,8 +2652,13 @@
       /* "ONWARDS" IS NOT PART OF THE FIGURE, so it is no longer set like one.
          At the price's own weight and size, "₹42 Lacs Onwards" read as though
          the whole phrase were the amount; it is a qualifier ON the amount, and
-         it now takes the same small gold uppercase as the EMI link under it —
-         which is what the client asked for, in those words.
+         it now takes the EMI link's small gold type — at the client's request
+         — but in Title Case rather than caps, which they asked for separately.
+
+         THE WORD IS NORMALISED, not printed as typed: the client spells it
+         ONWARDS, onwards and Onwards in the same dataset, and all three have
+         to come out Onwards. CSS cannot do this - text-transform:capitalize
+         leaves ONWARDS alone, it only raises a first letter.
 
          MATCHED ANYWHERE IN THE STRING, not just at the end. The client writes
          prices freehand and "42 Lacs Onwards for 1 BHK" is a form this file
@@ -2667,7 +2679,7 @@
         el.appendChild(document.createTextNode(t.slice(0, m.index)));
         const q = document.createElement('span');
         q.className = 'pdp-q';
-        q.textContent = m[0];
+        q.textContent = m[0].charAt(0).toUpperCase() + m[0].slice(1).toLowerCase();
         el.appendChild(q);
         const rest = t.slice(m.index + m[0].length);
         if(rest) el.appendChild(document.createTextNode(rest));

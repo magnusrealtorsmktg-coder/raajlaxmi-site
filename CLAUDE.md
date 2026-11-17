@@ -2857,38 +2857,56 @@ an intercepted Sanity response, at 1440x900 and 390x844: the card prints
 untouched, and the EMI hand-off is unchanged. No console errors.
 
 **"ONWARDS" IS SET AS A QUALIFIER, NOT AS PART OF THE FIGURE (17 Nov, the
-client's request).** At the price's own weight and size, `₹42 Lacs Onwards`
-read as though the whole phrase were the amount. On the **detail page** the
-word now takes the same small gold uppercase as the `CALCULATE THE MONTHLY
-EMI` link under it — which is what the client asked for, in those words.
+client's request, in two steps).** At the price's own weight and size,
+`₹42 Lacs Onwards` read as though the whole phrase were the amount. It now
+drops to the small gold type of the nearest label — `CALCULATE THE MONTHLY
+EMI` on the detail page, `VIEW DETAILS` on the card — **but in Title Case, not
+caps.** The client asked for the type first and the case second, and the second
+ask is the narrower one: `Onwards`, capital O and the rest lower.
 
-- **ONE DECLARATION, NOT TWO COPIES.** `.pd-emi` and `.pd-price .pdp-q` share
-  a single rule for the type (Inter 600, `.68rem`, `.12em`, uppercase,
-  `--gold-deep`); `.pd-emi`'s own `display`/`gap`/`margin` follow in a second
-  rule. Matching sizes written out twice are matching only until somebody
-  adjusts one of them. Verified by comparing the two computed styles property
-  by property: identical on all six.
-- **`priceInto()` replaces the two `textContent` assignments** — the
-  `.pdp-row` values and the one-line `DOC.price` branch. It builds **text
-  nodes and one span, never markup**: the string is the client's text, not
-  HTML, which is why this page sets prices with `textContent` everywhere else.
-  The original spacing rides along in the text nodes rather than being put
-  back with a margin, so whatever they typed around the word survives.
+**It is on BOTH surfaces**: the detail page and all four collection files.
+
+- **THE WORD IS NORMALISED IN JS, NOT IN CSS, and that is the whole reason it
+  cannot be a `text-transform`.** The same dataset carries `ONWARDS`,
+  `onwards` and `Onwards`, and all three must print `Onwards`.
+  `text-transform:capitalize` only raises a first letter — it would leave a
+  typed `ONWARDS` exactly as it found it. So the case is set on the string:
+  `m[0].charAt(0).toUpperCase() + m[0].slice(1).toLowerCase()`.
+- **The shared rule on the detail page stops short of the case.** `.pd-emi`
+  and `.pd-price .pdp-q` share one declaration of family, size, weight,
+  tracking and colour — matching sizes written out twice are matching only
+  until somebody adjusts one of them — and `text-transform:uppercase` then
+  sits on `.pd-emi` alone. Verified by comparing the two computed styles: the
+  five shared properties identical, the transform deliberately not.
+- **The card's rule inherits instead of repeating.** `.col-price .cp-q` sets
+  only `font-size`, `font-weight` and `letter-spacing` (`.col-details`'s
+  values); family and colour come down from `.col-price`, so there is nothing
+  there to keep in step.
+- **Two code paths, because the two pages build their prices differently.**
+  `priceInto()` on the detail page appends **text nodes and one span** — that
+  page sets prices with `textContent` everywhere, the CMS string being text
+  and not HTML. `priceHtml()` on the cards returns a **string**, because the
+  card is one big template literal; **it escapes both halves**, which the rest
+  of that template does not do, since this is the one field that now has
+  markup built *around* it and the client's own text must not close the span.
 - **Matched ANYWHERE in the string** (`/\bonwards?\b/i`), not anchored to the
   end: `42 Lacs Onwards for 1 BHK` is a form this file already knows the
   client writes, and an end-anchor would have missed it. `Onwards` **on its
   own** is left plain — with no amount in front of it there is nothing to
   qualify.
-- **The collection cards were NOT changed.** `CALCULATE THE MONTHLY EMI` does
-  not exist there, so there is no type to match, and the card's price is one
-  line in a template literal rather than built from nodes. If the client wants
-  it there too it is a separate, larger change.
 
-Checked against the real stylesheet by lifting `withRupee`, `QUALIFIER` and
-`priceInto` out of the shipped file and running them in the live page: nine
-price strings, every one keeping its text exactly, the word isolated in all
-five that carry it (`Onwards`, `onwards`, `ONWARDS`, `Onward`, and mid-string)
-and untouched in `45 – 65 Lacs`, `Price on request` and the bare `Onwards`.
+Checked by lifting `withRupee` and the qualifier code out of **both** shipped
+files and running them in their own live pages — ten strings each. Every one
+keeps its text exactly; `Onwards`, `onwards`, `ONWARDS` and `Onward` all come
+back `Onwards`/`Onward`; `45 – 65 Lacs`, `Price on request` and the bare
+`Onwards` are untouched; and a price containing `<b>` comes out escaped on the
+card. Computed type measured against `.pd-emi` and `.col-details` on the page.
+
+**The local placeholder cards carry no `price`**, so nothing on
+`projects.html` shows this over `file://` without forcing a value in — which
+is what the check above does. That is the built-in fallback array at the top
+of the file, not a statement about the live dataset.
+
 
 ### A price per configuration, and the budget bands that it fixed
 

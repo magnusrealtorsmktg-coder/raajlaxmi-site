@@ -1310,6 +1310,14 @@
      when it does not, rather than printing an empty row */
   .col-price{margin-top:.95rem;font-family:"Inter",sans-serif;font-weight:600;
     font-size:.95rem;letter-spacing:.01em;color:var(--gold-deep);}
+  /* "Onwards" IS A QUALIFIER ON THE FIGURE, NOT PART OF IT (17 Nov). At the
+     price's own size it read as though the whole phrase were the amount. It
+     drops to the size and tracking the card's small gold type uses (.col-details,
+     the VIEW PROJECT link) and inherits the price's family and colour, so there
+     is nothing here to keep in step with anything. It is NOT uppercased: the
+     client asked for Onwards, capital O and the rest lower. The detail page
+     does the same thing to the same word - see .pdp-q in project.html. */
+  .col-price .cp-q{font-size:.68rem;font-weight:600;letter-spacing:.12em;}
 
   .col-details{display:inline-flex;align-items:center;gap:.6rem;margin-top:1.1rem;
     font-family:"Inter",sans-serif;font-size:.68rem;font-weight:600;letter-spacing:.12em;
@@ -2269,10 +2277,38 @@
       return /₹|\brs\.?\b|\binr\b/i.test(t) ? t : '₹' + t;
     };
 
+    /* "ONWARDS" IS SET AS A QUALIFIER, NOT AS PART OF THE FIGURE (17 Nov, the
+       client's request, and the detail page does the same - see priceInto()
+       there). The word is NORMALISED to Onwards whatever case they typed,
+       because the same dataset carries ONWARDS and onwards and all of it has
+       to print the same way; CSS cannot do that, text-transform:capitalize
+       only raises a first letter and leaves ONWARDS as it found it.
+
+       MATCHED ANYWHERE IN THE STRING, not anchored to the end: "42 Lacs
+       Onwards for 1 BHK" is a form this file already knows the client writes.
+       A bare "Onwards" with no amount in front of it is left alone - there is
+       nothing for it to qualify.
+
+       THE HALVES ARE ESCAPED. Everything else in this card template goes in
+       raw, which is the file's standing convention, but this is the one field
+       that now has markup built AROUND it, so the client's own text is kept
+       from closing the span. */
+    const QUALIFIER = /\bonwards?\b/i;
+    const priceHtml = raw => {
+      const e = v => String(v).replace(/[&<>]/g,
+        c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;'}[c]));
+      const t = withRupee(raw);
+      const m = t.match(QUALIFIER);
+      if(!m || m.index === 0) return e(t);
+      const word = m[0].charAt(0).toUpperCase() + m[0].slice(1).toLowerCase();
+      return e(t.slice(0, m.index)) + '<span class="cp-q">' + word + '</span>' +
+             e(t.slice(m.index + m[0].length));
+    };
+
     /* returns the whole line, so the card template can stay one expression */
     const priceLine = p => {
       const t = lowestPriceText(p);
-      return t ? `<div class="col-price">${withRupee(t)}</div>` : '';
+      return t ? `<div class="col-price">${priceHtml(t)}</div>` : '';
     };
 
     function priceRange(p){
