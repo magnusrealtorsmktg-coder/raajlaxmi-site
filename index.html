@@ -2054,9 +2054,22 @@
      names one to two, so 3 and 2 cover the data with the alignment exact. A
      FOURTH LINE OF ROLE WOULD STEP THAT ONE CARD'S NAME UP AGAIN - raise the
      reserve, or shorten the role in the Studio. */
+  /* AND THE NAME SITS AT THE FOOT OF ITS BOX, NOT THE HEAD (17 Nov, the
+     client's request). Reserving two lines and filling them from the top is
+     what put a whole empty line between a one-line name and its role: 36px
+     under "Mr. Jigar Jawaharlal Shah" against 9px under "Mr. Hemant Deepak
+     Sampat", which wraps and so had nothing spare. `align-content:end` spends
+     the slack above the name instead of below it, so the role is 9px under
+     the name on every card and the gap no longer depends on how long someone's
+     name is. The names still line up - on their LAST line now rather than
+     their first, which is the line the role has to follow.
+     Grid and not flex: an anonymous grid item is a block and wraps the way the
+     text already did, where a flex item would be sized from its max-content
+     first. */
   .ow-name{font-family:"Playfair Display",serif;font-weight:600;
     font-size:clamp(1.1rem,1.5vw,1.45rem);line-height:1.25;color:#fff;
-    letter-spacing:-.005em;min-height:2.5em;}
+    letter-spacing:-.005em;min-height:2.5em;
+    display:grid;align-content:end;}
   .ow-role{margin-top:.55rem;font-family:"Inter",sans-serif;font-weight:600;
     font-size:clamp(.64rem,.76vw,.74rem);letter-spacing:.13em;line-height:1.6;
     text-transform:uppercase;color:#CBA96B;min-height:4.8em;}
