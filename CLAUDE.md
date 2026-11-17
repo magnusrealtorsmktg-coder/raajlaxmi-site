@@ -660,21 +660,47 @@ scroll** (3167 → 2042).
   **MARGIN, NOT PADDING** — the rail and every dot are positioned against
   `.why-time` and `top` resolves to the *padding* edge, so a padding would have
   left the gold rail standing on its own above the first dot.
-- **The two columns still end apart**, by ~141px at 1440: the list is four
-  rows, the rail five entries, and `align-items:start` leaves the shorter one
-  short. `.why-time{align-self:stretch;display:flex;flex-direction:column;
-  justify-content:space-between}` with `.why-ev{padding-bottom:0}` makes them
-  end together — tried and screenshotted on 17 Nov — but it also stretches the
-  sketched tower (`height:90%` of a column that is now 693px, not 552px) until
-  it crowds the entries, so it was not taken. Cap the tower first if this is
-  ever wanted.
-- **`.why-ev:last-of-type` matches nothing**, and has not since the sketch was
-  added: `.why-tower` is a `div` too, so it — not the last event — is the last
-  of its type. The rule is dead, the last entry keeps its
-  `clamp(2.6rem,5vw,4rem)` of padding, and that is what the gold tail below the
-  final dot actually is. Left alone because the rail's gradient fades over its
-  last 10% and the tail reads as that fade; anything that depends on the rule
-  firing needs `:not(:has(~ .why-ev))` or similar instead.
+- **AND THE RAIL ENDS WHERE THE LIST ENDS (17 Nov, the same request).** Four
+  rows against five entries under `align-items:start` left the rail **141px
+  short** at 1440 with an empty corner beneath it. `.why-time` is now
+  `align-self:stretch` + `display:flex;flex-direction:column` +
+  `justify-content:space-between`, so it takes the grid row's full height — the
+  list's — and spreads its entries down it. The bottoms agree **to the pixel at
+  all twelve widths from 921 to 1920px**; the entries sit ~155px apart at 1440
+  where they sat 110px.
+  - **`gap` IS A FLOOR, NOT THE SPACING.** `space-between` distributes what is
+    left *after* the gaps, so above 920px the gap never comes into it. It is
+    what holds the rail together where there is nothing to distribute: the
+    stacked tier, where this column is its own content's height, and a CMS
+    carrying so many entries that the rail becomes the taller column (seven, at
+    1440). Both then read exactly as they did, because the floor is the clamp
+    the entries used to carry as a padding.
+  - **THE SPREAD IS GUARDED BY `:has(.why-ev:nth-child(4))`.** The client owns
+    this list, and three entries spread down a 693px column sit **277px**
+    apart — not alignment, a column that has come apart. Under four entries the
+    rail keeps its own height and its own spacing, which is what it had before.
+    Verified at **two to seven entries at 1440 and 1100** — twelve cases, each
+    either aligned at both ends or at its floor, none overflowing.
+  - **The entries no longer carry a `padding-bottom`**, because a trailing one
+    is exactly what `space-between` cannot see. Worth knowing: that padding is
+    where the gold tail below the final dot used to come from, and
+    `.why-ev:last-of-type`, which was meant to remove it, **matched nothing** —
+    `.why-tower` is a `div` too, so the sketch, not the last entry, is the last
+    of its type. The rail now stops 16px past the final dot at every width.
+- **`.why-tower` IS CAPPED AT 31rem, AND 31rem IS TODAY'S SKETCH, MEASURED.**
+  The art is 500x964 and `contain` fits it to whichever edge binds first: above
+  ~1230px that is the box's height — 90% of a 552px rail, 496px — and below it
+  the box's width, 72% of the column. Stretching the rail took that height to
+  623px and the sketch grew by a fifth, crowding the entries it sits behind.
+  `height:min(90%,31rem)` pins the binding edge where it already was: the
+  sketch renders at **exactly** its old size — 257x496 wide, 236x454 at 1100,
+  197x380 at 921 — and simply sits lower in a taller column. The one exception
+  is the band around 1150–1230px, where the old rail was 527–551px tall and so
+  bound *below* the cap: 2.8% larger there, 7px of width at worst. A flat cap
+  cannot follow a height derived from the entries themselves, and 7px is not
+  worth a wrapper to chase. The `90%` still governs the stacked tier, where
+  this column is its own content's height — and there the sketch **is** ~9%
+  smaller than before, because the column lost that dead trailing padding.
 - **LANDSCAPE IS THE POINT, NOT DECORATION.** A 55–115 word paragraph wants
   roughly 65 characters a line to read, which is ~620px; the rail column is
   332px at 1440. Turning the timeline on its side is the only way the detail

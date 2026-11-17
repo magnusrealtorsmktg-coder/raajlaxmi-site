@@ -1285,15 +1285,48 @@
      the rail standing on its own above the first dot. A margin moves the rail,
      the dots and the sketch together. */
   .why-time{position:relative;padding-left:2.4rem;
-    margin-top:clamp(1.27rem,.3rem + 1.63vw,1.78rem);}
+    margin-top:clamp(1.27rem,.3rem + 1.63vw,1.78rem);
+    /* AND IT ENDS WHERE THE LIST ENDS (17 Nov, the same request). Four rows
+       against five entries under `align-items:start` left the rail 141px
+       short at 1440 and an empty corner under it. `stretch` gives this
+       column the grid row's full height - the list's - and `space-between`
+       spreads the five entries down it, so the first meets the first title
+       and the last meets the last paragraph.
+
+       THE GAP IS A FLOOR, NOT THE SPACING. `space-between` distributes what
+       is left AFTER the gaps, so above 920px the entries sit ~115px apart
+       and the gap never comes into it. It is what holds the rail together
+       in the two cases where there is nothing to distribute: the stacked
+       tier, where this column is its own content's height, and a CMS that
+       one day carries enough entries to make the rail the taller column.
+       Both then read exactly as they do today, because the floor is the
+       clamp the entries used to carry as padding. */
+    display:flex;flex-direction:column;gap:clamp(2.6rem,5vw,4rem);}
+  /* ...BUT ONLY WITH FOUR ENTRIES OR MORE. The client owns this list, and
+     spreading three entries down a 693px column puts 277px between them,
+     which is not alignment, it is a column that has come apart. Under four
+     the rail keeps its own height and its own spacing - today's look, which
+     is what the gap floor is - and the stretch and the spread come back
+     together the moment a fourth entry exists. `:has()` is already an idiom
+     here (see `html:has(.sheet.open)` and `.ct-item:has`), and a browser
+     without it simply drops this rule and gets the short rail, which is
+     exactly what it had before 17 Nov. */
+  .why-time:has(.why-ev:nth-child(4)){align-self:stretch;
+    justify-content:space-between;}
   .why-time::before{content:"";position:absolute;left:5px;top:.5rem;bottom:1.4rem;width:1.5px;
     background:linear-gradient(to bottom,var(--gold) 0%,var(--gold) 90%,rgba(201,161,90,.35) 100%);
     transform:scaleY(0);transform-origin:top;transition:transform 1.5s var(--lux) .2s;}
   .why.in .why-time::before{transform:scaleY(1);}
-  .why-ev{position:relative;padding-bottom:clamp(2.6rem,5vw,4rem);
+  /* the spacing is the column's `gap` now, not a padding each entry carries:
+     a trailing padding on the last one is exactly what `space-between` has
+     no way to see, and it is what used to hang the rail past the final dot */
+  .why-ev{position:relative;
     opacity:0;transform:translateX(14px);
     transition:opacity .8s var(--lux),transform .8s var(--lux);}
-  .why-ev:last-of-type{padding-bottom:0;}
+  /* `.why-ev:last-of-type` stood here and MATCHED NOTHING: `.why-tower` is a
+     div too, so the sketch - not the last entry - is the last of its type,
+     and the trailing padding it meant to remove stayed for as long as the
+     sketch has existed. Gone with the padding itself. */
   .why.in .why-ev{opacity:1;transform:none;}
   .why.in .why-ev:nth-child(1){transition-delay:.4s;}
   .why.in .why-ev:nth-child(2){transition-delay:.55s;}
@@ -1339,7 +1372,23 @@
   .why-ev.bare .tt .go{display:none;}
   /* the real pencil sketch, blended into the paper via multiply so only the
      drawn lines show — edges feathered so no rectangle is visible */
-  .why-tower{position:absolute;right:-10%;bottom:0;width:72%;height:90%;
+  /* 31rem IS TODAY'S SKETCH, MEASURED. The art is 500x964 and `contain`
+     fits it to whichever edge binds first: above ~1150px that is the box's
+     height - 90% of a 552px rail, 496px - and below it the box's width,
+     72% of the column. Stretching the rail to the list's height took the
+     first of those from 496px to 623px and the sketch grew by a fifth,
+     crowding the entries it sits behind. Capping the height at 31rem (496px)
+     pins the binding edge where it already was: the sketch renders at exactly
+     the size it does today - 257x496 from 1230px up, 236x454 at 1100, 197x380
+     at 921 - and simply sits lower in a taller column.
+
+     THE ONE PLACE IT IS NOT EXACT is the band around 1150-1230px, where the
+     old rail was 527-551px tall and so bound BELOW the cap: the sketch comes
+     out 2.8% larger there, 7px of width at its worst. A flat cap cannot
+     follow a height that was derived from the entries themselves, and 7px
+     is not worth a wrapper element to chase. The 90% still governs the
+     stacked tier, where this column is its own content's height. */
+  .why-tower{position:absolute;right:-10%;bottom:0;width:72%;height:min(90%,31rem);
     background:url("sketch-tower.jpg") no-repeat right bottom/contain;
     mix-blend-mode:multiply;opacity:.34;pointer-events:none;
     -webkit-mask-image:radial-gradient(118% 84% at 72% 60%,#000 40%,transparent 86%);
