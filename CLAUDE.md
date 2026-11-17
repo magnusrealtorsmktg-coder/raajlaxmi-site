@@ -639,6 +639,42 @@ and therefore set the height of the whole `.why-grid`. It is **552px and ten
 words** now, the grid takes the list's 721px, and Section IV lost **1,125px of
 scroll** (3167 → 2042).
 
+- **THE RAIL STARTS ON THE FIRST TITLE'S LINE (17 Nov).** The client asked
+  for the timeline and "Architecture That Inspires" to line up, and they did
+  not: both columns are `.why-grid` items and both began at the grid's top
+  edge, **which is not where either column's type begins**. `.why-row` pads
+  itself `clamp(1.1rem,1.8vw,1.5rem)` before the heading, and a 2rem Cormorant
+  cap then sits ~0.13em below the top of its line box, while the year — 1.35rem
+  Inter at `line-height:1` — sits almost on its own. The year set out **28px
+  above** the first heading at 1440.
+  `.why-time` now carries `margin-top:clamp(1.27rem,.3rem + 1.63vw,1.78rem)`,
+  which is that distance: the row's padding plus the difference in leading, so
+  it **tracks the heading's clamp** instead of being a flat number. The clamp's
+  two ends are where the quantities behind it stop moving — the row's padding
+  caps at 1333px, the heading at 1454px, and below 978px both are at their
+  minimum. Verified by measuring the **ink top** of each (canvas
+  `actualBoundingBoxAscent`, not the box top, which differs by the leading that
+  caused this): they agree **within 1.4px at fifteen widths from 921 to
+  1920px**. Zeroed at ≤920px, where the grid is one column and the timeline
+  follows the list.
+  **MARGIN, NOT PADDING** — the rail and every dot are positioned against
+  `.why-time` and `top` resolves to the *padding* edge, so a padding would have
+  left the gold rail standing on its own above the first dot.
+- **The two columns still end apart**, by ~141px at 1440: the list is four
+  rows, the rail five entries, and `align-items:start` leaves the shorter one
+  short. `.why-time{align-self:stretch;display:flex;flex-direction:column;
+  justify-content:space-between}` with `.why-ev{padding-bottom:0}` makes them
+  end together — tried and screenshotted on 17 Nov — but it also stretches the
+  sketched tower (`height:90%` of a column that is now 693px, not 552px) until
+  it crowds the entries, so it was not taken. Cap the tower first if this is
+  ever wanted.
+- **`.why-ev:last-of-type` matches nothing**, and has not since the sketch was
+  added: `.why-tower` is a `div` too, so it — not the last event — is the last
+  of its type. The rule is dead, the last entry keeps its
+  `clamp(2.6rem,5vw,4rem)` of padding, and that is what the gold tail below the
+  final dot actually is. Left alone because the rail's gradient fades over its
+  last 10% and the tail reads as that fade; anything that depends on the rule
+  firing needs `:not(:has(~ .why-ev))` or similar instead.
 - **LANDSCAPE IS THE POINT, NOT DECORATION.** A 55–115 word paragraph wants
   roughly 65 characters a line to read, which is ~620px; the rail column is
   332px at 1440. Turning the timeline on its side is the only way the detail

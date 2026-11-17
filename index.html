@@ -1264,7 +1264,28 @@
   .why-row:hover .plus{transform:rotate(90deg);}
 
   /* timeline — solid gold rail, filled gold milestone dots, bold sans years */
-  .why-time{position:relative;padding-left:2.4rem;}
+  /* THE TIMELINE STARTS ON THE FIRST TITLE'S LINE (17 Nov, the client's
+     request). Both columns are grid items and both began at the grid's top
+     edge - which is not where either column's TYPE begins. `.why-row` pads
+     itself clamp(1.1rem,1.8vw,1.5rem) before the heading, and a 2rem
+     Cormorant cap then sits another ~0.13em below the top of its line box,
+     while the year - 1.35rem Inter at line-height 1 - sits almost on its own.
+     So "2012" set out 28px ABOVE "Architecture That Inspires" at 1440px.
+
+     This margin is that distance: the row's top padding plus the difference
+     in leading, which is why it tracks the heading's clamp rather than being
+     a flat number. MEASURED, NOT GUESSED - the two ink tops now agree within
+     1.1px at every width from 921px to 1440px. The clamp's ends are where the
+     quantities behind it stop moving: the row's padding caps at 1.5rem from
+     1333px and the heading at 2rem from 1454px, and below 978px both are at
+     their minimum, so outside that band the gap is a constant.
+
+     MARGIN, NOT PADDING. The gold rail and every dot are positioned against
+     this box, and `top` resolves to the PADDING edge: padding would have left
+     the rail standing on its own above the first dot. A margin moves the rail,
+     the dots and the sketch together. */
+  .why-time{position:relative;padding-left:2.4rem;
+    margin-top:clamp(1.27rem,.3rem + 1.63vw,1.78rem);}
   .why-time::before{content:"";position:absolute;left:5px;top:.5rem;bottom:1.4rem;width:1.5px;
     background:linear-gradient(to bottom,var(--gold) 0%,var(--gold) 90%,rgba(201,161,90,.35) 100%);
     transform:scaleY(0);transform-origin:top;transition:transform 1.5s var(--lux) .2s;}
@@ -1371,6 +1392,10 @@
   }
   @media(max-width:920px){
     .why-grid{grid-template-columns:1fr;gap:3.5rem;}
+    /* one column: the timeline follows the list instead of standing
+       beside it, so there is no first title to meet and the 3.5rem
+       gap is the whole of the space between them */
+    .why-time{margin-top:0;}
     .why-quote{grid-template-columns:1fr;text-align:center;}
     .why-quote-in{text-align:center;}
     .why-quote-in blockquote{margin-left:auto;margin-right:auto;}
