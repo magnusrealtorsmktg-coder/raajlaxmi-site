@@ -1558,13 +1558,20 @@
   .pd-price .pdp-row .c{font-weight:500;font-size:.62em;letter-spacing:.1em;
     text-transform:uppercase;color:var(--body);}
 
+  /* THE SMALL GOLD LABEL TYPE, DECLARED ONCE FOR BOTH THINGS THAT USE IT.
+     The EMI link and the "Onwards" on a price are the same thing
+     typographically — a quiet gold aside beside something louder — and the
+     client asked on 17 Nov for them to match exactly. ONE DECLARATION, NOT
+     TWO COPIES: matching sizes written out twice is matching until somebody
+     adjusts one of them. */
+  .pd-emi,
+  .pd-price .pdp-q{font-family:"Inter",sans-serif;font-size:.68rem;font-weight:600;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--gold-deep);}
   /* The route to the EMI calculator. This page has no footer by design, so
      without it a property page is the one place on the site with no way of
      reaching the calculator at all — and it is the place someone is most
      likely to want it, standing in front of a price. */
   .pd-emi{display:inline-flex;align-items:center;gap:.55rem;margin-top:.7rem;
-    font-family:"Inter",sans-serif;font-size:.68rem;font-weight:600;
-    letter-spacing:.12em;text-transform:uppercase;color:var(--gold-deep);
     transition:gap .4s var(--lux);}
   .pd-emi:hover{gap:.85rem;}
   .pd-emi .arw{position:relative;width:1rem;height:1px;background:currentColor;}
@@ -2635,6 +2642,37 @@
         return /₹|\brs\.?\b|\binr\b/i.test(t) ? t : '₹' + t;
       };
 
+      /* "ONWARDS" IS NOT PART OF THE FIGURE, so it is no longer set like one.
+         At the price's own weight and size, "₹42 Lacs Onwards" read as though
+         the whole phrase were the amount; it is a qualifier ON the amount, and
+         it now takes the same small gold uppercase as the EMI link under it —
+         which is what the client asked for, in those words.
+
+         MATCHED ANYWHERE IN THE STRING, not just at the end. The client writes
+         prices freehand and "42 Lacs Onwards for 1 BHK" is a form this file
+         already knows about (see the BHK note further down), so anchoring to
+         the end would have missed it.
+
+         BUILT AS NODES, NEVER AS MARKUP. The CMS string is the client's text,
+         not HTML, and every other path on this page sets it with textContent
+         for that reason. The original spacing is carried across in the text
+         nodes rather than put back with a margin, so whatever they typed
+         around the word survives. */
+      const QUALIFIER = /\bonwards?\b/i;
+      const priceInto = (el, raw) => {
+        const t = withRupee(raw);
+        const m = t.match(QUALIFIER);
+        if(!m || m.index === 0){ el.textContent = t; return; }
+        el.textContent = '';
+        el.appendChild(document.createTextNode(t.slice(0, m.index)));
+        const q = document.createElement('span');
+        q.className = 'pdp-q';
+        q.textContent = m[0];
+        el.appendChild(q);
+        const rest = t.slice(m.index + m[0].length);
+        if(rest) el.appendChild(document.createTextNode(rest));
+      };
+
       const price = document.getElementById('pdPrice');
       const priced = (Array.isArray(DOC.sizes) ? DOC.sizes : []).filter(z => z && z.price);
       if(price){
@@ -2645,7 +2683,7 @@
             row.className = 'pdp-row';
             const v = document.createElement('span');
             v.className = 'v';
-            v.textContent = withRupee(z.price);   /* textContent: the CMS is never markup */
+            priceInto(v, z.price);   /* nodes only: the CMS is never markup */
             row.appendChild(v);
             if(z.config){
               const c = document.createElement('span');
@@ -2656,7 +2694,7 @@
             price.appendChild(row);
           });
           price.hidden = false;
-        } else if(DOC.price){ price.textContent = withRupee(DOC.price); price.hidden = false; }
+        } else if(DOC.price){ priceInto(price, DOC.price); price.hidden = false; }
         else price.hidden = true;
       }
 

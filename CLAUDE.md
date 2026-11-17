@@ -2856,6 +2856,40 @@ an intercepted Sanity response, at 1440x900 and 390x844: the card prints
 `₹60 Lacs Onwards 2 BHK`, `₹1.8 Cr` is not doubled, `Price on request` is
 untouched, and the EMI hand-off is unchanged. No console errors.
 
+**"ONWARDS" IS SET AS A QUALIFIER, NOT AS PART OF THE FIGURE (17 Nov, the
+client's request).** At the price's own weight and size, `₹42 Lacs Onwards`
+read as though the whole phrase were the amount. On the **detail page** the
+word now takes the same small gold uppercase as the `CALCULATE THE MONTHLY
+EMI` link under it — which is what the client asked for, in those words.
+
+- **ONE DECLARATION, NOT TWO COPIES.** `.pd-emi` and `.pd-price .pdp-q` share
+  a single rule for the type (Inter 600, `.68rem`, `.12em`, uppercase,
+  `--gold-deep`); `.pd-emi`'s own `display`/`gap`/`margin` follow in a second
+  rule. Matching sizes written out twice are matching only until somebody
+  adjusts one of them. Verified by comparing the two computed styles property
+  by property: identical on all six.
+- **`priceInto()` replaces the two `textContent` assignments** — the
+  `.pdp-row` values and the one-line `DOC.price` branch. It builds **text
+  nodes and one span, never markup**: the string is the client's text, not
+  HTML, which is why this page sets prices with `textContent` everywhere else.
+  The original spacing rides along in the text nodes rather than being put
+  back with a margin, so whatever they typed around the word survives.
+- **Matched ANYWHERE in the string** (`/\bonwards?\b/i`), not anchored to the
+  end: `42 Lacs Onwards for 1 BHK` is a form this file already knows the
+  client writes, and an end-anchor would have missed it. `Onwards` **on its
+  own** is left plain — with no amount in front of it there is nothing to
+  qualify.
+- **The collection cards were NOT changed.** `CALCULATE THE MONTHLY EMI` does
+  not exist there, so there is no type to match, and the card's price is one
+  line in a template literal rather than built from nodes. If the client wants
+  it there too it is a separate, larger change.
+
+Checked against the real stylesheet by lifting `withRupee`, `QUALIFIER` and
+`priceInto` out of the shipped file and running them in the live page: nine
+price strings, every one keeping its text exactly, the word isolated in all
+five that carry it (`Onwards`, `onwards`, `ONWARDS`, `Onward`, and mid-string)
+and untouched in `45 – 65 Lacs`, `Price on request` and the bare `Onwards`.
+
 ### A price per configuration, and the budget bands that it fixed
 
 **FIXED ON 14 NOV, in the same session that found it.** The section below
