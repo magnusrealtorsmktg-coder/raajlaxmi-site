@@ -428,11 +428,25 @@ export default {
       title: 'Amenities',
       type: 'array',
       description:
-        'Shown with a line icon each. The first six appear on the detail page.',
-      // EVERY VALUE IN THE ICON LIST BELOW MUST ALSO EXIST IN `ICON` IN
-      // project.html. That page does `.filter(a => ICON[a.icon])`, so an
-      // amenity whose icon key it does not know is dropped silently — it
-      // never appears and nothing errors. Add to both lists or to neither.
+        'Add as many as the project has — the first six appear on the detail page. ' +
+        'Type the name; the icon is optional and is chosen from the name when you ' +
+        'leave it blank.',
+      // ADD AN AMENITY WITHOUT TOUCHING THE CODE (17 Nov). This list used to be
+      // a closed set: `icon` was required, and project.html ran
+      // `.filter(a => ICON[a.icon])`, so an amenity whose key that page did not
+      // know VANISHED — no icon, no row, no error. Adding one therefore meant
+      // a developer editing two files, which is not something a client can do.
+      //
+      // Now `icon` is optional and project.html never drops a row. It resolves
+      // the mark in three steps: the chosen icon, else one guessed from the
+      // label (its ICON_GUESS table reads 'Jogging Track', 'CCTV', 'Rainwater
+      // Harvesting' and so on), else a neutral tick. So a brand new amenity
+      // always appears, and the worst case is a generic mark beside the
+      // client's own words rather than silence.
+      //
+      // The list below is a convenience, not a contract. Every value in it
+      // should still exist in ICON in project.html — one that does not now
+      // falls back to the guess instead of disappearing, but it is sloppy.
       fieldset: 'detail',
       of: [
         {
@@ -442,6 +456,11 @@ export default {
               name: 'icon',
               title: 'Icon',
               type: 'string',
+              description:
+                'Optional. Leave it blank and the icon is picked from the name ' +
+                'below — "Jogging Track", "CCTV", "Rainwater Harvesting" and most ' +
+                'other ordinary names are recognised. Anything unrecognised gets a ' +
+                'plain tick, so the amenity always shows.',
               options: {
                 list: [
                   {title: 'Gym', value: 'gym'},
@@ -449,20 +468,41 @@ export default {
                   {title: 'Clubhouse', value: 'club'},
                   {title: "Children's play", value: 'play'},
                   {title: 'Garden', value: 'garden'},
-                  {title: 'Planning', value: 'planning'},
-                  {title: 'Parking', value: 'parking'},
-                  {title: 'Security', value: 'security'},
-                  {title: 'Lift', value: 'lift'},
-                  {title: 'Power backup', value: 'power'},
-                  {title: 'Gazebo', value: 'gazebo'},
-                  {title: 'Indoor games', value: 'indoor'},
                   {title: 'Landscaped garden', value: 'landscape'},
                   {title: 'Common green space', value: 'green'},
+                  {title: 'Gazebo', value: 'gazebo'},
+                  {title: 'Terrace / deck', value: 'terrace'},
+                  {title: 'Jogging track', value: 'jogging'},
+                  {title: 'Yoga / wellness', value: 'yoga'},
+                  {title: 'Indoor games', value: 'indoor'},
+                  {title: 'Sports court', value: 'sports'},
+                  {title: 'Banquet hall', value: 'banquet'},
+                  {title: 'Temple', value: 'temple'},
+                  {title: 'Shops / retail', value: 'shop'},
+                  {title: 'Parking', value: 'parking'},
+                  {title: 'EV charging', value: 'ev'},
+                  {title: 'Lift', value: 'lift'},
+                  {title: 'Security', value: 'security'},
+                  {title: 'CCTV', value: 'cctv'},
+                  {title: 'Intercom', value: 'intercom'},
+                  {title: 'Fire safety', value: 'fire'},
+                  {title: 'Power backup', value: 'power'},
+                  {title: 'Solar', value: 'solar'},
+                  {title: 'Water / rainwater', value: 'water'},
+                  {title: 'Wi-Fi', value: 'wifi'},
+                  {title: 'Planning', value: 'planning'},
+                  {title: 'Other (plain tick)', value: 'check'},
                 ],
               },
+            },
+            {
+              name: 'label',
+              title: 'Name',
+              type: 'string',
+              description:
+                'What the buyer reads, in your own words — e.g. "Rooftop Jogging Track".',
               validation: (R) => R.required(),
             },
-            {name: 'label', title: 'Label', type: 'string', validation: (R) => R.required()},
           ],
           preview: {select: {title: 'label', subtitle: 'icon'}},
         },

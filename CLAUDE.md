@@ -80,11 +80,21 @@ command over.
 
 **FOUR THINGS ARE WAITING ON SOMEONE DOING THEM BY HAND:**
 
-1. **THE STUDIO NEEDS REDEPLOYING — DEFINITELY, as of 16 Nov.** `upcoming`
-   was added to the `project` schema's `stages` list and to `STAGES` in
-   `sanity.config.js`; `npm run build` passes, but until someone runs the
-   deploy the tick-box does not exist in the form and nothing can be filed
-   onto the new Upcoming page. See *The Upcoming listing*.
+1. **THE STUDIO NEEDS REDEPLOYING — DEFINITELY, as of 17 Nov.** `npm run
+   build` passes (checked 17 Nov). THREE separate changes are waiting on it:
+
+   - `upcoming` on the `project` schema's `stages` list and in `STAGES` in
+     `sanity.config.js` (16 Nov) — until it is deployed the tick-box does not
+     exist and nothing can be filed onto the Upcoming page. See *The Upcoming
+     listing*.
+   - the `ocReceived` boolean (16 Nov) — until it is deployed the OC mark
+     falls back to the hard-coded list of nine names and the client cannot
+     change it per project. See *The pill is the stage tag*.
+   - the **rewritten amenity field** (17 Nov) — `icon` is no longer required,
+     the list is 29 options instead of 14, and `label` is retitled *Name*.
+     See *Amenities are the client's to invent*. **The site half of this is
+     already live and works without the deploy**; what is waiting is only the
+     nicer form.
 
    The older, separate question below is still open:
 
@@ -239,7 +249,7 @@ two queries in the same session.
 | 3D walkthrough | **NONE.** The field exists on `project` and the button is wired, but no project carries a video, so the button renders nowhere. Untested against a real file |
 | Detail-page content | **6 of 15 have a gallery** (Rajlaxxmi Park 4, Priti Pearrl 3, and 2 each on Krishna Niwas, Raajlaxmi Avenue, Raajlaxmi Meenakshi, Shanti Niwas), **6 a price**, 7 a configuration. The gallery count was 0 on 8 Nov |
 | Prices | **SIX, all still in the one-line free-text field.** Priti Darpan `26 Lacs Onwards`; Priti Pearrl, Priti Chaaya, Raajlaxmi Tower, Raajlaxmi Apartment and Shakun Solitaire all in the form `42 Lacs Onwards for 1 BHK & 60 Lacs Onwards for 2 BHK`. **Nothing uses `sizes[].price` yet** — `split-prices.mjs` moves them and has not been run. See *A price per configuration, and the budget bands that it fixed*. **None of the six carries a `₹` and none should** — the symbol is added at render, see *The rupee sign is added at render* |
-| Amenity icons in use | `play`, `gazebo`, `indoor`, `landscape`, `security`, `gym`, `garden`, `planning`, `parking`, `lift`, `power`, `pool` — and one project has an amenity with **no icon set at all**. `green` (Common Green Space) is in the schema and used by nobody |
+| Amenity icons in use | `play`, `gazebo`, `indoor`, `landscape`, `security`, `gym`, `garden`, `planning`, `parking`, `lift`, `power`, `pool` — and one project has an amenity with **no icon set at all**. That one used to be deleted from the page in silence; since 17 Nov it gets a mark guessed from its label. `green` (Common Green Space) is in the schema and used by nobody |
 | Brochures | **3 on published projects** (Nakshatra Auris 18.0 MB, Shanti Niwas 7.7 MB, Rajlaxxmi Park 5.0 MB). A fourth, 0.4 MB, is on the unpublished Aarvi Apartment draft |
 | Reviews | **6 real Google reviews** (`testimonial` documents), all with Google links |
 | Client photo slider | **8 photographs** — the block is live now, no longer hidden |
@@ -1741,42 +1751,58 @@ origins, so the cutover needs no change there.
 
 **Every consultation CTA on the site points here**: the nav/sheet `Book Consultation` on every page, `Schedule a Consultation` (collection), `Book a Private Consultation` (testimonials) and `Schedule a Site Visit` (detail page) — the last three deep-link to `contact.html#ctForm`, which scrolls the card into view.
 
-`project.html` — one section, `#project` ("Section VI — Project Detail"), **rebuilt from the client's mock** and currently written for **Romal Kirti only**. Two columns: the left bleeds to the viewport edge and carries the photography (hero with painted-on copy, crossfading slides, arrows, slide ticks, and **a vertical thumbnail rail beside it** — see *The gallery is a rail, not a strip*); the right is a padded rail of facts (breadcrumb, kind, title, location, price, a four-cell fact bar, Project Highlights, six amenity chips, two CTAs and the direct line). Arrow keys still drive the gallery.
+`project.html` — one section, `#project` ("Section VI — Project Detail"), **rebuilt from the client's mock** and currently written for **Romal Kirti only**. Two columns: the left bleeds to the viewport edge and carries the photography (hero with painted-on copy, crossfading slides, arrows, slide ticks, and **a captioned thumbnail strip along its floor** — see *The gallery is a strip along the floor*); the right is a padded rail of facts (breadcrumb, kind, title, location, price, a four-cell fact bar, Project Highlights, six amenity chips, two CTAs and the direct line). Arrow keys still drive the gallery.
 
-### The gallery is a rail, not a strip
+### The gallery is a strip along the floor
 
-**THE PHOTOGRAPH RUNS TO THE FOOT OF THE FIRST SCREEN AND THE THUMBNAILS
-STAND BESIDE IT (16 Nov, the client's request)**, the way a product page does
-it. It was a flex column with a four-up captioned strip under the picture,
-which spent a band of the first screen on thumbnails.
+**THE PHOTOGRAPH RUNS TO THE FOOT OF THE FIRST SCREEN AND THE THUMBNAILS LIE
+ALONG ITS FLOOR (17 Nov, the client's request).**
 
-- **THE RAIL IS ON THE RIGHT, NOT THE LEFT AS IN THE REFERENCE.** `.pd-left`
-  bleeds to the left edge of the viewport — that is the whole gesture of this
-  layout — so a rail there would push the photograph ~80px in and take the
-  bleed with it. On the right it sits in the gutter that already exists
-  between the picture and the facts rail. The client asked for "left or
-  right".
+**THIS IS THE THIRD ARRANGEMENT OF THE SAME TWO PARTS** and the history is the
+point, because each one fixed what the last one broke:
+
+| | what it gave | what it cost |
+|---|---|---|
+| **column + four-up strip** (to 16 Nov) | landscape tiles, captions | the strip ate a band of the first screen and the picture stopped short |
+| **row + vertical rail** (16–17 Nov) | the picture ran to the fold | a 58–80px column: no caption fitted, a landscape shot was 40px tall |
+| **column + bottom strip** (now) | both | nothing yet |
+
+What makes "both" possible is that **the strip is a definite height and the
+photograph takes everything else**. `.pd-left` is a flex column with a definite
+height; `.pd-thumbs` is `flex:none` at `clamp(88px,11.5vh,122px)`; `.pd-hero` is
+`flex:1 1 auto` and absorbs the remainder. Measured at 1920/1600/1440/1280: the
+hero is 839/678/681/605px, the strip 122/103/103/92px, and the two together land
+on the foot of the screen.
+
 - **`align-self:start` PLUS A DEFINITE HEIGHT is what makes "to the bottom of
-  the screen" exact**, measured at 0px of gap to the fold at 1920, 1440 and
-  1280. `.pd-grid` keeps `min-height` rather than `height`, so the row still
-  grows when the facts rail is longer than a screen — but the photograph no
-  longer grows with it, which is what used to drag it to 1340px on a 900px
-  screen.
-- **The tiles are square in the rail** and go back to 288/213 when stacked.
-  That ratio came from the width of a quarter-row; in a 58–80px column a
-  landscape tile is 40px tall and unreadable.
-- **The caption is hidden in the rail, and the rule needs THREE classes to do
-  it.** `.pd-thumbs .cap` is two classes and loses to `.pd-thumb .cap`
-  declared after it, which carries `display:flex` — so the caption kept
-  painting and, at 80px wide, spilled out of the tile onto the page. Caught in
-  a screenshot; every measurement passed.
-- **The rail carries EVERY shot, the one on screen included.** The strip used
-  to skip it (`GAL.slice(1)`), because a four-up row under the picture would
-  have shown the same photograph twice and wrapped onto a second line. A rail
-  has neither problem, and the ringed tile is what says which is open.
-- **Below 1100px it is a strip under the picture again**, captions and all:
-  full width, a rail down one side would be a stripe of thumbnails beside a
-  letterbox.
+  the screen" exact.** `.pd-grid` keeps `min-height` rather than `height`, so
+  the row still grows when the facts rail is longer than a screen — but the
+  photograph no longer grows with it, which is what used to drag it to 1340px
+  on a 900px screen.
+- **The tiles are 288/213 again**, the ratio the photography is actually shot
+  in. The square was a concession to the 58–80px rail and went with it. Their
+  height is the strip's, so the width follows from the ratio and they stay a
+  consistent size however many there are — **120–165px wide at desktop.**
+- **It scrolls sideways rather than shrinking.** `overflow-x:auto` with the
+  scrollbar hidden, and `overscroll-behavior-x:contain` so a trackpad flick at
+  the end of the strip does not navigate back a page. Tiles that get smaller
+  as the gallery grows stop reading as buttons, and the four-up grid this
+  replaced wrapped onto a second line at five shots.
+- **THE CAPTION IS BACK, AND IT IS ONE LINE WITH AN ELLIPSIS.** It was turned
+  off for the rail, where the rule needed **three classes** to beat
+  `.pd-thumb .cap` and the first attempt with two let it keep painting and
+  spill out of an 80px tile. That whole rule is gone: the text now sits in its
+  own `.cap .t` span with `white-space:nowrap;text-overflow:ellipsis`, so a
+  long caption from Sanity is **cut, not wrapped**. The stacked tier releases
+  the nowrap and lets it wrap again.
+- **The strip carries EVERY shot, the one on screen included.** It used to skip
+  it (`GAL.slice(1)`), because the four-up row would then have shown the same
+  photograph twice and wrapped. A strip that scrolls has neither problem, and
+  the ringed tile is what says which is open.
+- **Below 1100px it is a four-up grid**, and everything the single-screen
+  layout fixes is released there: the column's height, the sideways scroll and
+  the one-line caption. **Miss any one of those resets and the tiles are sized
+  against a height that no longer exists.**
 - **NOTHING IN THE GALLERY IS CROPPED ANY MORE (17 Nov).** The client reported
   amenity boards losing their titles, and the picture was being cut **twice**:
   `IMG()` asked Sanity for `fit=crop` at 1600x1160, which trimmed the file
@@ -1792,7 +1818,7 @@ which spent a band of the first screen on thumbnails.
     the URL the script set on the slide, so the browser fetches it **once**.
     The blurred layer is `scale(1.14)` because a blur samples beyond its own
     box and would otherwise show a soft seam at the frame.
-  - **The rail tiles are `contain` too**, so a thumbnail previews the whole
+  - **The strip tiles are `contain` too**, so a thumbnail previews the whole
     shot rather than a crop of it — which is the point of a thumbnail when
     the set is mixed boards, elevations and floor plans.
   - **`IMG()` feeds nothing else**, so this is scoped to the gallery; the
@@ -1811,9 +1837,11 @@ Four parts of that are load-bearing:
 - **The hero is capped at one screen** (`max-height:calc(100svh - var(--pd-top))`).
   Without it, that same tall rail dragged the photograph to 1340px on a 900px
   screen.
-- ~~**The strip is NOT `margin-top:auto`.**~~ Moot since 16 Nov: there is no
-  strip under the picture to push anywhere. The note is kept because the trap
-  it describes returns the moment anyone puts one back.
+- **The strip is NOT `margin-top:auto`** — and the strip is back under the
+  picture since 17 Nov, so this is live again. The hero is the thing that
+  grows, so the strip follows it onto the floor of the column by itself.
+  Pinning it with an auto margin instead leaves a gap between the picture and
+  its own thumbnails on a project whose facts rail runs past the hero's cap.
 - **The `aspect-ratio` (`1045/520`) is the floor**, used when the column has no
   definite height: below 1100px, where the layout stacks, `.pd-left` returns to
   `display:block` and the grid's `min-height` is reset to 0.
@@ -1925,6 +1953,62 @@ hand-written Romal Kirti page — that is the fallback. The home page's
 Signature Projects cards **no longer land there**: each one now resolves its own
 `project.html?p=<slug>` (see *The signature cards point at projects*), and a bare
 `project.html` typed into a card's link field is ignored for exactly that reason.
+
+### Amenities are the client's to invent
+
+**THE CLIENT CAN ADD AN AMENITY THE CODE HAS NEVER HEARD OF AND IT APPEARS
+(17 Nov).** It could not before, and the failure was silent.
+
+The old arrangement was a closed set in two halves that had to agree:
+`icon` was `required` with a 14-value dropdown in
+`studio/schemaTypes/project.js`, and `project.html` ran
+
+```js
+(DOC.amenities || []).filter(a => ICON[a.icon])      // <- the bug
+```
+
+so an amenity whose key that page did not know was **deleted from the render —
+no icon, no row, no console error**. Adding one therefore meant a developer
+editing two files and a Studio redeploy, which is not something a client can
+do. The CMS audit had already caught one project with an amenity carrying no
+icon at all; it was simply not on the site.
+
+**Three steps resolve the mark now, and none of them can fail:**
+
+1. the icon they chose, if `ICON` has it;
+2. else **a guess from the label** — `ICON_GUESS`, a list of
+   `[regex, key]` pairs tested in order, first match wins;
+3. else `check`, a plain tick in a circle.
+
+The filter now only asks for a non-empty label. `icon` is **optional** in the
+schema, the dropdown is **29 options** (the original 14 plus `terrace`,
+`jogging`, `yoga`, `sports`, `banquet`, `temple`, `shop`, `ev`, `cctv`,
+`intercom`, `fire`, `solar`, `water`, `wifi`, `check`), and `label` is retitled
+**Name** because that is what it is.
+
+**ORDER IS THE WHOLE DESIGN OF `ICON_GUESS`, and two false matches were found
+by testing it rather than by reading it:**
+
+- `zen` unanchored matched **citi*zen*** — "Senior Citizen Corner" came back
+  `yoga`. `spa` unanchored matched **o*pen spa*ce**. Both are now `\bzen\b`
+  and `\bspa\b`.
+- `tree` unanchored matched **s*tree*t** — "Street Lighting" came back
+  `garden`. It is `\btree` now. `plant` matched "sewage treatment **plant**",
+  which is plumbing, not horticulture; it is `plantation`.
+- `park` matches "Parking" **and** "Children's Park", so the kids rule sits
+  above it. `landscap` sits above `garden` for the same reason.
+
+The table is exercised from the shipped source — extract `ICON_GUESS` and
+`guessIcon` out of `project.html` with a regex and run labels through them in
+Node. **Do that after any edit to it**; reading the list does not find a
+substring collision. Thirty-three labels pass, including the ones above.
+
+**Still capped at six on the page** (`AMEN.slice(0,6)`), which the schema
+description now says out loud. The grid is three columns by two rows; lifting
+the cap means deciding what a third row does to the fold.
+
+**`check` is also offered in the dropdown** ("Other (plain tick)"), so a client
+who dislikes the guess can force the neutral mark.
 
 ### The EMI calculator
 
@@ -2527,6 +2611,47 @@ already filled in, never reached the page**. It is now fixed, exactly as BUDGET
 is: written in the CMS, painted by the home-page content block, the same
 whatever the projects carry. `typesOf()` and `byType()` went with the
 derivation.
+
+### The navbar type grew, and the breakpoint had to move with it
+
+**The client asked for bigger type on the bar (17 Nov).** Every size on it
+moved together so the hierarchy holds: links `.7rem → .8rem`, the Projects
+menu `.66 → .74`, the pill `.68 → .76`, the mobile sheet's sub-row
+`.68 → .76`, and `.nav-menu`'s `min-width` `13.5rem → 14.5rem` so
+REDEVELOPMENT still has room. All thirteen files.
+
+**THE BAR HAD NO SLACK TO SPEND, which is the part worth knowing.** Measured
+before anything changed, at 1440x900 down to 861px:
+
+| width | gap, logo to links | gap, links to pill |
+|---|---|---|
+| 1440 | 169px | 169px |
+| 1100 | 37.5px | 37.5px |
+| 1000 | 3.7px | 3.7px |
+| 900 | **0px** | **0px** |
+| 861 | **0px, and the document overflowed horizontally** |  |
+
+So a straight font-size bump would have pushed a 100px-wide band into
+horizontal scroll. Two things carry it instead:
+
+- **The gap is elastic**: `gap:clamp(1.3rem,2.6vw,2.6rem)` on `.nav-links`. It
+  gives way before the bar does and only reaches its full 2.6rem where there
+  is room.
+- **The burger takes over at 940px, not 860px.** The desktop bar now only
+  exists where it fits. This fixed a **pre-existing** overflow at 861–880px
+  that had nothing to do with the type.
+
+Re-measured after: no overflow at any width from 390 to 1920, and 941–990px is
+the tight band (links flush against logo and pill, which is where 861–1000px
+used to be). `@media(max-width:860px)` appears **once per file** and is this
+block — do not confuse it with `max-width:860px` as a *property*, which
+`projects-redevelopment.html` uses on `.cor-figure.plate`.
+
+**THE PROJECTS MENU IS IN THE CLIENT'S ORDER: Ongoing, Completed, Upcoming,
+Redevelopment.** It is a selling order — what is on sale now comes first — not
+alphabetical and not chronological, so do not "tidy" it. The order lives in
+**two places per file** and they must not drift: `.nav-menu` in the bar and
+`.sheet-sub` in the mobile sheet. Thirteen files, twenty-six lists.
 
 ### LOCATION is a fixed list too
 

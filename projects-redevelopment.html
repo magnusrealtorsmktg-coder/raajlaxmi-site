@@ -345,12 +345,19 @@
     transition:height .5s var(--lux),opacity .55s var(--lux);}
   .brand-logo-light{position:absolute;left:0;top:50%;transform:translateY(-50%);opacity:0;}
   .nav.scrolled .brand-logo{height:clamp(30px,3vw,38px);}
-  .nav-links{display:flex;gap:2.6rem;}
+  /* THE GAP IS ELASTIC BECAUSE THE BAR HAS NO SLACK IN THE MIDDLE.
+     Measured before the type grew: at 900px the links sat flush against
+     both the logo and the pill - 0px either side - and at 861px the
+     document already overflowed. Bigger type on a fixed 2.6rem gap would
+     have made that worse across the whole 940-1100px band, so the gap
+     now gives way first and only reaches its full 2.6rem where there is
+     room for it. See also the breakpoint below, raised to 940px. */
+  .nav-links{display:flex;gap:clamp(1.3rem,2.6vw,2.6rem);}
   /* Full-strength paper, not the 66% tint it used to be: the hero is a
      photograph now and can be a bright sunset, against which a translucent
      cream label all but disappears. The shadow is the second half of that —
      it carries the type over whatever happens to be behind it. */
-  .nav-links a{position:relative;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;
+  .nav-links a{position:relative;font-size:.8rem;letter-spacing:.16em;text-transform:uppercase;
     color:var(--paper);font-weight:400;padding:.3rem 0;
     text-shadow:0 1px 12px rgba(8,13,20,.55);transition:color .4s var(--lux);}
   .nav-links a::after{content:"";position:absolute;left:0;bottom:-2px;height:1px;width:0;
@@ -363,7 +370,7 @@
   /* an invisible bridge across the gap, so the menu survives the trip down */
   .nav-drop::after{content:"";position:absolute;left:-1rem;right:-1rem;top:100%;height:1.5rem;}
   .nav-menu{position:absolute;left:50%;top:calc(100% + 1.4rem);z-index:5;
-    min-width:13.5rem;padding:.5rem;display:flex;flex-direction:column;gap:.1rem;
+    min-width:14.5rem;padding:.5rem;display:flex;flex-direction:column;gap:.1rem;
     background:rgba(12,18,27,.9);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
     border:1px solid var(--glass-line-2);border-radius:14px;
     box-shadow:0 30px 64px -34px rgba(0,0,0,.75);
@@ -371,7 +378,7 @@
     transition:opacity .38s var(--lux),transform .38s var(--lux);}
   .nav-drop:hover .nav-menu,
   .nav-drop:focus-within .nav-menu{opacity:1;pointer-events:auto;transform:translate(-50%,0);}
-  .nav-menu a{padding:.62rem .9rem;border-radius:9px;font-size:.66rem;letter-spacing:.14em;
+  .nav-menu a{padding:.66rem .95rem;border-radius:9px;font-size:.74rem;letter-spacing:.14em;
     color:var(--paper-dim);white-space:nowrap;transition:color .35s var(--lux),
     background-color .35s var(--lux);}
   .nav-menu a::after{display:none;}            /* no underline sweep inside the menu */
@@ -383,7 +390,7 @@
        so escape it — this button did not, and the scrim was being laid over
        the one element on the bar anyone is meant to click. */
     position:relative;
-    font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--paper);
+    font-size:.76rem;letter-spacing:.16em;text-transform:uppercase;color:var(--paper);
     padding:.72rem 1.35rem;border:1px solid var(--champagne);border-radius:999px;
     /* A filled pill, not an outline. As an outline it was the one element on
        the bar with no ground of its own, so over a bright hero it dissolved
@@ -406,7 +413,11 @@
   .burger.open span:nth-child(2){opacity:0;}
   .burger.open span:nth-child(3){bottom:auto;top:50%;transform:translateY(-50%) rotate(-45deg);}
 
-  @media(max-width:860px){
+  /* 940px, NOT 860px (17 Nov). The desktop bar only exists where it fits,
+     and at 861px it did not - the document overflowed horizontally on the
+     old type already. The burger now takes over before the bar runs out of
+     room rather than one breakpoint after. */
+  @media(max-width:940px){
     .nav{padding:1.5rem 1.6rem;}
     .nav.scrolled{padding:1rem 1.6rem;}
     .nav-links,.nav-cta{display:none;}
@@ -424,7 +435,7 @@
     border:1px solid var(--glass-line-2);border-radius:999px;padding:.9rem 1.8rem;margin-top:1rem;color:var(--champagne-soft);}
   /* the dropdown has no hover on touch, so its items ride under Projects */
   .sheet-sub{display:flex;flex-wrap:wrap;justify-content:center;gap:.5rem 1.5rem;margin-top:-1.3rem;}
-  .sheet-sub a{font-family:"Inter",sans-serif;font-size:.68rem;letter-spacing:.16em;
+  .sheet-sub a{font-family:"Inter",sans-serif;font-size:.76rem;letter-spacing:.16em;
     text-transform:uppercase;color:var(--champagne-soft);}
 
   /* ---------- HERO ---------- */
@@ -1716,8 +1727,13 @@
              ongoing or redevelopment, never appeared in the list. -->
         <a href="projects.html" data-hover>Projects</a>
         <div class="nav-menu">
-          <a href="projects.html?status=completed" data-hover>Completed</a>
+          <!-- ORDER SET BY THE CLIENT (17 Nov): Ongoing first, then
+               Completed, Upcoming, Redevelopment. It is a selling order, not
+               an alphabetical or chronological one - what is on sale now
+               comes first. The mobile sheet below carries the same order and
+               the two must not drift apart. -->
           <a href="projects-ongoing.html" data-hover>Ongoing</a>
+          <a href="projects.html?status=completed" data-hover>Completed</a>
           <a href="projects-upcoming.html" data-hover>Upcoming</a>
           <a href="projects-redevelopment.html" data-hover>Redevelopment</a>
         </div>
@@ -1733,7 +1749,7 @@
 
 <div class="sheet" id="sheet">
   <a href="index.html#about">About</a><a href="projects.html?status=completed">Projects</a>
-  <div class="sheet-sub"><a href="projects.html?status=completed">Completed</a><a href="projects-ongoing.html">Ongoing</a><a href="projects-upcoming.html">Upcoming</a><a href="projects-redevelopment.html">Redevelopment</a></div>
+  <div class="sheet-sub"><a href="projects-ongoing.html">Ongoing</a><a href="projects.html?status=completed">Completed</a><a href="projects-upcoming.html">Upcoming</a><a href="projects-redevelopment.html">Redevelopment</a></div>
   <a href="emi.html">EMI Calculator</a>
   <a href="services.html">Services</a>
   <a href="testimonials.html">Testimonials</a><a href="contact.html">Contact</a>
