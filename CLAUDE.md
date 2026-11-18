@@ -2920,6 +2920,29 @@ change. Two "clipped" readings are pre-existing and identical before and after
 `.pd-hero` reports 616>576 at 1024 because of something other than its
 paragraph, which sits well inside it.
 
+**FOUR HOMEPAGE AREAS WENT UP AGAIN (19 Nov, the last request before launch),
+`index.html` only, 16 rules:**
+
+| area | rule | 1440×900 before → after |
+|---|---|---|
+| hero search | `.hs-field select` `.82 → .9rem` — PROPERTY / LOCATION / BUDGET are the selects' **placeholder options**, there is no `<label>` | 13.1 → 14.4px |
+| About | `.ab-copy p` ×1.08 in all three tiers; `.ab-scap` (stat captions) up ~11% in both of its tiers | 16.0 → 17.3px; 11.5 → 12.8px |
+| Signature cards | `.sp-cat .6→.66rem`, `.sp-name` clamp ×~1.09, `.sp-loc .76→.84`, `.sp-desc .848→.92`, `.sp-btn .64→.7`; phone-tier `.sp-cat`/`.sp-btn` `.72→.76` | name 22.3 → 24.2, desc 13.6 → 14.7px |
+| timeline panel | `.wtl-text p` clamp ×~1.1, `.wtl-yr .n`, `.wtl-yrbig`, `.wtl-sub` | 14.4 → 16.0px text |
+
+`.wtl-text p`'s old size string is shared with `.owd-bio` (the leadership
+bio) — match on the selector, not the value, or both move.
+
+**Measured against the live CMS copy** (request interception) at 1280×720 to
+1920×1080: the hero search stays one row ("PROPERTY" fills 78 of its 89px);
+About's trust strip still ends above the fold at every desktop size; the last
+Signature "View Project" button is **24px** clear of the fold at 1280×720 (33
+before), 36px at 1366×768 and 58px at 1440×900 — above the 16px that section's
+`68.6vh − 374px` picture formula holds back, so **that formula was not
+re-fitted**; the timeline card stays on screen and its text still fits without
+the inner scroll. If anything else is added to a Signature card body, the
+1280×720 margin is what to re-measure.
+
 ### LOCATION is a fixed list too
 
 **The client asked for Vasai / Nallasopara / Virar / Saphale**, in Western-line

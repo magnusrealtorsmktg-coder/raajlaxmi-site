@@ -561,7 +561,7 @@
   .hs-field > label{font-size:.58rem;letter-spacing:.24em;text-transform:uppercase;
     color:var(--champagne-soft);padding-left:.15rem;}
   .hs-field select{appearance:none;-webkit-appearance:none;
-    font-family:inherit;font-size:.82rem;letter-spacing:.02em;color:var(--paper);
+    font-family:inherit;font-size:.9rem;letter-spacing:.02em;color:var(--paper);
     background:transparent;border:0;border-bottom:1px solid var(--glass-line-2);
     padding:.5rem 1.15rem .55rem .15rem;cursor:pointer;width:100%;
     transition:border-color .4s var(--lux);
@@ -780,7 +780,7 @@
   .about.in .ab-ln:nth-child(2) i{transition-delay:.32s;}
 
   .ab-copy{margin-top:clamp(1rem,2.2vh,1.7rem);max-width:560px;}
-  .ab-copy p{font-size:clamp(.975rem,1.113vw,19.1px);line-height:1.72;font-weight:300;
+  .ab-copy p{font-size:clamp(1.05rem,1.2vw,20.6px);line-height:1.72;font-weight:300;
     color:var(--body);
     opacity:0;transform:translateY(22px);
     transition:opacity .9s var(--lux),transform .9s var(--lux);}
@@ -834,7 +834,7 @@
   .ab-num .un{font-size:.6em;letter-spacing:.03em;margin-left:.24em;}
   .ab-slab{width:1.5rem;height:1px;background:var(--gold);opacity:.7;margin:clamp(.45rem,1vh,.75rem) 0;}
   /* the captions run long ("Sq.Ft Under Construction"), so they scale with the card */
-  .ab-scap{font-size:clamp(.72rem,.56vw,.82rem);line-height:1.45;color:var(--body);font-weight:300;}
+  .ab-scap{font-size:clamp(.8rem,.62vw,.9rem);line-height:1.45;color:var(--body);font-weight:300;}
 
   /* ---- button + signature row ---- */
 
@@ -874,7 +874,7 @@
      again — which is the thing this section was rebuilt to stop doing. */
   @media (min-width:1001px) and (max-height:880px){
     .ab-head{font-size:clamp(1.7rem,2.6vw,2.2rem);}
-    .ab-copy p{font-size:clamp(.901rem,1.007vw,17px);line-height:1.55;}
+    .ab-copy p{font-size:clamp(.973rem,1.088vw,18.4px);line-height:1.55;}
     .ab-stat{padding:clamp(.7rem,1.4vh,1rem) clamp(.7rem,1vw,.95rem);}
     .ab-num{font-size:clamp(1.3rem,1.9vw,1.75rem);}
     .ab-cred img{height:clamp(54px,5.2vh,66px);}
@@ -887,13 +887,13 @@
     .ab-photo{height:min(52vh,420px);}
     .ab-head{font-size:clamp(1.5rem,2.2vw,1.9rem);}
     .ab-copy{margin-top:clamp(.7rem,1.6vh,1.1rem);}
-    .ab-copy p{font-size:clamp(.848rem,.954vw,15.9px);line-height:1.5;}
+    .ab-copy p{font-size:clamp(.916rem,1.03vw,17.2px);line-height:1.5;}
     .ab-copy p + p{margin-top:clamp(.45rem,1vh,.75rem);}
     .ab-stats{margin-top:clamp(.8rem,1.8vh,1.3rem);}
     .ab-stat{padding:clamp(.55rem,1.1vh,.8rem) clamp(.6rem,.9vw,.85rem);}
     .ab-num{font-size:clamp(1.15rem,1.7vw,1.5rem);}
     .ab-slab{margin:clamp(.3rem,.7vh,.5rem) 0;}
-    .ab-scap{font-size:clamp(.66rem,.5vw,.74rem);}
+    .ab-scap{font-size:clamp(.72rem,.55vw,.8rem);}
     .ab-creds{margin-top:clamp(.9rem,2vh,1.5rem);}
     .ab-cred img{height:clamp(44px,4.4vh,56px);}
   }
@@ -1066,26 +1066,26 @@
   .sp-chead > div{min-width:0;}
   .sp-oc{flex:none;width:clamp(56px,22%,80px);height:auto;aspect-ratio:272/262;
     margin-top:-.1rem;}
-  .sp-cat{font-family:"Inter",sans-serif;font-size:.6rem;font-weight:600;letter-spacing:.22em;
+  .sp-cat{font-family:"Inter",sans-serif;font-size:.66rem;font-weight:600;letter-spacing:.22em;
     text-transform:uppercase;color:#C6A15B;margin-bottom:clamp(.4rem,.9vh,.75rem);}
   .sp-name{font-family:"Cormorant Garamond",serif;font-weight:400;
-    font-size:clamp(1.18rem,1.55vw,1.45rem);line-height:1.12;color:var(--charcoal);
+    font-size:clamp(1.28rem,1.68vw,1.58rem);line-height:1.12;color:var(--charcoal);
     margin-bottom:clamp(.25rem,.55vh,.45rem);}
   .sp-loc{display:flex;align-items:center;gap:.45rem;font-family:"Inter",sans-serif;
-    font-size:.76rem;color:var(--body);margin-bottom:clamp(.5rem,1.1vh,.9rem);}
+    font-size:.84rem;color:var(--body);margin-bottom:clamp(.5rem,1.1vh,.9rem);}
   .sp-loc .pin{flex:none;color:#C6A15B;}
   /* CLAMPED TO THREE LINES, and that is what keeps the section one screen.
      This text is the project's CMS `blurb`, so its length is the one thing on
      the card the page does not decide — a long one would put all four cards
      back past the fold. Three lines holds every blurb in the dataset today. */
-  .sp-desc{font-size:.848rem;line-height:1.62;font-weight:300;color:var(--body);
+  .sp-desc{font-size:.92rem;line-height:1.62;font-weight:300;color:var(--body);
     margin-bottom:clamp(.75rem,1.7vh,1.3rem);
     display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;
     line-clamp:3;overflow:hidden;}
   /* full-width outlined button: label left, arrow right; fades in last */
   .sp-btn{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:.9rem;
     width:100%;box-sizing:border-box;
-    font-family:"Inter",sans-serif;font-size:.64rem;letter-spacing:.16em;text-transform:uppercase;
+    font-family:"Inter",sans-serif;font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;
     color:var(--charcoal);border:1px solid rgba(198,161,91,.4);border-radius:8px;
     padding:clamp(.6rem,1.4vh,.9rem) 1.2rem;cursor:pointer;
     opacity:0;transition:opacity .8s var(--lux),color .45s var(--lux),border-color .45s var(--lux),
@@ -1557,7 +1557,7 @@
     font-size:clamp(.94rem,1.1vw,1.08rem);letter-spacing:.01em;
     line-height:1;color:var(--gold);}
   .wtl-yr .n{font-family:"Inter",sans-serif;font-weight:400;
-    font-size:clamp(.7rem,.78vw,.78rem);line-height:1.4;color:var(--body);
+    font-size:clamp(.78rem,.86vw,.86rem);line-height:1.4;color:var(--body);
     opacity:.7;transition:opacity .35s var(--lux),color .35s var(--lux);}
   .wtl-yr:hover{background:rgba(201,161,90,.09);}
   .wtl-yr:hover .dot{background:rgba(201,161,90,.5);}
@@ -1576,13 +1576,13 @@
     border-top:1px solid rgba(201,161,90,.26);
     max-height:min(42vh,400px);overflow-y:auto;overscroll-behavior:contain;}
   .wtl-yrbig{font-family:"Inter",sans-serif;font-weight:700;
-    font-size:clamp(.66rem,.8vw,.76rem);letter-spacing:.18em;
+    font-size:clamp(.72rem,.86vw,.82rem);letter-spacing:.18em;
     text-transform:uppercase;color:var(--gold);}
   .wtl-title{font-family:"Playfair Display",serif;font-weight:700;
     font-size:clamp(1.4rem,2.5vw,2.15rem);line-height:1.14;letter-spacing:-.015em;
     color:var(--charcoal);margin-top:.5rem;}
   .wtl-sub{font-family:"Cormorant Garamond",serif;font-style:italic;font-weight:400;
-    font-size:clamp(1.02rem,1.5vw,1.3rem);line-height:1.4;color:var(--gold);
+    font-size:clamp(1.1rem,1.6vw,1.4rem);line-height:1.4;color:var(--gold);
     margin-top:.45rem;}
   .wtl-sub[hidden]{display:none;}
   .wtl-text{margin-top:clamp(.9rem,1.6vw,1.3rem);}
@@ -1591,7 +1591,7 @@
      the same reason: the client does not want words broken across lines. The
      rivers that hyphenation was there to close are the accepted cost. */
   .wtl-text p{font-family:"Inter",sans-serif;font-weight:300;
-    font-size:clamp(.9rem,1vw,1.02rem);line-height:1.8;color:var(--body);
+    font-size:clamp(1rem,1.1vw,1.12rem);line-height:1.8;color:var(--body);
     text-align:justify;-webkit-hyphens:none;hyphens:none;text-wrap:pretty;}
   .wtl-text p + p{margin-top:.95rem;}
 
@@ -2599,8 +2599,8 @@
     .nav-menu a{font-size:.74rem;}
     .eyebrow{font-size:.72rem;letter-spacing:.26em;}
     .lead-label{font-size:.72rem;letter-spacing:.22em;}
-    .sp-cat{font-size:.72rem;letter-spacing:.16em;}
-    .sp-btn{font-size:.72rem;}
+    .sp-cat{font-size:.76rem;letter-spacing:.16em;}
+    .sp-btn{font-size:.76rem;}
     .br-tab{font-size:.74rem;}
     .ow-role{font-size:.72rem;}
     .pd-btn{font-size:.72rem;}
