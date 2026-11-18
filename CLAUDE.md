@@ -159,14 +159,14 @@ command over.
    covers both domains' mailboxes). **Never remove `raajlaxmi.com` from the
    plan**: the free email entitlement is attached to the domain on it.
 2. Confirm both email rows read **2028** before touching DNS.
-3. Then, and only then: delete the apex `A` records and the
-   `CNAME www → www.raajlaxmi.com.cdn.hstgr.net`, **AND THE APEX `AAAA`
-   RECORDS** — public DNS on 19 Nov showed two `A` (93.127.173.225,
-   91.108.106.42; the 88.223.91.x / 185.124.137.x noted on 6 Nov had already
-   changed) and two `AAAA` (2a02:4780:…) on `@`. Leave an `AAAA` behind and
-   IPv6 visitors still reach Hostinger and Netlify's certificate check can
-   fail. If records reappear or will not delete, Hostinger's CDN is enabled
-   on the old website and has to be switched off first. Then add
+3. Then, and only then: delete **`ALIAS @ → raajlaxmi.com.cdn.hstgr.net`** and
+   **`CNAME www → www.raajlaxmi.com.cdn.hstgr.net`** — those two and nothing
+   else. (Seen in hPanel on 19 Nov. There are no separate `A`/`AAAA` rows on
+   `@`; the two IPv4 and two IPv6 addresses a public `dig` returns all come
+   from that one ALIAS to Hostinger's CDN. Delete before adding — hPanel will
+   not hold a second `@`/`www` website record beside the old one. If the
+   ALIAS comes back, the old website's Hostinger CDN is still on and must be
+   switched off first.) Then add
    `A @ 75.2.60.5` and `CNAME www → raajlaxmi-site.netlify.app`. **Touch
    nothing else** — MX, SPF, DKIM and DMARC are what keep the 21 mailboxes
    working and are independent of the A/CNAME records.
