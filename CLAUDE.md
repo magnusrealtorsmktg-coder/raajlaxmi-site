@@ -67,7 +67,7 @@ and are not. The ones that will cost you an afternoon if you do not know them:
 | any Sanity query | *Every query starts in the document `<head>`* — the query text lives in one place per file and `get` memoises on the string |
 | a collection page | the three files are clones; a fix goes in all three |
 | a `project` document in a script | *Drafts shadow the live site* — a token-authenticated query sees drafts, the public API does not, and this has bitten twice |
-| the services band's height | *The services page runs a film* — the ratio is pinned by a watermark burnt into the footage, not by taste |
+| the services band, its film or its sound | *The services page runs a film* — full screen with two cuts; the `object-position` tiers are measured from the watermark and subtitles burnt into the footage, and the sound must stay behind a tap |
 | a video of any kind | *Hero, About and Why can each take a video* and the encode tables under it; every client upload so far has been a 60–265 MB master |
 | a headless check | *Verifying locally — and one headless trap* — and measure with CDP device metrics, never `--window-size --screenshot` |
 | any of the three moving strips | *The owners strip gives way and comes back* — the owners, the reviews and the photo gallery all run **one** implementation now; verify the drift by driving Chrome over CDP in real time, NOT with `--virtual-time-budget`, which reports zero for a working strip and a dead one alike — see *It shipped dead, and the harness is what hid it* |
@@ -1322,64 +1322,106 @@ selector that matches nothing there costs nothing.
 
 ### The services page runs a film
 
-`assets/services-film.mp4` (1920x1080, 24fps, 30s, **4.01 MB**) plays in that
-page's banner band at **1.4x**, with `assets/services-film.jpg` — a frame of
-it — as the poster and permanent fallback.
+**REPLACED ON 18 NOV: TWO CUTS, FULL SCREEN, WITH SOUND.** The client supplied
+`Services1.mp4` (16:9) and `Services1 Mobile.mp4` (9:16) and asked for them to
+replace the old film, fill the screen, and carry their sound. What ships:
 
-**THE BAND'S RATIO IS SET BY THE CLIENT'S WATERMARK, AND THE max-height CAP IS
-GONE BECAUSE OF IT.** Their logo plate is burnt into the footage at
-**x 1555–1920, y 825–985 of 1920x1080** — flush with the right edge, bottom
-91.2% of the way down. `object-fit:cover` centres what it keeps, so the band
-has to stay inside **[1.78, 2.05]**: wider and the bottom of the plate is cut,
-narrower than 16:9 and the crop moves to the sides and takes its right edge
-instead. The band is **2:1**, the middle of that window, showing 5.6%–94.4% of
-the frame with the plate ending 3.2% clear of the edge.
+| file | from | shape | size | notes |
+|---|---|---|---|---|
+| `assets/services-film.mp4` | `Services1.mp4` (22.4 MB, 5.6 Mbps) | 1920x1080, 31.5s | **7.66 MB** | CRF 26, maxrate 1.9M, + AAC 128k |
+| `assets/services-film-mobile.mp4` | `Services1 Mobile.mp4` (40.5 MB, 10.3 Mbps) | 810x1440, 31.5s | **5.13 MB** | CRF 26, maxrate 1.7M, + AAC 128k |
+| `assets/services-film.jpg` / `-mobile.jpg` | frame 0 of each encode | | 100 / 50 KB | the poster, so the dissolve is one shot continuing |
 
-The old `max-height:min(60vh,540px)` had to go, and this is the cost of the
-change: **any fixed cap re-widens the effective ratio on a large screen**, which
-is precisely what cut the logo — at 1920 that cap made the band 3.56:1 and at
-1440 it was 2.67:1, where only 2.55:1 was intended. A 1920 screen now opens on
-a **960px** band, which is most of the first screen for what is still a page
-header. That was a deliberate trade, made because the client asked for the
-logo whole.
+CRF 26 rather than the old film's CRF 30 because **this film has subtitles
+burnt in**; CRF 24/26/28 were compared on the subtitle strip and all read
+cleanly, and 26 was taken for the footage, not the type. Both masters carry
+the **same** soundtrack (identical loudness, −19.6 dB mean / −0.6 dB peak), so
+each cut keeps its own. `-movflags +faststart`, `-g 48`, `yuv420p`, High@4.0.
+The masters stay in the repo root, where `/*.mp4` in `.gitignore` keeps them
+out of the deploy.
 
-Below 820px the band takes the footage's **own 16:9**, which crops nothing at
-all: 2:1 of a 390px screen is a 195px strip, and the old `min-height:300px`
-would have forced the ratio to 1.3 and cut the plate's right edge off.
-Verified at 2560, 1920, 1440, 1280, 1081, 1024, 844x390 and 390x844: the plate
-is whole at every one.
+**THE BAND IS `100svh`, UNDER THE NAVBAR, AND `.sv{padding-top}` IS 0.** It
+used to be a 2:1 strip held 4.6rem clear of the bar. `100svh` comes AFTER
+`100vh` so a phone opens on the small viewport rather than one 60px taller than
+the screen. The band's and the still's ground is **navy `#0A1018`, and that is
+load-bearing**: the adaptive navbar reads the topmost opaque background under
+the bar, a `<video>` is transparent, so it reads the still — ivory there put a
+solid cream panel across the top of a full-screen film. Same trick as
+`.hero-media` on `index.html`.
+
+**THE ANCHOR IS MEASURED, AND IT HAS THREE TIERS.** The desktop cut carries two
+things `cover` must not cut: the client's gold mark (**x 79.5–97.0%, y
+3.9–12.0%** of the frame) and the burnt-in subtitles (**x 13.9–82.4%, y
+92.9–94.9%**, one centred line, 14 of 64 sampled frames). Their clearances are
+the budget — 3.9 top / 5.1 bottom, 13.9 left / 3.0 right — and the proportional
+split gives **`82% 43%`**, which keeps both whole on every viewport from
+**1.48:1 to 1.95:1**. Outside that one has to go, and **the words win both
+times**, because the navbar carries the logo a few inches above the film's copy
+of it:
+
+- **wider than 1.95:1** (`min-aspect-ratio:39/20`) → `82% 100%`, all overflow off
+  the top. A 1920x1080 monitor in a Chrome window is 1920x955 = 2.01:1, so this
+  is the commonest desktop there is, not an edge case;
+- **narrower than 1.48:1** (`max-aspect-ratio:37/25`) → `55% 43%`, which keeps
+  the widest subtitle line whole at a full 4:3 (13.85/25.03). Before this tier a
+  1024x768 tablet showed "understood our needs…" with "They" cut off.
+
+**THE CUT IS CHOSEN BY `(orientation:portrait)` ALONE — NO WIDTH CAP**, in the
+CSS (poster) and in `mountFilm()` (file), which must agree. The crossover
+between a 16:9 and a 9:16 frame is sqrt(1.778 × 0.5625) = exactly 1:1, so
+orientation already names the cut that loses less at every size.
+`index.html`'s `and (max-width:900px)` would send a 1024x1366 iPad Pro upright
+to the landscape cut and lose 58% of its width (25% of height with the portrait
+one). The portrait cut is centred: it has no subtitles, and **its copy of the
+gold mark is already sliced off by the top edge of the client's own export** —
+only the foot of the building rule survives, at x 92.3–99.0%, and a phone's
+8.9%-per-side crop takes that out of frame. A clean portrait master would be
+worth asking for; anchor it right if one arrives.
+
+**`RATE` IS 1 NOW, NOT 1.4.** The old clip had no words. This one's subtitles
+are cut to speech, and at 1.4x the lines leave before they can be read. The
+constant stays, still re-applied on `loadedmetadata`.
+
+**PHONES ARE NO LONGER REFUSED.** The `(max-width:620px),(max-height:560px)`
+bail is gone — it was right while the band was a 16:9 strip on a phone with no
+cut made for it. `saveData`, a 2G-class link and reduced motion still refuse
+the film, and the navy-grounded poster then fills the screen alone.
+
+**SOUND IS ONE TAP AWAY, AND IT CANNOT BE MORE.** Every browser refuses
+autoplay with sound until the visitor has interacted, and `mountFilm()` treats
+a `NotAllowedError` as fatal — so starting unmuted would give **no film**, not
+a film with sound. `.sv-sound` is a pill at the band's bottom-left (bottom-right
+is the chat/WhatsApp FABs), lifted to `max(5rem, 10vh + .8rem)` to clear the
+subtitles' top edge at every tier. It appears only when `show()` dissolves the
+film in and leaves on `kill`/`retire`, via `visibility` so it is out of the tab
+order while hidden; its state is painted from `volumechange`, never from the
+click. **The lead popup mutes it**: the popup's scrim covers the button, so a
+`MutationObserver` on `<html>` mutes the film when `lead-open` appears, and it
+is NOT unmuted on close — sound returns only on a tap. Off-screen and hidden-tab
+pausing already stop the sound with the picture.
+
+Verified 18 Nov over CDP at 14 viewports (2560x1300 to 360x800, both
+orientations, iPad Pro both ways): band = viewport, top 0, right cut, revealed,
+rate 1, navbar on its scrim over the film and `on-light` past it, subtitles
+whole at every one. The sound toggle was driven with real `Input` clicks under
+the **default** autoplay policy at five sizes, ×7 runs: starts muted, one click
+→ playing with ~126 KB of audio decoded, off-screen → paused, back → playing
+with sound, second click → muted, popup → muted and staying muted. **A probe
+that runs past 30s of one browser profile hits the lead popup** (the timer is
+per visit, kept in sessionStorage) and its scrim swallows the click — clear
+storage with `Storage.clearDataForOrigin` before each navigation.
+
+*Everything below this line is the 5–7 Nov history of the clip this replaced.
+The 2:1 ratio, the bottom-right watermark, the 1.4x rate and the phone refusal
+it describes are all superseded by the above.*
 
 **SWAPPED ON 7 NOV.** The clip here until then was a 7.83s consultant-meeting
-shot at 0.9x; the client supplied `Services.mp4` and asked for 1.4x in a loop.
-As handed over it is **60.71 MB at 16.19 Mbps** with an audio track on a video
-the site plays muted — unusable as it stands, so re-encoded like everything
-else:
-
-| | size | bitrate | SSIM |
-|---|---|---|---|
-| as supplied | 60.71 MB | 16.19 Mbps | — |
-| CRF 24 | 8.28 MB | 2.32 Mbps | 0.989 |
-| CRF 27 | 5.65 MB | 1.58 Mbps | 0.986 |
-| **CRF 30 (shipped)** | **4.01 MB** | **1.12 Mbps** | **0.983** |
-
-**CRF 30 because the curve is flat here**: CRF 24 costs more than double the
-bytes for 0.006 of SSIM, and 0.983 is the figure the previous clip shipped at
-for the same job. Encoded `-an -movflags +faststart -g 48 -preset slow`; `moov`
-ahead of `mdat` verified. SSIM against the source needs matched timebases
+shot at 0.9x; the client supplied `Services.mp4` (60.71 MB) and asked for 1.4x
+in a loop. It was shipped at CRF 30 / 4.01 MB / SSIM 0.983 in a 2:1 band whose
+ratio was pinned by a logo plate burnt in at the bottom right (x 1555–1920,
+y 825–985). SSIM against a source needs matched timebases
 (`settb=1/24000,setpts=N/24/TB` on both inputs) or ffmpeg warns and the numbers
-are wrong.
-
-**1.4x IS APPLIED AT PLAYBACK, NOT BAKED INTO THE FILE**, so it stays one
-number to turn — `RATE` in the Section IX block. It is re-applied on
-`loadedmetadata` because a browser that reloads the media resource resets
-`playbackRate` to 1, and the film would quietly drop to normal speed on a
-re-buffer. Re-timing the encode instead (`setpts=PTS/1.4`) would take 30s to
-21.4s and save about 1.2 MB, at the cost of a re-encode every time the speed
-changes.
-
-**The source stays out of the repo.** `Services.mp4` sits in the working
-directory and `.gitignore` blocks root-level `*.mp4`, so only the 4 MB encode
-in `assets/` ships.
+are wrong — that part still applies to any future encode.
 
 **ONE SLOT, NOT TWO, AND NO COPY OVER IT (5 Nov).** It shipped that morning in
 both banner slots with the painted-in copy re-set as live HTML on top. The
@@ -1432,13 +1474,9 @@ Five things about the swap are load-bearing:
   three-visible-stalls retirement, same 20s give-up, same `NotAllowedError`-only
   kill. `index.html` had all of that stripped out on 5 Nov at the client's
   request (see *The connection and file-size refusals are GONE*); **this page was
-  not part of that request and still has every guard.** It also still refuses phones,
-  with `(max-width:620px),(max-height:560px)` — the second clause catching a
-  landscape handset at 844x390, which a width-only query sails straight past.
-  `index.html` stopped refusing phones on 5 Nov at the client's request and
-  grades by file size instead (see *Hero, About and Why can each take a
-  video*). **Nobody has asked for the services film on phones**, so it is left
-  as it is; at 2.29 MB it would be a reasonable candidate if that changes.
+  not part of that request and still has every guard** except the phone
+  refusal, which went on 18 Nov when the client supplied a portrait cut (see
+  the top of this section).
 
 The two superseded artworks are **still on disk and still shipping**
 (`Services_start.png` 1.39 MB, `assets/service-philosophy.jpg` 169 KB), now

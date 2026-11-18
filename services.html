@@ -1393,32 +1393,34 @@
        real link rather than a transparent hit area lying over painted pixels.
        (That was also the one false positive in the phone audit: services.html
        reporting its first heading under the navbar was this clipped h1.) */
-  /* the clearance is padding on the section, not margin on the band: a margin
-     collapses through .sv and lifts the section out from under the navbar, and
-     the adaptive nav then has no painted background to sample */
-  .sv{padding-top:4.6rem;}
-  /* THE RATIO IS SET BY THE CLIENT'S WATERMARK, NOT BY TASTE (7 Nov).
-     Their logo plate is burnt into the footage at x 1555-1920, y 825-985 of
-     1920x1080 — flush with the right edge and with its bottom 91.2% of the
-     way down the frame. `object-fit:cover` centres what it keeps, so:
+  /* THE CLEARANCE IS GONE (18 Nov). It was 4.6rem of padding that held the
+     band clear of the fixed navbar. The band is the whole screen now and runs
+     UNDER the bar, exactly as index.html's hero does, so the clearance would
+     only push the film off the bottom of the viewport.
+     Kept as a zeroed rule rather than deleted because the note it carries is
+     the one that matters if it ever comes back: the clearance has to be
+     PADDING on the section, never margin on the band. A margin collapses
+     through .sv, lifts the section out from under the navbar, and the adaptive
+     nav is then left with no painted background to sample. */
+  .sv{padding-top:0;}
+  /* THE BAND IS THE SCREEN (18 Nov, asked for).
+     It used to be a 2:1 strip, and that ratio was not taste: the old film had
+     the client's logo plate burnt in at the BOTTOM right, and 2:1 was the one
+     window that kept the plate whole. Both of those facts are gone. This is a
+     new film, its mark sits at the TOP right, and the band is now the whole
+     viewport, under the navbar, the way index.html's hero is.
 
-       - go WIDER than about 2.05:1 and the bottom of the plate is cut off;
-       - go NARROWER than 16:9 (1.78:1) and the crop moves to the sides, which
-         takes the plate's right edge off instead.
+     `100svh` BEFORE `100vh` WOULD BE WRONG, SO IT COMES AFTER. On a handset
+     100vh is the TALL viewport — the one you get with the address bar rolled
+     away — so a 100vh band opens about 60px taller than the screen and the
+     page is already scrollable before anyone touches it. svh is the small
+     one, which is what "full screen" means on first paint; 100vh stays
+     underneath it as the fallback for anything that does not know svh.
 
-     So the band has to live in [1.78, 2.05] and 2:1 sits in the middle of it,
-     showing 88.9% of the frame height — 5.6% to 94.4%, with the plate ending
-     3.2% clear of the bottom edge.
-
-     THE max-height CAP IS GONE, and that is the cost of this. It used to be
-     what actually set the height on a desktop (2.55:1 only governed below
-     ~1377px), and it was there because a tall band is most of the screen for
-     what is only a page header. But any fixed cap re-widens the effective
-     ratio on a large monitor — at 1920 the old min(60vh,540px) made it 3.56:1
-     — and re-widening is exactly what cuts the logo. A 1920 screen now opens
-     on a 960px band. */
-  .sv-band{position:relative;width:100%;overflow:hidden;background:#F8F6F2;
-    aspect-ratio:2/1;min-height:200px;
+     The floor is 360px, under a landscape handset's 390px, so it never fights
+     svh on a real device; it only catches a browser that reports nothing. */
+  .sv-band{position:relative;width:100%;overflow:hidden;background:#0A1018;
+    height:100vh;height:100svh;min-height:360px;
     opacity:0;transform:translateY(18px);
     transition:opacity 1.1s var(--lux),transform 1.1s var(--lux);}
   .sv-band.in{opacity:1;transform:none;}   /* the band IS the [data-rev] node */
@@ -1434,16 +1436,153 @@
      a veil over the one thing the band is for. The page's <h1> is .sv-sr now
      (see the markup), so the document still has a heading even though the
      band draws no words. */
+  /* THE GROUND UNDER THE POSTER IS NAVY, NOT IVORY, AND THAT IS LOAD-BEARING.
+     `cover` means the JPEG always fills the box, so this colour is never seen
+     — except by the adaptive navbar, which samples the topmost OPAQUE
+     background under the bar to decide whether to go charcoal-on-ivory. A
+     <video> has a transparent background, so the element it actually reads
+     through to is this one. Ivory here put a solid cream panel across the top
+     of a full-screen film; navy keeps the bar on its scrim, which is the same
+     trick `.hero-media{background-color:#0A1018}` plays on index.html.
+
+     82% 43% IS MEASURED, NOT CHOSEN, and both numbers come out of the same
+     sum. Full-bleed means `cover`, and `cover` always throws some of the
+     frame away; the only question is which part. The film carries two things
+     that must survive it — the gold mark, at x 79.5%-97.0% and y 3.9%-12.0%
+     of the frame, and the burnt-in subtitles, at x 13.9%-82.4% and y
+     92.9%-94.9%. Their clearances to each edge are the budget:
+
+       top 3.9% | bottom 5.1%  ->  9.0% of height to give away,  3.9/9.0 = 43%
+       left 13.9% | right 3.0% -> 16.9% of width to give away, 13.9/16.9 = 82%
+
+     Anchored there, the band keeps BOTH whole on any viewport between 1.48:1
+     and 1.95:1 — which is every laptop, every desktop window that is not
+     nearly 2:1, and every tablet in landscape. Outside that range something
+     has to go, and these ratios spend the overflow on the two in proportion
+     instead of taking it all out of one. At `center` the mark would be the
+     one that always paid: a 3:2 screen would cut a quarter of it off, and
+     a 4:3 one would halve it.
+
+     Outside 1.48-1.95 the budget is spent and one of the two has to give way.
+     Both queries below answer that the same way — see them. */
   .sv-still{position:absolute;inset:0;z-index:0;
-    background:#F8F6F2 url('assets/services-film.jpg') center 46%/cover no-repeat;}
+    background:#0A1018 url('assets/services-film.jpg') 82% 43%/cover no-repeat;}
   .sv-film{position:absolute;inset:0;z-index:1;width:100%;height:100%;
-    object-fit:cover;object-position:center 46%;
+    object-fit:cover;object-position:82% 43%;
     opacity:0;transition:opacity .9s var(--lux);}
   .sv-film.on{opacity:1;}
+
+  /* ---- WIDER THAN 1.95:1 — THE WORDS WIN ----
+     Past 1.95:1 the budget above is spent and one of the two has to go. The
+     subtitles are the client's message and the mark is not: the site's own
+     logo is in the navbar directly above it, three inches away, on every page
+     — and at these ratios the film's copy has been pushed up behind that very
+     bar anyway, where it reads as a smudge rather than a brand. So the whole
+     overflow is taken off the TOP from here on, which keeps every line of
+     type whole however wide the window gets.
+
+     1.95 is not a round number picked for looks; it is where the 9.0% of
+     height the frame can spare runs out (see the sum above). Just under it
+     both survive, so nothing jumps on the way through.
+
+     A 1920x1080 monitor in a normal Chrome window is 1920x955, or 2.01:1 —
+     this is not an edge case, it is the commonest desktop there is. A handset
+     held sideways (844x390) is 2.16:1 and lands here too. */
+  @media (min-aspect-ratio:39/20){
+    .sv-still{background-position:82% 100%;}
+    .sv-film{object-position:82% 100%;}
+  }
+
+  /* ---- NARROWER THAN 1.48:1 — THE WORDS WIN HERE TOO ----
+     A tablet held sideways is 1.43:1 and an old 4:3 one is 1.33:1. There the
+     frame loses 19-25% of its WIDTH — more than the 16.9% the two marks can
+     spare between them — and at 82% all of that overflow lands on the
+     subtitles' left edge: "They understood our needs" arrives as "understood
+     our needs".
+     55% is 13.85/25.03 — the share that still keeps the widest subtitle line
+     whole at a full 4:3, the narrowest landscape screen anyone actually
+     holds. The mark pays for it, exactly as it does above 1.95:1, and for the
+     same reason: the navbar is carrying the logo three inches above it.
+     This also matches portrait viewports, which are narrower than 1.48 by
+     definition. That is harmless — the portrait block below overrides it. */
+  @media (max-aspect-ratio:37/25){
+    .sv-still{background-position:55% 43%;}
+    .sv-film{object-position:55% 43%;}
+  }
+
+  /* ---- the portrait cut ----
+     The client supplied the film twice, 16:9 and 9:16. This query picks the
+     poster frame; mountFilm() picks the file with the SAME query written out
+     again — change one and change the other.
+
+     THE TEST IS ORIENTATION ALONE, with no width cap, and the crossover is
+     not a guess: a 16:9 frame and a 9:16 frame lose the same share of
+     themselves at sqrt(1.778 x 0.5625) = 1.00:1 exactly. So above 1:1 the
+     landscape cut always loses less and below it the portrait cut does, which
+     is what `orientation` already means. index.html's hero caps the same test
+     at 900px; that cap would send a 1024x1366 iPad Pro held upright to the
+     landscape cut, which would lose 58% of its width — against 25% of its
+     height for the portrait one. The cost of having no cap is that a large
+     portrait display gets an 810px-wide file to stretch, and a soft film
+     beats a film with half of it missing.
+     Centred rather than anchored: the vertical cut carries no subtitles, so
+     there is nothing low in the frame to protect, and its copy of the gold
+     mark is already sliced by the top edge of the client's own export — only
+     the foot of the building rule survives, at x 92.3%-99.0%. A phone crops
+     8.9% off each side, which takes that remnant out of frame, and a broken
+     mark is worse to show than none. Anchor this to the right if a clean
+     portrait master ever replaces it. */
+  @media (orientation:portrait){
+    .sv-still{background-image:url('assets/services-film-mobile.jpg');
+      background-position:center;}
+    .sv-film{object-position:center;}
+  }
   /* The page's visually-hidden utility. Nothing drew it for a while; the <h1>
      uses it again now that the band carries no visible heading. */
   .sv-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
     clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;}
+
+  /* ---- the sound button (18 Nov, asked for) ----
+     THE FILM STILL STARTS MUTED, AND THAT IS NOT A CHOICE. Every browser
+     refuses to autoplay a video with sound until the visitor has interacted
+     with the page; mountFilm() treats that refusal as fatal (NotAllowedError
+     -> kill), so asking for sound up front would not get sound, it would get
+     NO FILM. The sound is one tap away instead, and that tap is the
+     interaction that lets it play.
+
+     It appears only once the film has actually dissolved in (mountFilm adds
+     .in from show()) and goes again if the film is retired, so it can never
+     sit over the poster frame offering sound that does not exist — under
+     reduced motion, data-saver or a 2G link it never appears at all.
+     `visibility` rather than `hidden` so it can fade, and so that while it is
+     out it is also out of the tab order and the accessibility tree.
+
+     LEFT, AND LIFTED CLEAR OF THE SUBTITLES. Bottom-right is taken by the
+     chat and WhatsApp buttons. The subtitles' top edge sits at most 8.6% of
+     the band above its foot (the wide tier, on a sideways phone), so
+     10vh + .8rem clears them at every ratio the band is measured for, and
+     the 5rem floor keeps a short screen from putting it on the type. */
+  .sv-sound{position:absolute;z-index:3;
+    left:clamp(1.1rem,4vw,3rem);bottom:max(5rem,calc(10vh + .8rem));
+    display:inline-flex;align-items:center;gap:.6rem;min-height:44px;
+    padding:.7rem 1.1rem .7rem .9rem;border-radius:999px;cursor:pointer;
+    font:600 .7rem/1 "Inter",sans-serif;letter-spacing:.16em;text-transform:uppercase;
+    color:#fff;background:rgba(10,16,24,.42);border:1px solid rgba(255,255,255,.38);
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    opacity:0;visibility:hidden;
+    transition:opacity .6s var(--lux),visibility 0s linear .6s,
+      border-color .4s var(--lux),background-color .4s var(--lux);}
+  .sv-sound.in{opacity:1;visibility:visible;
+    transition:opacity .6s var(--lux),border-color .4s var(--lux),background-color .4s var(--lux);}
+  .sv-sound:hover,.sv-sound:focus-visible{border-color:var(--champagne);
+    background:rgba(10,16,24,.62);}
+  .sv-sound:focus-visible{outline:2px solid var(--champagne);outline-offset:3px;}
+  .sv-sound.is-on{border-color:var(--champagne);}
+  .sv-sound svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;
+    stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+  .sv-sound .snd-on{display:none;}
+  .sv-sound.is-on .snd-on{display:inline;}
+  .sv-sound.is-on .snd-off{display:none;}
 
   /* ---- the journey rail's wrapper ----
      This was a two-column grid: an "Our Philosophy" plate at 52% beside the
@@ -1598,15 +1737,10 @@
     .sv-rail{grid-template-columns:repeat(2,minmax(0,1fr));gap:2.4rem 1.2rem;}
     .sv-rail::before,.sv-rail::after{display:none;}
   }
-  /* The band keeps a floor on a phone, where 2.55:1 of a 390px screen is a
-     153px strip — too thin to read as footage. There is no copy over it to
-     protect any more, so this is the only thing left in this tier. */
-  @media(max-width:820px){
-    /* 2:1 of a narrow screen is a strip — 195px at 390px wide — so below
-       this the band takes the footage's OWN shape instead, which is both
-       taller and the one ratio that crops nothing at all. */
-    .sv-band{aspect-ratio:16/9;}
-  }
+  /* The @media(max-width:820px) tier that used to sit here held one rule —
+     .sv-band{aspect-ratio:16/9} — which gave the band the footage's own shape
+     on a narrow screen so that 2:1 did not become a 195px strip. The band has
+     no aspect-ratio at all now; it is 100svh at every width. */
   @media(max-width:620px){
     .sv-rail{grid-template-columns:minmax(0,1fr);}
   }
@@ -1984,6 +2118,18 @@
            engines and screen readers get what the band says silently. -->
       <h1 class="sv-sr">Services — Beyond Buildings. We Deliver Experiences.</h1>
       <div class="sv-still"></div>
+      <!-- The film's sound toggle. Inert until mountFilm() has a film playing:
+           it adds .in from show() and wires the click; see the note on
+           .sv-sound for why the film cannot simply start with sound. -->
+      <button class="sv-sound" id="svSound" type="button" data-hover
+              aria-pressed="false" aria-label="Play the film with sound">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 9.5h3.2L12 5.6v12.8l-4.8-3.9H4z"/>
+          <path class="snd-off" d="M16 9.6l4.6 4.8M20.6 9.6L16 14.4"/>
+          <path class="snd-on" d="M15.6 9.2a4 4 0 0 1 0 5.6M18.2 6.6a7.6 7.6 0 0 1 0 10.8"/>
+        </svg>
+        <span class="sv-sound-t">Sound</span>
+      </button>
     </div>
 
     <!-- 3. journey rail. The "Our Philosophy" block that used to sit beside it
@@ -2302,7 +2448,7 @@
     if(!sec) return;
 
     /* --- the film --------------------------------------------------------
-       ONE 7.8s clip in two places: the hero band and the philosophy plate.
+       ONE 31.5s clip, in two cuts, filling the screen.
 
        Everything below except the last two rules is index.html's mountVideo(),
        carried over deliberately rather than written afresh, and for the same
@@ -2313,25 +2459,50 @@
        keeps pausing; it is dropped at 20s if it never becomes ready, so a
        visitor's data is not spent on something they will never see; and it
        stops when off-screen or the tab is hidden. Every exit leaves the poster
-       frame showing rather than a black box. It is skipped outright on phones,
-       on data-saver, on a 2G-class link and under prefers-reduced-motion —
-       which is why .sv-still is painted first and always.
+       frame showing rather than a black box. It is skipped on data-saver, on
+       a 2G-class link and under prefers-reduced-motion — which is why
+       .sv-still is painted first and always. It is NO LONGER skipped on a
+       phone; see the note at the guards.
 
-       One thing here that is NOT in index.html's copy: RATE, which is 1.4 as
-       asked (it was 0.9 for the previous clip). It is applied again on
-       `loadedmetadata`, because a browser that reloads the media resource
-       resets playbackRate to 1 and the film would silently go back to normal
-       speed on a re-buffer.
+       One thing here that is NOT in index.html's copy: RATE. It is applied
+       again on `loadedmetadata`, because a browser that reloads the media
+       resource resets playbackRate to 1, and a rate set anywhere but 1 would
+       silently revert on a re-buffer.
 
        The paragraph that used to sit here about PHASE is gone with the thing
        it described — the philosophy plate held a second copy of the film half
        a loop behind this one, and was removed on 5 Nov. */
-    const FILM = 'assets/services-film.mp4';
-    /* 1.4x is applied at PLAYBACK, not baked into the file, so it stays one
-       number to turn. Re-timing the encode instead (`setpts=PTS/1.4`) would
-       take the 30s clip to 21.4s and save about 1.2MB, at the cost of needing
-       a re-encode to change the speed again. */
-    const RATE = 1.4;
+    /* TWO CUTS, CHOSEN BY ORIENTATION (18 Nov). The client supplied the film
+       as a 16:9 master and a 9:16 one, and the band is the whole screen now,
+       so the shape of the screen decides which arrives.
+
+       THE TEST IS ORIENTATION, AND NOTHING ELSE. A width test would get this
+       wrong in both directions: a handset held sideways is 844px WIDE and
+       390px tall, so `max-width` alone hands it the portrait cut and squeezes
+       a 9:16 film into a 2.16:1 window; and index.html's `and (max-width:900px)`
+       would send a 1024x1366 iPad Pro held upright to the LANDSCAPE cut,
+       which loses 58% of its width where the portrait cut loses 25% of its
+       height.
+       There is no cap here because the crossover is exactly 1:1 and needs no
+       help: a 16:9 frame and a 9:16 frame give up the same share of
+       themselves at sqrt(1.778 x 0.5625) = 1.00, so `orientation` already
+       names the better file at every size.
+
+       Chosen ONCE, at mount. Turning the phone afterwards keeps the file it
+       has already started buffering rather than discarding it and fetching
+       the other 4.6MB on a metered link. The CSS carries this query a second
+       time for the poster frame — change one and change the other. */
+    const FILM = matchMedia('(orientation:portrait)').matches
+      ? 'assets/services-film-mobile.mp4'
+      : 'assets/services-film.mp4';
+    /* 1, NOT 1.4. The clip this replaced carried no words, so running it fast
+       cost nothing. This one has the client's subtitles burnt into it and
+       they are cut to speech: at 1.4x the 31.5s film runs in 22.5s and the
+       lines leave the screen before they can be read. The constant stays
+       rather than being deleted because `loadedmetadata` re-applies it, and
+       because the speed is then one number to turn if the next film has no
+       words on it either. */
+    const RATE = 1;
 
     /* the film is the biggest thing this page fetches and nobody is waiting
        for it, so it goes after load — capped, so one hanging image cannot hold
@@ -2352,13 +2523,15 @@
       const conn = navigator.connection;
       if(conn && conn.saveData) return;
       if(conn && /2g/.test(conn.effectiveType || '')) return;
-      /* The second half of this is load-bearing and is NOT in index.html's
-         copy, which checks the width alone. A phone in landscape is 844px
-         WIDE and 390px tall, so a width-only query sails straight past it and
-         mounts two videos on a handset on mobile data — measured here at
-         844x390 before this line existed. It is the same reason the page's
-         small-type tier is (hover:none),(max-width:620px),(max-height:560px). */
-      if(matchMedia('(max-width:620px),(max-height:560px)').matches) return;
+      /* THERE IS NO SIZE TEST ANY MORE (18 Nov). This used to bail on
+         (max-width:620px),(max-height:560px), and that was right while it was
+         true: the band was a 16:9 strip on a phone and the only cut was a
+         landscape one, so a handset would have spent several MB on a 195px
+         ribbon of a film framed for a desktop. The band is the whole screen
+         now and there is a cut made for that screen, so the phone gets the
+         film the film was made for.
+         The two guards above are what still turn it away, and they are the
+         two that were doing the real work on a metered link all along. */
       if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
       whenQuiet(() => {
@@ -2382,10 +2555,18 @@
           if(io){ io.disconnect(); io = null; }
           document.removeEventListener('visibilitychange', onVis);
         };
+        /* THE SOUND BUTTON follows the film: in when it dissolves in, out on
+           either exit, so it can never offer sound over the poster frame. */
+        const snd = document.getElementById('svSound');
+        let leadWatch = null;                      // see the note in the snd block
+        const sndOut = () => {
+          if(snd) snd.classList.remove('in');
+          if(leadWatch){ leadWatch.disconnect(); leadWatch = null; }
+        };
         /* never shown, or shown and then found wanting — the two exits */
-        const kill   = () => { unwire(); v.remove(); };
+        const kill   = () => { unwire(); sndOut(); v.remove(); };
         const retire = () => {
-          unwire(); v.classList.remove('on'); v.pause();
+          unwire(); sndOut(); v.classList.remove('on'); v.pause();
           setTimeout(() => v.remove(), 900);     // after the fade, not during
         };
         function resume(){
@@ -2396,7 +2577,53 @@
         v.addEventListener('error', kill, {once:true});
         v.addEventListener('loadedmetadata', () => { v.playbackRate = RATE; });
 
-        const show = () => { if(v.isConnected) v.classList.add('on'); };
+        const show = () => {
+          if(!v.isConnected) return;
+          v.classList.add('on');
+          if(snd) snd.classList.add('in');
+        };
+
+        /* Unmuting inside a click is a user gesture, which is the one thing
+           every browser accepts as permission for sound — so this never hits
+           the NotAllowedError the muted autoplay is guarded against.
+           The state is painted from `volumechange`, not from the click, so
+           the button cannot disagree with the video whatever changed it.
+           Scrolling the band off-screen or hiding the tab already pauses the
+           film (the observer and onVis below), so the sound stops with it and
+           resumes with it — nothing extra is needed for that. */
+        if(snd){
+          const label = snd.querySelector('.sv-sound-t');
+          const paint = () => {
+            const on = !v.muted;
+            snd.classList.toggle('is-on', on);
+            snd.setAttribute('aria-pressed', on ? 'true' : 'false');
+            snd.setAttribute('aria-label', on ? 'Mute the film' : 'Play the film with sound');
+            if(label) label.textContent = on ? 'Mute' : 'Sound';
+          };
+          snd.onclick = () => {
+            v.muted = !v.muted;
+            if(!v.muted){ v.volume = 1; resume(); }
+            paint();
+          };
+          v.addEventListener('volumechange', paint);
+          paint();
+
+          /* THE LEAD POPUP SILENCES IT. The popup opens 30s into a visit with a
+             scrim over the whole page — including this button — so a visitor
+             who had turned the sound on would be left with a voice-over they
+             could not stop while they filled in a form. It marks <html>
+             `lead-open` (the LEAD POPUP block), so that class is watched and
+             the film is muted when it appears. It is NOT unmuted when the
+             popup closes: sound comes back only on a tap, the same rule as
+             the first time. */
+          if(window.MutationObserver){
+            leadWatch = new MutationObserver(() => {
+              if(!v.muted && document.documentElement.classList.contains('lead-open'))
+                v.muted = true;                    // volumechange repaints the button
+            });
+            leadWatch.observe(document.documentElement, {attributes:true, attributeFilter:['class']});
+          }
+        }
         const runway = () => {
           if(v.readyState < 3 || !v.buffered.length) return 0;
           return v.buffered.end(v.buffered.length - 1) - v.currentTime;
