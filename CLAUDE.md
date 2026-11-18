@@ -150,9 +150,32 @@ command over.
    hand as test users. Publishing needs a homepage and privacy-policy URL on
    the Branding page first, and no Google review. See *Continue with Google*.
 
-### The domain cutover (not done)
+### The domain cutover (DONE 19 Nov)
 
-`raajlaxmi.com` still points at Hostinger. The plan, settled on 6 Nov:
+**`https://raajlaxmi.com` is the live site, served by Netlify.** Verified 19 Nov:
+`A @ 75.2.60.5`, `CNAME www → raajlaxmi-site.netlify.app` (both TTL 300), no
+`AAAA`; Let's Encrypt certificate for `raajlaxmi.com` + `www.raajlaxmi.com`
+(auto-renews; first one expires 16 Feb 2027); `raajlaxmi.com` is Netlify's
+**primary** domain, so `www` and both `http://` forms 301 to
+`https://raajlaxmi.com/`; Sanity CORS returns `allow-origin` for both origins;
+the live pages show the 23 real projects, no placeholders, no JS errors.
+
+- **The first certificate attempt FAILED and the second, ~15 minutes later,
+  succeeded with no DNS change in between.** Let's Encrypt validates from
+  several vantage points and some still had the old Hostinger answers cached.
+  If this is ever redone: wait 15–30 minutes after the DNS edit before
+  provisioning, and do not "fix" records that are already right.
+- **Hostinger's nameservers rate-limit direct queries.** After a few dozen
+  `dig @athena/apollo.dns-parking.com` calls they answered `REFUSED` to
+  everything, flipping back and forth, which looks exactly like the zone
+  having vanished. It had not. Prefer a public resolver, and few queries.
+- **The registrar is GoDaddy** (expires 2029-09-21); only DNS is at Hostinger,
+  which is why hPanel lists it under "External domains". Nameservers stay
+  `athena`/`apollo.dns-parking.com`.
+- **Still to do by hand:** point the Google sign-in Branding URLs at
+  `https://raajlaxmi.com` (step 5 below), and confirm a test email both ways.
+
+The plan as written on 6 Nov, kept for the record:
 
 1. Client renews the Hostinger **Business** plan for 24 months (₹17,813.28 —
    3.3x cheaper over two years than hosting separately from email, and it
