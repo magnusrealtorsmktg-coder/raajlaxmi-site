@@ -15,6 +15,9 @@
      an invented telephone number on three pages for months. No build step
      and no dependencies either way. See assets/saathi.js. -->
 <link rel="stylesheet" href="assets/saathi.css">
+<!-- The card the WhatsApp button opens. A shared file for Saathi's reason:
+     its greeting is prose. See assets/wa-chat.js. -->
+<link rel="stylesheet" href="assets/wa-chat.css">
 
 <!-- The CMS lives on another origin and every page needs it on first paint, so
      the handshake is opened before the browser has read a byte of the stylesheet.
@@ -327,11 +330,18 @@
   .nav.scrolled{
     padding:.85rem clamp(1.6rem,7vw,7rem);
   }
+  /* THE LOGO IS ABOUT 10% LARGER (19 Nov, asked for) — BUT ONLY WHERE THE
+     BAR HAS ROOM. Only the clamp's CEILING was raised; the vw slope and the
+     floor were left alone, so the logo is unchanged in the 941-1250px band.
+     That band has no slack: measured before the change, the homepage's links
+     sat 0px from the logo at 941-960px, and the inner pages' 9px. Below 940px
+     the links have folded into the burger and there are 100+px spare, so the
+     phone sizes are raised in that tier (see the 940px block). */
   .brand{display:flex;align-items:center;position:relative;}
-  .brand-logo{height:clamp(32px,3.2vw,40px);width:auto;display:block;
+  .brand-logo{height:clamp(32px,3.2vw,44px);width:auto;display:block;
     transition:height .5s var(--lux),opacity .55s var(--lux);}
   .brand-logo-light{position:absolute;left:0;top:50%;transform:translateY(-50%);opacity:0;}
-  .nav.scrolled .brand-logo{height:clamp(30px,3vw,38px);}
+  .nav.scrolled .brand-logo{height:clamp(30px,3vw,42px);}
   /* THE GAP IS ELASTIC BECAUSE THE BAR HAS NO SLACK IN THE MIDDLE.
      Measured before the type grew: at 900px the links sat flush against
      both the logo and the pill - 0px either side - and at 861px the
@@ -409,6 +419,9 @@
     .nav.scrolled{padding:1rem 1.6rem;}
     .nav-links,.nav-cta{display:none;}
     .burger{display:block;}
+    /* +10% here, where the burger has left room — see the note at .brand */
+    .brand-logo{height:35px;}
+    .nav.scrolled .brand-logo{height:33px;}
   }
 
   /* mobile menu sheet */
@@ -607,7 +620,7 @@
   .about.in .ab-ln:nth-child(2) i{transition-delay:.32s;}
 
   .ab-copy{margin-top:2.4rem;}
-  .ab-copy p{font-size:clamp(1rem,1.2vw,21px);line-height:1.9;font-weight:300;
+  .ab-copy p{font-size:clamp(1.06rem,1.272vw,22.3px);line-height:1.9;font-weight:300;
     color:var(--body);
     opacity:0;transform:translateY(22px);
     transition:opacity .9s var(--lux),transform .9s var(--lux);}
@@ -736,7 +749,7 @@
   .sp.in .sp-ln i{transform:translateY(0);}
   .sp.in .sp-ln:nth-child(1) i{transition-delay:.12s;}
   .sp.in .sp-ln:nth-child(2) i{transition-delay:.24s;}
-  .sp-intro{max-width:700px;margin:1.9rem auto 0;font-size:clamp(1.05rem,1.25vw,21px);
+  .sp-intro{max-width:700px;margin:1.9rem auto 0;font-size:clamp(1.113rem,1.325vw,22.3px);
     line-height:1.8;font-weight:300;color:var(--body);
     opacity:0;transform:translateY(18px);
     transition:opacity 1s var(--lux) .4s,transform 1s var(--lux) .4s;}
@@ -784,7 +797,7 @@
   .sp-loc{display:flex;align-items:center;gap:.45rem;font-family:"Inter",sans-serif;
     font-size:.76rem;color:var(--body);margin-bottom:1.1rem;}
   .sp-loc .pin{flex:none;color:#C6A15B;}
-  .sp-desc{font-size:.82rem;line-height:1.7;font-weight:300;color:var(--body);
+  .sp-desc{font-size:.869rem;line-height:1.7;font-weight:300;color:var(--body);
     margin-bottom:1.7rem;}
   /* full-width outlined button: label left, arrow right; fades in last */
   .sp-btn{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:.9rem;
@@ -878,7 +891,7 @@
   .why.in .why-ln i{transform:translateY(0);}
   .why.in .why-ln:nth-child(1) i{transition-delay:.12s;}
   .why.in .why-ln:nth-child(2) i{transition-delay:.24s;}
-  .why-intro{max-width:700px;margin:1.9rem auto 0;font-size:clamp(1.05rem,1.25vw,22px);
+  .why-intro{max-width:700px;margin:1.9rem auto 0;font-size:clamp(1.113rem,1.325vw,23.3px);
     line-height:1.8;font-weight:300;color:var(--body);
     opacity:0;transform:translateY(18px);
     transition:opacity 1s var(--lux) .4s,transform 1s var(--lux) .4s;}
@@ -970,7 +983,7 @@
   .why-row:hover .why-rtext{transform:translateY(-5px);}
   .why-rtext h3{font-family:"Cormorant Garamond",serif;font-weight:300;
     font-size:clamp(1.5rem,2.2vw,2rem);color:var(--charcoal);margin-bottom:.9rem;}
-  .why-rtext p{font-size:.94rem;line-height:1.75;font-weight:300;color:var(--body);
+  .why-rtext p{font-size:.996rem;line-height:1.75;font-weight:300;color:var(--body);
     max-width:30rem;transition:opacity .6s var(--lux);opacity:.82;}
   .why-row:hover .why-rtext p{opacity:1;}
   .why-row .plus{font-family:"Inter",sans-serif;font-weight:300;font-size:1.5rem;
@@ -1119,7 +1132,7 @@
   .col.in .col-ln i{transform:translateY(0);}
   .col.in .col-ln:nth-child(1) i{transition-delay:.12s;}
   .col.in .col-ln:nth-child(2) i{transition-delay:.24s;}
-  .col-intro{max-width:720px;margin:1.7rem auto 0;font-size:clamp(1.05rem,1.2vw,21px);
+  .col-intro{max-width:720px;margin:1.7rem auto 0;font-size:clamp(1.113rem,1.272vw,22.3px);
     line-height:1.8;font-weight:300;color:var(--body);
     opacity:0;transform:translateY(18px);
     transition:opacity 1s var(--lux) .4s,transform 1s var(--lux) .4s;}
@@ -1210,7 +1223,7 @@
   .col-loc{display:flex;align-items:center;gap:.4rem;font-family:"Inter",sans-serif;
     font-size:.75rem;color:var(--body);margin-bottom:.9rem;}
   .col-loc .pin{flex:none;color:#C6A15B;}
-  .col-desc{font-size:.8rem;line-height:1.65;font-weight:300;color:var(--body);margin-bottom:1.1rem;}
+  .col-desc{font-size:.848rem;line-height:1.65;font-weight:300;color:var(--body);margin-bottom:1.1rem;}
   .col-meta{display:flex;gap:1.2rem;margin-top:auto;padding:.9rem 0;
     border-top:1px solid rgba(28,28,28,.08);border-bottom:1px solid rgba(28,28,28,.08);}
   .col-meta > div{display:flex;align-items:center;gap:.5rem;font-family:"Inter",sans-serif;
@@ -1275,7 +1288,7 @@
   .col-cta-ill{color:#C6A15B;flex:none;}
   .col-cta-mid h3{font-family:"Playfair Display",serif;font-weight:600;
     font-size:clamp(1.5rem,2.4vw,2.1rem);color:var(--charcoal);margin-bottom:.5rem;}
-  .col-cta-mid p{font-family:"Inter",sans-serif;font-size:.9rem;line-height:1.7;
+  .col-cta-mid p{font-family:"Inter",sans-serif;font-size:.954rem;line-height:1.7;
     font-weight:300;color:var(--body);max-width:34rem;}
   .col-cta-end{text-align:center;}
   .col-cta-btn{display:inline-flex;align-items:center;gap:.9rem;font-family:"Inter",sans-serif;
@@ -1341,7 +1354,7 @@
   .lg-rule{display:block;width:3.4rem;height:1px;background:var(--gold);
     margin:clamp(1.4rem,2.4vw,1.9rem) 0 0;}
   .lg-intro{margin-top:clamp(1.4rem,2.4vw,1.9rem);max-width:46rem;
-    font-size:clamp(1rem,1.15vw,1.12rem);line-height:1.8;font-weight:300;
+    font-size:clamp(1.06rem,1.219vw,1.187rem);line-height:1.8;font-weight:300;
     color:var(--body);}
 
   /* The numbers are drawn by a counter, so the client never types one and
@@ -1360,7 +1373,7 @@
     font-family:"Inter",sans-serif;font-weight:600;font-size:.76rem;
     letter-spacing:.08em;color:var(--gold);}
   .lg-sec p{margin-top:.95rem;padding-left:2.9rem;
-    font-size:clamp(.95rem,1.05vw,1.04rem);line-height:1.85;font-weight:300;
+    font-size:clamp(1.007rem,1.113vw,1.102rem);line-height:1.85;font-weight:300;
     color:var(--body);}
   .lg-sec p + p{margin-top:.85rem;}
   .lg-sec a{color:var(--gold-deep);text-decoration:underline;
@@ -1377,7 +1390,7 @@
   .lg-note.in{opacity:1;transform:none;}
   .lg-note h3{font-family:"Playfair Display",serif;font-weight:600;
     font-size:1.1rem;color:var(--charcoal);}
-  .lg-note p{margin-top:.8rem;font-size:.94rem;line-height:1.8;font-weight:300;
+  .lg-note p{margin-top:.8rem;font-size:.996rem;line-height:1.8;font-weight:300;
     color:var(--body);}
   .lg-note a{color:var(--gold-deep);text-decoration:underline;
     text-underline-offset:3px;}
@@ -2540,5 +2553,6 @@
 
 </script>
 <script defer src="assets/saathi.js"></script>
+<script defer src="assets/wa-chat.js"></script>
 </body>
 </html>

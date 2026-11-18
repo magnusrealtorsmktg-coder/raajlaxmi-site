@@ -1,0 +1,150 @@
+/* =====================================================================
+   WHATSAPP CHAT BOX — the card the WhatsApp button opens
+   =====================================================================
+   Asked for on 19 Nov: tapping the green button should open a small
+   WhatsApp-looking card — a header with the brand, one message from
+   Raajlaxmi Group, and a "Start chat" button that hands over to WhatsApp —
+   instead of jumping straight to the app.
+
+   A FILE, NOT TWELVE COPIES, FOR SAATHI'S REASON. Every other piece of
+   shared chrome is duplicated into each HTML document (see CLAUDE.md).
+   This one carries prose — the greeting — and prose copied into thirteen
+   files is how this site once ended up with an invented telephone number
+   on three of them. No build step and no dependencies, same as Saathi.
+
+   THE COLOURS ARE WHATSAPP'S, NOT THE SITE'S, ON PURPOSE. The brief was
+   "like a WhatsApp interface", and the familiarity is the point: a visitor
+   should know before reading a word where "Start chat" will take them.
+   The site's own navy and gold appear once, in the avatar.
+
+   IT TAKES SAATHI'S SLOT. Saathi's launcher sits directly above the
+   WhatsApp button, so this card opens above both — the same place Saathi's
+   panel opens. The two never share it: each closes when the other opens
+   (see wa-chat.js), so the column of buttons is never covered.
+   ===================================================================== */
+
+:root{
+  --wac-teal:#075E54;      /* WhatsApp's header */
+  --wac-green:#25D366;     /* WhatsApp's brand green — the button below is the same */
+  --wac-green-d:#1EBE5A;
+  --wac-wall:#EFEAE2;      /* the chat wallpaper */
+  --wac-ink:#111B21;
+  --wac-mute:#667781;
+  --wac-ease:cubic-bezier(.16,1,.3,1);
+}
+
+.wac{
+  position:fixed; z-index:870;
+  right:calc(var(--wa-bottom-r, clamp(1rem,2.2vw,1.5rem)) + env(safe-area-inset-right,0px));
+  /* two buttons and a gap above the floor, plus the hero-capsule lift
+     (--wa-lift is negative when the buttons rise, so it is subtracted) */
+  bottom:calc(var(--wa-bottom, clamp(1rem,2.2vh,1.5rem))
+              + env(safe-area-inset-bottom,0px)
+              + var(--wa-size, clamp(48px,3.6vw,56px)) * 2
+              + 1.4rem - var(--wa-lift, 0px));
+  width:min(340px, calc(100vw - 2rem));
+  max-height:calc(100vh - 2rem);
+  display:flex; flex-direction:column;
+  border-radius:16px; overflow:hidden; background:#fff;
+  font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  box-shadow:0 24px 60px rgba(12,20,36,.28),0 2px 8px rgba(12,20,36,.14);
+  /* visibility, not display:none — it fades, and while closed it is out of
+     the tab order and the accessibility tree. The idiom .lead and Saathi use. */
+  visibility:hidden; opacity:0; transform:translateY(12px) scale(.97);
+  transform-origin:bottom right;
+  transition:opacity .28s var(--lux,var(--wac-ease)),
+             transform .28s var(--lux,var(--wac-ease)),
+             visibility 0s linear .28s;
+}
+html.wac-open .wac{
+  visibility:visible; opacity:1; transform:none;
+  transition:opacity .3s var(--lux,var(--wac-ease)),
+             transform .3s var(--lux,var(--wac-ease));
+}
+
+/* ---- header ---- */
+.wac-head{display:flex;align-items:center;gap:.8rem;flex:none;
+  padding:1rem 1rem 1rem 1.1rem;background:var(--wac-teal);color:#fff;}
+.wac-av{width:46px;height:46px;flex:none;border-radius:50%;
+  /* the site's own gold mark (the favicon) on its navy — the one place the
+     card wears the brand's colours rather than WhatsApp's */
+  background:#14243C url("favicon-192.png") center 46%/72% no-repeat;
+  box-shadow:inset 0 0 0 1.5px rgba(201,169,107,.55);}
+.wac-who{min-width:0;flex:1 1 auto;}
+.wac-name{display:block;font-weight:600;font-size:1.02rem;line-height:1.25;
+  letter-spacing:-.005em;}
+.wac-sub{display:block;margin-top:.15rem;font-size:.74rem;line-height:1.3;
+  color:rgba(255,255,255,.82);}
+.wac-x{flex:none;width:36px;height:36px;margin-right:-.3rem;border:0;border-radius:50%;
+  display:grid;place-items:center;cursor:pointer;color:#fff;background:transparent;
+  transition:background-color .2s ease;}
+.wac-x:hover{background:rgba(255,255,255,.12);}
+.wac-x:focus-visible{outline:2px solid #fff;outline-offset:1px;}
+.wac-x svg{width:16px;height:16px;display:block;}
+
+/* ---- the conversation ---- */
+.wac-body{flex:1 1 auto;min-height:0;overflow-y:auto;
+  padding:1.15rem 1rem 1.4rem;background:var(--wac-wall);}
+.wac-msg{position:relative;max-width:86%;padding:.6rem .8rem .45rem;
+  background:#fff;border-radius:0 10px 10px 10px;color:var(--wac-ink);
+  box-shadow:0 1px .5px rgba(11,20,26,.13);}
+/* the tail, the one detail that makes a rounded box read as a WhatsApp bubble */
+.wac-msg::before{content:"";position:absolute;top:0;left:-8px;width:8px;height:13px;
+  background:#fff;clip-path:polygon(0 0,100% 0,100% 100%);}
+.wac-from{display:block;font-size:.8rem;font-weight:600;color:#1F8A70;margin-bottom:.15rem;}
+.wac-text{margin:0;font-size:.92rem;line-height:1.45;white-space:pre-line;}
+.wac-time{display:block;text-align:right;font-size:.66rem;color:var(--wac-mute);
+  margin-top:.2rem;}
+/* typing dots, shown for a moment on the first open only */
+.wac-typing{display:inline-flex;gap:4px;padding:.75rem .85rem;background:#fff;
+  border-radius:0 10px 10px 10px;box-shadow:0 1px .5px rgba(11,20,26,.13);}
+.wac-typing i{width:6px;height:6px;border-radius:50%;background:#9AA3AA;
+  animation:wac-dot 1s infinite ease-in-out;}
+.wac-typing i:nth-child(2){animation-delay:.16s;}
+.wac-typing i:nth-child(3){animation-delay:.32s;}
+@keyframes wac-dot{0%,80%,100%{opacity:.35;transform:translateY(0);}40%{opacity:1;transform:translateY(-3px);}}
+.wac-msg{animation:wac-in .32s var(--lux,var(--wac-ease)) both;}
+@keyframes wac-in{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+/* ---- the hand-over ---- */
+.wac-foot{flex:none;padding:1rem 1rem .8rem;background:#fff;text-align:center;}
+.wac-go{display:flex;align-items:center;justify-content:center;gap:.55rem;
+  width:100%;min-height:48px;padding:.75rem 1rem;border-radius:999px;
+  background:var(--wac-green);color:#fff;text-decoration:none;
+  font-weight:600;font-size:1rem;letter-spacing:.005em;
+  box-shadow:0 6px 16px -8px rgba(18,140,70,.7);
+  transition:background-color .2s ease,transform .2s ease;}
+.wac-go:hover{background:var(--wac-green-d);transform:translateY(-1px);}
+.wac-go:focus-visible{outline:2px solid var(--wac-teal);outline-offset:3px;}
+.wac-go svg{width:20px;height:20px;display:block;flex:none;}
+.wac-note{display:block;margin-top:.55rem;font-size:.7rem;color:var(--wac-mute);}
+
+/* ---- standing down ----
+   The same rules the WhatsApp button follows: the mobile menu sheet is a
+   full-screen overlay and would otherwise sit under this. */
+html:has(.sheet.open) .wac{opacity:0;visibility:hidden;pointer-events:none;}
+
+/* ---- phones ---- */
+@media (max-width:620px){
+  .wac{right:calc(.75rem + env(safe-area-inset-right,0px));
+       width:min(340px, calc(100vw - 1.5rem));
+       bottom:calc(var(--wa-bottom, clamp(1rem,2.2vh,1.5rem))
+                   + env(safe-area-inset-bottom,0px)
+                   + var(--wa-size, 46px) * 2 + 1.2rem - var(--wa-lift, 0px));}
+}
+/* A SHORT SCREEN PUTS IT BESIDE THE BUTTONS, NOT ABOVE THEM. A phone held
+   sideways is ~390px tall; stacked above two buttons the card would start
+   ~130px up and run off the top. Beside the column it gets the full height. */
+@media (max-height:560px){
+  .wac{bottom:calc(var(--wa-bottom, 1rem) + env(safe-area-inset-bottom,0px));
+       right:calc(var(--wa-bottom-r, 1rem) + env(safe-area-inset-right,0px)
+                  + var(--wa-size, 46px) + .9rem);
+       transform-origin:bottom right;}
+  .wac-body{padding:.9rem 1rem 1rem;}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .wac,html.wac-open .wac{transition:none;transform:none;}
+  .wac-msg{animation:none;}
+  .wac-typing i{animation:none;opacity:.6;}
+}

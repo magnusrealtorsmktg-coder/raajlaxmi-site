@@ -61,7 +61,7 @@ and are not. The ones that will cost you an afternoon if you do not know them:
 | before you touch… | read |
 |---|---|
 | anything in the shared chrome | *The `<head>` CSS is duplicated across all twelve files* — nav, footer, loader, the WhatsApp button and the `:root` tokens live in twelve copies |
-| the WhatsApp button | *The WhatsApp button is on every page* — it stands aside for two things, and both were found by measuring rather than by eye. It also publishes its geometry, because Saathi's launcher stacks on it |
+| the WhatsApp button or its chat card | *The WhatsApp button is on every page* — it stands aside for two things, and both were found by measuring rather than by eye. It publishes its geometry, because Saathi's launcher stacks on it. A tap opens the card in `assets/wa-chat.*`, which shares Saathi's slot and takes its number from the button's href |
 | the chat assistant, or either file in `assets/saathi.*` | *Saathi, the rule-based assistant* — the ONE piece of shared chrome that is not duplicated twelve times, and the one place a suggested chip can be offered and then not answered |
 | a price anywhere on screen | *The rupee sign is added at render* — the CMS holds the figure without one, so `₹` is never in the stored string |
 | any Sanity query | *Every query starts in the document `<head>`* — the query text lives in one place per file and `get` memoises on the string |
@@ -2843,6 +2843,52 @@ alphabetical and not chronological, so do not "tidy" it. The order lives in
 **two places per file** and they must not drift: `.nav-menu` in the bar and
 `.sheet-sub` in the mobile sheet. Thirteen files, twenty-six lists.
 
+### The logo and the paragraph text are both a little larger (19 Nov)
+
+**THE LOGO GREW ~10%, BUT ONLY WHERE THE BAR HAS ROOM.** The clamp's *ceiling*
+was raised and its vw slope and floor left alone, so the logo is **unchanged
+from 941px to ~1250px** — the band the section above calls tight. Measured
+before the change: the homepage's links sat **0px** from the logo at
+941–960px (inner pages 9px). Below 940px the links have folded into the burger
+and there were 100+px spare, so fixed phone sizes go in the first
+`@media(max-width:940px)` block of each file.
+
+| | top of page | scrolled | ≤940px top / scrolled |
+|---|---|---|---|
+| `index.html` | `clamp(42px,4.6vw,58px → 64px)` | `clamp(34px,3.4vw,42px → 46px)` | 46px / 37px (was 42 / 34) |
+| the other twelve | `clamp(32px,3.2vw,40px → 44px)` | `clamp(30px,3vw,38px → 42px)` | 35px / 33px (was 32 / 30) |
+
+Re-measured at 11 widths on three pages: identical gaps from 941 to 1100px,
+the bar 4–6px taller where the logo grew, no overflow anywhere.
+
+**PARAGRAPH TEXT IS ×1.06 EVERYWHERE — 133 rules in 13 files.** "Increase a
+very little everywhere, like the text under *Creating Possibilities*." Scaled
+were the `font-size`s of body-copy paragraphs only — found by walking every
+page's text nodes (≥45 chars, Inter, not uppercase) on the live site, not by
+guessing: `.ab-copy p`, `.ab-cred p`, `.sp-intro`, `.sp-desc`, `.why-intro`,
+`.why-rtext p`, `.ow-intro`, `.br-intro`, `.col-intro`, `.col-desc`,
+`.col-cta-mid p`, `.pd-hero-p`, `.pd-copy`, `.sv-card p`, `.sv-qb p`,
+`.tm-intro`, `.tg-intro`, `.tm-strip p`, `.ct-done p`, `.ct-loc-in p`,
+`.ct-consent`, `.emi-intro`, `.emi-note`, `.lg-intro`, `.lg-sec p`,
+`.lg-note p`. Headings, eyebrows, labels, buttons, the nav and `.col-loc` (an
+address line) were left alone. Every number inside the value scaled, so a
+`clamp()` keeps its shape and the phone tiers moved with the desktop ones.
+
+**EVERY COPY OF A RULE WAS SCALED, INCLUDING THE INERT ONES.** Most of these
+rules sit in all thirteen heads (the duplicated stylesheet) and render on one
+or four pages. Scaling only where they render would have made the clones drift
+apart; scaling all of them keeps them identical to each other. The homepage's
+copies were already different from the other twelve (its about/why/services
+tiers were refined there alone) and still are.
+
+At 1440px the about paragraph is **15.1 → 16.0px**, legal body 15.2 → 16.1,
+card descriptions 12.8 → 13.6. Checked at 1440, 1024 and 390 on all thirteen
+pages against the live site: no horizontal overflow and nothing clipped by the
+change. Two "clipped" readings are pre-existing and identical before and after
+— the services FAQ answers are collapsed accordions (height 0 by design), and
+`.pd-hero` reports 616>576 at 1024 because of something other than its
+paragraph, which sits well inside it.
+
 ### LOCATION is a fixed list too
 
 **The client asked for Vasai / Nallasopara / Virar / Saphale**, in Western-line
@@ -3834,6 +3880,52 @@ releases correctly; the sheet rule hides it; and under
 collection card's `.col-heart` as you scroll past it. Every fixed button
 eventually covers something.
 
+**IT OPENS A CHAT CARD NOW, NOT WHATSAPP (19 Nov, asked for).** A tap opens a
+small WhatsApp-looking card — teal header with the brand mark, name and
+tagline, one message from Raajlaxmi Group on the chat wallpaper, and a green
+**Start chat** that hands over to WhatsApp. Modelled on a TeleCRM widget the
+client sent; the "Powered by" line was not copied, and it says *Opens
+WhatsApp* instead. It lives in **`assets/wa-chat.css` + `assets/wa-chat.js`**,
+wired in beside Saathi's two lines on all thirteen pages, for Saathi's reason:
+it carries prose (`NAME`, `TAGLINE`, `GREETING`, `CTA`, `NOTE` at the top of
+the JS — edit there, once).
+
+Load-bearing:
+
+- **THE BUTTON IS STILL A PLAIN `<a href="https://wa.me/…">`.** The script
+  only intercepts an unmodified primary click. With the script missing, or on
+  a ctrl/cmd/shift/middle click, it goes straight to WhatsApp as before.
+- **"Start chat" copies `#waFab`'s `href` and watches it** (a
+  `MutationObserver` on the attribute). The SITE SETTINGS block repoints that
+  href from the CMS through `waHref()`, possibly after the card has opened, so
+  the Studio's number reaches this with nothing to keep in step. **Never write
+  a number into `wa-chat.js`.**
+- **IT TAKES SAATHI'S SLOT, ABOVE BOTH BUTTONS, AND THE TWO ARE EXCLUSIVE.**
+  A pointer press on either button already closes the other (both close on an
+  outside `pointerdown`). Keyboard does not press anything outside, so: opening
+  this calls `.sa-launch.click()` when `html.sa-open` is set (Saathi's only
+  public way in), and an observer on `<html>`'s class closes this when
+  `sa-open` appears. The same observer closes it for `lead-open` (the 30s
+  popup) and `pdw-open` (the walkthrough player on `project.html`). **On a
+  phone Saathi hides the WhatsApp button while its panel is open** (its own
+  CSS), so there the card simply cannot be reached until Saathi closes.
+- **A SHORT SCREEN PUTS IT BESIDE THE BUTTONS** (`max-height:560px`). Above two
+  46px buttons on a sideways phone it would start ~130px up and run off the
+  top of a 390px screen.
+- **The typing dots play on the first open only**, and not under reduced
+  motion; reopening shows the message rather than performing it again.
+- Focus moves to Start chat on open; Esc and the ✕ return it to the button.
+  It stands down under the mobile sheet with the same `:has(.sheet.open)` rule.
+
+Verified with real CDP clicks at 1440x900 (index, services, project),
+1024x768, 390x844 (index, contact) and 844x390: opens, shows the message,
+`aria-expanded` follows, Start chat's href equals the button's and is
+`target=_blank rel=noopener`, Start chat / ✕ / Esc / an outside press / the
+button again all close it, never covers either button, never both it and
+Saathi open by pointer or keyboard, closes for `lead-open`, hidden under the
+sheet, no console errors. **A test tapping "outside" on a phone must check the
+point really is outside** — the card is 340px wide on a 390px screen.
+
 ### Saathi, the rule-based assistant
 
 A chat launcher sits **directly above the WhatsApp button** on all twelve
@@ -3845,8 +3937,9 @@ person. Asked for on 16 Nov.
 call of its own** — so it keeps working with Sanity unreachable and with the
 network off once the page has loaded, like the rest of this site.
 
-**IT IS THE ONE PIECE OF SHARED CHROME THAT IS NOT DUPLICATED TWELVE TIMES**,
-and that is a deliberate departure from the convention the rest of this file
+**IT WAS THE FIRST PIECE OF SHARED CHROME NOT DUPLICATED TWELVE TIMES** (the
+WhatsApp chat card followed it on 19 Nov, for the same reason), and that is a
+deliberate departure from the convention the rest of this file
 insists on. It lives in `assets/saathi.css` and `assets/saathi.js`, wired in
 with one `<link>` and one `<script defer>` per page. The reason: the thing
 most likely to be edited here is the **FAQ prose**, and prose copied twelve
