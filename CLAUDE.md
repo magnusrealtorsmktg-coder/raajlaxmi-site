@@ -2868,9 +2868,11 @@ and the Ongoing, Upcoming and Redevelopment pages card-for-card identical to
 live. (The Redevelopment page loads the heaviest artwork; a probe reading it
 too early sees 0 cards — wait for `.col-card` before concluding anything.)
 
-**THE MOBILE SHEET'S "Projects" STILL GOES TO `?status=completed`**, unlike the
-bar's, which was repointed to `projects.html` on 16 Nov. Not changed here —
-flagged to the user on 19 Nov.
+**THE MOBILE SHEET'S "Projects" GOES TO `projects.html` TOO (19 Nov).** It had
+been left at `?status=completed` when the bar's link was repointed on 16 Nov,
+so on a phone "Projects" and its own "Completed" sub-link went to the same
+place and the whole collection was unreachable from the menu. All thirteen
+files; the sheet's Completed link still carries `?status=completed`.
 
 ### The logo and the paragraph text are both a little larger (19 Nov)
 
