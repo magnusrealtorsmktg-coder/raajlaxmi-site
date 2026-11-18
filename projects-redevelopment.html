@@ -2406,13 +2406,33 @@
       ? `<img class="col-oc" src="assets/oc-received.png" alt="OC received" loading="lazy" decoding="async">`
       : '';
 
+    /* THE CARDS ARE GROUPED IN THE DROPDOWN'S ORDER (19 Nov, asked for):
+       Ongoing, then Completed, then Upcoming, then Redevelopment — the same
+       selling order as the Projects menu, so "all projects" reads the way
+       the menu does. Before this, the CMS `order` field alone decided, and it
+       put the completed buildings first.
+
+       A PROJECT FILED UNDER SEVERAL STAGES RANKS BY ITS EARLIEST ONE. Krishna
+       Niwas and Shanti Niwas are both `ongoing` and `redevelopment`, and the
+       pill on both says "Ongoing"; ranked by the later stage they would sit at
+       the foot of the page wearing an Ongoing badge among the Upcoming cards.
+       A project with no recognised stage goes last rather than vanishing.
+
+       THE CMS `order` FIELD STILL DECIDES INSIDE EACH GROUP. Array.sort is
+       stable (ES2019), and the documents arrive already sorted by
+       `order asc, _createdAt asc` from the query in <head>, so this only
+       moves whole groups — the client keeps control of the sequence within
+       one from the Studio.
+
+       Identical in all four collection files. On the single-stage pages it is
+       a no-op, and it is kept there so the four stay byte-identical. */
+    const STAGE_RANK = {ongoing:0, completed:1, upcoming:2, redevelopment:3};
+    const rankOf = p => Math.min(4, ...stagesOf(p).map(s => s in STAGE_RANK ? STAGE_RANK[s] : 4));
+
     /* render cards */
     function renderCards(city){
       const filtered = P.filter(p => (city === 'all' || townOf(p) === city) && wanted(p))
-        /* NO SORT ANY MORE. Sold-out properties used to be pushed to the
-           foot of the list by a stable sort on a boolean the project carried;
-           the whole sold-out idea went on 9 Nov, so the CMS `order` field is
-           once again the only thing deciding the sequence. */;
+        .sort((a, b) => rankOf(a) - rankOf(b));
       if(grid){
         grid.innerHTML = !filtered.length
           ? `<p class="col-empty">${window.RL_EMPTY_MESSAGE ||

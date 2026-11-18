@@ -2843,6 +2843,35 @@ alphabetical and not chronological, so do not "tidy" it. The order lives in
 **two places per file** and they must not drift: `.nav-menu` in the bar and
 `.sheet-sub` in the mobile sheet. Thirteen files, twenty-six lists.
 
+**`projects.html` LISTS ITS CARDS IN THAT SAME ORDER (19 Nov, asked for).**
+"All projects" groups the cards Ongoing → Completed → Upcoming → Redevelopment,
+so the page reads the way the menu does. Until then the CMS `order` field alone
+decided, which put the completed buildings first. `STAGE_RANK` / `rankOf()`
+just above `renderCards()`, and three things about it are load-bearing:
+
+- **A project in several stages ranks by its EARLIEST one.** Krishna Niwas and
+  Shanti Niwas are filed `ongoing` + `redevelopment` and their pill says
+  "Ongoing"; ranked by the later stage they would sit at the foot of the page
+  wearing an Ongoing badge among the Upcoming cards. Today no project is
+  Redevelopment alone, so that group is empty on the All page.
+- **The Studio's `order` field still decides INSIDE each group.** The sort is
+  stable and the documents arrive sorted `order asc, _createdAt asc`, so only
+  whole groups move. Do not add a tiebreaker — it would take that control away
+  from the client.
+- **It is in all four collection files**, byte-identical, and is a no-op on the
+  three single-stage pages; it is there so the clones stay identical.
+
+Verified against the live CMS through request interception: the same 23
+projects as before, grouped 6 Ongoing / 9 Completed / 8 Upcoming, Studio order
+unchanged within each, the Virar chip and `?status=completed` still correct,
+and the Ongoing, Upcoming and Redevelopment pages card-for-card identical to
+live. (The Redevelopment page loads the heaviest artwork; a probe reading it
+too early sees 0 cards — wait for `.col-card` before concluding anything.)
+
+**THE MOBILE SHEET'S "Projects" STILL GOES TO `?status=completed`**, unlike the
+bar's, which was repointed to `projects.html` on 16 Nov. Not changed here —
+flagged to the user on 19 Nov.
+
 ### The logo and the paragraph text are both a little larger (19 Nov)
 
 **THE LOGO GREW ~10%, BUT ONLY WHERE THE BAR HAS ROOM.** The clamp's *ceiling*
