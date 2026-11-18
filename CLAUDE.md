@@ -515,7 +515,7 @@ Check at 1440×900, 1024×800 and 420×860; scroll the full page; confirm no con
 | IV | Why Raajlaxmi | `why` | Team photograph as the feature plate, **sized so the heading and the photograph share one screen** (see *The Why heading and photograph share one screen*), four numbered rows, **a year timeline that prints a year and the name of a milestone and opens
 the full account sideways** (see *The timeline shows headings and opens
 sideways*), and a closing quote. **The Est. 2004 medallion beside that quote is gone** (12 Nov, client's request) — see *No seal is drawn anywhere now*. The auto-scrolling brand marquee (`.why-carousel`) that used to sit before the quote is gone — Section X replaced it. |
-| XI | Meet Our Owners | `owners` | **Sits between Why and Brands in scroll order**, despite the number. Portrait cards running as a **continuous right-to-left marquee that the visitor can take hold of** — see *The owners strip gives way and comes back*. `SPEED` is 30 px/s, the slowest of the three strips because a tall portrait going past at speed is harder to read than a line of text. `.ow-stage` is the scroll container and carries the edge-fade mask. The copy sits over the foot of the photograph behind a gradient scrim, so the card *is* the picture rather than a picture with a caption under it. **THE NAME AND THE ROLE EACH SIT IN A RESERVED BOX** (`min-height` 2.5em and 4.8em), and that is what makes the row line up: `.ow-text` is pinned to the FOOT of the card, so the block grows upward, and a one-line role left its name 1.6em lower than a card whose role ran to three — across five portraits the names stepped up and down the row. Reserved, **not clamped**, so nothing is ever truncated: the live roles run one to three lines and the names one to two, so 3 and 2 cover the data with the alignment exact. A fourth line of role would step that one card's name up again; raise the reserve or shorten the role in the Studio. Measured 0px of spread on both. **THE NAME SITS AT THE FOOT OF ITS BOX** (`display:grid;align-content:end`, 17 Nov, the client's request): filling that reserve from the TOP is what put a whole empty line between a one-line name and its role — **36px** under *Mr. Jigar Jawaharlal Shah* against **9px** under *Mr. Hemant Deepak Sampat*, which wraps to two lines and so had nothing spare. The slack is spent above the name now, so the role sits 9px under the name on **every card at 1440, 900 and 390**, measured on the live data, and the names line up on their LAST line — which is the line the role has to follow. Grid and not flex: an anonymous grid item is a block and wraps the way the text already did, where a flex item would be sized from its max-content first. **Hovering one card pauses the strip and blurs and dims the others** — the blur is pure CSS (`.ow-grid:hover .ow-card:not(:hover)`), the pause is now JS, with `:focus-within` / `focusin` carrying both for a keyboard, and the blur dropped below 620px where `:hover` sticks after a tap. **Clicking a card opens the detail panel** — hover is the invitation, the click is the choice; see *The owner detail panel*. **Copies are computed, not fixed**, exactly as the client photo strip does it: `build()` measures a card, renders `max(3, ceil(stageWidth / setWidth) + 2)` sets and re-measures, so two published owners loop as cleanly as six. (The photo strip uses `+ 1`; this one needs `+ 2` because it can be pushed backwards.) **The CMS fills the cards from a later block**, so that block fires **`rl:owners`** and this one rebuilds the strip from whatever it left — the same handshake the About counters use with `rl:home-stats`. Reduced motion renders a single set, puts scroll-snap back and drops the mask, so no card is stranded off a stage that no longer moves. **Driven by the `ownersPage` singleton, not the home-page document** — see *The owners live on their own document*. **Its six cards are bracketed placeholders and it is the one section on the home page that removes itself**: an empty `owners` list deletes the section rather than printing "[Owner name]" six times to the public, and it returns the moment anyone is published. With Sanity unreachable the placeholders stay, so a failed fetch never costs the design. **The card prints the name and the role only** — "About them" is the detail panel's content and never appears here; it rides on the card as `data-bio` so the panel can read it off whichever card was opened. The card carries the person, the panel carries what there is to say about them. |
+| XI | Meet Our Owners | `owners` | **Sits between Why and Brands in scroll order**, despite the number. Portrait cards running as a **continuous right-to-left marquee that the visitor can take hold of** — see *The owners strip gives way and comes back*. `SPEED` is 30 px/s, the slowest of the three strips because a tall portrait going past at speed is harder to read than a line of text. `.ow-stage` is the scroll container and carries the edge-fade mask. The copy sits over the foot of the photograph behind a gradient scrim, so the card *is* the picture rather than a picture with a caption under it. **THE NAME AND THE ROLE EACH SIT IN A RESERVED BOX** (`min-height` 2.5em and 4.8em), and that is what makes the row line up: `.ow-text` is pinned to the FOOT of the card, so the block grows upward, and a one-line role left its name 1.6em lower than a card whose role ran to three — across five portraits the names stepped up and down the row. Reserved, **not clamped**, so nothing is ever truncated: the live roles run one to three lines and the names one to two, so 3 and 2 cover the data with the alignment exact. A fourth line of role would step that one card's name up again; raise the reserve or shorten the role in the Studio. Measured 0px of spread on both. **THE NAME SITS AT THE FOOT OF ITS BOX** (`display:grid;align-content:end`, 17 Nov, the client's request): filling that reserve from the TOP is what put a whole empty line between a one-line name and its role — **36px** under *Mr. Jigar Jawaharlal Shah* against **9px** under *Mr. Hemant Deepak Sampat*, which wraps to two lines and so had nothing spare. The slack is spent above the name now, so the role sits the same distance under the name on **every card at 1440, 900 and 390**, measured on the live data — 9px as first shipped, then **`.ow-role{margin-top}` taken from .55rem to .35rem on 18 Nov** at the client's request, so 5.6px — and the names line up on their LAST line — which is the line the role has to follow. Grid and not flex: an anonymous grid item is a block and wraps the way the text already did, where a flex item would be sized from its max-content first. **Hovering one card pauses the strip and blurs and dims the others** — the blur is pure CSS (`.ow-grid:hover .ow-card:not(:hover)`), the pause is now JS, with `:focus-within` / `focusin` carrying both for a keyboard, and the blur dropped below 620px where `:hover` sticks after a tap. **Clicking a card opens the detail panel** — hover is the invitation, the click is the choice; see *The owner detail panel*. **Copies are computed, not fixed**, exactly as the client photo strip does it: `build()` measures a card, renders `max(3, ceil(stageWidth / setWidth) + 2)` sets and re-measures, so two published owners loop as cleanly as six. (The photo strip uses `+ 1`; this one needs `+ 2` because it can be pushed backwards.) **The CMS fills the cards from a later block**, so that block fires **`rl:owners`** and this one rebuilds the strip from whatever it left — the same handshake the About counters use with `rl:home-stats`. Reduced motion renders a single set, puts scroll-snap back and drops the mask, so no card is stranded off a stage that no longer moves. **Driven by the `ownersPage` singleton, not the home-page document** — see *The owners live on their own document*. **Its six cards are bracketed placeholders and it is the one section on the home page that removes itself**: an empty `owners` list deletes the section rather than printing "[Owner name]" six times to the public, and it returns the moment anyone is published. With Sanity unreachable the placeholders stay, so a failed fetch never costs the design. **The card prints the name and the role only** — "About them" is the detail panel's content and never appears here; it rides on the card as `data-bio` so the panel can read it off whichever card was opened. The card carries the person, the panel carries what there is to say about them. |
 | X | Brands We Use | `brands` | Follows Why in scroll order. `OUR PARTNERS` header, six category tabs (All / Structure / Interiors / Electrical / Fittings / Utilities) and a card grid, all rendered from the `BRANDS` array in the Section X IIFE — adding a supplier is one line of data, no markup. Each row is `[name, logo file, trade, tab]`: `trade` is the line from the client's sheet and prints on the card, `tab` is the coarser bucket the tabs filter by. Johnson and Hindware appear twice on purpose, under two different trades. Its header (`.br-head` / `.br-label` / `.br-title` / `.br-intro`) is a **copy of Section IV's** rather than a shared rule — change one and the other will not follow. **On a phone the All view is clipped to the first six cards behind a "Show all 30 brands" pill** — see *Brands are clipped on a phone*. |
 
 ### Signature Projects holds one screen
@@ -2047,6 +2047,44 @@ editing two files and a Studio redeploy, which is not something a client can
 do. The CMS audit had already caught one project with an amenity carrying no
 icon at all; it was simply not on the site.
 
+**AND A STORED `check` IS NOT A CHOICE, IT IS THE ABSENCE OF ONE (18 Nov).**
+The client reported ticks everywhere and they were right: **26 of the 36
+amenity marks on six live project pages were the plain tick**, and the guess
+was not at fault — it never ran. Queried from the API, **87 of the 99 distinct
+amenity labels in the dataset carry `icon: 'check'`**, seeded that way, and
+since `check` IS a key in `ICON` the old line took it and never read the name:
+
+```js
+ICON[a.icon] ? a.icon : guessIcon(a.label)   // a seeded tick wins
+```
+
+`pickIcon` now ignores a stored `check` and falls through to the label. The
+tick has also stopped being an option in the Studio, because a setting that
+does nothing is worse than no setting. A real icon still wins outright.
+
+**The marks were then drawn from the client's own list, not invented.** Even
+with the tick out of the way, 28 of the 99 labels still had nothing to land on,
+so there are **fourteen new marks** — `kitchen`, `bath`, `door`, `window`,
+`floor`, `school`, `electric`, `waste`, `path`, `streetlight`, `star`, `bbq`,
+`bench`, `swing` — each one answering labels that are in the dataset today:
+"Modular Kitchen", "Premium Sanitary Fittings", "Vitrified Flooring",
+"Pre-School", "Street Lighting", "Barbeque Zone", "Porch Swing", "Star Gazing
+Point", "Senior Citizen Area", "Solid Waste Management", "Footpaths",
+"Decorative Main Door", "Sliding Windows", "Modular Electrical Switches".
+**All 99 labels now resolve to a drawn mark and none to the tick** — 43 marks
+in the set. Two of the fourteen were redrawn after being rendered and looked
+at: `swing` read as a gazebo until its A-frame became a beam, and `floor` read
+as a step until it became tiles in perspective. **Render the sheet and look at
+it** — path data that parses can still be a mess.
+
+Rules added with them, and the traps they had to clear: `\bdoor` (not `door`)
+because of "outDOOR gym" and "inDOOR games"; the intercom rule stays above it
+so "Video Door Phone" is not a door; `gaz[e]*bo` because the client spells it
+"Gazeebo"; `game` not `games` for "Game Zone"; `inetrcom`, because that typo is
+in the data and the client should not be punished for it; and the `path` rule
+sits **above** jogging so "Sky Walk" is a walkway rather than a runner, while
+"Jogging Track" and "Walking Track" still fall through to it.
+
 **Three steps resolve the mark now, and none of them can fail:**
 
 1. the icon they chose, if `ICON` has it;
@@ -2055,9 +2093,9 @@ icon at all; it was simply not on the site.
 3. else `check`, a plain tick in a circle.
 
 The filter now only asks for a non-empty label. `icon` is **optional** in the
-schema, the dropdown is **29 options** (the original 14 plus `terrace`,
-`jogging`, `yoga`, `sports`, `banquet`, `temple`, `shop`, `ev`, `cctv`,
-`intercom`, `fire`, `solar`, `water`, `wifi`, `check`), and `label` is retitled
+schema, the dropdown is **42 options** (the original 14, plus the 15 added on
+17 Nov less `check`, which was removed on 18 Nov, plus the 14 new marks), and
+`label` is retitled
 **Name** because that is what it is.
 
 **ORDER IS THE WHOLE DESIGN OF `ICON_GUESS`, and two false matches were found

@@ -2552,6 +2552,45 @@
                   '<path d="M9 13.6a3 3 0 003 3"/>'),
       wifi:     S('<path d="M3.6 8.8a13 13 0 0116.8 0M6.8 12.6a8.2 8.2 0 0110.4 0M10 16.2a3.6 3.6 0 014 0"/>' +
                   '<circle cx="12" cy="19.6" r="1.1"/>'),
+      /* Added 18 Nov. Drawn FROM THE CLIENT'S OWN LIST, not invented: every
+         one of these answers labels that are in the dataset today and were
+         landing on the tick - "Modular Kitchen", "Premium Sanitary Fittings",
+         "Vitrified Flooring", "Pre-School", "Street Lighting", "Barbeque
+         Zone", "Porch Swing", "Star Gazing Point", "Senior Citizen Area",
+         "Solid Waste Management", "Footpaths", "Decorative Main Door",
+         "Sliding Windows", "Modular Electrical Switches". */
+      kitchen:  S('<path d="M3.6 10.6h16.8v2.8a6.2 6.2 0 01-6.2 6.2H9.8a6.2 6.2 0 01-6.2-6.2z"/>' +
+                  '<path d="M12 10.6V7.4a3 3 0 016 0v1.2M3.6 14h16.8"/>'),
+      bath:     S('<path d="M3 12.8h18v2.4a4.4 4.4 0 01-4.4 4.4H7.4A4.4 4.4 0 013 15.2z"/>' +
+                  '<path d="M6.8 12.8V6.4a2 2 0 014 0"/><circle cx="8.8" cy="8.6" r=".9"/>' +
+                  '<path d="M6.2 19.6l-1 1.4M17.8 19.6l1 1.4"/>'),
+      door:     S('<path d="M5.6 3.2h12.8v17.6H5.6zM4 20.8h16M8.6 3.2v17.6"/>' +
+                  '<circle cx="15.4" cy="12" r="1"/>'),
+      window:   S('<path d="M3.6 4.6h16.8v14.8H3.6zM12 4.6v14.8M3 21h18"/>' +
+                  '<path d="M9.6 12H6M14.4 12H18"/>'),
+      floor:    S('<path d="M2.8 19.8h18.4L17.4 9.4H6.6z"/>' +
+                  '<path d="M12 9.4v10.4M4.6 14.6h14.8"/>'),
+      school:   S('<path d="M12 4.2L2.6 8.8 12 13.4l9.4-4.6z"/>' +
+                  '<path d="M6.8 11.2v4.2c0 1.8 2.3 3.2 5.2 3.2s5.2-1.4 5.2-3.2v-4.2M21.4 8.8v5.4"/>'),
+      electric: S('<path d="M5.4 3.6h13.2v16.8H5.4z"/><circle cx="12" cy="12" r="4.4"/>' +
+                  '<path d="M10.3 10.4v2.2M13.7 10.4v2.2"/>'),
+      waste:    S('<path d="M4.6 6.8h14.8M9.4 6.8V4.6h5.2v2.2"/>' +
+                  '<path d="M6.8 6.8l.9 13.2h8.6l.9-13.2"/><path d="M10.4 10.4v6M13.6 10.4v6"/>'),
+      path:     S('<path d="M4.6 21L8.6 3.4M19.4 21L15.4 3.4"/>' +
+                  '<path d="M12 5.4v2.6M12 10.8v2.6M12 16.2v2.6"/>'),
+      streetlight: S('<path d="M11 21h6M14 21V7.6"/>' +
+                     '<path d="M14 7.6c0-2.4-1.8-4-4.2-4"/>' +
+                     '<path d="M7 3.6h5.6l-1.1 3.2H8.1z"/><path d="M4.6 9.6l1.6 1M15.6 10.6l1.8-1"/>'),
+      star:     S('<path d="M12 3.2l2.6 5.6 6 .7-4.5 4.1 1.3 6-5.4-3.1-5.4 3.1 1.3-6L3.4 9.5l6-.7z"/>'),
+      bbq:      S('<path d="M4.4 7h15.2l-2.5 7.4a4.6 4.6 0 01-4.4 3.2h-1.4a4.6 4.6 0 01-4.4-3.2z"/>' +
+                  '<path d="M8.8 17.6L6.8 21M15.2 17.6L17.2 21M8.2 10.6h7.6"/>' +
+                  '<path d="M9.6 4.6c0-.8.8-1.2.8-2M14.4 4.6c0-.8-.8-1.2-.8-2"/>'),
+      bench:    S('<path d="M3.4 7.6h17.2M3.4 11h17.2M2.8 14.4h18.4"/>' +
+                  '<path d="M5.6 6.4v14M18.4 6.4v14"/>'),
+      swing:    S('<path d="M3.2 4.6h17.6"/>' +
+                  '<path d="M7.4 4.6l1.1 9.8M16.6 4.6l-1.1 9.8"/>' +
+                  '<path d="M7.8 14.4h8.4v2.4H7.8z"/>' +
+                  '<path d="M6 20.4c2.2-1.4 9.8-1.4 12 0"/>'),
       /* THE DEFAULT. Nothing on this page may be dropped for want of an icon,
          so there is always something to fall back to. */
       check:    S('<circle cx="12" cy="12" r="8.6"/><path d="M8.2 12.2l2.6 2.6 5-5.4"/>')
@@ -2566,36 +2605,58 @@
        the client invents appears beside their own words rather than vanishing,
        which is what the old ICON[a.icon] filter did to it. */
     const ICON_GUESS = [
+      /* ORDER IS THE WHOLE DESIGN: first match wins, so every rule has to be
+         read against the labels ABOVE it as much as its own. The traps that
+         are already paid for: parking sits above garden because "Parking"
+         contains "park"; landscape above garden for the same reason; \btree
+         because of "sTREEt lighting"; plantation not plant because "sewage
+         treatment PLANT" is plumbing; \bzen\b and \bspa\b because of
+         "citiZENs" and "open SPAce"; \bdoor because of "outDOOR gym" and
+         "inDOOR games", which must keep their own marks; and the intercom
+         rule stays above \bdoor so "Video Door Phone" is not a door. */
       [/kid|child|toddler|play|creche|cr.che/,               'play'],
       [/park|garage/,                                        'parking'],
       [/landscap/,                                           'landscape'],
+      [/school|play.?group|day.?care|nursery/,               'school'],
+      /* above jogging, so "Sky Walk" is a walkway and not a runner; nothing
+         here matches "Jogging Track" or "Walking Track", which fall through */
+      [/footpath|walkway|pathway|\bpath|internal road|\broad|sky.?walk/, 'path'],
       [/jog|run|walk|cycl|track/,                            'jogging'],
       [/gym|fitness|workout|exercis|treadmill/,              'gym'],
       [/swim|pool/,                                          'pool'],
-      /* \bzen\b and \bspa\b are anchored on purpose: unanchored they matched
-         "citiZENs" and "open SPAce", both of which are real amenity names. */
-      [/yoga|medit|\bzen\b|wellness|\bspa\b|aerobic/,         'yoga'],
+      [/yoga|medit|\bzen\b|wellness|\bspa\b|aerobic/,        'yoga'],
       [/sport|court|badminton|cricket|basket|tennis|turf/,   'sports'],
-      [/indoor|carrom|chess|table tennis|billiard|games/,    'indoor'],
+      [/indoor|carrom|chess|table tennis|billiard|game/,     'indoor'],
       [/banquet|party|multi.?purpose|function|hall/,         'banquet'],
-      [/club/,                                               'club'],
+      [/club|lifestyle|recreation|leisure/,                  'club'],
       [/temple|mandir|puja|prayer/,                          'temple'],
       [/shop|retail|store|market|conveni/,                   'shop'],
-      [/gazebo|pergola|sit.?out|amphi/,                      'gazebo'],
+      /* gaz[e]*bo, because the dataset spells it "Gazeebo" as well */
+      [/gaz[e]*bo|pergola|sit.?out|amphi/,                   'gazebo'],
+      [/senior|elder|sitting|bench|relax|plaza|lounge/,      'bench'],
+      [/swing|hammock/,                                      'swing'],
+      [/barbe|bar.?b.?q|\bbbq|grill/,                        'bbq'],
+      [/star.?gaz|telescope|observator|\bstar\b/,            'star'],
       [/terrace|deck|roof|podium|balcon/,                    'terrace'],
-      /* \btree, not tree: "sTREEt lighting". plantation, not plant:
-         "sewage treatment PLANT" is plumbing, not horticulture. */
-      [/garden|lawn|green|\btree|plantation|orchard/,         'garden'],
+      [/garden|lawn|green|\btree|plantation|orchard/,        'garden'],
       [/open space|common space/,                            'green'],
-      [/e.?v\b|electric vehicle|charging/,                   'ev'],
+      [/e.?v\b|electric vehicle|charging point/,             'ev'],
       [/cctv|camera|surveill/,                               'cctv'],
-      [/intercom|video.?door|door.?phone|doorbell/,          'intercom'],
+      [/intercom|inetrcom|video.?door|door.?phone|doorbell/, 'intercom'],
       [/fire|sprinkler|hydrant/,                             'fire'],
       [/secur|guard|gate|watchman|access control/,           'security'],
       [/lift|elevat/,                                        'lift'],
       [/power|generator|backup|inverter|\bdg\b/,             'power'],
       [/solar|renewab/,                                      'solar'],
+      [/kitchen|\bhob\b|chimney|\bsink|platform/,            'kitchen'],
+      [/sanitary|bath|shower|toilet|\bwc\b|wash basin/,      'bath'],
+      [/waste|garbage|refuse|rubbish|dustbin/,               'waste'],
       [/water|borewell|rain|tank|\bstp\b|sewage|plumb|drain/,'water'],
+      [/street.?light|\blamp|lighting/,                      'streetlight'],
+      [/switch|electric|\bmeter|wiring|\bmcb\b|db\b/,        'electric'],
+      [/window|glaz|grill work/,                             'window'],
+      [/\bdoor|main entrance door/,                          'door'],
+      [/floor|tile|marble|granite|vitrified|laminat/,        'floor'],
       [/wi.?fi|internet|broadband|fibre|fiber|network/,      'wifi'],
       [/plan|layout|master|vastu|architect/,                 'planning'],
       [/lobby|entrance|foyer|reception|entry/,               'club']
@@ -2896,10 +2957,20 @@
        in the Studio without a developer adding a matching icon here first.
        The filter now only asks for a name, and the mark is resolved in three
        steps: the icon they chose, the icon guessed from the name, the tick. */
+    /* A STORED `check` IS NOT A CHOICE, IT IS THE ABSENCE OF ONE (18 Nov).
+       87 of the 99 amenity labels in the dataset carry `icon: 'check'` - they
+       were seeded that way, and the old Studio's list of fourteen had no tick
+       to pick, so nobody chose it. Because `check` IS a key in ICON, it won
+       over the guess and the label was never read: that is why the client was
+       looking at a column of ticks. The tick is the FALLBACK now and nothing
+       else, which is why it has also stopped being an option in the Studio -
+       see studio/schemaTypes/project.js. A real icon still wins outright. */
+    const pickIcon = a =>
+      (a.icon && a.icon !== 'check' && ICON[a.icon]) ? a.icon : guessIcon(a.label);
     const AMEN = DOC
       ? (DOC.amenities || [])
           .filter(a => a && String(a.label || '').trim())
-          .map(a => [ICON[a.icon] ? a.icon : guessIcon(a.label), a.label])
+          .map(a => [pickIcon(a), a.label])
       : FALLBACK.amenities;
     const amenEl = document.getElementById('pdAmen');
     if(amenEl){

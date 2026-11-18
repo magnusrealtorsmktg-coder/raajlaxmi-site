@@ -447,6 +447,15 @@ export default {
       // The list below is a convenience, not a contract. Every value in it
       // should still exist in ICON in project.html — one that does not now
       // falls back to the guess instead of disappearing, but it is sloppy.
+      //
+      // THERE IS NO 'Other (plain tick)' TO PICK ANY MORE (18 Nov). The tick
+      // is what an unrecognised name falls back to, and that is all it is: 87
+      // of the 99 amenity labels in the dataset were carrying `icon: 'check'`
+      // from a seed, and because `check` is a real key in ICON it won over the
+      // guess and the name was never read. The client was looking at a column
+      // of ticks. project.html now treats a stored `check` as no choice at
+      // all, so offering it here would be offering a setting that does
+      // nothing.
       fieldset: 'detail',
       of: [
         {
@@ -491,7 +500,20 @@ export default {
                   {title: 'Water / rainwater', value: 'water'},
                   {title: 'Wi-Fi', value: 'wifi'},
                   {title: 'Planning', value: 'planning'},
-                  {title: 'Other (plain tick)', value: 'check'},
+                  {title: 'Kitchen', value: 'kitchen'},
+                  {title: 'Sanitary / bath', value: 'bath'},
+                  {title: 'Door', value: 'door'},
+                  {title: 'Windows', value: 'window'},
+                  {title: 'Flooring', value: 'floor'},
+                  {title: 'School / play group', value: 'school'},
+                  {title: 'Electrical', value: 'electric'},
+                  {title: 'Waste management', value: 'waste'},
+                  {title: 'Footpath / internal road', value: 'path'},
+                  {title: 'Street lighting', value: 'streetlight'},
+                  {title: 'Star gazing', value: 'star'},
+                  {title: 'Barbeque', value: 'bbq'},
+                  {title: 'Seating / senior citizen', value: 'bench'},
+                  {title: 'Swing', value: 'swing'},
                 ],
               },
             },
