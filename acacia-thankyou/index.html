@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en-IN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Thank you – Rajlaxmi Acacia</title>
+<meta name="description" content="Your enquiry for Rajlaxmi Acacia, Saphale West has been received. Our sales team will call you within one working day." />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#0e1a33" />
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon-192.png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+
+<!-- ===== THE CONVERSION =====
+     This page is where the Acacia ads count a lead. Before GTM loads, the
+     `lead_submit` event goes onto the dataLayer — with the visitor's email and
+     +91 mobile as `user_data` for Google Ads enhanced conversions — exactly as
+     the agency's build pushed it, so the triggers already set up in
+     GTM-TF2LLXP4 keep working unchanged. The details were saved by the form on
+     /acacia/ and are read ONCE and deleted. Only GTM ever sees them; Google
+     hashes user_data before it leaves.
+
+     ONE DIFFERENCE FROM THE AGENCY'S BUILD, ON PURPOSE: theirs pushed the event
+     on every load of this page, so a reload, a Back-then-Forward or a bookmark
+     counted another lead in Meta and Google Ads. The form now leaves a one-shot
+     `rl-acacia-lead` flag and the event fires only while it is there. If
+     sessionStorage cannot be read at all (rare: storage blocked), it fires
+     anyway — a doubtful extra conversion beats a lost real one. -->
+<script>
+window.dataLayer = window.dataLayer || [];
+(function(){
+  var ev = {event:'lead_submit', form:'acacia'}, fresh = true;
+  try{
+    fresh = sessionStorage.getItem('rl-acacia-lead') === '1';
+    sessionStorage.removeItem('rl-acacia-lead');
+    var raw = sessionStorage.getItem('lead_user_data');
+    sessionStorage.removeItem('lead_user_data');
+    var saved = raw ? JSON.parse(raw) : null;
+    if(saved && saved.form === 'acacia' && saved.userData) ev.user_data = saved.userData;
+  }catch(e){ fresh = true; }
+  if(fresh) window.dataLayer.push(ev);
+})();
+(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});
+var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';
+j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-TF2LLXP4');
+document.documentElement.classList.add('js');
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500&family=Marcellus&display=swap" rel="stylesheet">
+
+<style>
+/* The agency's thank-you page, in the corporate navy and gold rather than the
+   Acacia olive — the hand-off from campaign to company. */
+:root{
+  --navy-700:#1b2c52; --navy-900:#0e1a33; --navy-950:#09111f;
+  --gold-300:#e2c88f; --gold-400:#d4b373; --gold-500:#c39f59; --gold-600:#a8843f;
+  --cream:#f6f0e4; --muted:#5b6170; --rust:#9e4c23;
+  --o50:#fcf9de; --o800:#41491e;
+  --display:'Marcellus',ui-serif,Georgia,serif; --sans:'Jost',ui-sans-serif,system-ui,sans-serif;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;min-height:100dvh;background:var(--cream);color:#1f2430;font-family:var(--sans);-webkit-font-smoothing:antialiased}
+h1,h2,h3,p,ol{margin:0}
+ol{list-style:none;padding:0}
+img{display:block;max-width:100%}
+.ico{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.ico.fill{fill:currentColor;stroke:none}
+
+.hero{position:relative;isolation:isolate;overflow:hidden;padding:56px 16px 80px;text-align:center;color:#fff;
+  background:radial-gradient(at 50% 0%,var(--navy-700),var(--navy-900),var(--navy-950))}
+@media(min-width:640px){.hero{padding:80px 16px 96px}}
+.rays{position:absolute;inset:0;z-index:-1;pointer-events:none}
+.rays span{position:absolute;height:1px}
+.rays .a{top:0;left:-96px;width:520px;transform-origin:left;transform:rotate(38deg);background:linear-gradient(to right,transparent,var(--gold-500),transparent)}
+.rays .b{top:160px;left:-128px;width:420px;transform-origin:left;transform:rotate(-38deg);background:linear-gradient(to right,transparent,rgba(195,159,89,.7),transparent)}
+.rays .c{top:0;right:-96px;width:520px;transform-origin:right;transform:rotate(-38deg);background:linear-gradient(to left,transparent,var(--gold-500),transparent)}
+.rays .d{top:176px;right:-128px;width:420px;transform-origin:right;transform:rotate(38deg);background:linear-gradient(to left,transparent,rgba(195,159,89,.7),transparent)}
+.logo{display:inline-block;border-radius:6px;background:#fff;padding:8px 16px}
+.logo img{height:40px;width:auto}
+.up{animation:fadeUp .7s var(--ease) both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.tick{display:grid;place-items:center;width:80px;height:80px;margin:40px auto 0;border:1px solid rgba(195,159,89,.7);border-radius:999px;color:var(--gold-400)}
+.tick svg{width:36px;height:36px;fill:none;stroke:currentColor;stroke-width:1.5}
+.tick path{stroke-dasharray:24;stroke-dashoffset:24;animation:draw .9s .3s ease-out both}
+@keyframes draw{to{stroke-dashoffset:0}}
+.hero h1{margin-top:32px;font-family:var(--display);font-weight:400;font-size:36px;line-height:1.15;animation-delay:120ms}
+@media(min-width:640px){.hero h1{font-size:60px}}
+.hero .lede{max-width:36rem;margin:20px auto 0;font-size:18px;line-height:1.55;color:rgba(255,255,255,.8);animation-delay:200ms}
+.hero .meta{margin-top:20px;font-size:14px;color:rgba(255,255,255,.55);animation-delay:260ms}
+.hero .meta i{margin:0 8px;font-style:normal;color:var(--gold-500)}
+.ctas{margin-top:36px;display:flex;flex-wrap:wrap;justify-content:center;gap:12px;animation-delay:320ms}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:2px;padding:12px 24px;font-size:14px;
+  font-weight:500;letter-spacing:.05em;text-transform:uppercase;text-decoration:none;transition:background .3s,border-color .3s,color .3s}
+.btn.gold{background:var(--gold-500);color:var(--navy-950)} .btn.gold:hover{background:var(--gold-400)}
+.btn.ol{border:1px solid rgba(255,255,255,.6);color:#fff} .btn.ol:hover{border-color:var(--gold-400);background:rgba(255,255,255,.1)}
+.btn.rust{border:1px solid var(--rust);color:var(--rust)} .btn.rust:hover{background:var(--rust);color:#fff}
+
+.next{padding:64px 16px}
+@media(min-width:640px){.next{padding:96px 16px}}
+.next h2{text-align:center;font-family:var(--display);font-weight:400;font-size:30px;color:var(--navy-900)}
+@media(min-width:640px){.next h2{font-size:36px}}
+.steps{position:relative;max-width:36rem;margin:48px auto 0;border-left:1px solid rgba(195,159,89,.4);padding-left:32px}
+.steps li{position:relative;padding-bottom:40px}
+.steps li:last-child{padding-bottom:0}
+.steps .dot{position:absolute;top:6px;left:-38px;width:12px;height:12px;border-radius:999px;background:var(--gold-500);box-shadow:0 0 0 4px var(--cream)}
+.steps .w{font-size:12px;letter-spacing:.05em;color:var(--muted);text-transform:uppercase}
+.steps h3{margin-top:4px;font-family:var(--display);font-weight:400;font-size:20px;color:var(--navy-900)}
+.steps p.t{margin-top:8px;line-height:1.625;color:var(--muted)}
+.js [data-reveal]{opacity:0;transform:translateY(28px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+.js [data-reveal].seen{opacity:1;transform:none}
+
+.recap{background:var(--o800);padding:56px 16px;color:var(--o50)}
+.recap .g{max-width:64rem;margin:0 auto;display:grid;gap:40px}
+@media(min-width:640px){.recap .g{grid-template-columns:repeat(3,1fr)}}
+.recap h3{font-family:var(--display);font-weight:400;font-size:20px;color:var(--gold-300)}
+.recap p{margin-top:8px;font-size:14px;line-height:1.625;color:rgba(252,249,222,.8)}
+.recap a{color:inherit;text-decoration:underline;text-underline-offset:4px}
+.recap a:hover{color:#fff}
+
+.cx{padding:64px 16px}
+.cards{max-width:64rem;margin:0 auto;display:grid;gap:24px}
+@media(min-width:640px){.cards{grid-template-columns:repeat(3,1fr)}}
+.card{border-radius:6px;background:#fff;padding:24px;box-shadow:0 1px 2px rgba(0,0,0,.05),0 0 0 1px rgba(0,0,0,.05)}
+.card .ico{width:20px;height:20px;color:var(--gold-600)}
+.card h3{margin-top:12px;font-family:var(--display);font-weight:400;font-size:18px;color:var(--navy-900)}
+.card p,.card a{margin-top:4px;font-size:14px;color:var(--muted);text-decoration:none}
+.card a{display:block;word-break:break-all}
+.card a:hover{color:var(--rust)}
+.fine{max-width:48rem;margin:48px auto 0;display:grid;gap:8px;text-align:center;font-size:12px;line-height:1.625;color:var(--muted)}
+.fine a{color:inherit}
+.back{margin-top:40px;text-align:center}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  .js [data-reveal]{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TF2LLXP4" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6.5 8.5-6.5"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-wa" viewBox="0 0 24 24"><path d="M17.47 14.38c-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.38-.03-.53-.07-.15-.67-1.6-.92-2.2-.24-.58-.49-.5-.67-.5h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.08c.15.2 2.1 3.2 5.08 4.49.71.3 1.27.49 1.7.63.72.23 1.37.2 1.88.12.58-.09 1.75-.72 2-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.57-.35M12.05 21.5h-.01a9.45 9.45 0 0 1-4.82-1.32l-.35-.2-3.58.93.96-3.49-.23-.36a9.43 9.43 0 0 1-1.45-5.03c0-5.21 4.25-9.45 9.48-9.45a9.4 9.4 0 0 1 6.7 2.78 9.4 9.4 0 0 1 2.77 6.69c0 5.21-4.25 9.45-9.47 9.45M20.1 3.9A11.32 11.32 0 0 0 12.05.55C5.77.55.66 5.65.66 11.92c0 2 .52 3.96 1.52 5.69L.56 23.5l6.03-1.58a11.4 11.4 0 0 0 5.45 1.39h.01c6.27 0 11.38-5.1 11.38-11.37 0-3.04-1.18-5.9-3.33-8.04"/></symbol>
+</svg>
+
+<main>
+  <section class="hero">
+    <div class="rays" aria-hidden="true"><span class="a"></span><span class="b"></span><span class="c"></span><span class="d"></span></div>
+    <a href="/acacia/" class="logo" aria-label="Back to Rajlaxmi Acacia"><img src="/assets/acacia/group-logo.webp" alt="Rajlaxmi Group of Companies" width="700" height="244"></a>
+    <div class="tick up" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <h1 class="up" id="ty">Your enquiry has reached us</h1>
+    <p class="lede up">Thank you for your interest in Rajlaxmi Acacia. Our sales team will call you within one working day with pricing, availability and floor plans.</p>
+    <p class="meta up">Saphale West, next to Virar <i>|</i> 1 BHK homes and road-facing offices</p>
+    <div class="ctas up">
+      <a class="btn gold" id="waBtn" href="https://wa.me/918600402939" target="_blank" rel="noopener noreferrer"><svg class="ico fill"><use href="#i-wa"/></svg> Chat on WhatsApp</a>
+      <a class="btn ol" href="tel:+918600402939"><svg class="ico"><use href="#i-phone"/></svg> Call 86004 02939</a>
+    </div>
+  </section>
+
+  <section class="next">
+    <h2>What happens next</h2>
+    <ol class="steps">
+      <li data-reveal><span class="dot"></span><p class="w">Right away</p><h3>Details sent to our sales desk</h3><p class="t">Your name, number and area of interest are with the Acacia team at Saphale.</p></li>
+      <li data-reveal style="transition-delay:120ms"><span class="dot"></span><p class="w">Within 24 working hours</p><h3>A call from our sales team</h3><p class="t">We’ll walk you through current pricing, available units, payment plans and the layout that fits your budget.</p></li>
+      <li data-reveal style="transition-delay:240ms"><span class="dot"></span><p class="w">At your convenience</p><h3>Visit the ready sample building</h3><p class="t">See the finished amenities and sample flat in person. The site is a five-minute walk from Saphale railway station.</p></li>
+    </ol>
+  </section>
+
+  <section class="recap">
+    <div class="g">
+      <div><h3>Ready to move in</h3><p>OC received, amenities ready and a sample building open for viewing.</p></div>
+      <div><h3>Homes and businesses</h3><p>1 BHK residences from ₹25.47L* and road-facing offices from ₹21.50L*. 2 BHK homes and shops are sold out.</p></div>
+      <div><h3>See the project again</h3><p><a href="/acacia/#amenities">Amenities</a>, <a href="/acacia/#configuration">configurations</a> and <a href="/acacia/#connectivity">location</a>.</p></div>
+    </div>
+  </section>
+
+  <section class="cx">
+    <div class="cards">
+      <div class="card"><svg class="ico"><use href="#i-pin"/></svg><h3>Site address</h3><p>Rajlaxxmi Park, Saphale, Mande, Maharashtra 401102</p></div>
+      <div class="card"><svg class="ico"><use href="#i-phone"/></svg><h3>Call us</h3><a href="tel:+918446002939">84460 02939</a><a href="tel:+918600402939" style="margin-top:0">86004 02939</a></div>
+      <div class="card"><svg class="ico"><use href="#i-mail"/></svg><h3>Email</h3><a href="mailto:sales-acasia@raajlaxmi.com">sales-acasia@raajlaxmi.com</a></div>
+    </div>
+    <div class="fine">
+      <p>MahaRERA registration number P99000056103. Available on the website <a href="https://maharera.maharashtra.gov.in" target="_blank" rel="noopener noreferrer">maharera.maharashtra.gov.in</a>.</p>
+      <p>Perspectives are an artist’s impression. Plans, amenities and prices are subject to change and to approval by the concerned authorities.</p>
+    </div>
+    <div class="back"><a class="btn rust" href="/acacia/">Back to Rajlaxmi Acacia <svg class="ico"><use href="#i-arrow"/></svg></a></div>
+  </section>
+</main>
+
+<script>
+(function(){
+  document.getElementById('waBtn').href = 'https://wa.me/918600402939?text=' +
+    encodeURIComponent('Hi! I just submitted an enquiry for Rajlaxmi Acacia. Please share the details.');
+  try{
+    var first = sessionStorage.getItem('rl-acacia-first');
+    sessionStorage.removeItem('rl-acacia-first');
+    if(first) document.getElementById('ty').textContent = 'Thank you, ' + first + '. Your enquiry has reached us';
+  }catch(e){}
+  var rev = document.querySelectorAll('[data-reveal]');
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches || !('IntersectionObserver' in window)){
+    rev.forEach(function(el){ el.classList.add('seen'); }); return;
+  }
+  var io = new IntersectionObserver(function(es){ es.forEach(function(x){
+    if(x.isIntersecting){ x.target.classList.add('seen'); io.unobserve(x.target); } }); }, {threshold:.1});
+  rev.forEach(function(el){ io.observe(el); });
+})();
+</script>
+</body>
+</html>

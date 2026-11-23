@@ -498,6 +498,83 @@ What a future session needs to know about it:
   bathroom and no lift. Two more are filed oddly on the site itself — Polycab
   and Havells are under Wire rather than Switches.
 
+### The Acacia landing page is a separate thing too
+
+`acacia/index.html` and `acacia-thankyou/index.html` (23 Nov) are the
+**campaign landing page for Codename Acacia** (Raajlaxmi Park, Saphale) that
+the old agency (Synovative) ran Meta and Google ads to. The agency sent its
+Next.js source (`github.com/wpsynovative2/raajlaxmigroups`, the
+`app/(landing)/acacia*` routes) and the client asked for it on this site. It
+was **ported to plain HTML**, not hosted as their app, so that the leads are
+the client's and nothing of theirs runs except the one container below.
+
+**IT BREAKS THIS FILE'S CONVENTIONS ON PURPOSE.** It is not one of the
+thirteen pages: no shared `<head>` stylesheet, no nav, footer, Saathi,
+WhatsApp chat card, lead popup or Sanity. Its olive palette, Poppins type and
+layout are the agency's, matching the ads and the brochure. Nothing in the
+"apply to all twelve/thirteen files" rules applies to it, and it must not be
+synced into them.
+
+- **Folders, not `acacia.html`**, because the ads point at
+  `raajlaxmi.com/acacia/` with the trailing slash (their app ran
+  `trailingSlash: true`). A folder's `index.html` answers that URL with no
+  redirect rule. **Every path in both files is absolute** (`/assets/…`) for
+  the same reason.
+- **Leads post to Web3Forms with the site's own key**, so they land in the
+  same inbox as every other form (`rajjlaxmi20@gmail.com`; see *The forms post
+  to Web3Forms*). The key is written once in the Acacia script, so a new key
+  is **thirteen files plus this one**. The agency's version posted to a Google
+  Sheet on their account (a private `GOOGLE_SCRIPT_URL`); this one does not.
+- **The agency's Google Tag Manager, `GTM-TF2LLXP4`, loads on these two pages
+  and nowhere else.** Checked on 21 Nov, it carries Meta Pixel
+  `1615991263569496`, Google Ads `AW-18342328366` and GA4 `G-WGE5QDL8XQ`.
+  Whoever owns a container can put any script on a page it runs on, so it
+  stays off the main site, and **the client should hold admin on it**. That
+  has been asked for and not confirmed.
+- **The conversion is the agency's event, unchanged in shape**:
+  `dataLayer.push({event:'lead_submit', form:'acacia', user_data:{email,
+  phone_number:'+91…'}})` on the thank-you page, pushed *before* GTM loads.
+  The form saves `user_data` to `sessionStorage` (`lead_user_data`, their
+  key), and the thank-you page reads it once and deletes it.
+- **ONE DELIBERATE DIFFERENCE: a reload no longer counts a second lead.**
+  Their thank-you page pushed the event on every load. The form now leaves a
+  one-shot `rl-acacia-lead` flag and the event fires only while it is there,
+  or when storage cannot be read at all. Verified: submit → one event with
+  `user_data`, reload → none.
+- **Campaign attribution rides along in the email**: `utm_*`, `gclid` and
+  `fbclid` from the landing URL, kept for the visit in `rl-attribution` (also
+  their key), plus `pageUrl` and `referrer`. The `project` field names which
+  of the page's forms was used ("Overview form", "Contact section", "Auto
+  popup", "Configuration: Office spaces" …).
+- **The phone rule is the agency's, verbatim**: 10 digits starting 6–9,
+  optional `+91`/`91`/`0`, and repeated-digit junk such as `9999999999`
+  refused. The email sends `+91 XXXXXXXXXX`.
+- **The consent box is pre-ticked**, as the agency had it. That is the
+  client's call to revisit; the contact page's box is not pre-ticked.
+- **The enquiry popup opens once on its own at 5s**, the agency's timing,
+  unless the gallery is open or a field has focus. Every "Get price"-style
+  button opens the same popup, with "Interested in" preset where the button
+  says which (the two Configuration cards).
+- **Images are re-encoded copies in `assets/acacia/`**, 4.5 MB in all against
+  their ~13 MB of originals: WebP, gallery at 1600px with 800px `-sm` tiles,
+  and the five amenity photos smaller than 800px **left at their own size
+  rather than upscaled**. `floor-plans/` was not brought over because their
+  page never used it.
+- **The content is the agency's and dated**: prices (1 BHK ₹25.47L*, offices
+  ₹21.50L*), "2 BHK & shops sold out", OC received, phones `84460 02939` /
+  `86004 02939`, `sales-acasia@raajlaxmi.com` (spelled that way, as on their
+  page), and Facebook/Instagram links to Magnus Realtor. The main site calls
+  the project "Codename Acacia". **Confirm prices with the client before
+  launch.** They are hand-written in several places on both pages; search
+  for `25.47` and `21.50`.
+
+Verified locally at 1440x900 and 390x844 over CDP: no horizontal overflow,
+no console errors, all images load, validation (empty fields, bad mobile),
+the Web3Forms payload with UTM fields (request intercepted, nothing sent),
+the redirect, the personalised thank-you heading, the single conversion
+event, the popup (auto-open, Esc, preset interest), the gallery viewer and
+the phone menu.
+
 ### History worth knowing
 
 On 26 Sep a regex matched a CSS comment instead of the JS block it was aimed at
