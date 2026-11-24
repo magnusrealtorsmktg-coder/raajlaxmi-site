@@ -22,3 +22,8 @@
 
 [build]
   publish = "."
+
+# One server function: the Acacia landing page's lead → Google Sheet relay.
+# Its URL and secret are environment variables set in the Netlify UI.
+[functions]
+  directory = "netlify/functions"

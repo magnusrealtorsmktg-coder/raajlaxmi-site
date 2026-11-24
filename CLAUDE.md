@@ -523,8 +523,31 @@ synced into them.
 - **Leads post to Web3Forms with the site's own key**, so they land in the
   same inbox as every other form (`rajjlaxmi20@gmail.com`; see *The forms post
   to Web3Forms*). The key is written once in the Acacia script, so a new key
-  is **thirteen files plus this one**. The agency's version posted to a Google
-  Sheet on their account (a private `GOOGLE_SCRIPT_URL`); this one does not.
+  is **thirteen files plus this one**.
+- **AND TO THE AGENCY'S GOOGLE SHEET (24 Nov)**, the "Acacia Leads" tab their
+  sales team works from. It had stopped on 19 Nov because the first port sent
+  email only. Each lead now also goes to **`/api/acacia-lead`**, a Netlify
+  function (`netlify/functions/acacia-lead.mjs`, the ONLY server code on this
+  site), which adds the secret and forwards to the agency's Apps Script in
+  exactly the payload their `submit-lead.ts` built, so the sheet needed no
+  change. **The URL and secret are Netlify environment variables,
+  `GOOGLE_SCRIPT_URL` and `GOOGLE_SCRIPT_SECRET`, never in the repo — the repo
+  is public.** A change to either needs a redeploy before the function sees
+  it. The secret the agency gave is their `.env.example` placeholder, which is
+  itself public, so it protects nothing until they set a real one.
+  - **The page waits for the EMAIL, not the sheet.** Navigating away cancels
+    a pending fetch, so the thank-you page loads once Web3Forms accepts; the
+    sheet request is `keepalive` and finishes after the page has gone. If the
+    email fails it waits on the sheet, and the error shows only when both
+    fail. Verified all four combinations.
+  - **`keepalive` is on the same-origin call only.** The Web3Forms post is
+    cross-origin JSON and so preflighted, where keepalive support has been
+    patchy across browsers; it does not need it, since the page waits for it.
+  - **Testing this from zsh: `node script.mjs $c` with `c="ok fail"` passes
+    ONE argument**, so every case silently becomes the same case. Use
+    `${=c}`. That cost an hour of chasing a bug that did not exist.
+  - The netlify CLI on this laptop is linked to a DIFFERENT site
+    (`stirring-basbousa-6d4b4b`); do not `netlify env:set` from here.
 - **The agency's Google Tag Manager, `GTM-TF2LLXP4`, loads on these two pages
   and nowhere else.** Checked on 21 Nov, it carries Meta Pixel
   `1615991263569496`, Google Ads `AW-18342328366` and GA4 `G-WGE5QDL8XQ`.

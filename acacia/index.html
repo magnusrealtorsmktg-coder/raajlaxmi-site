@@ -990,12 +990,34 @@ html.md-open{overflow:hidden}
     };
     Object.keys(attribution).forEach(function(k){ body[k] = attribution[k]; });
 
-    fetch('https://api.web3forms.com/submit', {method:'POST',
-        headers:{'Content-Type':'application/json','Accept':'application/json'},
-        body: JSON.stringify(body)})
-      .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){
-        if(!r.ok || j.success === false) throw new Error(r.status);
-      }); })
+    /* The same lead also goes to the agency's Google Sheet, through the Netlify
+       function at /api/acacia-lead (netlify/functions/acacia-lead.mjs), which
+       holds the Apps Script URL and secret. Fields as the agency's build sent them. */
+    var row = {name: nv, phone: local, email: ev, project: PROJECT + ' (' + source + ')',
+               location: '', units: '', interest: interest, consent: 'Yes',
+               pageUrl: location.href, pageTitle: document.title, referrer: document.referrer || ''};
+    Object.keys(attribution).forEach(function(k){ row[k] = attribution[k]; });
+
+    /* keepalive only on the same-origin call: a cross-origin JSON post needs a
+       preflight, and Chrome refuses keepalive on those outright. */
+    function post(url, headers, payload, okIf){
+      return fetch(url, {method:'POST', headers: headers, body: JSON.stringify(payload), keepalive: url.charAt(0) === '/'})
+        .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){
+          if(!r.ok || !okIf(j)) throw new Error(r.status);
+        }); });
+    }
+    /* The visitor moves on once the EMAIL has been accepted: leaving earlier
+       would cancel it. The sheet request is keepalive, so it finishes after the
+       page has gone. Only if the email fails is the sheet's answer waited for,
+       and the error shows only when neither copy landed. */
+    var toSheet = post('/api/acacia-lead', {'Content-Type':'application/json'},
+                       row, function(j){ return j.ok === true; });
+    toSheet.catch(function(){});
+    var sent = post('https://api.web3forms.com/submit', {'Content-Type':'application/json','Accept':'application/json'},
+                    body, function(j){ return j.success !== false; })
+      .catch(function(){ return toSheet; });
+
+    sent
       .then(function(){
         /* The thank-you page fires the conversion with these for enhanced
            conversions — same key and shape as the agency's build. */
